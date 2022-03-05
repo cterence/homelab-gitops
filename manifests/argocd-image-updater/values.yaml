@@ -7,7 +7,7 @@ argocd-image-updater:
     # -- Default image pull policy
     pullPolicy: Always
     # -- Default image tag
-    tag: v0.10.1
+    tag: v0.11.3
 
   # -- ImagePullSecrets for the image updater deployment
   imagePullSecrets: []
