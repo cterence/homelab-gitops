@@ -82,27 +82,6 @@ applications:
   - name: gitlab-runner
     enabled: true
     annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: gitlab
-          - name: HELM_REPO_URL
-            value: https://charts.gitlab.io
-          - name: HELM_CHART
-            value: gitlab-runner
-          - name: CHART_VERSION
-            value: 0.37.2
-    destination:
-      namespace: gitlab
-  - name: gitlab-runner-manifests
-    enabled: true
-    annotations:
       argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
