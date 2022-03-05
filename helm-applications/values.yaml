@@ -9,49 +9,7 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: argocd
-  - name: external-dns-ovh
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: bitnami
-          - name: HELM_REPO_URL
-            value: https://charts.bitnami.com/bitnami
-          - name: HELM_CHART
-            value: external-dns
-          - name: CHART_VERSION
-            value: 6.1.3
-    destination:
-      namespace: external-dns
-  - name: external-dns-cloudflare
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: bitnami
-          - name: HELM_REPO_URL
-            value: https://charts.bitnami.com/bitnami
-          - name: HELM_CHART
-            value: external-dns
-          - name: CHART_VERSION
-            value: 6.1.3
-    destination:
-      namespace: external-dns
-  - name: external-dns-manifests
+  - name: external-dns
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "2"

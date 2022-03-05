@@ -1,0 +1,8 @@
+external-dns:
+  provider: cloudflare
+  cloudflare:
+    secretName: cloudflare-credentials
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true

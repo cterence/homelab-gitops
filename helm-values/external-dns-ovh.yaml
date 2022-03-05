@@ -1,7 +1,0 @@
-provider: ovh
-ovh:
-  secretName: ovh-credentials
-metrics:
-  enabled: true
-  serviceMonitor:
-    enabled: true
