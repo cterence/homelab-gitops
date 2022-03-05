@@ -105,19 +105,8 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/sealed-secrets
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: sealed-secrets
-          - name: HELM_REPO_URL
-            value: https://bitnami-labs.github.io/sealed-secrets
-          - name: HELM_CHART
-            value: sealed-secrets
-          - name: CHART_VERSION
-            value: 2.1.2
     destination:
       namespace: sealed-secrets
   - name: oauth2-proxy
