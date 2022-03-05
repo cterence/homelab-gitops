@@ -139,56 +139,14 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: monitoring
-  - name: argocd-notifications
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: argocd-notifications
-          - name: HELM_REPO_URL
-            value: https://argoproj.github.io/argo-helm
-          - name: HELM_CHART
-            value: argocd-notifications
-          - name: CHART_VERSION
-            value: 1.5.1
-    destination:
-      namespace: argocd
-  - name: argocd-notifications-manifests
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/argocd-notifications
-      targetRevision: HEAD
-    destination:
-      namespace: argocd
   - name: argocd-image-updater
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/argocd-image-updater
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: argocd-image-updater
-          - name: HELM_REPO_URL
-            value: https://argoproj.github.io/argo-helm
-          - name: HELM_CHART
-            value: argocd-image-updater
-          - name: CHART_VERSION
-            value: 0.6.2
     destination:
       namespace: argocd
   - name: blackbox-exporter

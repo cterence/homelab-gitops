@@ -1,0 +1,9 @@
+apiVersion: v2
+name: argocd-image-updater
+description: A helm chart for an app
+type: application
+version: 0.6.2
+dependencies:
+  - name: argocd-image-updater
+    repository: https://argoproj.github.io/argo-helm
+    version: 0.6.2
