@@ -25,19 +25,8 @@ applications:
       argocd.argoproj.io/sync-wave: "4"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/cert-manager
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: jetstack
-          - name: HELM_REPO_URL
-            value: https://charts.jetstack.io
-          - name: HELM_CHART
-            value: cert-manager
-          - name: CHART_VERSION
-            value: v1.7.0
     destination:
       namespace: cert-manager
   - name: ingress-nginx
@@ -175,16 +164,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: gitlab
-  - name: cert-manager-manifests
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "4"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/cert-manager
-      targetRevision: HEAD
-    destination:
-      namespace: apps
   - name: external-endpoints-manifests
     enabled: true
     annotations:
