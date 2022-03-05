@@ -199,37 +199,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: apps
-  - name: ghost
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: bitnami
-          - name: HELM_REPO_URL
-            value: https://charts.bitnami.com/bitnami
-          - name: HELM_CHART
-            value: ghost
-          - name: CHART_VERSION
-            value: 15.0.8
-    destination:
-      namespace: apps
-  - name: ghost-manifests
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/ghost
-      targetRevision: HEAD
-    destination:
-      namespace: apps
   - name: gotify
     enabled: false
     annotations:
@@ -240,56 +209,14 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: gotify
-  - name: victoria-metrics-operator
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: vm
-          - name: HELM_REPO_URL
-            value: https://victoriametrics.github.io/helm-charts/
-          - name: HELM_CHART
-            value: victoria-metrics-operator
-          - name: CHART_VERSION
-            value: 0.4.1
-    destination:
-      namespace: monitoring
-  - name: victoria-metrics-manifests
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/victoria-metrics
-      targetRevision: HEAD
-    destination:
-      namespace: monitoring
   - name: longhorn
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/longhorn
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: longhorn
-          - name: HELM_REPO_URL
-            value: https://charts.longhorn.io
-          - name: HELM_CHART
-            value: longhorn
-          - name: CHART_VERSION
-            value: 1.2.3
     destination:
       namespace: longhorn-system
   - name: mongodb
