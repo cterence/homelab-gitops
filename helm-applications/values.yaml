@@ -240,43 +240,12 @@ applications:
     destination:
       namespace: apps
   - name: crossplane
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: crossplane-stable
-          - name: HELM_REPO_URL
-            value: https://charts.crossplane.io/stable
-          - name: HELM_CHART
-            value: crossplane
-          - name: CHART_VERSION
-            value: 1.6.2
-    destination:
-      namespace: crossplane-system
-  - name: crossplane-config
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/crossplane/config
-      targetRevision: HEAD
-    destination:
-      namespace: crossplane-system
-  - name: crossplane-resources
     enabled: false
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/crossplane/resources
+      path: manifests/crossplane
       targetRevision: HEAD
     destination:
       namespace: crossplane-system
