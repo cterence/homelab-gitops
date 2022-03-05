@@ -1,8 +1,6 @@
 # argo
 
-A cool repo to deploy stuff to a Kubernetes cluster with ArgoCD.
-
-This is a WIP as I'm in the process of moving my code to GitHub, it's still linked to my GitLab project. As of now, this is just a showcase.
+My Kubernetes cluster state. Managed by ArgoCD. There is a whole lot of stuff here, mostly to experiment.
 
 ## Bootstrap
 
@@ -27,7 +25,7 @@ On your Kubernetes node :
   sudo chown $(id -u):$(id -g) $HOME/.kube/config
   ```
 
-- Add the flannel CNI
+- Install the flannel CNI
 
   ```bash
   kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
@@ -36,7 +34,7 @@ On your Kubernetes node :
 - Remove the master node taint (if you are running a single node cluster)
 
   ```bash
-  kubectl taint nodes <node_name> node-role.kubernetes.io/master:NoSchedule-
+  kubectl taint nodes _node_name_ node-role.kubernetes.io/master:NoSchedule-
   ```
 
 ### Important secrets creation
@@ -81,22 +79,22 @@ On your Kubernetes node :
     ssh-keygen -t ed25519 -C "ArgoCD" -f argocd -N ""
     ```
 
-  - Add the public ssh key to your git remote repository
+  - Add the public ssh key to your git remote repository (for Github, add a [deploy key](https://docs.github.com/en/developers/overview/managing-deploy-keys#deploy-keys))
 
-  - Create a temporary secret manifest named `applications/argocd/argo-repository-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `applications/argocd/argo-github-repository-credentials-cleartext.yaml` from the ssh private key
 
     ```yaml
     apiVersion: v1
     kind: Secret
     metadata:
-      name: argo-repository-credentials
+      name: argo-github-repository-credentials
       namespace: argocd
       labels:
         argocd.argoproj.io/secret-type: repository
     stringData:
       sshPrivateKey: |
         -----BEGIN OPENSSH PRIVATE KEY-----
-        _key_
+        _key_material_
         -----END OPENSSH PRIVATE KEY-----
       url: _your_repo_ssh_uri_
     ```
@@ -110,23 +108,23 @@ On your Kubernetes node :
   - Seal the secret
 
     ```bash
-    seal argocd argo-repository-credentials
+    seal argocd argo-github-repository-credentials
     # OR
     kubeseal \
       --controller-name=sealed-secrets \
       --controller-namespace sealed-secrets \
       --format yaml \
       --scope cluster-wide \
-      < applications/argocd/argo-repository-credentials-cleartext.yaml \
-      > applications/argocd/argo-repository-credentials.yaml \
-    && rm applications/argocd/argo-repository-credentials-cleartext.yaml
+      < applications/argocd/argo-github-repository-credentials-cleartext.yaml \
+      > applications/argocd/argo-github-repository-credentials.yaml \
+    && rm applications/argocd/argo-github-repository-credentials-cleartext.yaml
     ```
 
-- OAuth2 Provider
+- oAuth2-proxy provider
 
   - Create an application in your desired OAuth2 provider (we will use GitLab as an example) and add https://argocd.yourdomain.com/oauth2/callback as a callback URL
 
-  - Create a temporary secret manifest named `applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml`
 
     ```yaml
     apiVersion: v1
@@ -158,7 +156,7 @@ On your Kubernetes node :
 
   - Create API keys for your DNS provider (we will use OVH as an example)
 
-  - Create a temporary secret manifest named `applications/external-dns/ovh-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `applications/external-dns/ovh-credentials-cleartext.yaml`
 
     ```yaml
     apiVersion: v1
@@ -186,6 +184,8 @@ On your Kubernetes node :
     && rm applications/external-dns/ovh-credentials-cleartext.yaml
     ```
 
+- There are quite a lot of other apps that require sealing a secret, but it's tedious to add them all to this readme, get to work.
+
 - Commit and push
 
   ```bash
@@ -199,13 +199,13 @@ On your Kubernetes node :
   ```bash
   helm repo add argo https://argoproj.github.io/argo-helm
   helm repo update
-  helm install --wait argocd argo/argo-cd --values helm-values/argocd.yaml -n argocd --set server.metrics.serviceMonitor.enabled=false --create-namespace=true
+  helm install --wait argocd argo/argo-cd --values application/argocd/values.yaml -n argocd --set server.metrics.serviceMonitor.enabled=false --create-namespace=true
   ```
 
 - Apply the secret containing the repository credentials
 
   ```bash
-  kubectl apply -f applications/argocd/argo-repository-credentials.yaml -n argocd
+  kubectl apply -f applications/argocd/argo-github-repository-credentials.yaml -n argocd
   ```
 
 - Apply the app of apps
@@ -218,12 +218,10 @@ You should be done !
 
 ## Teardown
 
-- Save important secrets before teardown :
+- Save all secrets
 
   ```bash
-  kubectl get secret argo-repository-credentials -n argocd -o yaml | kubectl neat > applications/argocd/argo-repository-credentials-cleartext.yaml
-  kubectl get secret ovh-credentials -n external-dns -o yaml | kubectl neat > applications/external-dns/ovh-credentials-cleartext.yaml
-  kubectl get secret gitlab-oauth2-credentials -n oauth2-proxy -o yaml | kubectl neat > applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml
+  mkdir /tmp/kube-secrets && for ns in $(kns); do for secret in $(k get secret -n $ns | grep Opaque | awk '{print $1}'); do k get secrets -n $ns $secret -o yaml | k neat > /tmp/kube-secrets/$secret-cleartext.yaml; done; done
   ```
 
 - Teardown the cluster
