@@ -130,7 +130,7 @@ applications:
     destination:
       namespace: monitoring
   - name: kube-prometheus-stack
-    enabled: true
+    enabled: false
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
@@ -170,7 +170,7 @@ applications:
     destination:
       namespace: apps
   - name: elastic
-    enabled: false
+    enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "3"
     source:

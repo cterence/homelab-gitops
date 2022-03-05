@@ -1,5 +1,5 @@
 apiVersion: v2
-name: eck-operator
+name: elastic
 description: A helm chart for an app
 type: application
 version: 1.8.0
