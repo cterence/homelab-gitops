@@ -225,19 +225,8 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/mongodb
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: bitnami
-          - name: HELM_REPO_URL
-            value: https://charts.bitnami.com/bitnami
-          - name: HELM_CHART
-            value: mongodb
-          - name: CHART_VERSION
-            value: 10.29.2
     destination:
       namespace: mongodb
   - name: url-shortener
