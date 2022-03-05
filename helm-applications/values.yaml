@@ -35,19 +35,8 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/ingress-nginx
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: ingress-nginx
-          - name: HELM_REPO_URL
-            value: https://kubernetes.github.io/ingress-nginx
-          - name: HELM_CHART
-            value: ingress-nginx
-          - name: CHART_VERSION
-            value: 4.0.16
     destination:
       namespace: ingress-nginx
   - name: metallb
