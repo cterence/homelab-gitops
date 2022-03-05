@@ -112,27 +112,6 @@ applications:
   - name: oauth2-proxy
     enabled: true
     annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: oauth2-proxy
-          - name: HELM_REPO_URL
-            value: https://oauth2-proxy.github.io/manifests
-          - name: HELM_CHART
-            value: oauth2-proxy
-          - name: CHART_VERSION
-            value: 5.0.6
-    destination:
-      namespace: oauth2-proxy
-  - name: oauth2-proxy-manifests
-    enabled: true
-    annotations:
       argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
