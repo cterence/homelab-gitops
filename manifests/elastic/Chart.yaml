@@ -1,0 +1,9 @@
+apiVersion: v2
+name: eck-operator
+description: A helm chart for an app
+type: application
+version: 1.8.0
+dependencies:
+  - name: eck-operator
+    repository: https://helm.elastic.co
+    version: 1.8.0

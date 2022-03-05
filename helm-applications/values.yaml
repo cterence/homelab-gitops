@@ -159,81 +159,8 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: monitoring
-  - name: loki
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: grafana
-          - name: HELM_REPO_URL
-            value: https://grafana.github.io/helm-charts
-          - name: HELM_CHART
-            value: loki-stack
-          - name: CHART_VERSION
-            value: 2.5.0
-    destination:
-      namespace: monitoring
-  - name: wg-access-server
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: wg-access-server
-          - name: HELM_REPO_URL
-            value: https://place1.github.io/wg-access-server
-          - name: HELM_CHART
-            value: wg-access-server
-          - name: CHART_VERSION
-            value: v0.4.6
-    destination:
-      namespace: wireguard
-  - name: wg-access-server-manifests
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/wg-access-server
-      targetRevision: HEAD
-    destination:
-      namespace: wireguard
-  - name: istio-operator
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: wiremind
-          - name: HELM_REPO_URL
-            value: https://wiremind.github.io/wiremind-helm-charts
-          - name: HELM_CHART
-            value: istio-operator
-          - name: CHART_VERSION
-            value: 1.9.5
-    destination:
-      namespace: istio-system
   - name: httpbin
-    enabled: false
+    enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
@@ -248,19 +175,8 @@ applications:
       argocd.argoproj.io/sync-wave: "3"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/elastic
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: elastic
-          - name: HELM_REPO_URL
-            value: https://helm.elastic.co
-          - name: HELM_CHART
-            value: eck-operator
-          - name: CHART_VERSION
-            value: 1.8.0
     destination:
       namespace: logging
   - name: elastic-manifests
