@@ -120,7 +120,7 @@ applications:
     destination:
       namespace: oauth2-proxy
   - name: kube-prometheus-stack-crds
-    enabled: true
+    enabled: false
     annotations:
       argocd.argoproj.io/sync-wave: "1"
     source:
@@ -130,7 +130,7 @@ applications:
     destination:
       namespace: monitoring
   - name: kube-prometheus-stack
-    enabled: true
+    enabled: false
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
