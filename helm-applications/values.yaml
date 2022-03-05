@@ -269,3 +269,13 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: monitoring
+  - name: external-secrets
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: applications/external-secrets
+      targetRevision: HEAD
+    destination:
+      namespace: external-secrets
