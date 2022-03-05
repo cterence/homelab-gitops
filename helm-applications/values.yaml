@@ -259,67 +259,14 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: atlantis
-  - name: istio-base
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: istio
-          - name: HELM_REPO_URL
-            value: https://istio-release.storage.googleapis.com/charts
-          - name: HELM_CHART
-            value: base
-          - name: CHART_VERSION
-            value: 1.12.2
-    destination:
-      namespace: istio-system
-  - name: istiod
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "3"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: istio
-          - name: HELM_REPO_URL
-            value: https://istio-release.storage.googleapis.com/charts
-          - name: HELM_CHART
-            value: istiod
-          - name: CHART_VERSION
-            value: 1.12.2
-    destination:
-      namespace: istio-system
   - name: linkerd
-    enabled: true
+    enabled: false
     annotations:
       argocd.argoproj.io/sync-wave: "3"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/linkerd
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: linkerd
-          - name: HELM_REPO_URL
-            value: https://helm.linkerd.io/stable
-          - name: HELM_CHART
-            value: linkerd2
-          - name: CHART_VERSION
-            value: 2.11.1
     destination:
       namespace: linkerd
   - name: alertmanager-telegram-manifests

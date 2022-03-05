@@ -1,0 +1,9 @@
+apiVersion: v2
+name: linkerd
+description: A helm chart for an app
+type: application
+version: 2.11.1
+dependencies:
+  - name: linkerd2
+    repository: https://helm.linkerd.io/stable
+    version: 2.11.1
