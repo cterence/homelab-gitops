@@ -1,6 +1,7 @@
 argo-cd:
   global:
-    tag: v2.3.0-rc5
+    image:
+      tag: v2.3.0-rc5
   server:
     metrics:
       enabled: true
