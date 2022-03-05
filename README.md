@@ -120,71 +120,11 @@ On your Kubernetes node :
     && rm applications/argocd/argo-github-repository-credentials-cleartext.yaml
     ```
 
-- oAuth2-proxy provider
+<!-- TODO: more details on this part -->
 
-  - Create an application in your desired OAuth2 provider (we will use GitLab as an example) and add https://argocd.yourdomain.com/oauth2/callback as a callback URL
+- Seal the secrets for external-secrets (and optionally gitlab-runner, we can't use external-secrets for this one because we cannot put an empty value as a CI/CD variable in Gitlab).
 
-  - Create a temporary secret manifest named `applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml`
-
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: gitlab-oauth2-credentials
-      namespace: oauth2-proxy
-    stringData:
-      client-id: _client_id_
-      client-secret: _client_secret_
-      cookie-secret: _cookie_secret_
-    ```
-
-  - Seal the secret
-
-    ```bash
-    seal oauth2-proxy gitlab-oauth2-credentials
-    # OR
-    kubeseal \
-      --controller-name=sealed-secrets \
-      --controller-namespace sealed-secrets \
-      --format yaml \
-      < applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml \
-      > applications/oauth2-proxy/gitlab-oauth2-credentials.yaml \
-    && rm applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml
-    ```
-
-- External DNS
-
-  - Create API keys for your DNS provider (we will use OVH as an example)
-
-  - Create a temporary secret manifest named `applications/external-dns/ovh-credentials-cleartext.yaml`
-
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: ovh-credentials
-      namespace: external-dns
-    stringData:
-      ovh_application_key: _ovh_application_key_
-      ovh_application_secret: _ovh_application_secret_
-      ovh_consumer_key: _ovh_consumer_key_
-    ```
-
-  - Seal the secret
-
-    ```bash
-    seal external-dns ovh-credentials
-    # OR
-    kubeseal \
-      --controller-name=sealed-secrets \
-      --controller-namespace sealed-secrets \
-      --format yaml \
-      < applications/external-dns/ovh-credentials-cleartext.yaml \
-      > applications/external-dns/ovh-credentials.yaml \
-    && rm applications/external-dns/ovh-credentials-cleartext.yaml
-    ```
-
-- There are quite a lot of other apps that require sealing a secret, but it's tedious to add them all to this readme, get to work.
+- Setup all the secrets in the Gitlab backend with the correct names.
 
 - Commit and push
 
