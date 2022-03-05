@@ -1,0 +1,9 @@
+apiVersion: v2
+name: ghost
+description: A helm chart for an app
+type: application
+version: ???
+dependencies:
+  - name: ghost
+    repository: ???
+    version: ???

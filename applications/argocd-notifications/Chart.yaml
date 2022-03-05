@@ -1,0 +1,9 @@
+apiVersion: v2
+name: argocd-notifications
+description: A helm chart for an app
+type: application
+version: ???
+dependencies:
+  - name: argocd-notifications
+    repository: ???
+    version: ???
