@@ -89,7 +89,7 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: gitlab
-  - name: external-endpoints-manifests
+  - name: external-endpoints
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "10"
@@ -179,16 +179,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: logging
-  - name: elastic-manifests
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/elastic
-      targetRevision: HEAD
-    destination:
-      namespace: logging
   - name: qbittorrent
     enabled: false
     annotations:
@@ -269,7 +259,7 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: linkerd
-  - name: alertmanager-telegram-manifests
+  - name: alertmanager-telegram
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "10"
