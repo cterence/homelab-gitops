@@ -29,15 +29,6 @@ argo-cd:
       https: true
     config:
       url: https://argocd.terence.cloud
-      configManagementPlugins: |
-        - name: helm-remote-chart
-          init:
-            command: ["/bin/sh", "-c"]
-            args: ["helm repo add $HELM_REPO_NAME $HELM_REPO_URL"]
-          generate:
-            command: ["/bin/sh", "-c"]
-            args: ["helm template -n $ARGOCD_APP_NAMESPACE --values $ARGOCD_APP_NAME.yaml $ARGOCD_APP_NAME $HELM_REPO_NAME/$HELM_CHART --version $CHART_VERSION"]
-
       # The application customization allows to do sync waves of Argo applications.
       # Very useful to counteract race conditions. Ex : deploy Prometheus operator CRDs before the kube-prometheus-stack chart
       # Or deploy nginx-ingress-controller and external-dns before cert-manager.
