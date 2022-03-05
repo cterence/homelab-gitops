@@ -12,23 +12,10 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: {{ default "default" $application.project }}
+  {{- with $application.source }}
   source:
-    repoURL: {{ $application.source.repoURL }}
-    {{- if $application.source.chart }}
-    chart: {{ $application.source.chart }}
-    {{- end }}
-    {{- if $application.source.path }}
-    path: {{ $application.source.path }}
-    {{- end }}
-    targetRevision: {{ $application.source.targetRevision }}
-    {{- if $application.source.helm }}
-    helm:
-      {{- toYaml $application.source.helm | nindent 6 }}
-    {{- end }}
-    {{- if $application.source.plugin }}
-    plugin:
-      {{- toYaml $application.source.plugin | nindent 6 }}
-    {{- end }}
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
   destination:
     {{- if $application.destination.server }}
     server: https://kubernetes.default.svc
