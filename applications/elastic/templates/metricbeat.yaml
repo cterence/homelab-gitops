@@ -4,7 +4,7 @@ metadata:
   name: metricbeat
 spec:
   type: metricbeat
-  version: 7.15.1
+  version: {{ .Values.version }}
   elasticsearchRef:
     name: elastic
   config:

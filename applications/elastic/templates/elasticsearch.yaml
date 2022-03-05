@@ -3,18 +3,26 @@ kind: Elasticsearch
 metadata:
   name: elastic
 spec:
-  version: 7.15.1
+  version: {{ .Values.version }}
   nodeSets:
     - name: elastic
-      count: 1
+      count: 3
       config:
         node.store.allow_mmap: false
-        xpack.monitoring.collection.enabled: true
-        xpack.monitoring.elasticsearch.collection.enabled: false
+        # xpack.monitoring.collection.enabled: true
+        # xpack.monitoring.elasticsearch.collection.enabled: false
       podTemplate:
         metadata:
           labels:
             scrape: es
+        spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                limits:
+                  memory: 1Gi
+                requests:
+                  memory: 1Gi
       volumeClaimTemplates:
         - metadata:
             name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.

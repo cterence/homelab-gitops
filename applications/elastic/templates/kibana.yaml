@@ -3,13 +3,13 @@ kind: Kibana
 metadata:
   name: kibana
 spec:
-  version: 7.15.1
+  version: {{ .Values.version }}
   count: 1
   elasticsearchRef:
     name: elastic
   config:
     # https://www.elastic.co/guide/en/kibana/current/monitoring-metricbeat.html
-    monitoring.kibana.collection.enabled: false
+    server.publicBaseUrl: "https://kibana.terence.cloud"
   podTemplate:
     metadata:
       labels:
