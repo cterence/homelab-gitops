@@ -55,19 +55,8 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/metrics-server
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: metrics-server
-          - name: HELM_REPO_URL
-            value: https://kubernetes-sigs.github.io/metrics-server/
-          - name: HELM_CHART
-            value: metrics-server
-          - name: CHART_VERSION
-            value: 3.7.0
     destination:
       namespace: metrics-server
   - name: openebs
