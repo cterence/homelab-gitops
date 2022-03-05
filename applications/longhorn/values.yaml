@@ -2,19 +2,11 @@ longhorn:
   persistence:
     defaultClass: true
     defaultFsType: ext4
-    defaultClassReplicaCount: 1
     reclaimPolicy: Delete
 
   defaultSettings:
     backupTarget: s3://longhorn-backup-tch@eu-central-003/
     backupTargetCredentialSecret: backup-credentials
-    defaultReplicaCount: 1
-
-  csi:
-    attacherReplicaCount: 1
-    provisionerReplicaCount: 1
-    resizerReplicaCount: 1
-    snapshotterReplicaCount: 1
 
   ingress:
     enabled: true
