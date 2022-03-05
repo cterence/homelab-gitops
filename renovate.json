@@ -7,7 +7,7 @@
       "ignoreTests": true
     },
     {
-      "matchPaths": ["manifests/atlantis/values\\.yaml"],
+      "matchPaths": ["applications/atlantis/values\\.yaml"],
       "enabled": false
     }
   ]

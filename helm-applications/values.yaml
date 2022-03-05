@@ -5,7 +5,7 @@ applications:
       argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/argocd
+      path: applications/argocd
       targetRevision: HEAD
     destination:
       namespace: argocd
@@ -15,7 +15,7 @@ applications:
       argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/external-dns
+      path: applications/external-dns
       targetRevision: HEAD
     destination:
       namespace: external-dns
@@ -25,7 +25,7 @@ applications:
       argocd.argoproj.io/sync-wave: "4"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/cert-manager
+      path: applications/cert-manager
       targetRevision: HEAD
     destination:
       namespace: cert-manager
@@ -35,7 +35,7 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/ingress-nginx
+      path: applications/ingress-nginx
       targetRevision: HEAD
     destination:
       namespace: ingress-nginx
@@ -45,7 +45,7 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/metallb
+      path: applications/metallb
       targetRevision: HEAD
     destination:
       namespace: metallb-system
@@ -55,7 +55,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/metrics-server
+      path: applications/metrics-server
       targetRevision: HEAD
     destination:
       namespace: metrics-server
@@ -75,7 +75,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/pihole
+      path: applications/pihole
       targetRevision: HEAD
     destination:
       namespace: pihole
@@ -85,7 +85,7 @@ applications:
       argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/gitlab-runner
+      path: applications/gitlab-runner
       targetRevision: HEAD
     destination:
       namespace: gitlab
@@ -95,7 +95,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/external-endpoints
+      path: applications/external-endpoints
       targetRevision: HEAD
     destination:
       namespace: apps
@@ -105,7 +105,7 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/sealed-secrets
+      path: applications/sealed-secrets
       targetRevision: HEAD
     destination:
       namespace: sealed-secrets
@@ -115,7 +115,7 @@ applications:
       argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/oauth2-proxy
+      path: applications/oauth2-proxy
       targetRevision: HEAD
     destination:
       namespace: oauth2-proxy
@@ -135,7 +135,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/kube-prometheus-stack
+      path: applications/kube-prometheus-stack
       targetRevision: HEAD
     destination:
       namespace: monitoring
@@ -145,7 +145,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/argocd-image-updater
+      path: applications/argocd-image-updater
       targetRevision: HEAD
     destination:
       namespace: argocd
@@ -155,7 +155,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/blackbox-exporter
+      path: applications/blackbox-exporter
       targetRevision: HEAD
     destination:
       namespace: monitoring
@@ -165,7 +165,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/httpbin
+      path: applications/httpbin
       targetRevision: HEAD
     destination:
       namespace: apps
@@ -175,7 +175,7 @@ applications:
       argocd.argoproj.io/sync-wave: "3"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/elastic
+      path: applications/elastic
       targetRevision: HEAD
     destination:
       namespace: logging
@@ -185,7 +185,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/qbittorrent
+      path: applications/qbittorrent
       targetRevision: HEAD
     destination:
       namespace: apps
@@ -195,7 +195,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/gotify
+      path: applications/gotify
       targetRevision: HEAD
     destination:
       namespace: gotify
@@ -205,7 +205,7 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/longhorn
+      path: applications/longhorn
       targetRevision: HEAD
     destination:
       namespace: longhorn-system
@@ -215,7 +215,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/mongodb
+      path: applications/mongodb
       targetRevision: HEAD
     destination:
       namespace: mongodb
@@ -225,7 +225,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/url-shortener
+      path: applications/url-shortener
       targetRevision: HEAD
     destination:
       namespace: apps
@@ -235,7 +235,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/crossplane
+      path: applications/crossplane
       targetRevision: HEAD
     destination:
       namespace: crossplane-system
@@ -245,7 +245,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/atlantis
+      path: applications/atlantis
       targetRevision: HEAD
     destination:
       namespace: atlantis
@@ -255,7 +255,7 @@ applications:
       argocd.argoproj.io/sync-wave: "3"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/linkerd
+      path: applications/linkerd
       targetRevision: HEAD
     destination:
       namespace: linkerd
@@ -265,7 +265,7 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: manifests/alertmanager-telegram
+      path: applications/alertmanager-telegram
       targetRevision: HEAD
     destination:
       namespace: monitoring

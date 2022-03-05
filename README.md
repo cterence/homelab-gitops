@@ -67,9 +67,9 @@ On your Kubernetes node :
       --controller-name=sealed-secrets \
       --controller-namespace sealed-secrets \
       --format yaml \
-      < manifests/"$1"/"$2"-cleartext.yaml \
-      > manifests/"$1"/"$2".yaml \
-      && rm manifests/"$1"/"$2"-cleartext.yaml
+      < applications/"$1"/"$2"-cleartext.yaml \
+      > applications/"$1"/"$2".yaml \
+      && rm applications/"$1"/"$2"-cleartext.yaml
   }
   ```
 
@@ -83,7 +83,7 @@ On your Kubernetes node :
 
   - Add the public ssh key to your git remote repository
 
-  - Create a temporary secret manifest named `manifests/argocd/argo-repository-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `applications/argocd/argo-repository-credentials-cleartext.yaml` from the ssh private key
 
     ```yaml
     apiVersion: v1
@@ -117,16 +117,16 @@ On your Kubernetes node :
       --controller-namespace sealed-secrets \
       --format yaml \
       --scope cluster-wide \
-      < manifests/argocd/argo-repository-credentials-cleartext.yaml \
-      > manifests/argocd/argo-repository-credentials.yaml \
-    && rm manifests/argocd/argo-repository-credentials-cleartext.yaml
+      < applications/argocd/argo-repository-credentials-cleartext.yaml \
+      > applications/argocd/argo-repository-credentials.yaml \
+    && rm applications/argocd/argo-repository-credentials-cleartext.yaml
     ```
 
 - OAuth2 Provider
 
   - Create an application in your desired OAuth2 provider (we will use GitLab as an example) and add https://argocd.yourdomain.com/oauth2/callback as a callback URL
 
-  - Create a temporary secret manifest named `manifests/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml` from the ssh private key
 
     ```yaml
     apiVersion: v1
@@ -149,16 +149,16 @@ On your Kubernetes node :
       --controller-name=sealed-secrets \
       --controller-namespace sealed-secrets \
       --format yaml \
-      < manifests/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml \
-      > manifests/oauth2-proxy/gitlab-oauth2-credentials.yaml \
-    && rm manifests/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml
+      < applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml \
+      > applications/oauth2-proxy/gitlab-oauth2-credentials.yaml \
+    && rm applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml
     ```
 
 - External DNS
 
   - Create API keys for your DNS provider (we will use OVH as an example)
 
-  - Create a temporary secret manifest named `manifests/external-dns/ovh-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `applications/external-dns/ovh-credentials-cleartext.yaml` from the ssh private key
 
     ```yaml
     apiVersion: v1
@@ -181,9 +181,9 @@ On your Kubernetes node :
       --controller-name=sealed-secrets \
       --controller-namespace sealed-secrets \
       --format yaml \
-      < manifests/external-dns/ovh-credentials-cleartext.yaml \
-      > manifests/external-dns/ovh-credentials.yaml \
-    && rm manifests/external-dns/ovh-credentials-cleartext.yaml
+      < applications/external-dns/ovh-credentials-cleartext.yaml \
+      > applications/external-dns/ovh-credentials.yaml \
+    && rm applications/external-dns/ovh-credentials-cleartext.yaml
     ```
 
 - Commit and push
@@ -205,7 +205,7 @@ On your Kubernetes node :
 - Apply the secret containing the repository credentials
 
   ```bash
-  kubectl apply -f manifests/argocd/argo-repository-credentials.yaml -n argocd
+  kubectl apply -f applications/argocd/argo-repository-credentials.yaml -n argocd
   ```
 
 - Apply the app of apps
@@ -221,9 +221,9 @@ You should be done !
 - Save important secrets before teardown :
 
   ```bash
-  kubectl get secret argo-repository-credentials -n argocd -o yaml | kubectl neat > manifests/argocd/argo-repository-credentials-cleartext.yaml
-  kubectl get secret ovh-credentials -n external-dns -o yaml | kubectl neat > manifests/external-dns/ovh-credentials-cleartext.yaml
-  kubectl get secret gitlab-oauth2-credentials -n oauth2-proxy -o yaml | kubectl neat > manifests/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml
+  kubectl get secret argo-repository-credentials -n argocd -o yaml | kubectl neat > applications/argocd/argo-repository-credentials-cleartext.yaml
+  kubectl get secret ovh-credentials -n external-dns -o yaml | kubectl neat > applications/external-dns/ovh-credentials-cleartext.yaml
+  kubectl get secret gitlab-oauth2-credentials -n oauth2-proxy -o yaml | kubectl neat > applications/oauth2-proxy/gitlab-oauth2-credentials-cleartext.yaml
   ```
 
 - Teardown the cluster
