@@ -2,22 +2,11 @@ applications:
   - name: argocd
     enabled: true
     annotations:
-      argocd.argoproj.io/sync-wave: "3"
+      argocd.argoproj.io/sync-wave: "2"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/argocd
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: argocd
-          - name: HELM_REPO_URL
-            value: https://argoproj.github.io/argo-helm
-          - name: HELM_CHART
-            value: argo-cd
-          - name: CHART_VERSION
-            value: 3.33.1
     destination:
       namespace: argocd
   - name: external-dns-ovh
@@ -300,16 +289,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: oauth2-proxy
-  - name: argocd-manifests
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: manifests/argocd
-      targetRevision: HEAD
-    destination:
-      namespace: argocd
   - name: kube-prometheus-stack-crds
     enabled: true
     annotations:
