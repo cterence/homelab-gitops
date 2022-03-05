@@ -155,19 +155,8 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/blackbox-exporter
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: prometheus-community
-          - name: HELM_REPO_URL
-            value: https://prometheus-community.github.io/helm-charts
-          - name: HELM_CHART
-            value: prometheus-blackbox-exporter
-          - name: CHART_VERSION
-            value: 5.3.2
     destination:
       namespace: monitoring
   - name: loki
