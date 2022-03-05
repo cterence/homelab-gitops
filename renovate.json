@@ -5,6 +5,10 @@
       "updateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true,
       "ignoreTests": true
+    },
+    {
+      "matchPaths": ["manifests/atlantis/values\\.yaml"],
+      "enabled": false
     }
   ]
 }
