@@ -1,0 +1,9 @@
+apiVersion: v2
+name: pihole
+description: A helm chart for an app
+type: application
+version: 2.5.2
+dependencies:
+  - name: pihole
+    repository: https://mojo2600.github.io/pihole-kubernetes
+    version: 2.5.2

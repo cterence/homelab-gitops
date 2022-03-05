@@ -75,27 +75,6 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: pihole
-          - name: HELM_REPO_URL
-            value: https://mojo2600.github.io/pihole-kubernetes/
-          - name: HELM_CHART
-            value: pihole
-          - name: CHART_VERSION
-            value: 2.5.2
-    destination:
-      namespace: pihole
-  - name: pihole-manifests
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
       path: manifests/pihole
       targetRevision: HEAD
     destination:
