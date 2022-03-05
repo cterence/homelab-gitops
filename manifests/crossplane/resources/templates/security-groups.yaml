@@ -1,0 +1,58 @@
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: {{ .Values.securityGroups.name }}
+  labels:
+    name: {{ .Values.securityGroups.name }}
+    {{- toYaml .Values.securityGroups.labels | nindent 4 }}
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    description: Compute security group
+    groupName: {{ .Values.securityGroups.name }}
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name}}
+    tags:
+      - key: Name
+        value: {{ .Values.securityGroups.name }}
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: allow-{{ .Values.securityGroups.name }}-traffic
+  labels:
+    name: allow-{{ .Values.securityGroups.name }}-traffic
+    {{- toYaml .Values.securityGroups.labels | nindent 4 }}
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    description: Security group that allows traffic from all the members of the {{ .Values.securityGroups.name }} group
+    groupName: allow-{{ .Values.securityGroups.name }}-traffic
+    ingress:
+      - fromPort: 0
+        toPort: 0
+        ipProtocol: "-1"
+        userIdGroupPairs:
+          - groupIdSelector:
+              matchLabels:
+                name: {{ .Values.securityGroups.name }}
+            vpcIdSelector:
+              matchLabels:
+                name: {{ .Values.vpc.name}}
+    egress:
+      - fromPort: 0
+        toPort: 0
+        ipProtocol: "-1"
+        ipRanges:
+          - cidrIp: 0.0.0.0/0
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name}}
+    tags:
+      - key: Name
+        value: allow-{{ .Values.securityGroups.name }}-traffic
+  providerConfigRef:
+    name: aws

@@ -1,0 +1,31 @@
+# Wait for better SG support
+
+# apiVersion: ec2.aws.crossplane.io/v1alpha1
+# kind: LaunchTemplate
+# metadata:
+#   name: bastion-lt
+#   labels:
+#     name: bastion-lt
+# spec:
+#   forProvider:
+#     region: eu-west-3
+#     launchTemplateName: bastion-lt
+#     versionDescription: Launch template for a SSM bastion instance
+#     launchTemplateData:
+#       imageId: ami-0c6ebbd55ab05f070
+#       updateDefaultVersion: true
+#       instanceType: t3.nano
+#       keyName: bastion-key
+#       vpcSecurityGroupIdSelector:
+#         matchLabels:
+#           group: compute-sg
+#         matchControllerRef: false
+#     tagSpecifications:
+#       - resourceType: instance
+#         tags:
+#           - Name: bastion
+#     tags:
+#       - key: Name
+#         value: bastion-lt
+#   providerConfigRef:
+#     name: aws

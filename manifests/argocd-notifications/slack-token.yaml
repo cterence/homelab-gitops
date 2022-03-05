@@ -1,0 +1,14 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: argocd-notifications-secret
+spec:
+  encryptedData:
+    slack-token: AgCoQqb/8MU3E84xU1u3HnE/1JYyHdln2iJDGA9yT+tAQ8fQV80yruWLMNH0Ewmw8qeNS0xADXMeoofPizzVCqN+qjyAfkxzM2rEl2CZgLnrTbUbzgptWkn0MqmYKWPM7vjKLWEafvpSlDjU/800ZQKSjokST14PaN2QB2ssoxWsiHnWSQBMbFKuipK4D7ostVR2qyCtdjfw+0LYsg/YMPYZzcdgVL9XCYkNrJHTvs5egOUX4YYJY13LvcOMnKRHCCSvyYbVFAVb2QrxAo3l4zOcCFdrTE0UPTjAK+MJYneNdriYgVMlkBC0HDePgxAFo+baWyy6ofLdGtYYdItVQWH2CQRDiMcJ17OX45eS8vDk1p8Cm2Wn8QARi5e00JtPCGiwqcXg2F7aBZE7usVse17IJo2VEABjZBxvaZLiwX5L8GlakwnkYNOtyPfy10a+U5UB5/miprrLYr6+GDQ71STM4ddTi+RQqsvxAwoN/Cai4lm14bRaF6vtXmEI9VWkpEWmt+sbDya+8Oi1xwv4SkcGG6Qj+iw8y57zAfKJXQdlakO7V+HNrj6bnFMmC6t0NxhtEx62swckaWCgCuwTMkXf5DpZjf0UO2OrEHekDdqxknNq2CPh2QG0DFUBX5dGPNtgv/xYt+POGmlzR9rMpzimZxdDcxQZ4IZ4DjdEj8JGUlVlWWzuaCFUIEgk5/SWlNJvwdv2w/1dWjU/oWlUgSG4r4np7Q6alBaHJr7gIc5zzykN2VWe/BcGeIFXgk+A4tOVEoIOl+/+yBSPfdBjYLVa55pcgG38syEDbzuS6M3K
+  template:
+    data: null
+    metadata:
+      creationTimestamp: null
+      name: argocd-notifications-secret
+      namespace: argocd

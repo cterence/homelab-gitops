@@ -1,0 +1,71 @@
+apiVersion: ec2.aws.crossplane.io/v1alpha1
+kind: VPCEndpoint
+metadata:
+  name: ssm-vpce
+  labels:
+    name: ssm-vpce
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    privateDNSEnabled: true
+    vpcEndpointType: Interface
+    serviceName: com.amazonaws.{{ .Values.region }}.ssm
+    securityGroupIdSelector:
+      matchLabels:
+        {{- toYaml .Values.securityGroups.labels | nindent 8 }}
+    subnetIdSelector:
+      matchLabels:
+        {{- toYaml .Values.subnets.private.labels | nindent 8 }}
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name }}
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1alpha1
+kind: VPCEndpoint
+metadata:
+  name: ssmmessages-vpce
+  labels:
+    name: ssmmessages-vpce
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    privateDNSEnabled: true
+    vpcEndpointType: Interface
+    serviceName: com.amazonaws.{{ .Values.region }}.ssmmessages
+    securityGroupIdSelector:
+      matchLabels:
+        {{- toYaml .Values.securityGroups.labels | nindent 8 }}
+    subnetIdSelector:
+      matchLabels:
+        {{- toYaml .Values.subnets.private.labels | nindent 8 }}
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name }}
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1alpha1
+kind: VPCEndpoint
+metadata:
+  name: ec2messages-vpce
+  labels:
+    name: ec2messages-vpce
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    privateDNSEnabled: true
+    vpcEndpointType: Interface
+    serviceName: com.amazonaws.{{ .Values.region }}.ec2messages
+    securityGroupIdSelector:
+      matchLabels:
+        {{- toYaml .Values.securityGroups.labels | nindent 8 }}
+    subnetIdSelector:
+      matchLabels:
+        {{- toYaml .Values.subnets.private.labels | nindent 8 }}
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name }}
+  providerConfigRef:
+    name: aws

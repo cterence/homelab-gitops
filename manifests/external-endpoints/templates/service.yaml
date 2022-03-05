@@ -1,0 +1,11 @@
+{{ range $externalEndpoint := .Values.externalEndpoints }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $externalEndpoint.name }}
+spec:
+  ports:
+    - port: {{ $externalEndpoint.port }}
+      targetPort: {{ $externalEndpoint.port }}
+---
+{{- end }}

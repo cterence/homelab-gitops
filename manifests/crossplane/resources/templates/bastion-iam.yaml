@@ -1,0 +1,39 @@
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Values.bastion.name }}
+  labels:
+    name: {{ .Values.bastion.name }}
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {"Service": "ec2.amazonaws.com"},
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    tags:
+      - key: Name
+        value: {{ .Values.bastion.name }}
+  providerConfigRef:
+    name: aws
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Values.bastion.name }}
+  labels:
+    name: {{ .Values.bastion.name }}
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+    roleNameSelector:
+      matchLabels:
+        name: {{ .Values.bastion.name }}
+  providerConfigRef:
+    name: aws

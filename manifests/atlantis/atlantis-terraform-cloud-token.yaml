@@ -1,0 +1,17 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: atlantis-terraform-cloud-token
+  namespace: atlantis
+spec:
+  encryptedData:
+    ATLANTIS_TFE_TOKEN: AgBuzKqYaHVcQ6Ex8ZterArwOrN4w4+zlIJ/rNJp6ZZP2s/2BHWbGBhzgxdL2Va2gNzFlRsQUSb079TmPm7HPl87KlSCEp5hru8BFmi7QhD1ZAzFxapsmYGSMlnO+6JHKJ7LGukMwLpDYUtnUu/5+RkdkTlLlw09ifTaaVo5GbBvbEPrHLy5GjLJUD6vkct5H8FvtCxDFYgGeXF+ybUnt6Ziv8CteK/mm5ozU258XkSds5yF5uBkAeYAOYu1HF0gl79ecygNlYCrS+Aavmw3r2vaLiTZDrxssYwn0/dwF0TtA03Uzyvlgz7hZ6bkWBtKub0EDz6L9Ln2oWT1iV0UuibdKEkfsRzivQOyJTMAv/sApKkh4zyfGPOvcKDj48CMbQTaNNiirEImAsUohvcg8a0kcZfPpgQ0B0hp51KhIvZ4pc2QvUQT75u5Wv/BLi5j5qQwoj0bl8xcahkWuduoAXNAV+fj9z+3Mo8o2z3ECgDwxi2aJTyJSDECAmGR6TyK2zAVVS+8AjQVVsw2MEDovjOmpJBRX9l8hC8D91Oe1l7PbYurlxP3IciLbfKHtWB9716VlgCr5hYWAP1LH/sOJ9UwWtfYlOC9xV6mpilts7V0wE7kWvseUU7zk8QKpxguh3u+DaN72xtUPWS25v7J0+mmj/PH9cfeqD8mBQex8jcYOnKQXSFnvC4mvlNnR1lNAdMwo8kv6fzeBT8BQXPmq4F1Pvi5mTrIXiez2YMvCqlwWtUa/QhU92HKDjfDa9OC1W9gNExeWnvh4O+W8igyxUtC0whFAm6cO75m1SqdGDZkpzahspp+D6rFZX0=
+  template:
+    data: null
+    metadata:
+      creationTimestamp: null
+      name: atlantis-terraform-cloud-token
+      namespace: atlantis
+    type: Opaque
+

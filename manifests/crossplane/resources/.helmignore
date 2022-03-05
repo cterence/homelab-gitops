@@ -1,0 +1,3 @@
+templates/eks-cluster.yaml
+templates/eks-node-groups.yaml
+templates/bastion-lt.yaml

@@ -1,0 +1,17 @@
+# apiVersion: kms.aws.crossplane.io/v1alpha1
+# kind: Alias
+# metadata:
+#   name: kms-key-alias
+#   labels:
+#     name: kms-key-alias
+# spec:
+#   forProvider:
+#     region: eu-west-3
+#     targetKeyIdSelector:
+#       matchLabels:
+#         name: kms-key
+#   providerConfigRef:
+#     name: aws
+#   writeConnectionSecretToRef:
+#     name: kms-key-alias
+#     namespace: crossplane-system

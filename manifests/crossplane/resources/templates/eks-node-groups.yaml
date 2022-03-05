@@ -1,0 +1,63 @@
+# apiVersion: eks.aws.crossplane.io/v1alpha1
+# kind: NodeGroup
+# metadata:
+#   name: {{ .Values.eks.nodes.blue.name }}
+#   labels:
+#     name: {{ .Values.eks.nodes.blue.name }}
+# spec:
+#   forProvider:
+#     region: {{ .Values.region }}
+#     version: "{{ .Values.eks.nodes.blue.version }}"
+#     diskSize: {{ .Values.eks.nodes.blue.diskSize }}
+#     capacityType: {{ .Values.eks.nodes.blue.capacityType }}
+#     instanceTypes:
+#       {{- range .Values.eks.nodes.blue.instanceTypes }}
+#       - {{ . | quote }}
+#       {{- end }}
+#     scalingConfig:
+#       {{- toYaml .Values.eks.nodes.blue.scalingConfig | nindent 6 }}
+#     nodeRoleSelector:
+#       matchLabels:
+#         name: {{ .Values.eks.nodes.name }}
+#     clusterNameSelector:
+#       matchLabels:
+#         name: {{ .Values.eks.cluster.name }}
+#     subnetSelector:
+#       matchLabels:
+#         {{- toYaml .Values.subnets.private.labels | nindent 8 }}
+#     tags:
+#       Name: {{ .Values.eks.nodes.blue.name }}
+#   providerConfigRef:
+#     name: aws
+# ---
+# apiVersion: eks.aws.crossplane.io/v1alpha1
+# kind: NodeGroup
+# metadata:
+#   name: {{ .Values.eks.nodes.green.name }}
+#   labels:
+#     name: {{ .Values.eks.nodes.green.name }}
+# spec:
+#   forProvider:
+#     region: {{ .Values.region }}
+#     version: "{{ .Values.eks.nodes.green.version }}"
+#     diskSize: {{ .Values.eks.nodes.green.diskSize }}
+#     capacityType: {{ .Values.eks.nodes.green.capacityType }}
+#     instanceTypes:
+#       {{- range .Values.eks.nodes.green.instanceTypes }}
+#       - {{ . | quote }}
+#       {{- end }}
+#     scalingConfig:
+#       {{- toYaml .Values.eks.nodes.green.scalingConfig | nindent 6 }}
+#     nodeRoleSelector:
+#       matchLabels:
+#         name: {{ .Values.eks.nodes.name }}
+#     clusterNameSelector:
+#       matchLabels:
+#         name: {{ .Values.eks.cluster.name }}
+#     subnetSelector:
+#       matchLabels:
+#         {{- toYaml .Values.subnets.private.labels | nindent 8 }}
+#     tags:
+#       Name: {{ .Values.eks.nodes.green.name }}
+#   providerConfigRef:
+#     name: aws

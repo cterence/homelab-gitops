@@ -1,0 +1,36 @@
+# apiVersion: tf.crossplane.io/v1alpha1
+# kind: ProviderConfig
+# metadata:
+#   name: terraform-aws
+# spec:
+#   credentials:
+#     - filename: credentials
+#       source: Secret
+#       secretRef:
+#         namespace: crossplane-system
+#         name: aws-credentials
+#         key: credentials
+#   configuration: |
+#     provider "aws" {
+#       shared_credentials_file = "credentials"
+#       region      = "eu-west-3"
+#       assume_role {
+#         role_arn     = "arn:aws:iam::964066691632:role/administrator"
+#         session_name = "TerraformCrossplaneProvider"
+#       }
+#     }
+
+#     terraform {
+#       backend "kubernetes" {
+#         secret_suffix     = "terraform-provider"
+#         namespace         = "crossplane-system"
+#         in_cluster_config = true
+#       }
+
+#       required_providers {
+#         aws = {
+#           source  = "hashicorp/aws"
+#           version = "~> 3.0"
+#         }
+#       }
+#     }

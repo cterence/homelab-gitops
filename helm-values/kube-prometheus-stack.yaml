@@ -1,0 +1,249 @@
+# ==============================================================================
+# Prometheus
+# ==============================================================================
+
+prometheus:
+  # ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+  prometheusSpec:
+    # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
+    scrapeInterval: 15s
+
+    retention: 1d
+
+    # Watch all PrometheusRules in the cluster.
+    ruleNamespaceSelector:
+      matchLabels: {}
+    ruleSelector:
+      matchLabels: {}
+
+    # Watch all ServiceMonitors in the cluster.
+    serviceMonitorNamespaceSelector:
+      matchLabels: {}
+    serviceMonitorSelector:
+      matchLabels: {}
+
+    # Watch all PodMonitors in the cluster.
+    podMonitorSelector:
+      matchLabels: {}
+    podMonitorNamespaceSelector:
+      matchLabels: {}
+
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+
+    # ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/storage.md
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: longhorn
+          resources:
+            requests:
+              storage: 50Gi
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: terence.cloud
+      nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+      nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+    hosts:
+      - prometheus.terence.cloud
+    tls:
+      - secretName: prometheus-general-tls
+        hosts:
+          - prometheus.terence.cloud
+
+    additionalScrapeConfigs:
+      - job_name: blackbox
+        metrics_path: /probe
+        params:
+          module: [http_2xx]
+        static_configs:
+          - targets:
+              - https://gitlab.com
+              - https://github.com
+              - https://google.com
+              - https://stackoverflow.com
+              - https://padok.fr
+              - https://reddit.com
+              - https://youtube.com
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: target
+          - target_label: __address__
+            replacement: blackbox-exporter-prometheus-blackbox-exporter.monitoring:9115
+
+# ==============================================================================
+# Grafana
+# Default values: https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+# ==============================================================================
+
+grafana:
+  defaultDashboardsTimezone: Europe/Paris
+
+  # Required as long as Grafana's persistent volume is ReadWriteOnce.
+  # During a rolling update, the new Grafana pod would not be able to start
+  # while the old pod still holds the volume.
+  deploymentStrategy:
+    type: Recreate
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: terence.cloud
+      nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+      nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+      nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
+    hosts:
+      - grafana.terence.cloud
+    tls:
+      - secretName: grafana-general-tls
+        hosts:
+          - grafana.terence.cloud
+
+  # The oAuth2 proxy handles authentication, not Grafana.
+  grafana.ini:
+    auth:
+      disable_login_form: true
+      signout_redirect_url: "https://grafana.terence.cloud/oauth2/sign_out"
+    auth.basic:
+      enabled: false
+    auth.proxy:
+      enabled: true
+      header_name: X-Auth-Request-Email
+      header_property: email
+      auto_sign_up: true
+    users:
+      allow_sign_up: false
+      auto_assign_org: true
+      auto_assign_org_role: Admin
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  # Organise dashboards by provider, with the provider's name as the key.
+  dashboards:
+    default: # The "default" provider is defined below.
+      nginx-ingress-controller:
+        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/nginx.json
+      ingress-request-performance:
+        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
+    extra:
+      loki-dashboard-quick-search:
+        gnetId: 12019
+        datasource: Prometheus
+      pihole-overview:
+        gnetId: 10176
+        datasource: Prometheus
+
+  # Configure dashboard providers.
+  # ref: http://docs.grafana.org/administration/provisioning/#dashboards
+  # `path` must be /var/lib/grafana/dashboards/<provider_name>
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+        - name: "extra"
+          orgId: 1
+          folder: "Extra"
+          type: file
+          disableDeletion: true
+          editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/extra
+
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClassName: longhorn
+    accessModes:
+      - ReadWriteOnce
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+  additionalDataSources:
+    - name: Loki
+      access: proxy
+      orgId: 1
+      type: loki
+      url: http://loki:3100
+      version: 1
+
+  plugins:
+    - grafana-piechart-panel
+# ==============================================================================
+# Alertmanager
+# ref: https://prometheus.io/docs/alerting/alertmanager/
+# ==============================================================================
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    # useExistingSecret: true
+    # secrets:
+    #   - alertmanager-secret
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: longhorn
+          resources:
+            requests:
+              storage: 10Gi
+
+  config:
+    route:
+      group_by: ["alertname"]
+      receiver: "alertmanager-bot"
+    receivers:
+      - name: "null"
+      - name: "alertmanager-bot"
+        webhook_configs:
+          - send_resolved: true
+            url: "http://alertmanager-bot:8080"
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: terence.cloud
+      nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    hosts:
+      - alertmanager.terence.cloud
+    paths:
+      - /
+    pathType: ImplementationSpecific
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.terence.cloud

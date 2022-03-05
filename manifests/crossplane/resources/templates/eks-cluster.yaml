@@ -1,0 +1,34 @@
+# apiVersion: eks.aws.crossplane.io/v1beta1
+# kind: Cluster
+# metadata:
+#   name: {{ .Values.eks.cluster.name }}
+#   labels:
+#     name: {{ .Values.eks.cluster.name }}
+# spec:
+#   forProvider:
+#     region: {{ .Values.region }}
+#     version: "{{ .Values.eks.cluster.version }}"
+#     # encryptionConfig:
+#     #   - provider:
+#     #       keyArn: kms-key-alias
+#     #     resources:
+#     #       - secrets
+#     roleArnSelector:
+#       matchLabels:
+#         name: {{ .Values.eks.cluster.name }}
+#     resourcesVpcConfig:
+#       endpointPrivateAccess: true
+#       endpointPublicAccess: false
+#       securityGroupIdSelector:
+#         matchLabels:
+#           {{- toYaml .Values.securityGroups.labels | nindent 10 }}
+#       subnetIdSelector:
+#         matchLabels:
+#           {{- toYaml .Values.subnets.private.labels | nindent 10 }}
+#     tags:
+#       Name: {{ .Values.eks.cluster.name }}
+#   providerConfigRef:
+#     name: aws
+#   writeConnectionSecretToRef:
+#     namespace: crossplane-system
+#     name: {{ .Values.eks.cluster.name }}-credentials

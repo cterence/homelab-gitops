@@ -1,0 +1,13 @@
+{{ range $externalEndpoint := .Values.externalEndpoints }}
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ $externalEndpoint.name }}
+subsets:
+  - addresses:
+      - ip: {{ $externalEndpoint.ip }}
+    ports:
+      - port: {{ $externalEndpoint.port }}
+        protocol: TCP
+---
+{{- end }}

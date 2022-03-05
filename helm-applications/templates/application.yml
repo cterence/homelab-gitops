@@ -1,0 +1,49 @@
+{{ range $application := .Values.applications }}
+{{- if $application.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $application.name }}
+  {{- with $application.annotations }}
+  annotations:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ default "default" $application.project }}
+  source:
+    repoURL: {{ $application.source.repoURL }}
+    {{- if $application.source.chart }}
+    chart: {{ $application.source.chart }}
+    {{- end }}
+    {{- if $application.source.path }}
+    path: {{ $application.source.path }}
+    {{- end }}
+    targetRevision: {{ $application.source.targetRevision }}
+    {{- if $application.source.helm }}
+    helm:
+      {{- toYaml $application.source.helm | nindent 6 }}
+    {{- end }}
+    {{- if $application.source.plugin }}
+    plugin:
+      {{- toYaml $application.source.plugin | nindent 6 }}
+    {{- end }}
+  destination:
+    {{- if $application.destination.server }}
+    server: https://kubernetes.default.svc
+    {{- else }}
+    name: in-cluster
+    {{- end }}
+    {{- if $application.destination.namespace }}
+    namespace: {{ $application.destination.namespace }}
+    {{- end }}
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+---
+{{- end }}
+{{- end }}

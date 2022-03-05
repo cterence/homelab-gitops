@@ -1,0 +1,34 @@
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  # defaultDatabase is the default database to be used in DSN.
+  # Similar to PGDATABASE environment variable and defaults to "postgres"
+  # if not set.
+  # defaultDatabase: postgres
+  credentials:
+    source: PostgreSQLConnectionSecret
+    connectionSecretRef:
+      namespace: crossplane-system
+      name: rds-credentials
+---
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: Database
+metadata:
+  name: test
+spec:
+  forProvider: {}
+---
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: parent-role
+spec:
+  forProvider:
+    connectionLimit: 10
+    privileges:
+      login: true
+  writeConnectionSecretToRef:
+    name: example-parent-role-secret
+    namespace: crossplane-system

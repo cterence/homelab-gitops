@@ -1,0 +1,31 @@
+image:
+  repository: mendhak/http-https-echo
+  tag: 21
+
+service:
+  port: 80
+
+serviceAccount:
+  create: true
+
+autoscaling:
+  enabled: false
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    external-dns.alpha.kubernetes.io/target: terence.cloud
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+  hosts:
+    - host: httpbin.terence.cloud
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: httpbin-tls
+      hosts:
+        - httpbin.terence.cloud

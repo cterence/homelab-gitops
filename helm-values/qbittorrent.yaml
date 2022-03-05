@@ -1,0 +1,78 @@
+env:
+  TZ: Europe/Paris
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+  bittorrent:
+    enabled: false
+    type: ClusterIP
+    ports:
+      bittorrent:
+        enabled: true
+        port: 6881
+        protocol: TCP
+        targetPort: 6881
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See values.yaml
+  main:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: terence.cloud
+    ingressClassName: nginx
+    hosts:
+      - host: qbittorrent.terence.cloud
+        paths:
+          - path: /
+    tls:
+      - secretName: qbittorrent-tls
+        hosts:
+          - qbittorrent.terence.cloud
+
+# -- Configure persistence settings for the chart under this key.
+# @default -- See values.yaml
+persistence:
+  config:
+    enabled: true
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 100Mi
+
+  media:
+    enabled: true
+    mountPath: /media
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 100Mi
+
+  downloads:
+    enabled: true
+    mountPath: /downloads
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 50Gi
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    interval: 15s
+    scrapeTimeout: 5s
+    labels: {}
+  prometheusRule:
+    enabled: false
+    labels: {}
+    rules:
+      - alert: qBittorrentDown
+        annotations:
+          description: qBittorrent service is down.
+          summary: qBittorrent is down.
+        expr: |
+          qbittorrent_up == 0
+        for: 5m
+        labels:
+          severity: critical

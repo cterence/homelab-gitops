@@ -1,0 +1,13 @@
+loki:
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    storageClassName: longhorn
+
+promtail:
+  initContainer:
+    enabled: true
+    # Solves a "too many open files" error
+    fsInotifyMaxUserInstances: 512

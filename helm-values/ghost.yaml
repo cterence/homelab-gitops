@@ -1,0 +1,62 @@
+global:
+  storageClass: "longhorn"
+
+image:
+  registry: docker.io
+  repository: bitnami/ghost
+  tag: 4.20.4-debian-10-r4
+
+ghostUsername: terence
+existingSecret: ghost-credentials
+ghostEmail: terence.chateigne@posteo.net
+ghostBlogTitle: Térence's blog
+ghostHost: "blog.terence.cloud"
+allowEmptyPassword: false
+ghostSkipInstall: false
+ghostEnableHttps: true
+args: []
+extraEnvVars: []
+extraEnvVarsCM: ""
+extraEnvVarsSecret: ""
+
+service:
+  type: ClusterIP
+
+livenessProbe:
+  enabled: false
+
+readinessProbe:
+  enabled: false
+
+customLivenessProbe:
+  failureThreshold: 6
+  httpGet:
+    path: /
+    port: https
+    scheme: HTTP
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+
+customReadinessProbe:
+  failureThreshold: 6
+  httpGet:
+    path: /
+    port: https
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 3
+
+ingress:
+  enabled: true
+  pathType: ImplementationSpecific
+  hostname: blog.terence.cloud
+  path: /
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    external-dns.alpha.kubernetes.io/target: terence.cloud
+  tls: true
+  ingressClassName: "nginx"

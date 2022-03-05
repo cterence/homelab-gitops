@@ -1,0 +1,40 @@
+gitlabUrl: https://gitlab.com
+rbac:
+  create: true
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - pods
+        - pods/exec
+        - pods/logs
+        - pods/attach
+        - secrets
+        - configmaps
+      verbs:
+        - get
+        - list
+        - watch
+        - create
+        - patch
+        - delete
+        - update
+    # To create runners able to deploy anything into the cluster, not very useful with GitOps
+    # - apiGroups: ["*"]
+    #   resources: ["*"]
+    #   verbs: ["*"]
+  clusterWideAccess: false
+runners:
+  secret: gitlab-runner-registration-token
+  # The environment variable is needed for kaniko to work
+  # https://github.com/GoogleContainerTools/kaniko/issues/1542#issuecomment-853929795
+  config: |
+    listen_address = ":9252"
+    [[runners]]
+      environment = ["container=docker"]
+      [runners.kubernetes]
+        image = "ubuntu:16.04"
+      [runners.feature_flags]
+        FF_SCRIPT_SECTIONS = true
+  executor: kubernetes
+  tags: "homelab"

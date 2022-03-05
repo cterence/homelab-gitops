@@ -1,0 +1,16 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+spec:
+  version: 7.15.1
+  count: 1
+  elasticsearchRef:
+    name: elastic
+  config:
+    # https://www.elastic.co/guide/en/kibana/current/monitoring-metricbeat.html
+    monitoring.kibana.collection.enabled: false
+  podTemplate:
+    metadata:
+      labels:
+        scrape: kb

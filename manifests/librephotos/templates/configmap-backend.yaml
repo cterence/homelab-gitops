@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "librephotos.fullname" . }}-backend
+data: 
+  SECRET_KEY: "LwAvmpm7vBk7ELMpAE3r"
+  BACKEND_HOST: "librephotos-backend"
+  ADMIN_EMAIL: "{{ .Values.backend.adminEmail }}"
+  ADMIN_USERNAME: "{{ .Values.backend.adminUsername }}"
+  ADMIN_PASSWORD: "{{ .Values.backend.adminPassword }}"
+  DB_BACKEND: "postgresql"
+  DB_NAME: "{{ .Values.postgresql.global.postgresql.postgresqlDatabase }}"
+  DB_USER: "{{ .Values.postgresql.global.postgresql.postgresqlUsername }}"
+  DB_PASS: "{{ .Values.postgresql.global.postgresql.postgresqlPassword }}"
+  DB_HOST: "librephotos-postgresql"
+  DB_PORT: "5432"
+  REDIS_HOST: "librephotos-redis-master"
+  REDIS_PORT: "6379"
+  WEB_CONCURRENCY: "2"
+  DEBUG: "0"
+  HEAVYWEIGHT_PROCESS: "1"

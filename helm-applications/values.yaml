@@ -1,0 +1,902 @@
+applications:
+  - name: argocd
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: argocd
+          - name: HELM_REPO_URL
+            value: https://argoproj.github.io/argo-helm
+          - name: HELM_CHART
+            value: argo-cd
+          - name: CHART_VERSION
+            value: 3.33.1
+    destination:
+      namespace: argocd
+  - name: external-dns-ovh
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: bitnami
+          - name: HELM_REPO_URL
+            value: https://charts.bitnami.com/bitnami
+          - name: HELM_CHART
+            value: external-dns
+          - name: CHART_VERSION
+            value: 6.1.3
+    destination:
+      namespace: external-dns
+  - name: external-dns-cloudflare
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: bitnami
+          - name: HELM_REPO_URL
+            value: https://charts.bitnami.com/bitnami
+          - name: HELM_CHART
+            value: external-dns
+          - name: CHART_VERSION
+            value: 6.1.3
+    destination:
+      namespace: external-dns
+  - name: external-dns-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/external-dns
+      targetRevision: HEAD
+    destination:
+      namespace: external-dns
+  - name: cert-manager
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "4"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: jetstack
+          - name: HELM_REPO_URL
+            value: https://charts.jetstack.io
+          - name: HELM_CHART
+            value: cert-manager
+          - name: CHART_VERSION
+            value: v1.7.0
+    destination:
+      namespace: cert-manager
+  - name: ingress-nginx
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: ingress-nginx
+          - name: HELM_REPO_URL
+            value: https://kubernetes.github.io/ingress-nginx
+          - name: HELM_CHART
+            value: ingress-nginx
+          - name: CHART_VERSION
+            value: 4.0.16
+    destination:
+      namespace: ingress-nginx
+  - name: metallb
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: metallb
+          - name: HELM_REPO_URL
+            value: https://metallb.github.io/metallb
+          - name: HELM_CHART
+            value: metallb
+          - name: CHART_VERSION
+            value: v0.11.0
+    destination:
+      namespace: metallb-system
+  - name: metrics-server
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: metrics-server
+          - name: HELM_REPO_URL
+            value: https://kubernetes-sigs.github.io/metrics-server/
+          - name: HELM_CHART
+            value: metrics-server
+          - name: CHART_VERSION
+            value: 3.7.0
+    destination:
+      namespace: metrics-server
+  - name: openebs
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    source:
+      repoURL: https://openebs.github.io/charts
+      chart: openebs
+      targetRevision: 3.0.3
+    destination:
+      namespace: openebs
+  - name: pihole
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: pihole
+          - name: HELM_REPO_URL
+            value: https://mojo2600.github.io/pihole-kubernetes/
+          - name: HELM_CHART
+            value: pihole
+          - name: CHART_VERSION
+            value: 2.5.2
+    destination:
+      namespace: pihole
+  - name: pihole-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/pihole
+      targetRevision: HEAD
+    destination:
+      namespace: pihole
+  - name: gitlab-runner
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: gitlab
+          - name: HELM_REPO_URL
+            value: https://charts.gitlab.io
+          - name: HELM_CHART
+            value: gitlab-runner
+          - name: CHART_VERSION
+            value: 0.37.2
+    destination:
+      namespace: gitlab
+  - name: gitlab-runner-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/gitlab-runner
+      targetRevision: HEAD
+    destination:
+      namespace: gitlab
+  - name: cert-manager-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "4"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/cert-manager
+      targetRevision: HEAD
+    destination:
+      namespace: apps
+  - name: external-endpoints-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/external-endpoints
+      targetRevision: HEAD
+    destination:
+      namespace: apps
+  - name: sealed-secrets
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: sealed-secrets
+          - name: HELM_REPO_URL
+            value: https://bitnami-labs.github.io/sealed-secrets
+          - name: HELM_CHART
+            value: sealed-secrets
+          - name: CHART_VERSION
+            value: 2.1.2
+    destination:
+      namespace: sealed-secrets
+  - name: oauth2-proxy
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: oauth2-proxy
+          - name: HELM_REPO_URL
+            value: https://oauth2-proxy.github.io/manifests
+          - name: HELM_CHART
+            value: oauth2-proxy
+          - name: CHART_VERSION
+            value: 5.0.6
+    destination:
+      namespace: oauth2-proxy
+  - name: oauth2-proxy-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/oauth2-proxy
+      targetRevision: HEAD
+    destination:
+      namespace: oauth2-proxy
+  - name: argocd-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/argocd
+      targetRevision: HEAD
+    destination:
+      namespace: argocd
+  - name: kube-prometheus-stack-crds
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    source:
+      repoURL: https://github.com/prometheus-operator/prometheus-operator.git
+      path: example/prometheus-operator-crd
+      targetRevision: v0.51.0
+    destination:
+      namespace: monitoring
+  - name: kube-prometheus-stack
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: kube-prometheus-stack
+          - name: HELM_REPO_URL
+            value: https://prometheus-community.github.io/helm-charts
+          - name: HELM_CHART
+            value: kube-prometheus-stack
+          - name: CHART_VERSION
+            value: 31.0.0
+    destination:
+      namespace: monitoring
+  - name: kube-prometheus-stack-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/kube-prometheus-stack
+      targetRevision: HEAD
+    destination:
+      namespace: monitoring
+  - name: argocd-notifications
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: argocd-notifications
+          - name: HELM_REPO_URL
+            value: https://argoproj.github.io/argo-helm
+          - name: HELM_CHART
+            value: argocd-notifications
+          - name: CHART_VERSION
+            value: 1.5.1
+    destination:
+      namespace: argocd
+  - name: argocd-notifications-manifests
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/argocd-notifications
+      targetRevision: HEAD
+    destination:
+      namespace: argocd
+  - name: argocd-image-updater
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: argocd-image-updater
+          - name: HELM_REPO_URL
+            value: https://argoproj.github.io/argo-helm
+          - name: HELM_CHART
+            value: argocd-image-updater
+          - name: CHART_VERSION
+            value: 0.6.2
+    destination:
+      namespace: argocd
+  - name: blackbox-exporter
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: prometheus-community
+          - name: HELM_REPO_URL
+            value: https://prometheus-community.github.io/helm-charts
+          - name: HELM_CHART
+            value: prometheus-blackbox-exporter
+          - name: CHART_VERSION
+            value: 5.3.2
+    destination:
+      namespace: monitoring
+  - name: loki
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: grafana
+          - name: HELM_REPO_URL
+            value: https://grafana.github.io/helm-charts
+          - name: HELM_CHART
+            value: loki-stack
+          - name: CHART_VERSION
+            value: 2.5.0
+    destination:
+      namespace: monitoring
+  - name: wg-access-server
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: wg-access-server
+          - name: HELM_REPO_URL
+            value: https://place1.github.io/wg-access-server
+          - name: HELM_CHART
+            value: wg-access-server
+          - name: CHART_VERSION
+            value: v0.4.6
+    destination:
+      namespace: wireguard
+  - name: wg-access-server-manifests
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/wg-access-server
+      targetRevision: HEAD
+    destination:
+      namespace: wireguard
+  - name: istio-operator
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: wiremind
+          - name: HELM_REPO_URL
+            value: https://wiremind.github.io/wiremind-helm-charts
+          - name: HELM_CHART
+            value: istio-operator
+          - name: CHART_VERSION
+            value: 1.9.5
+    destination:
+      namespace: istio-system
+  - name: httpbin
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/httpbin
+      targetRevision: HEAD
+    destination:
+      namespace: apps
+  - name: elastic
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: elastic
+          - name: HELM_REPO_URL
+            value: https://helm.elastic.co
+          - name: HELM_CHART
+            value: eck-operator
+          - name: CHART_VERSION
+            value: 1.8.0
+    destination:
+      namespace: logging
+  - name: elastic-manifests
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/elastic
+      targetRevision: HEAD
+    destination:
+      namespace: logging
+  - name: qbittorrent
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/qbittorrent
+      targetRevision: HEAD
+    destination:
+      namespace: apps
+  - name: ghost
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: bitnami
+          - name: HELM_REPO_URL
+            value: https://charts.bitnami.com/bitnami
+          - name: HELM_CHART
+            value: ghost
+          - name: CHART_VERSION
+            value: 15.0.8
+    destination:
+      namespace: apps
+  - name: ghost-manifests
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/ghost
+      targetRevision: HEAD
+    destination:
+      namespace: apps
+  - name: gotify
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/gotify
+      targetRevision: HEAD
+    destination:
+      namespace: gotify
+  - name: victoria-metrics-operator
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: vm
+          - name: HELM_REPO_URL
+            value: https://victoriametrics.github.io/helm-charts/
+          - name: HELM_CHART
+            value: victoria-metrics-operator
+          - name: CHART_VERSION
+            value: 0.4.1
+    destination:
+      namespace: monitoring
+  - name: victoria-metrics-manifests
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "2"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/victoria-metrics
+      targetRevision: HEAD
+    destination:
+      namespace: monitoring
+  - name: longhorn
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: longhorn
+          - name: HELM_REPO_URL
+            value: https://charts.longhorn.io
+          - name: HELM_CHART
+            value: longhorn
+          - name: CHART_VERSION
+            value: 1.2.3
+    destination:
+      namespace: longhorn-system
+  - name: mongodb
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: bitnami
+          - name: HELM_REPO_URL
+            value: https://charts.bitnami.com/bitnami
+          - name: HELM_CHART
+            value: mongodb
+          - name: CHART_VERSION
+            value: 10.29.2
+    destination:
+      namespace: mongodb
+  - name: url-shortener
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/url-shortener
+      targetRevision: HEAD
+    destination:
+      namespace: apps
+  - name: crossplane
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: crossplane-stable
+          - name: HELM_REPO_URL
+            value: https://charts.crossplane.io/stable
+          - name: HELM_CHART
+            value: crossplane
+          - name: CHART_VERSION
+            value: 1.6.2
+    destination:
+      namespace: crossplane-system
+  - name: crossplane-config
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/crossplane/config
+      targetRevision: HEAD
+    destination:
+      namespace: crossplane-system
+  - name: crossplane-resources
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/crossplane/resources
+      targetRevision: HEAD
+    destination:
+      namespace: crossplane-system
+  - name: longhorn-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/longhorn
+      targetRevision: HEAD
+    destination:
+      namespace: longhorn-system
+  - name: vaultwarden
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: k8s-at-home
+          - name: HELM_REPO_URL
+            value: https://k8s-at-home.com/charts/
+          - name: HELM_CHART
+            value: vaultwarden
+          - name: CHART_VERSION
+            value: 3.3.2
+    destination:
+      namespace: vaultwarden
+  - name: datadog-agent
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: datadog
+          - name: HELM_REPO_URL
+            value: https://helm.datadoghq.com
+          - name: HELM_CHART
+            value: datadog
+          - name: CHART_VERSION
+            value: 2.28.13
+    destination:
+      namespace: datadog
+  - name: datadog-crds
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: datadog
+          - name: HELM_REPO_URL
+            value: https://helm.datadoghq.com
+          - name: HELM_CHART
+            value: datadog-crds
+          - name: CHART_VERSION
+            value: 0.4.6
+    destination:
+      namespace: datadog
+  - name: datadog-agent-manifests
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/datadog-agent
+      targetRevision: HEAD
+    destination:
+      namespace: datadog
+  - name: atlantis
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: runatlantis
+          - name: HELM_REPO_URL
+            value: https://runatlantis.github.io/helm-charts
+          - name: HELM_CHART
+            value: atlantis
+          - name: CHART_VERSION
+            value: 3.15.2
+    destination:
+      namespace: atlantis
+  - name: atlantis-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/atlantis
+      targetRevision: HEAD
+    destination:
+      namespace: atlantis
+  - name: istio-base
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: istio
+          - name: HELM_REPO_URL
+            value: https://istio-release.storage.googleapis.com/charts
+          - name: HELM_CHART
+            value: base
+          - name: CHART_VERSION
+            value: 1.12.2
+    destination:
+      namespace: istio-system
+  - name: istiod
+    enabled: false
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: istio
+          - name: HELM_REPO_URL
+            value: https://istio-release.storage.googleapis.com/charts
+          - name: HELM_CHART
+            value: istiod
+          - name: CHART_VERSION
+            value: 1.12.2
+    destination:
+      namespace: istio-system
+  - name: linkerd
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "3"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: helm-values
+      targetRevision: HEAD
+      plugin:
+        name: helm-remote-chart
+        env:
+          - name: HELM_REPO_NAME
+            value: linkerd
+          - name: HELM_REPO_URL
+            value: https://helm.linkerd.io/stable
+          - name: HELM_CHART
+            value: linkerd2
+          - name: CHART_VERSION
+            value: 2.11.1
+    destination:
+      namespace: linkerd
+  - name: alertmanager-telegram-manifests
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: manifests/alertmanager-telegram
+      targetRevision: HEAD
+    destination:
+      namespace: monitoring

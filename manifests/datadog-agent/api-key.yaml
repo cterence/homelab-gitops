@@ -1,0 +1,17 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: datadog-api-key
+  namespace: datadog
+spec:
+  encryptedData:
+    api-key: AgBfVebjOm8qq51IUejoj9Tv6QIqtqlac9QMVZ6IPNBoE5Tkq65JKjRmmWF7SEEbav2k76FfNAW65Kf9bxMEcGHoy8emmeUBv30RAE7lvmKopGmiR3fyJbXAmgNCizEK3azwpW8UL+pE6y2WCvJ2REEx0t9apZ0G4uRIoZesJGYljy3XCA2hqHgEMikiAXkpuOTD5T8ls22ZkdmRr1WXdIA49q21XY3ji0vpzA9TjtP+AoqUnHlK34zO1UKehMsHCmSSslYmdkQeff8UpE60ScaRMRpiNqTtzcco9Now+qQK4uENI7n2Pt8Bjgz+nTeLL52uq38EeGnmLpMd3DfEv8dGUmhtM8dKu5XC45SLCLpXe/+EGsmVQYqdU0dL3kI2g5+InFnLKDUzCI5wvABDmc+Ggf2vf4ZJGusiyqzGL0PC/U22wBncMi9vvOnSN0v/8dW1RcLQltIzeEjOvQsKvaP9sZKYn6ntbPWbAEiZD4mjRYzAWNKTo+ynsRu1c3xCdV2BflXaV719K1Qccx1gk6EQHMKqGeAJ8s5J1deDvUGoukUIJB4uyp6tMU/L8NWVxUKKBIC8neIdgLbq+qStLzqgKrdPwUVutkcVKM/gyBjUkBr5vFcmofD6QxwzLRzPtfjZDkNFgXbz2bA193wBkMdr72B8CS0rSnLyNOsi4h1Gt/p+xJYS3LxGyiGBFY/Hesuc2JNRL7Spqbhccpo2YdBdDwCmPk6pp8GNACIsV9y7oQ==
+  template:
+    data: null
+    metadata:
+      creationTimestamp: null
+      name: datadog-api-key
+      namespace: datadog
+    type: Opaque
+

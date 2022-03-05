@@ -1,0 +1,91 @@
+# apiVersion: tf.crossplane.io/v1alpha1
+# kind: Workspace
+# metadata:
+#   name: eks-node-launch-template
+# spec:
+#   forProvider:
+#     source: Inline
+#     # Lots of research has been done to get to this
+#     # The goal : having SSM preinstalled on each node without requiring the use of a daemonset
+#     # When using a custom AMI and specifying user data, you have to launch the bootstrap.sh script yourself
+#     # See https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html#launch-template-custom-ami
+#     # and https://github.com/aws/aws-cdk/issues/12256#issuecomment-752036554
+#     module: |
+#       data "aws_security_group" "compute_sg" {
+#         tags = {
+#           Name = "compute-sg"
+#         }
+#       }
+
+#       data "aws_security_group" "allow_compute_sg_traffic" {
+#         tags = {
+#           Name = "allow-compute-sg-traffic"
+#         }
+#       }
+
+#       data "aws_kms_key" "this" {
+#         key_id = "alias/kms-key-alias"
+#       }
+
+#       resource "aws_ami_copy" "this" {
+#         name = "amazon-linux-2-eks-optimized-1.21"
+#         source_ami_id = "ami-008ccec5b800d034b"
+#         source_ami_region = "eu-west-3"
+#       }
+
+#       resource "aws_launch_template" "this" {
+#         name = "eks-nodes"
+#         description = "Launch template for nodes of an EKS cluster"
+
+#         update_default_version = true
+
+#         block_device_mappings {
+#           device_name = aws_ami_copy.this.root_device_name
+
+#           ebs {
+#             delete_on_termination = true
+#             volume_size = 8
+#             volume_type = "gp2"
+#             encrypted = true
+#             kms_key_id = data.aws_kms_key.this.arn
+#           }
+#         }
+
+#         image_id = aws_ami_copy.this.id
+
+#         instance_type = "t3.micro"
+
+#         tag_specifications {
+#           resource_type = "instance"
+
+#           tags = {
+#             Name = "eks-node"
+#           }
+#         }
+
+#         vpc_security_group_ids = [data.aws_security_group.compute_sg.id, data.aws_security_group.allow_compute_sg_traffic.id]
+
+#         user_data = base64encode(<<-EOF
+#           #!/bin/bash
+
+#           # Install SSM agent
+#           yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+
+#           # Execute the script to join the cluster
+#           /etc/eks/bootstrap.sh eks-cluster
+#           EOF
+#         )
+#       }
+
+#       output "ami_outputs" {
+#         value       = aws_ami_copy.this
+#       }
+
+#       output "lt_outputs" {
+#         value       = aws_launch_template.this
+#       }
+#   providerConfigRef:
+#     name: terraform-aws
+#   writeConnectionSecretToRef:
+#     namespace: crossplane-system
+#     name: terraform-eks-node-launch-template

@@ -1,0 +1,28 @@
+apiVersion: ec2.aws.crossplane.io/v1alpha1
+kind: Instance
+metadata:
+  name: {{ .Values.bastion.name }}
+  labels:
+    name: {{ .Values.bastion.name }}
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    # launchTemplate:
+    #   launchTemplateName: bastion
+    #   launchTemplateId: ""
+    imageId: {{ .Values.bastion.imageId }}
+    iamInstanceProfile:
+      name: {{ .Values.bastion.name }}
+    instanceType: {{ .Values.bastion.instanceType }}
+    keyName: {{ .Values.bastion.name }}
+    securityGroupSelector:
+      matchLabels:
+        {{- toYaml .Values.securityGroups.labels | nindent 10 }}
+    subnetIdSelector:
+      matchLabels:
+        name: {{ .Values.subnets.private.name }}-1
+    tags:
+      - key: Name
+        value: {{ .Values.bastion.name }}
+  providerConfigRef:
+    name: aws
