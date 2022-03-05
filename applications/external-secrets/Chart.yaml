@@ -2,8 +2,8 @@ apiVersion: v2
 name: external-secrets
 description: A helm chart for an app
 type: application
-version: 8.5.4
+version: 0.4.4
 dependencies:
-  - name: kubernetes-external-secrets
-    repository: https://external-secrets.github.io/kubernetes-external-secrets/
-    version: 8.5.4
+  - name: external-secrets
+    repository: https://charts.external-secrets.io
+    version: 0.4.4
