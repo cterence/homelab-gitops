@@ -82,5 +82,4 @@ argo-cd:
     secret:
       createSecret: true
       # TODO: hide
-      gitlabSecret: "W2iHfhnUwo0jK8vFuUZMYOwZfsXyqht8"
       githubSecret: "W2iHfhnUwo0jK8vFuUZMYOwZfsXyqht8"
