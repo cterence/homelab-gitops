@@ -135,27 +135,6 @@ applications:
       argocd.argoproj.io/sync-wave: "10"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
-      targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: kube-prometheus-stack
-          - name: HELM_REPO_URL
-            value: https://prometheus-community.github.io/helm-charts
-          - name: HELM_CHART
-            value: kube-prometheus-stack
-          - name: CHART_VERSION
-            value: 31.0.0
-    destination:
-      namespace: monitoring
-  - name: kube-prometheus-stack-manifests
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "2"
-    source:
-      repoURL: git@github.com:cterence/argo.git
       path: manifests/kube-prometheus-stack
       targetRevision: HEAD
     destination:
