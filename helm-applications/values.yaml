@@ -45,19 +45,8 @@ applications:
       argocd.argoproj.io/sync-wave: "1"
     source:
       repoURL: git@github.com:cterence/argo.git
-      path: helm-values
+      path: manifests/metallb
       targetRevision: HEAD
-      plugin:
-        name: helm-remote-chart
-        env:
-          - name: HELM_REPO_NAME
-            value: metallb
-          - name: HELM_REPO_URL
-            value: https://metallb.github.io/metallb
-          - name: HELM_CHART
-            value: metallb
-          - name: CHART_VERSION
-            value: v0.11.0
     destination:
       namespace: metallb-system
   - name: metrics-server
