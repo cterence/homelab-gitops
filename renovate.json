@@ -1,6 +1,9 @@
 {
-  "automerge": true,
-  "argocd": {
-    "fileMatch": ["^\\.yaml$"]
-  }
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "updateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    }
+  ]
 }
