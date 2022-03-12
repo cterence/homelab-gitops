@@ -59,22 +59,10 @@ argocd-image-updater:
 
     # -- ArgoCD Image Updater registries list configuration. More information [here](https://argocd-image-updater.readthedocs.io/en/stable/configuration/registries/)
     registries:
-      []
-      # - name: Docker Hub
-      #   api_url: https://registry-1.docker.io
-      #   ping: yes
-      #   credentials: secret:foo/bar#creds
-      #   defaultns: library
-      # - name: Google Container Registry
-      #   api_url: https://gcr.io
-      #   prefix: gcr.io
-      #   ping: no
-      #   credentials: pullsecret:foo/bar
-      # - name: RedHat Quay
-      #   api_url: https://quay.io
-      #   ping: no
-      #   prefix: quay.io
-      #   credentials: env:REGISTRY_SECRET
+      - name: Docker Hub
+        api_url: https://registry-1.docker.io
+        ping: yes
+        defaultns: library
 
   serviceAccount:
     # -- Specifies whether a service account should be created

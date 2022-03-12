@@ -13,6 +13,7 @@ applications:
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "2"
+      argocd-image-updater.argoproj.io/image-list: bitnami/external-dns
     source:
       repoURL: git@github.com:cterence/argo.git
       path: applications/external-dns
