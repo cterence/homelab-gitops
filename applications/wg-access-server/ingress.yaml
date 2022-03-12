@@ -6,7 +6,7 @@ metadata:
     name: wg-access-server
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
-    external-dns.alpha.kubernetes.io/target: terence.cloud
+    external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
 spec:
   ingressClassName: nginx
   rules:

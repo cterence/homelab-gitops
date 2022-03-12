@@ -32,7 +32,7 @@ oauth2-proxy:
     enabled: true
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      external-dns.alpha.kubernetes.io/target: terence.cloud
+      external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
     className: nginx
     path: /oauth2
     pathType: Prefix
