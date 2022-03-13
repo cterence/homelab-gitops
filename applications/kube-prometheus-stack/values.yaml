@@ -217,15 +217,26 @@ kube-prometheus-stack:
                 storage: 10Gi
 
     config:
-      route:
-        group_by: ["alertname"]
-        receiver: "alertmanager-bot"
       receivers:
-        - name: "null"
-        - name: "alertmanager-bot"
+        - name: empty
+        - name: alertmanager-bot
           webhook_configs:
             - send_resolved: true
               url: "http://alertmanager-bot:8080"
+      route:
+        group_by: ["alertname"]
+        receiver: alertmanager-bot
+        routes:
+          - matchers:
+              - alertname=~"etcdInsufficientMembers|Watchdog|KubeProxyDown|KubeSchedulerDown|KubeControllerManagerDown"
+            receiver: empty
+          - matchers:
+              - alertname="TargetDown"
+              - job=~"kube-controller-manager|kube-etcd|kube-proxy|kube-scheduler"
+            receiver: empty
+          - matchers:
+              - alertname="PrometheusOperatorRejectedResources"
+            receiver: empty
 
     ingress:
       enabled: true
