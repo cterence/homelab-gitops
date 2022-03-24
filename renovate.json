@@ -1,14 +1,9 @@
 {
-  "extends": ["config:base", "schedule:nonOfficeHours"],
   "packageRules": [
     {
       "updateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true,
       "ignoreTests": true
-    },
-    {
-      "matchPaths": ["applications/atlantis/values\\.yaml"],
-      "enabled": false
     }
   ]
 }
