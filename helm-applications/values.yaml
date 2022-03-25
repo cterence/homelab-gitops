@@ -270,3 +270,4 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: external-secrets
+#
