@@ -1,9 +1,0 @@
-apiVersion: v2
-name: loki
-description: A helm chart for an app
-type: application
-version: ???
-dependencies:
-  - name: loki
-    repository: ???
-    version: ???

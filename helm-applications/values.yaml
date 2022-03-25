@@ -220,16 +220,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: mongodb
-  - name: url-shortener
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: applications/url-shortener
-      targetRevision: HEAD
-    destination:
-      namespace: apps
   - name: crossplane
     enabled: false
     annotations:
