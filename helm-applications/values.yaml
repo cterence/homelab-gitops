@@ -13,7 +13,6 @@ applications:
     enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "2"
-      argocd-image-updater.argoproj.io/image-list: bitnami/external-dns
     source:
       repoURL: git@github.com:cterence/argo.git
       path: applications/external-dns
@@ -140,16 +139,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: monitoring
-  - name: argocd-image-updater
-    enabled: true
-    annotations:
-      argocd.argoproj.io/sync-wave: "10"
-    source:
-      repoURL: git@github.com:cterence/argo.git
-      path: applications/argocd-image-updater
-      targetRevision: HEAD
-    destination:
-      namespace: argocd
   - name: blackbox-exporter
     enabled: true
     annotations:
