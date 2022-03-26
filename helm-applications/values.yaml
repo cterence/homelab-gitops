@@ -124,6 +124,8 @@ applications:
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
+      helm:
+        skipCrds: true
       repoURL: git@github.com:cterence/argo.git
       path: applications/kube-prometheus-stack
       targetRevision: HEAD
