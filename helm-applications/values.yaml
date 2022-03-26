@@ -119,8 +119,8 @@ applications:
       targetRevision: kube-prometheus-stack-34.1.1
       directory:
         recurse: true
-      syncOptions:
-        - Replace=true
+    syncOptions:
+      - Replace=true
     destination:
       namespace: monitoring
   - name: kube-prometheus-stack

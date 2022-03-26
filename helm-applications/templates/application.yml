@@ -29,6 +29,9 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      {{- with $application.syncOptions }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
     automated:
       selfHeal: true
       prune: true
