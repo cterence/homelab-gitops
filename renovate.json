@@ -8,5 +8,6 @@
       "ignoreTests": true,
       "automerge": true
     }
-  ]
+  ],
+  "ignorePaths": ["**/atlantis/**"]
 }
