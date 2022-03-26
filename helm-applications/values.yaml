@@ -59,16 +59,6 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: metrics-server
-  - name: openebs
-    enabled: false
-    annotations:
-      argocd.argoproj.io/sync-wave: "1"
-    source:
-      repoURL: https://openebs.github.io/charts
-      chart: openebs
-      targetRevision: 3.0.3
-    destination:
-      namespace: openebs
   - name: pihole
     enabled: false
     annotations:
@@ -259,4 +249,3 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: external-secrets
-#
