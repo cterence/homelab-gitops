@@ -110,13 +110,17 @@ applications:
     destination:
       namespace: oauth2-proxy
   - name: kube-prometheus-stack-crds
-    enabled: false
+    enabled: true
     annotations:
       argocd.argoproj.io/sync-wave: "1"
     source:
-      repoURL: https://github.com/prometheus-operator/prometheus-operator.git
-      path: example/prometheus-operator-crd
-      targetRevision: v0.51.0
+      repoURL: https://github.com/prometheus-community/helm-charts.git
+      path: charts/kube-prometheus-stack/crds/
+      targetRevision: kube-prometheus-stack-34.1.1
+      directory:
+        recurse: true
+      syncOptions:
+        - Replace=true
     destination:
       namespace: monitoring
   - name: kube-prometheus-stack
