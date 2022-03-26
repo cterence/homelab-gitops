@@ -6,7 +6,7 @@ metadata:
   name: {{ $application.name }}
   {{- with $application.annotations }}
   annotations:
-    argocd.argoproj.io/manifest-generate-paths: {{ $application.source.path }}
+    argocd.argoproj.io/manifest-generate-paths: {{ $application.source.path }}/
     {{- toYaml . | nindent 4 }}
   {{- end }}
   finalizers:
