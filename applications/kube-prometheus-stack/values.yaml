@@ -195,13 +195,19 @@ kube-prometheus-stack:
       finalizers:
         - kubernetes.io/pvc-protection
 
-    additionalDataSources:
-      - name: Loki
-        access: proxy
-        orgId: 1
-        type: loki
-        url: http://loki-stack:3100
-        version: 1
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Prometheus
+            type: prometheus
+            url: http://kube-prometheus-stack-prometheus:9090
+            access: proxy
+            isDefault: true
+          - name: Loki
+            type: loki
+            url: http://loki-stack:3100
+            access: proxy
 
     plugins:
       - grafana-piechart-panel
