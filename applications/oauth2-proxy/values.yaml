@@ -45,6 +45,7 @@ oauth2-proxy:
       - grafana.terence.cloud
       - httpbin.terence.cloud
       - kibana.terence.cloud
+      - loki.terence.cloud
       - longhorn.terence.cloud
       - pihole.terence.cloud
       - prometheus.terence.cloud
