@@ -48,7 +48,7 @@ kube-prometheus-stack:
 
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
       hosts:
@@ -100,7 +100,7 @@ kube-prometheus-stack:
 
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
@@ -252,7 +252,7 @@ kube-prometheus-stack:
       ingressClassName: nginx
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
       hosts:

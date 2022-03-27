@@ -15,6 +15,7 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
+    external-dns.alpha.kubernetes.io/target: terence.cloud
     cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
     nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
