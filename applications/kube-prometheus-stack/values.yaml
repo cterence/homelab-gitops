@@ -48,7 +48,7 @@ kube-prometheus-stack:
 
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
       hosts:
@@ -100,7 +100,7 @@ kube-prometheus-stack:
 
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
@@ -138,11 +138,12 @@ kube-prometheus-stack:
 
     # Organise dashboards by provider, with the provider's name as the key.
     dashboards:
-      extra:
+      default: # The "default" provider is defined below.
         nginx-ingress-controller:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/nginx.json
         ingress-request-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
+      extra:
         loki-dashboard-quick-search:
           gnetId: 12019
           datasource: Prometheus
@@ -251,7 +252,7 @@ kube-prometheus-stack:
       ingressClassName: nginx
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
       hosts:

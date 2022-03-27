@@ -2,14 +2,14 @@ externalEndpoints:
   - name: nextcloud
     ingressAnnotations:
       nginx.ingress.kubernetes.io/proxy-body-size: 10g
-      external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+      external-dns.alpha.kubernetes.io/target: terence.cloud
       cert-manager.io/cluster-issuer: letsencrypt
     host: next.terence.cloud
     ip: 192.168.1.32
     port: 8080
   - name: duplicati
     ingressAnnotations:
-      external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+      external-dns.alpha.kubernetes.io/target: terence.cloud
       cert-manager.io/cluster-issuer: letsencrypt
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
       nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
@@ -18,7 +18,7 @@ externalEndpoints:
     port: 8200
   - name: firezone
     ingressAnnotations:
-      external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+      external-dns.alpha.kubernetes.io/target: terence.cloud
       cert-manager.io/cluster-issuer: letsencrypt
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
       # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"

@@ -17,7 +17,7 @@ ingress:
   className: "nginx"
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
-    external-dns.alpha.kubernetes.io/target: homelab.terence.cloud
+    external-dns.alpha.kubernetes.io/target: terence.cloud
     nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
     nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
     # The qBittorrent WebUI doesn't like to see gitlab.com as the referer, so we just strip this header out
