@@ -12,3 +12,8 @@ spec:
       - http01:
           ingress:
             class: nginx
+            ingressTemplate:
+              metadata:
+                annotations:
+                  external-dns.alpha.kubernetes.io/target: terence.cloud
+                  external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
