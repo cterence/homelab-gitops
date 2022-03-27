@@ -1,0 +1,9 @@
+apiVersion: v2
+name: loki-stack
+description: A helm chart for an app
+type: application
+version: 2.6.1
+dependencies:
+  - name: loki-stack
+    repository: https://grafana.github.io/helm-charts
+    version: 2.6.1

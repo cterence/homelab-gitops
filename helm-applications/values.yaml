@@ -135,6 +135,16 @@ applications:
       targetRevision: HEAD
     destination:
       namespace: monitoring
+  - name: loki-stack
+    enabled: true
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    source:
+      repoURL: git@github.com:cterence/argo.git
+      path: applications/loki-stack
+      targetRevision: HEAD
+    destination:
+      namespace: monitoring
   - name: blackbox-exporter
     enabled: true
     annotations:
