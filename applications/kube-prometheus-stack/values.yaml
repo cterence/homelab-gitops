@@ -150,6 +150,9 @@ kube-prometheus-stack:
         pihole-overview:
           gnetId: 10176
           datasource: Prometheus
+        argocd-overview:
+          gnetId: 14584
+          datasource: Prometheus
 
     # Configure dashboard providers.
     # ref: http://docs.grafana.org/administration/provisioning/#dashboards
