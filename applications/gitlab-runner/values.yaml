@@ -39,3 +39,9 @@ gitlab-runner:
           FF_SCRIPT_SECTIONS = true
     executor: kubernetes
     tags: "homelab"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  service:
+    enabled: true
