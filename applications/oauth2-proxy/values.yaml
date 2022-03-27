@@ -50,7 +50,7 @@ oauth2-proxy:
       - prometheus.terence.cloud
       - qbittorrent.terence.cloud
 
-  prometheus:
+  metrics:
     enabled: true
     servicemonitor:
       enabled: true
