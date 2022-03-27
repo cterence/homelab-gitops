@@ -153,6 +153,12 @@ kube-prometheus-stack:
         argocd-overview:
           gnetId: 14584
           datasource: Prometheus
+        cert-manager-overview:
+          gnetId: 11001
+          datasource: Prometheus
+        external-dns-overview:
+          gnetId: 15038
+          datasource: Prometheus
 
     # Configure dashboard providers.
     # ref: http://docs.grafana.org/administration/provisioning/#dashboards

@@ -78,7 +78,7 @@ external-secrets:
 
   prometheus:
     # -- Specifies whether to expose Service resource for collecting Prometheus metrics
-    enabled: false
+    enabled: true
     service:
       port: 8080
 
