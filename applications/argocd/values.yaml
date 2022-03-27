@@ -45,7 +45,7 @@ argo-cd:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+
         nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
