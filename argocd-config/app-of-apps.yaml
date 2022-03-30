@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: git@github.com:cterence/argo.git
-    path: argo-applications
+    path: argocd-config
     targetRevision: HEAD
   destination:
     name: in-cluster
