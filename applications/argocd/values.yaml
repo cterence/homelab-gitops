@@ -30,6 +30,14 @@ argo-cd:
         enabled: true
 
   notifications:
+    secret:
+      create: false
+      name: argocd-notifications-controller-secret
+    argocdUrl: https://argocd.terence.cloud
+    notifiers:
+      service.telegram: |
+        token: $telegram-token
+
     metrics:
       enabled: true
       serviceMonitor:
@@ -63,6 +71,7 @@ argo-cd:
             - argocd.terence.cloud
       ingressClassName: nginx
       https: true
+
     config:
       url: https://argocd.terence.cloud
       # The application customization allows to do sync waves of Argo applications.

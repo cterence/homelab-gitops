@@ -67,6 +67,7 @@ spec:
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "/applications/{{name}}"
         argocd.argoproj.io/sync-wave: "{{syncWave}}"
+        notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
     spec:
       project: default
       source:
