@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: applications
+spec:
+  generators:
+    - list:
+        elements:
+          - name: alertmanager-telegram
+            namespace: monitoring
+  template:
+    metadata:
+      name: "{{name}}"
+      annotations:
+        argocd.argoproj.io/manifest-generate-paths: "/applications/{{name}}"
+    spec:
+      project: default
+      source:
+        repoURL: git@github.com:cterence/argo.git
+        targetRevision: HEAD
+        path: applications/{{name}}
+      destination:
+        server: in-cluster
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

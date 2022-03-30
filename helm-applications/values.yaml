@@ -246,7 +246,7 @@ applications:
     destination:
       namespace: linkerd
   - name: alertmanager-telegram
-    enabled: true
+    enabled: false
     annotations:
       argocd.argoproj.io/sync-wave: "10"
     source:
