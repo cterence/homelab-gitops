@@ -1,0 +1,83 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: applications
+spec:
+  generators:
+    - list:
+        elements:
+          - name: argocd
+            namespace: argocd
+            syncWave: "2"
+          - name: alertmanager-telegram
+            namespace: monitoring
+            syncWave: "10"
+          - name: external-dns
+            namespace: external-dns
+            syncWave: "2"
+          - name: cert-manager
+            namespace: cert-manager
+            syncWave: "4"
+          - name: ingress-nginx
+            namespace: ingress-nginx
+            syncWave: "1"
+          - name: metallb
+            namespace: metallb
+            syncWave: "1"
+          - name: metrics-server
+            namespace: metrics-server
+            syncWave: "10"
+          - name: gitlab-runner
+            namespace: gitlab
+            syncWave: "10"
+          - name: external-endpoints
+            namespace: external-endpoints
+            syncWave: "10"
+          - name: sealed-secrets
+            namespace: sealed-secrets
+            syncWave: "10"
+          - name: oauth2-proxy
+            namespace: oauth2-proxy
+            syncWave: "2"
+          - name: kube-prometheus-stack
+            namespace: monitoring
+            syncWave: "10"
+          - name: loki-stack
+            namespace: monitoring
+            syncWave: "10"
+          - name: blackbox-exporter
+            namespace: monitoring
+            syncWave: "10"
+          - name: httpbin
+            namespace: apps
+            syncWave: "10"
+          - name: longhorn
+            namespace: longhorn-system
+            syncWave: "10"
+          - name: atlantis
+            namespace: atlantis
+            syncWave: "10"
+          - name: external-secrets
+            namespace: external-secrets
+            syncWave: "10"
+  template:
+    metadata:
+      name: "{{name}}"
+      annotations:
+        argocd.argoproj.io/manifest-generate-paths: "/applications/{{name}}"
+        argocd.argoproj.io/sync-wave: "{{syncWave}}"
+    spec:
+      project: default
+      source:
+        repoURL: git@github.com:cterence/argo.git
+        targetRevision: HEAD
+        path: applications/{{name}}
+      destination:
+        name: in-cluster
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
