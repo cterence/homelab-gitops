@@ -18,12 +18,21 @@ spec:
           - name: external-dns
             namespace: external-dns
             syncWave: "2"
-          - name: oauth2-proxy
-            namespace: oauth2-proxy
+          - name: external-secrets
+            namespace: external-secrets
             syncWave: "2"
           - name: cert-manager
             namespace: cert-manager
             syncWave: "3"
+          - name: oauth2-proxy
+            namespace: oauth2-proxy
+            syncWave: "3"
+          - name: sealed-secrets
+            namespace: sealed-secrets
+            syncWave: "3"
+          - name: longhorn
+            namespace: longhorn-system
+            syncWave: "4"
           - name: alertmanager-telegram
             namespace: monitoring
             syncWave: "5"
@@ -35,9 +44,6 @@ spec:
             syncWave: "5"
           - name: external-endpoints
             namespace: external-endpoints
-            syncWave: "5"
-          - name: external-secrets
-            namespace: external-secrets
             syncWave: "5"
           - name: gitlab-runner
             namespace: gitlab
@@ -51,14 +57,8 @@ spec:
           - name: loki-stack
             namespace: monitoring
             syncWave: "5"
-          - name: longhorn
-            namespace: longhorn-system
-            syncWave: "5"
           - name: metrics-server
             namespace: metrics-server
-            syncWave: "5"
-          - name: sealed-secrets
-            namespace: sealed-secrets
             syncWave: "5"
 
   template:
