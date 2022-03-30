@@ -6,7 +6,8 @@
     {
       "matchUpdateTypes": ["pin", "digest", "patch", "minor"],
       "ignoreTests": true,
-      "automerge": true
+      "automerge": true,
+      "automergeType": "branch"
     }
   ],
   "ignorePaths": ["**/atlantis/**"]
