@@ -33,6 +33,9 @@ spec:
           - name: blackbox-exporter
             namespace: monitoring
             syncWave: "10"
+          - name: external-dns
+            namespace: external-secrets
+            syncWave: "10"
           - name: external-endpoints
             namespace: external-endpoints
             syncWave: "10"
