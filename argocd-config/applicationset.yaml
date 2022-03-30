@@ -12,6 +12,9 @@ spec:
           - name: metallb
             namespace: metallb
             syncWave: "1"
+          - name: argocd
+            namespace: argocd
+            syncWave: "2"
           - name: external-dns
             namespace: external-dns
             syncWave: "2"
@@ -23,46 +26,40 @@ spec:
             syncWave: "3"
           - name: alertmanager-telegram
             namespace: monitoring
-            syncWave: "10"
-          - name: argocd
-            namespace: argocd
-            syncWave: "10"
+            syncWave: "5"
           - name: atlantis
             namespace: atlantis
-            syncWave: "10"
+            syncWave: "5"
           - name: blackbox-exporter
             namespace: monitoring
-            syncWave: "10"
-          - name: external-dns
-            namespace: external-secrets
-            syncWave: "10"
+            syncWave: "5"
           - name: external-endpoints
             namespace: external-endpoints
-            syncWave: "10"
+            syncWave: "5"
           - name: external-secrets
             namespace: external-secrets
-            syncWave: "10"
+            syncWave: "5"
           - name: gitlab-runner
             namespace: gitlab
-            syncWave: "10"
+            syncWave: "5"
           - name: httpbin
             namespace: apps
-            syncWave: "10"
+            syncWave: "5"
           - name: kube-prometheus-stack
             namespace: monitoring
-            syncWave: "10"
+            syncWave: "5"
           - name: loki-stack
             namespace: monitoring
-            syncWave: "10"
+            syncWave: "5"
           - name: longhorn
             namespace: longhorn-system
-            syncWave: "10"
+            syncWave: "5"
           - name: metrics-server
             namespace: metrics-server
-            syncWave: "10"
+            syncWave: "5"
           - name: sealed-secrets
             namespace: sealed-secrets
-            syncWave: "10"
+            syncWave: "5"
 
   template:
     metadata:
