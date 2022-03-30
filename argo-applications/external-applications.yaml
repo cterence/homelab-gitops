@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: helm-applications
+  name: external-applications
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
     repoURL: git@github.com:cterence/argo.git
-    path: helm-applications
+    path: external-applications
     targetRevision: HEAD
   destination:
     name: in-cluster

@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack-crds
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: /charts/kube-prometheus-stack/crds/
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    directory:
+      recurse: true
+    path: charts/kube-prometheus-stack/crds/
+    repoURL: https://github.com/prometheus-community/helm-charts.git
+    targetRevision: kube-prometheus-stack-34.1.1
+  destination:
+    name: in-cluster
+    namespace: monitoring
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - Replace=true
+    automated:
+      selfHeal: true
+      prune: true
