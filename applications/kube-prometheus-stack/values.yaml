@@ -5,7 +5,7 @@ kube-prometheus-stack:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
       scrapeInterval: 15s
 
-      retention: 7d
+      retention: 6h
 
       # Watch all PrometheusRules in the cluster.
       ruleNamespaceSelector:
@@ -44,7 +44,9 @@ kube-prometheus-stack:
                 storage: 10Gi
 
       thanos:
-        image: quay.io/thanos/thanos:v0.25.2
+        objectStorageConfig:
+          key: objstore.yml
+          name: thanos-objstore-secret
 
     ingress:
       enabled: true
@@ -132,21 +134,24 @@ kube-prometheus-stack:
         ingress-request-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
       extra:
-        loki-dashboard-quick-search:
-          url: https://grafana.com/api/dashboards/12019/revisions/2/download
-          datasource: Prometheus
         pihole-overview:
           gnetId: 10176
-          datasource: Prometheus
+          datasource: Thanos
         argocd-overview:
           gnetId: 14584
-          datasource: Prometheus
+          datasource: Thanos
         cert-manager-overview:
           gnetId: 11001
-          datasource: Prometheus
+          datasource: Thanos
         external-dns-overview:
           gnetId: 15038
-          datasource: Prometheus
+          datasource: Thanos
+        blackbox-exporter-overview:
+          gnetId: 5345
+          datasource: Thanos
+        thanos-overview:
+          gnetId: 12937
+          datasource: Thanos
 
     # Configure dashboard providers.
     # ref: http://docs.grafana.org/administration/provisioning/#dashboards
@@ -191,15 +196,15 @@ kube-prometheus-stack:
             type: prometheus
             url: http://kube-prometheus-stack-prometheus:9090
             access: proxy
-            isDefault: true
           - name: Loki
             type: loki
             url: http://loki-stack:3100
             access: proxy
-          - name: Thanos Query Frontend
+          - name: Thanos
             type: prometheus
             url: http://thanos-query-frontend:9090
             access: proxy
+            isDefault: true
 
     plugins:
       - grafana-piechart-panel
