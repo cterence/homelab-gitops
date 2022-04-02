@@ -335,6 +335,7 @@ argo-cd:
             id: oauth2-proxy
             name: OAuth2 Proxy
       admin.enabled: "false"
+      accounts.guest: login
 
     rbacConfig:
       policy.default: role:admin
