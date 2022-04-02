@@ -68,6 +68,23 @@ kube-prometheus-stack:
     thanosServiceMonitor:
       enabled: true
 
+    thanosIngress:
+      enabled: true
+      ingressClassName: nginx
+
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: terence.cloud
+        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+      hosts:
+        - thanos.terence.cloud
+      pathType: ImplementationSpecific
+      tls:
+        - secretName: thanos-general-tls
+          hosts:
+            - thanos.terence.cloud
+
   # ==============================================================================
   # Grafana
   # Default values: https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
