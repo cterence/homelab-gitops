@@ -144,9 +144,10 @@ kube-prometheus-stack:
         ingress-request-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
       extra:
-        loki-dashboard-quick-search:
-          gnetId: 12019
-          datasource: Prometheus
+        # Does not work because you cannot specify two datasources.
+        # loki-dashboard-quick-search:
+        #   gnetId: 12019
+        #   datasource: Prometheus
         pihole-overview:
           gnetId: 10176
           datasource: Prometheus
