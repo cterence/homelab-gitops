@@ -1,72 +1,12 @@
-## @section Global parameters
-## Global Docker image parameters
-## Please, note that this will override the image parameters, including dependencies, configured to use the global value
-## Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
-
-## @param global.imageRegistry Global Docker image registry
-## @param global.imagePullSecrets Global Docker registry secret names as an array
-## @param global.storageClass Global StorageClass for Persistent Volume(s)
-##
 thanos:
   global:
-    imageRegistry: ""
-    ## e.g:
-    ## imagePullSecrets:
-    ##   - myRegistryKeySecretName
-    ##
-    imagePullSecrets: []
     storageClass: "longhorn"
 
-  ## @section Common parameters
-
-  ## @param kubeVersion Force target Kubernetes version (using Helm capabilities if not set)
-  ##
-  kubeVersion: ""
-  ## @param nameOverride String to partially override common.names.fullname template (will maintain the release name)
-  ##
-  nameOverride: ""
-  ## @param fullnameOverride String to fully override common.names.fullname template
-  ##
-  fullnameOverride: ""
-  ## @param commonLabels Add labels to all the deployed resources
-  ##
-  commonLabels: {}
-  ## @param commonAnnotations Add annotations to all the deployed resources
-  ##
-  commonAnnotations: {}
-  ## @param clusterDomain Kubernetes Cluster Domain
-  ##
-  clusterDomain: cluster.local
-  ## @param extraDeploy Array of extra objects to deploy with the release
-  ##
-  extraDeploy: []
-
-  ## @section Thanos common parameters
-
-  ## Bitnami Thanos image
-  ## ref: https://hub.docker.com/r/bitnami/thanos/tags/
-  ## @param image.registry Thanos image registry
-  ## @param image.repository Thanos image repository
-  ## @param image.tag Thanos image tag (immutable tags are recommended)
-  ## @param image.pullPolicy Thanos image pull policy
-  ## @param image.pullSecrets Specify docker-registry secret names as an array
-  ##
   image:
     registry: docker.io
     repository: bitnami/thanos
     tag: 0.25.2-scratch-r0
-    ## Specify a imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
-    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
-    ##
-    pullPolicy: IfNotPresent
-    ## Optionally specify an array of imagePullSecrets.
-    ## Secrets must be manually created in the namespace.
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-    ## e.g:
-    ## pullSecrets:
-    ##   - myRegistryKeySecretName
-    ##
-    pullSecrets: []
+
   ## @param objstoreConfig The [objstore configuration](https://thanos.io/tip/thanos/storage.md/)
   ## Specify content for objstore.yml
   ##
@@ -93,23 +33,7 @@ thanos:
   ## @section Thanos Query parameters
 
   query:
-    ## @param query.enabled Set to true to enable Thanos Query component
-    ##
     enabled: true
-    ## @param query.logLevel Thanos Query log level
-    ##
-    logLevel: info
-    ## @param query.logFormat Thanos Query log format
-    ##
-    logFormat: logfmt
-    ## @param query.replicaLabel Replica indicator(s) along which data is de-duplicated
-    ##
-    replicaLabel: [replica]
-    ## Dynamically configure store APIs using DNS discovery
-    ## @param query.dnsDiscovery.enabled Enable store APIs discovery via DNS
-    ## @param query.dnsDiscovery.sidecarsService Sidecars service name to discover them using DNS discovery
-    ## @param query.dnsDiscovery.sidecarsNamespace Sidecars namespace to discover them using DNS discovery
-    ##
     dnsDiscovery:
       enabled: true
       sidecarsService: ""
@@ -998,7 +922,7 @@ thanos:
       ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
       ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
       ##
-      ingressClassName: ""
+      ingressClassName: "nginx"
       ## @param queryFrontend.ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
       ## For a full list of possible ingress annotations, please see
       ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md
