@@ -5,7 +5,7 @@ kube-prometheus-stack:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
       scrapeInterval: 15s
 
-      retention: 1d
+      retention: 7d
 
       # Watch all PrometheusRules in the cluster.
       ruleNamespaceSelector:
@@ -58,28 +58,6 @@ kube-prometheus-stack:
         - secretName: prometheus-general-tls
           hosts:
             - prometheus.terence.cloud
-
-      # additionalScrapeConfigs:
-      #   - job_name: blackbox
-      #     metrics_path: /probe
-      #     params:
-      #       module: [http_2xx]
-      #     static_configs:
-      #       - targets:
-      #           - https://gitlab.com
-      #           - https://github.com
-      #           - https://google.com
-      #           - https://stackoverflow.com
-      #           - https://padok.fr
-      #           - https://reddit.com
-      #           - https://youtube.com
-      #     relabel_configs:
-      #       - source_labels: [__address__]
-      #         target_label: __param_target
-      #       - source_labels: [__param_target]
-      #         target_label: target
-      #       - target_label: __address__
-      #         replacement: blackbox-exporter-prometheus-blackbox-exporter.monitoring:9115
 
     thanosService:
       enabled: true
