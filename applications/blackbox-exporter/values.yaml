@@ -1,0 +1,11 @@
+prometheus-blackbox-exporter:
+  serviceMonitor:
+    enabled: true
+    targets:
+      - name: reddit # Human readable URL that will appear in Prometheus / AlertManager
+        url: http://reddit.com/ # The URL that blackbox will scrape
+        labels: {} # Map of labels for ServiceMonitor. Overrides value set in `defaults`
+        interval: 60s # Scraping interval. Overrides value set in `defaults`
+        scrapeTimeout: 60s # Scrape timeout. Overrides value set in `defaults`
+        module: http_2xx # Module used for scraping. Overrides value set in `defaults`
+        additionalMetricsRelabels: {} # Map of metric labels and values to add

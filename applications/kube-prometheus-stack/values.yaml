@@ -42,6 +42,7 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 10Gi
+
     ingress:
       enabled: true
       ingressClassName: nginx
@@ -58,27 +59,30 @@ kube-prometheus-stack:
           hosts:
             - prometheus.terence.cloud
 
-      additionalScrapeConfigs:
-        - job_name: blackbox
-          metrics_path: /probe
-          params:
-            module: [http_2xx]
-          static_configs:
-            - targets:
-                - https://gitlab.com
-                - https://github.com
-                - https://google.com
-                - https://stackoverflow.com
-                - https://padok.fr
-                - https://reddit.com
-                - https://youtube.com
-          relabel_configs:
-            - source_labels: [__address__]
-              target_label: __param_target
-            - source_labels: [__param_target]
-              target_label: target
-            - target_label: __address__
-              replacement: blackbox-exporter-prometheus-blackbox-exporter.monitoring:9115
+      # additionalScrapeConfigs:
+      #   - job_name: blackbox
+      #     metrics_path: /probe
+      #     params:
+      #       module: [http_2xx]
+      #     static_configs:
+      #       - targets:
+      #           - https://gitlab.com
+      #           - https://github.com
+      #           - https://google.com
+      #           - https://stackoverflow.com
+      #           - https://padok.fr
+      #           - https://reddit.com
+      #           - https://youtube.com
+      #     relabel_configs:
+      #       - source_labels: [__address__]
+      #         target_label: __param_target
+      #       - source_labels: [__param_target]
+      #         target_label: target
+      #       - target_label: __address__
+      #         replacement: blackbox-exporter-prometheus-blackbox-exporter.monitoring:9115
+
+    thanosService:
+      enabled: true
 
   # ==============================================================================
   # Grafana
@@ -144,7 +148,6 @@ kube-prometheus-stack:
         ingress-request-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
       extra:
-        # Does not work because you cannot specify two datasources.
         loki-dashboard-quick-search:
           url: https://grafana.com/api/dashboards/12019/revisions/2/download
           datasource: Prometheus
