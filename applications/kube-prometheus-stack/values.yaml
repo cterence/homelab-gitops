@@ -43,6 +43,9 @@ kube-prometheus-stack:
               requests:
                 storage: 10Gi
 
+      thanos:
+        image: quay.io/thanos/thanos:v0.25.2
+
     ingress:
       enabled: true
       ingressClassName: nginx
@@ -60,6 +63,9 @@ kube-prometheus-stack:
             - prometheus.terence.cloud
 
     thanosService:
+      enabled: true
+
+    thanosServiceMonitor:
       enabled: true
 
   # ==============================================================================
