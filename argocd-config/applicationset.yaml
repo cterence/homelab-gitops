@@ -51,9 +51,6 @@ spec:
           - name: httpbin
             namespace: apps
             syncWave: "5"
-          - name: kube-prometheus-stack
-            namespace: monitoring
-            syncWave: "5"
           - name: loki-stack
             namespace: monitoring
             syncWave: "5"
@@ -83,6 +80,23 @@ spec:
               syncOptions:
                 - CreateNamespace=true
                 - Replace=true
+
+    # Dedicated generator for this application.
+    # Needed because the source is not internal to this repo and the sync policy is not the same.
+    - list:
+        elements:
+          - name: kube-prometheus-stack
+            namespace: monitoring
+            syncWave: "5"
+        template:
+          metadata: {}
+          spec:
+            project: "default"
+            source:
+              repoURL: ""
+              helm:
+                skipCrds: true
+            destination: {}
 
   template:
     metadata:
