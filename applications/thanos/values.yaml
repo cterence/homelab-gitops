@@ -10,7 +10,14 @@ thanos:
   ## @param objstoreConfig The [objstore configuration](https://thanos.io/tip/thanos/storage.md/)
   ## Specify content for objstore.yml
   ##
-  objstoreConfig: ""
+  objstoreConfig: |
+    type: "S3"
+    config:
+      bucket: "thanos"
+      endpoint: "thanos-minio:9000"
+      access_key: "admin"
+      secret_key: "minio123"
+      insecure: true
   ## @param indexCacheConfig The [index cache configuration](https://thanos.io/tip/components/store.md/)
   ## Specify content for index-cache.yml
   ##
@@ -36,8 +43,8 @@ thanos:
     enabled: true
     dnsDiscovery:
       enabled: true
-      sidecarsService: ""
-      sidecarsNamespace: ""
+      sidecarsService: "prometheus-operated"
+      sidecarsNamespace: "monitoring"
     ## @param query.stores Statically configure store APIs to connect with Thanos Query
     ##
     stores: []
@@ -3430,7 +3437,7 @@ thanos:
       rootUser: admin
       ## @param minio.auth.rootPassword Password for MinIO&reg; root user
       ##
-      rootPassword: ""
+      rootPassword: minio123
     ## @param minio.defaultBuckets Comma, semi-colon or space separated list of MinIO&reg; buckets to create
     ##
     defaultBuckets: "thanos"
