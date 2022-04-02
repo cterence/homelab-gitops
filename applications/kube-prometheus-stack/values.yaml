@@ -271,3 +271,15 @@ kube-prometheus-stack:
         - secretName: alertmanager-tls
           hosts:
             - alertmanager.terence.cloud
+
+  kubeControllerManager:
+    enabled: false
+
+  kubeEtcd:
+    enabled: false
+
+  kubeScheduler:
+    enabled: false
+
+  kubeProxy:
+    enabled: false
