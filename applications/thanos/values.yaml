@@ -78,186 +78,9 @@ thanos:
     ##
     updateStrategy:
       type: RollingUpdate
-    ## K8s Pod Security Context for Thanos Query pods
-    ## https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-    ## @param query.podSecurityContext.enabled Enable security context for the Thanos Query pods
-    ## @param query.podSecurityContext.fsGroup Group ID for the filesystem used by Thanos Query pods
-    ##
-    podSecurityContext:
-      enabled: true
-      fsGroup: 1001
-    ## K8s containers' Security Context for Thanos Query containers
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-    ## @param query.containerSecurityContext.enabled Enable container security context for the Thanos Query containers
-    ## @param query.containerSecurityContext.runAsUser User ID for the service user running the Thanos Query containers
-    ## @param query.containerSecurityContext.runAsNonRoot Force the Thanos Query containers to run as a non root user
-    ## @param query.containerSecurityContext.allowPrivilegeEscalation Switch privilegeEscalation possibility on or off for Thanos Query containers
-    ## @param query.containerSecurityContext.readOnlyRootFilesystem mount / (root) as a readonly filesystem on Thanos Query containers
-    ##
-    containerSecurityContext:
-      enabled: true
-      runAsUser: 1001
-      runAsNonRoot: true
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-    ## Thanos Query containers' resource requests and limits
-    ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
-    ## @param query.resources.limits The resources limits for the Thanos Query container
-    ## @param query.resources.requests The requested resources for the Thanos Query container
-    ##
     resources:
       limits: {}
       requests: {}
-    ## Configure extra options for Thanos Query containers' liveness and readiness probes
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
-    ## @param query.livenessProbe.enabled Enable livenessProbe on Thanos Query containers
-    ## @param query.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
-    ## @param query.livenessProbe.periodSeconds Period seconds for livenessProbe
-    ## @param query.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
-    ## @param query.livenessProbe.failureThreshold Failure threshold for livenessProbe
-    ## @param query.livenessProbe.successThreshold Success threshold for livenessProbe
-    ##
-    livenessProbe:
-      enabled: true
-      initialDelaySeconds: 30
-      timeoutSeconds: 30
-      periodSeconds: 10
-      successThreshold: 1
-      failureThreshold: 6
-    ## @param query.readinessProbe.enabled Enable readinessProbe on Thanos Query containers
-    ## @param query.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
-    ## @param query.readinessProbe.periodSeconds Period seconds for readinessProbe
-    ## @param query.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
-    ## @param query.readinessProbe.failureThreshold Failure threshold for readinessProbe
-    ## @param query.readinessProbe.successThreshold Success threshold for readinessProbe
-    ##
-    readinessProbe:
-      enabled: true
-      initialDelaySeconds: 30
-      timeoutSeconds: 30
-      periodSeconds: 10
-      successThreshold: 1
-      failureThreshold: 6
-    ## @param query.startupProbe.enabled Enable startupProbe on Thanos Query containers
-    ## @param query.startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
-    ## @param query.startupProbe.periodSeconds Period seconds for startupProbe
-    ## @param query.startupProbe.timeoutSeconds Timeout seconds for startupProbe
-    ## @param query.startupProbe.failureThreshold Failure threshold for startupProbe
-    ## @param query.startupProbe.successThreshold Success threshold for startupProbe
-    ##
-    startupProbe:
-      enabled: false
-      initialDelaySeconds: 5
-      periodSeconds: 5
-      timeoutSeconds: 1
-      failureThreshold: 15
-      successThreshold: 1
-    ## @param query.customLivenessProbe Custom livenessProbe that overrides the default one
-    ##
-    customLivenessProbe: {}
-    ## @param query.customReadinessProbe Custom readinessProbe that overrides the default one
-    ##
-    customReadinessProbe: {}
-    ## @param query.customStartupProbe Custom startupProbe that overrides the default one
-    ##
-    customStartupProbe: {}
-    ## @param query.initContainers Add additional init containers to the Thanos Query pods
-    ## ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-    ## e.g:
-    ## initContainers:
-    ##  - name: your-image-name
-    ##    image: your-image
-    ##    imagePullPolicy: Always
-    ##    command: ['sh', '-c', 'echo "hello world"']
-    ##
-    initContainers: []
-    ## @param query.sidecars Extra containers running as sidecars to Thanos Query pods
-    ## e.g:
-    ## sidecars:
-    ##   - name: your-image-name
-    ##     image: your-image
-    ##     imagePullPolicy: Always
-    ##     ports:
-    ##       - name: portname
-    ##         containerPort: 1234
-    ##
-    sidecars: []
-    ## @param query.extraVolumes Extra volumes to add to Thanos Query
-    ##
-    extraVolumes: []
-    ## @param query.extraVolumeMounts Extra volume mounts to add to the query container
-    ##
-    extraVolumeMounts: []
-    ## @param query.podAffinityPreset Thanos Query pod affinity preset
-    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-    ##
-    podAffinityPreset: ""
-    ## @param query.podAntiAffinityPreset Thanos Query pod anti-affinity preset. Ignored if `query.affinity` is set. Allowed values: `soft` or `hard`
-    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-    ##
-    podAntiAffinityPreset: soft
-    ## Thanos Query node affinity preset
-    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
-    ##
-    nodeAffinityPreset:
-      ## @param query.nodeAffinityPreset.type Thanos Query node affinity preset type. Ignored if `query.affinity` is set. Allowed values: `soft` or `hard`
-      ##
-      type: ""
-      ## @param query.nodeAffinityPreset.key Thanos Query node label key to match Ignored if `query.affinity` is set.
-      ## e.g:
-      ## key: "kubernetes.io/e2e-az-name"
-      ##
-      key: ""
-      ## @param query.nodeAffinityPreset.values Thanos Query node label values to match. Ignored if `query.affinity` is set.
-      ## e.g:
-      ## values:
-      ##   - e2e-az1
-      ##   - e2e-az2
-      ##
-      values: []
-    ## @param query.affinity Thanos Query affinity for pod assignment
-    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-    ## Note: query.podAffinityPreset, query.podAntiAffinityPreset, and query.nodeAffinityPreset will be ignored when it's set
-    ##
-    affinity: {}
-    ## @param query.nodeSelector Thanos Query node labels for pod assignment
-    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-    ##
-    nodeSelector: {}
-    ## @param query.tolerations Thanos Query tolerations for pod assignment
-    ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-    ##
-    tolerations: []
-    ## @param query.podLabels Thanos Query pod labels
-    ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-    ##
-    podLabels: {}
-    ## @param query.podAnnotations Annotations for Thanos Query pods
-    ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-    ##
-    podAnnotations: {}
-    ## @param query.hostAliases Deployment pod host aliases
-    ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-    ##
-    hostAliases: []
-    ## @param query.lifecycleHooks for the Thanos Query container(s) to automate configuration before or after startup
-    ##
-    lifecycleHooks: {}
-    ## @param query.priorityClassName Thanos Query priorityClassName
-    ## ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-    ##
-    priorityClassName: ""
-    ## @param query.schedulerName Name of the k8s scheduler (other than default) for Thanos Query pods
-    ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-    ##
-    schedulerName: ""
-    ## @param query.topologySpreadConstraints Topology Spread Constraints for Thanos Query pods assignment spread across your cluster among failure-domains
-    ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#spread-constraints-for-pods
-    ##
-    topologySpreadConstraints: []
-    ## Thanos Query GRPC parameters
-    ## ref: https://github.com/thanos-io/thanos/blob/master/docs/components/query.md#flags
-    ##
     grpc:
       ## GRPC server side
       ##
@@ -379,7 +202,7 @@ thanos:
     rbac:
       ## @param query.rbac.create Create a ClusterRole and ClusterRoleBinding for the Thanos Query Service Account
       ##
-      create: false
+      create: true
       ## @param query.rbac.rules Custom RBAC rules to set
       ## e.g:
       ## rules:
@@ -392,18 +215,7 @@ thanos:
       ##       - list
       ##
       rules: []
-    ## @param query.pspEnabled Whether to create a PodSecurityPolicy for Thanos Query
-    ## WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later
-    ##
-    pspEnabled: false
-    ## Thanos Query Autoscaling configuration
-    ## ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
-    ## @param query.autoscaling.enabled Enable autoscaling for Thanos Query
-    ## @param query.autoscaling.minReplicas Minimum number of Thanos Query replicas
-    ## @param query.autoscaling.maxReplicas Maximum number of Thanos Query replicas
-    ## @param query.autoscaling.targetCPU Target CPU utilization percentage
-    ## @param query.autoscaling.targetMemory Target Memory utilization percentage
-    ##
+
     autoscaling:
       enabled: false
       minReplicas: ""
@@ -992,7 +804,7 @@ thanos:
   bucketweb:
     ## @param bucketweb.enabled Enable/disable Thanos Bucket Web component
     ##
-    enabled: false
+    enabled: true
     ## @param bucketweb.logLevel Thanos Bucket Web log level
     ##
     logLevel: info
@@ -1371,7 +1183,7 @@ thanos:
   compactor:
     ## @param compactor.enabled Enable/disable Thanos Compactor component
     ##
-    enabled: false
+    enabled: true
     ## @param compactor.logLevel Thanos Compactor log level
     ##
     logLevel: info
@@ -1757,7 +1569,7 @@ thanos:
   storegateway:
     ## @param storegateway.enabled Enable/disable Thanos Store Gateway component
     ##
-    enabled: false
+    enabled: true
     ## @param storegateway.logLevel Thanos Store Gateway log level
     ##
     logLevel: info
@@ -3503,13 +3315,13 @@ thanos:
   metrics:
     ## @param metrics.enabled Enable the export of Prometheus metrics
     ##
-    enabled: false
+    enabled: true
     ## Prometheus Operator ServiceMonitor configuration
     ##
     serviceMonitor:
       ## @param metrics.serviceMonitor.enabled Specify if a ServiceMonitor will be deployed for Prometheus Operator
       ##
-      enabled: false
+      enabled: true
       ## @param metrics.serviceMonitor.namespace Namespace in which Prometheus is running
       ##
       namespace: ""
