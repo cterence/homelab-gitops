@@ -50,6 +50,8 @@ oauth2-proxy:
       - pihole.terence.cloud
       - prometheus.terence.cloud
       - qbittorrent.terence.cloud
+      - thanos-bucketweb.terence.cloud
+      - thanos.terence.cloud
 
   metrics:
     enabled: true
