@@ -3443,6 +3443,22 @@ thanos:
     ##
     defaultBuckets: "thanos"
 
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+
+    ingress:
+      enabled: true
+      annotations:
+        external-dns.alpha.kubernetes.io/target: terence.cloud
+        cert-manager.io/cluster-issuer: letsencrypt
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+      ingressClassName: nginx
+      hostname: thanos-minio.terence.cloud
+      tls: true
+
   ## @section NetWorkPolicy parameters
 
   networkPolicy:
