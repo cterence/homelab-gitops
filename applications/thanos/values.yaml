@@ -71,7 +71,8 @@ thanos:
     extraEnvVarsSecret: ""
     ## @param query.extraFlags Extra Flags to passed to Thanos Query
     ##
-    extraFlags: []
+    extraFlags:
+      - --query.auto-downsampling
     ## @param query.command Override default container command (useful when using custom images)
     ##
     command: []
@@ -416,7 +417,12 @@ thanos:
     ## @param queryFrontend.config Thanos Query Frontend configuration
     ## Specify content for config.yml
     ##
-    config: ""
+    config: |
+      type: IN-MEMORY
+      config:
+        max_size: 1GB
+        max_size_items: 0
+        validity: 0s
     ## @param queryFrontend.existingConfigmap Name of existing ConfigMap with Thanos Query Frontend configuration
     ## NOTE: This will override queryFrontend.config
     ##
@@ -1202,9 +1208,9 @@ thanos:
     ## @param compactor.retentionResolution5m Resolution and Retention flag
     ## @param compactor.retentionResolution1h Resolution and Retention flag
     ##
-    retentionResolutionRaw: 30d
+    retentionResolutionRaw: 2d
     retentionResolution5m: 30d
-    retentionResolution1h: 10y
+    retentionResolution1h: 1y
     ## @param compactor.consistencyDelay Minimum age of fresh (non-compacted) blocks before they are being processed
     ##
     consistencyDelay: 30m
@@ -1548,7 +1554,7 @@ thanos:
     persistence:
       ## @param compactor.persistence.enabled Enable data persistence using PVC(s) on Thanos Compactor pods
       ##
-      enabled: true
+      enabled: false
       ## @param compactor.persistence.storageClass Specify the `storageClass` used to provision the volume
       ## If defined, storageClassName: <storageClass>
       ## If set to "-", storageClassName: "", which disables dynamic provisioning
