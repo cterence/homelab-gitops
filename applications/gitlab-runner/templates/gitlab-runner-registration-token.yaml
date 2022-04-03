@@ -1,18 +1,14 @@
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
+apiVersion: external-secrets.io/v1alpha1
+kind: ExternalSecret
 metadata:
-  creationTimestamp: null
   name: gitlab-runner-registration-token
-  namespace: gitlab
 spec:
-  encryptedData:
-    runner-registration-token: AgCBC5WVYK08u3PlRPZ+mkNlNExAJlegQBP7ifBDXSWdaDTfClqzFuJitnxD4zJG2i+ThluBVK1kTDWLG/tlLjUZbNbHV1TcXxzPhbSyxQ48KRwdrPaPDbyOr7MxzagQX+X7UgP2UuANre62FdSELL3PRsX2B1m7/THQkYOdyG/UoZYgmEmYjk7KKQ+Rpi1eN2EQuIXXqxwXSxjcCyeCRibqKIcrkPOAygmMTTWCzaXUtoaVgQIxJx/1iV+evbJizg6Bmc19zbrzSStqrBz7R6wVbVJb5g+Jw5jSmPn1dEGcB5FUHjl4dZq2w/NGyoAcGaT35FphBB8PvbN9FVu/7zddOEi6wfDiI+JgFhfw5ghY0kv2f5TkLVVJtMJIJUctSukMQUFWqgRc3L36J4UyBSH1UHKmn+wFWUgmkh1DzmpQ66HftgZE39c+TqSsvmCSxWfPyCT+9+1UeNwevv77vw0RMYeq2E93ahzUalQyt2PGVsqccfMIPj8Majj44NTgcn2BIIKJfPAD32YI8pxsg/T4fKm5JSj6KsFdm+RfgkZRlSSuGRUL6ch3lUhFe6pXhtRGZzkNulnbT8r6yMQ4kTpeCLIvikqdgcWvazouyUb+1jksk3nyMFbAflCEtvnmAUrIr/THPpMOJHCNeoCGi6Wbvui6/KcLBguPNU+0UglZTOKs9MpKHsTraBudKBIMJCz+oNsxhct7SS8ROHwZoio1ekbfTCkAsm4YGeJ7Xg==
-    runner-token: AgAApJ+XP9kqHnuAo/vrhl+wrgSmbW4/b9fXYj74QHTTIhuPgfkf9lpDm1oCSrB4RLg7Qph3RNwczIr9+m3bRcFZPMsj7zs5EdoyXdEnPfAu9Anj4+ITUJ38j5XViw9pn8HGC8lVYmEBveqniinoDoDSn1zj1iA91R8mEsMq/M53oIVrrihTRuYQDdgcKOTZn6X/XQKDxI0pQg8XFNaIz969EAn31wuTRPEuUpnnhxCB5MbgUUT6tgvYE5Z0cM1Fw8r0bXhLGCulV+ye3IwhbSKsbYYhl8DeT+A32mJAJAbpK7hKZIz6nzHppBu4OqEWWGSMRuGPzat/F+ZlgGqJnQgEXqahTvnSQyqlQmu4UYL0Yblh5kviTYODig8RhcDXJ4whn/BH9PndmPjXw+Pb3qB8zGvSkvf/wBmlcruQ2rBJ41j66YFplNRO+WkgHFRAvZzFzTUXr+m3TohC2NDJa+rnVa/ums2f6FuV4YTBnaCiK7r6Md7aAVDIq0WXeJxuQNGuz42mX3deB+vWQhf4oHtVCT5Tx8D7vYk+RkxkqMx1naN6pbYAUGz/mcT5RCik1+ewtYVvdcA6f3i4uHyApRvF9ey9pJBuGR+7MrqH8uMvCYbvGELa6VsaC7miHlyM+QGQyqJUUS1SMQs5tRxXecdfmtzNOuZdoWMDbZefu/ApbElBXRML5Qe4jYdu8021LAg=
-  template:
-    data: null
-    metadata:
-      creationTimestamp: null
-      name: gitlab-runner-registration-token
-      namespace: gitlab
-    type: Opaque
-
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: gitlab-runner-registration-token
+    creationPolicy: Owner
+  dataFrom:
+    - key: gitlab_runner_registration_token
