@@ -5,7 +5,7 @@
 <div><p>My Kubernetes cluster state. Managed by ArgoCD.</p><p>
 <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/cterence/homelab">
 <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/w/cterence/homelab">
-<img alt="Website" src="https://img.shields.io/website?label=argocd.terence.cloud&url=https%3A%2F%2Fargocd.terence.cloud%2Fhealthz">
+<img alt="GitHub" src="https://img.shields.io/github/license/cterence/homelab">
 </p></div>
 </div>
 
