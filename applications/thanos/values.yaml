@@ -66,6 +66,10 @@ thanos:
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
       tls: true
 
+    extraEnvVars:
+      - name: TZ
+        value: Europe/Paris
+
   bucketweb:
     enabled: true
     ingress:
