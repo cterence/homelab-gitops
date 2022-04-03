@@ -1,8 +1,26 @@
-# argo
+# 🏠 homelab
 
-My Kubernetes cluster state. Managed by ArgoCD. There is a whole lot of stuff here, mostly to experiment.
+<div style="display: flex; justify-content: left; flex-direction: row; align-items: center;">
+<img width="144px" height="144px" style="margin-right: 10px;" src="https://camo.githubusercontent.com/fd23263fa81136afc1918aaee7bd61b0178989edb8c999e5dd6fd8bc7417932d/68747470733a2f2f692e696d6775722e636f6d2f45584e544a6e412e706e67"></img>
+<div><p>My Kubernetes cluster state. Managed by ArgoCD.</p><p>
+<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/cterence/homelab">
+<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/w/cterence/homelab">
+<img alt="Website" src="https://img.shields.io/website?label=argocd.terence.cloud&url=https%3A%2F%2Fargocd.terence.cloud%2Fhealthz">
+</p></div>
+</div>
 
-## Bootstrap
+
+## ⚙️ Hardware
+
+| Device                    | Count | Specs                                          | Purpose         |
+| ------------------------- | ----- | ---------------------------------------------- | --------------- |
+| Lenovo ThinkCentre M75q-1 | 1     | Ryzen 5 Pro 3400GE + 16GB RAM + 512GB NVMe SSD | All-in-one node |
+
+I also use this machine to host a Nextcloud instance for my files.
+
+## ⏫ Bootstrap
+
+How to setup a cluster just like mine with a Linux node and `kubeadm`.
 
 ### Cluster initialization
 
@@ -122,9 +140,9 @@ On your Kubernetes node :
 
 <!-- TODO: more details on this part -->
 
-- Seal the secrets for external-secrets (and optionally gitlab-runner, we can't use external-secrets for this one because we cannot put an empty value as a CI/CD variable in Gitlab).
+- Seal the secrets for external-secrets.
 
-- Setup all the secrets in the Gitlab backend with the correct names.
+- Setup all the secrets in the Gitlab backend with the correct names (search for ExternalSecret resources).
 
 - Commit and push
 
@@ -137,9 +155,10 @@ On your Kubernetes node :
 - Install ArgoCD with the provided values in your cluster
 
   ```bash
-  helm repo add argo https://argoproj.github.io/argo-helm
-  helm repo update
-  helm install --wait argocd argo/argo-cd --values application/argocd/values.yaml -n argocd --set server.metrics.serviceMonitor.enabled=false --create-namespace=true
+  cd applications/argocd
+  helm dependency build
+  kubectl create namespace argocd
+  helm template argocd . -n argocd --set argo-cd.server.metrics.serviceMonitor.enabled=false --set argo-cd.redis.metrics.serviceMonitor.enabled=false --set argo-cd.dex.metrics.serviceMonitor.enabled=false --set argo-cd.repoServer.metrics.serviceMonitor.enabled=false --set argo-cd.notifications.metrics.serviceMonitor.enabled=false --set argo-cd.applicationSet.metrics.serviceMonitor.enabled=false   --set argo-cd.controller.metrics.serviceMonitor.enabled=false | kubectl apply -n argocd -f -
   ```
 
 - Apply the secret containing the repository credentials
@@ -154,14 +173,14 @@ On your Kubernetes node :
   kubectl apply -f argo-applications/app-of-apps.yaml -n argocd
   ```
 
-You should be done !
+You should be done ! 👌
 
-## Teardown
+## 💣 Teardown
 
-- Save all secrets
+- Save all secrets (in `/tmp/kube-secrets`)
 
   ```bash
-  mkdir /tmp/kube-secrets && for ns in $(kns); do for secret in $(k get secret -n $ns | grep Opaque | awk '{print $1}'); do k get secrets -n $ns $secret -o yaml | k neat > /tmp/kube-secrets/$secret-cleartext.yaml; done; done
+  mkdir /tmp/kube-secrets && for ns in $(kubectl ns); do for secret in $(kubectl get secret -n $ns | grep Opaque | awk '{print $1}'); do kubectl get secrets -n $ns $secret -o yaml | kubectl neat > /tmp/kube-secrets/$secret-cleartext.yaml; done; done
   ```
 
 - Teardown the cluster
