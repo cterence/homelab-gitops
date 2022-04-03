@@ -51,6 +51,7 @@ oauth2-proxy:
       - prometheus.terence.cloud
       - qbittorrent.terence.cloud
       - thanos-bucketweb.terence.cloud
+      - thanos-minio.terence.cloud
       - thanos.terence.cloud
 
   metrics:
