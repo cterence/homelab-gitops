@@ -1,0 +1,9 @@
+apiVersion: v2
+name: k8tz
+description: A helm chart for an app
+type: application
+version: 0.2.3
+dependencies:
+  - name: k8tz
+    repository: https://k8tz.github.io/k8tz/
+    version: 0.2.3

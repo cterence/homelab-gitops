@@ -51,6 +51,9 @@ spec:
           - name: httpbin
             namespace: apps
             syncWave: "5"
+          - name: k8tz
+            namespace: k8tz
+            syncWave: "5"
           - name: loki-stack
             namespace: monitoring
             syncWave: "5"
