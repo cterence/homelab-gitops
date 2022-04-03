@@ -105,6 +105,6 @@ items:
               - ReadWriteOnce
             resources:
               requests:
-                storage: 1Gi
+                storage: 200Mi
             storageClassName: longhorn
 kind: List

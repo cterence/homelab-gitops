@@ -226,7 +226,7 @@ kube-prometheus-stack:
             storageClassName: longhorn
             resources:
               requests:
-                storage: 10Gi
+                storage: 1Gi
 
     config:
       receivers:
