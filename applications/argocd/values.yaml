@@ -35,6 +35,9 @@ argo-cd:
       create: false
       name: argocd-notifications-controller-secret
     argocdUrl: https://argocd.terence.cloud
+    extraEnv:
+      - name: TZ
+        value: Europe/Paris
     notifiers:
       service.telegram: |
         token: $telegram-token
@@ -115,7 +118,7 @@ argo-cd:
         email:
           subject: Failed to sync application {{.app.metadata.name}}.
         message: |
-          {{if eq .serviceType "slack"}}:exclamation:{{end}}  The sync operation of application {{.app.metadata.name}} has failed at {{.app.status.operationState.finishedAt}} with the following error: {{.app.status.operationState.message}}
+          {{if eq .serviceType "slack"}}:exclamation:{{end}}  The sync operation of application {{.app.metadata.name}} has failed with the following error: {{.app.status.operationState.message}}
           Sync operation details are available at: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true .
         slack:
           attachments: |-
@@ -149,7 +152,7 @@ argo-cd:
         email:
           subject: Start syncing application {{.app.metadata.name}}.
         message: |
-          The sync operation of application {{.app.metadata.name}} has started at {{.app.status.operationState.startedAt}}.
+          The sync operation of application {{.app.metadata.name}} has started.
           Sync operation details are available at: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true .
         slack:
           attachments: |-
@@ -222,7 +225,9 @@ argo-cd:
         email:
           subject: Application {{.app.metadata.name}} has been successfully synced.
         message: |
-          {{if eq .serviceType "slack"}}:white_check_mark:{{end}} Application {{.app.metadata.name}} has been successfully synced at {{.app.status.operationState.finishedAt}}.
+          {{if eq .serviceType "slack"}}:white_check_mark:{{end}} Application {{.app.metadata.name}} has been successfully synced.
+          App versions: {{range .app.status.summary.images}}
+          - {{.}}{{end}}
           Sync operation details are available at: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}?operation=true .
         slack:
           attachments: "[{\n  \"title\": \"{{ .app.metadata.name}}\",\n  \"title_link\":\"{{.context.argocdUrl}}/applications/{{.app.metadata.name}}\",\n  \"color\": \"#18be52\",\n  \"fields\": [\n  {\n    \"title\": \"Sync Status\",\n    \"value\": \"{{.app.status.sync.status}}\",\n    \"short\": true\n  },\n  {\n    \"title\": \"Repository\",\n    \"value\": \"{{.app.spec.source.repoURL}}\",\n    \"short\": true\n  }\n  {{range $index, $c := .app.status.conditions}}\n  {{if not $index}},{{end}}\n  {{if $index}},{{end}}\n  {\n    \"title\": \"{{$c.type}}\",\n    \"value\": \"{{$c.message}}\",\n    \"short\": true\n  }\n  {{end}}\n  ]\n}]    "
@@ -335,7 +340,6 @@ argo-cd:
             id: oauth2-proxy
             name: OAuth2 Proxy
       admin.enabled: "false"
-      users.anonymous.enabled: "true"
 
     rbacConfig:
       policy.default: role:readonly
