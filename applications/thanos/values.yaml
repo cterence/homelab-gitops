@@ -116,6 +116,9 @@ thanos:
 
     defaultBuckets: "thanos"
 
+    persistence:
+      size: 25Gi
+
     metrics:
       enabled: true
       serviceMonitor:
