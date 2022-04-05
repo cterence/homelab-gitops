@@ -8,7 +8,7 @@ loki-stack:
     serviceMonitor:
       enabled: true
       prometheusRule:
-        enabled: true
+        enabled: false
 
   promtail:
     enabled: true
