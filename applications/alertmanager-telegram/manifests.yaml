@@ -5,7 +5,6 @@ items:
     metadata:
       name: alertmanager-bot
     spec:
-      refreshInterval: 1h
       secretStoreRef:
         kind: ClusterSecretStore
         name: gitlab-secret-store

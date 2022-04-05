@@ -3,7 +3,7 @@ kind: ExternalSecret
 metadata:
   name: atlantis-terraform-cloud-token
 spec:
-  refreshInterval: 1h
+  
   secretStoreRef:
     kind: ClusterSecretStore
     name: gitlab-secret-store
