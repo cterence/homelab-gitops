@@ -15,12 +15,6 @@ spec:
           - name: argocd
             namespace: argocd
             syncWave: "2"
-          - name: external-dns
-            namespace: external-dns
-            syncWave: "2"
-          - name: external-secrets
-            namespace: external-secrets
-            syncWave: "2"
           - name: cert-manager
             namespace: cert-manager
             syncWave: "3"
@@ -97,11 +91,33 @@ spec:
         template:
           metadata: {}
           spec:
-            project: "default"
+            project: ""
             source:
               repoURL: ""
               helm:
                 skipCrds: true
+            destination: {}
+
+    - list:
+        elements:
+          - name: external-secrets
+            namespace: external-secrets
+            syncWave: "2"
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              repoURL: ""
+            ignoreDifferences:
+              - group: admissionregistration.k8s.io
+                kind: "*"
+                jqPathExpressions:
+                  - .webhooks[].clientConfig.caBundle
+              - group: apiextensions.k8s.io/v1
+                kind: CustomResourceDefinition
+                jqPathExpressions:
+                  - .spec.conversion.webhook.clientConfig
             destination: {}
 
   template:
