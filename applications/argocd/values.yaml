@@ -30,6 +30,7 @@ argo-cd:
         enabled: true
 
   notifications:
+    enabled: false
     logLevel: debug
     secret:
       create: false
