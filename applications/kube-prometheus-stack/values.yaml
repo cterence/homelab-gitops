@@ -84,6 +84,9 @@ kube-prometheus-stack:
     deploymentStrategy:
       type: Recreate
 
+    serviceMonitor:
+      scrapeTimeout: 5s
+
     ingress:
       enabled: true
       ingressClassName: nginx
