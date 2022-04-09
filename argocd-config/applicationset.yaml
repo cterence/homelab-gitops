@@ -48,9 +48,9 @@ spec:
           # - name: k8tz
           #   namespace: k8tz
           #   syncWave: "5"
-          - name: loki-stack
-            namespace: monitoring
-            syncWave: "5"
+          # - name: loki-stack
+          #   namespace: monitoring
+          #   syncWave: "5"
           - name: metrics-server
             namespace: metrics-server
             syncWave: "5"
