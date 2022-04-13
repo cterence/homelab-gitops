@@ -32,8 +32,7 @@ argo-cd:
         enabled: true
 
   notifications:
-    enabled: false
-    logLevel: debug
+    enabled: true
     secret:
       create: false
       name: argocd-notifications-controller-secret
