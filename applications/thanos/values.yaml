@@ -5,7 +5,7 @@ thanos:
   image:
     registry: docker.io
     repository: bitnami/thanos
-    tag: 0.25.2-scratch-r0
+    tag: 0.26.0-scratch-r0
 
   objstoreConfig: |
     type: "S3"
