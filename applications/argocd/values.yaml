@@ -1,6 +1,5 @@
 argo-cd:
   controller:
-    logLevel: warn
     metrics:
       enabled: true
       serviceMonitor:
