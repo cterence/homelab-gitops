@@ -334,6 +334,7 @@ argo-cd:
       # Avoid out of sync loop for aggregated roles
       resource.compareoptions: |
         ignoreAggregatedRoles: true
+        ignoreResourceStatusField: all
 
       dex.config: |
         connectors:
