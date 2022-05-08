@@ -3,11 +3,8 @@ region: eu-west-3
 
 bastion:
   name: bastion
-  # Ubuntu 20.04
-  imageId: ami-0c6ebbd55ab05f070
-  # imageId: ami-08e4e35cccc6189f4 # us-east-1
-  instanceType: t3.nano
-  subnetName: private-subnet-1
+  imageId: ami-0042da0ea9ad6dd83
+  instanceType: t3a.nano
 
 securityGroups:
   name: compute
