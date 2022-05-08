@@ -57,6 +57,9 @@ spec:
           - name: thanos
             namespace: monitoring
             syncWave: "5"
+          - name: crossplane
+            namespace: crossplane-system
+            syncWave: "5"
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.

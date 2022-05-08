@@ -4,7 +4,7 @@ crossplane:
   provider:
     packages:
       - crossplane/provider-aws:master
-      - crossplane/provider-sql:master
+      # - crossplane/provider-sql:master
       # - crossplane/provider-terraform:master
       # - crossplane/provider-jet-aws:v0.4.0-preview
 
@@ -13,75 +13,3 @@ crossplane:
 
   metrics:
     enabled: true
-
-# Resources
-region: eu-west-3
-
-bastion:
-  name: bastion
-  # Ubuntu 20.04
-  imageId: ami-0c6ebbd55ab05f070
-  # imageId: ami-08e4e35cccc6189f4 # us-east-1
-  instanceType: t3.nano
-  subnetName: private-subnet-1
-
-securityGroups:
-  name: compute
-  labels:
-    group: compute
-
-eks:
-  cluster:
-    name: eks-cluster
-    version: "1.21"
-  nodes:
-    name: eks-nodes
-    blue:
-      name: blue
-      version: "1.21"
-      diskSize: 8
-      instanceTypes:
-        - t3.micro
-      capacityType: SPOT
-      scalingConfig:
-        minSize: 1
-        maxSize: 2
-        desiredSize: 1
-    green:
-      name: green
-      version: "1.21"
-      diskSize: 8
-      instanceTypes:
-        - t3.micro
-      capacityType: SPOT
-      scalingConfig:
-        minSize: 1
-        maxSize: 2
-        desiredSize: 1
-
-vpc:
-  name: main
-  cidrBlock: 10.0.0.0/16
-
-subnets:
-  private:
-    name: private
-    labels:
-      type: private
-  public:
-    name: public
-    labels:
-      type: public
-
-gateways:
-  internet:
-    name: igw
-  nat:
-    name: ngw
-    eip:
-      name: eip
-
-routeTables:
-  name: rtb
-
-rds:
