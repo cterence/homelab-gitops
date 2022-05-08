@@ -14,9 +14,9 @@ spec:
     resourcesVpcConfig:
       endpointPrivateAccess: true
       endpointPublicAccess: false
-      securityGroupIdSelector:
-        matchLabels:
-          {{- toYaml .Values.securityGroups.labels | nindent 10 }}
+      # securityGroupIdSelector:
+      #   matchLabels:
+      #     {{- toYaml .Values.securityGroups.labels | nindent 10 }}
       subnetIdSelector:
         matchLabels:
           {{- toYaml .Values.subnets.private.labels | nindent 10 }}
