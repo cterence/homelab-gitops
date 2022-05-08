@@ -128,10 +128,10 @@ spec:
                 - RespectIgnoreDifferences=true
 
     - list:
-        elements:
-          - name: crossplane-resources
-            namespace: crossplane-system
-            syncWave: "10"
+        elements: []
+        # - name: crossplane-resources
+        #   namespace: crossplane-system
+        #   syncWave: "10"
         template:
           metadata: {}
           spec:
