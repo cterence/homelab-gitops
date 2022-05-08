@@ -12,12 +12,12 @@ securityGroups:
 eks:
   cluster:
     name: eks-cluster
-    version: "1.21"
+    version: "1.22"
   nodes:
     name: eks-nodes
     blue:
       name: blue
-      version: "1.21"
+      version: "1.22"
       diskSize: 8
       instanceTypes:
         - t3.micro
@@ -28,7 +28,7 @@ eks:
         desiredSize: 1
     green:
       name: green
-      version: "1.21"
+      version: "1.22"
       diskSize: 8
       instanceTypes:
         - t3.micro

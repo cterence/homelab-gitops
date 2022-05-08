@@ -1,0 +1,53 @@
+apiVersion: eks.aws.crossplane.io/v1alpha1
+kind: Addon
+metadata:
+  name: vpc-cni
+  labels:
+    name: vpc-cni
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    addonName: vpc-cni
+    clusterNameSelector:
+      matchLabels:
+        name: {{ .Values.eks.cluster.name }}
+    tags:
+      Name: vpc-cni
+  providerConfigRef:
+    name: aws
+---
+apiVersion: eks.aws.crossplane.io/v1alpha1
+kind: Addon
+metadata:
+  name: coredns
+  labels:
+    name: coredns
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    addonName: coredns
+    clusterNameSelector:
+      matchLabels:
+        name: {{ .Values.eks.cluster.name }}
+    tags:
+      Name: coredns
+  providerConfigRef:
+    name: aws
+---
+apiVersion: eks.aws.crossplane.io/v1alpha1
+kind: Addon
+metadata:
+  name: kube-proxy
+  labels:
+    name: kube-proxy
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    addonName: kube-proxy
+    clusterNameSelector:
+      matchLabels:
+        name: {{ .Values.eks.cluster.name }}
+    tags:
+      Name: kube-proxy
+  providerConfigRef:
+    name: aws
