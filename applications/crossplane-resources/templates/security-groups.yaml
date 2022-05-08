@@ -3,7 +3,7 @@ kind: SecurityGroup
 metadata:
   name: bastion
   labels:
-    toto: toto
+    name: bastion
 spec:
   forProvider:
     region: {{ .Values.region }}
@@ -15,6 +15,36 @@ spec:
     tags:
       - key: Name
         value: bastion
+    egress:
+      - ipProtocol: "-1"
+        ipRanges:
+          - cidrIp: 0.0.0.0/0
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: cluster
+  labels:
+    name: cluster
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    description: Cluster security group
+    groupName: cluster
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name}}
+    tags:
+      - key: Name
+        value: cluster
+    ingress:
+      - ipProtocol: "-1"
+        userIdGroupPairs:
+          - groupIdSelector:
+              matchLabels:
+                name: bastion
     egress:
       - ipProtocol: "-1"
         ipRanges:
