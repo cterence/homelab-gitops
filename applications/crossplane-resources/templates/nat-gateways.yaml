@@ -1,0 +1,73 @@
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: NATGateway
+metadata:
+  name: {{ .Values.gateways.nat.name }}-1
+  labels:
+    name: {{ .Values.gateways.nat.name }}-1
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    connectivityType: public
+    allocationIdSelector:
+      matchLabels:
+        name: {{ .Values.gateways.nat.eip.name }}-1
+    subnetIdSelector:
+      matchLabels:
+        name: {{ .Values.subnets.public.name }}-1
+    tags:
+      - key: Name
+        value: {{ .Values.gateways.nat.name }}-1
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: NATGateway
+metadata:
+  name: {{ .Values.gateways.nat.name }}-2
+  labels:
+    name: {{ .Values.gateways.nat.name }}-2
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    connectivityType: public
+    allocationIdSelector:
+      matchLabels:
+        name: {{ .Values.gateways.nat.eip.name }}-2
+    subnetIdSelector:
+      matchLabels:
+        name: {{ .Values.subnets.public.name }}-2
+    tags:
+      - key: Name
+        value: {{ .Values.gateways.nat.name }}-2
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: Address
+metadata:
+  name: {{ .Values.gateways.nat.eip.name }}-1
+  labels:
+    name: {{ .Values.gateways.nat.eip.name }}-1
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    tags:
+      - key: Name
+        value: {{ .Values.gateways.nat.eip.name }}-1
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: Address
+metadata:
+  name: {{ .Values.gateways.nat.eip.name }}-2
+  labels:
+    name: {{ .Values.gateways.nat.eip.name }}-2
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    tags:
+      - key: Name
+        value: {{ .Values.gateways.nat.eip.name }}-2
+  providerConfigRef:
+    name: aws

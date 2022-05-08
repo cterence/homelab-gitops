@@ -1,39 +1,64 @@
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: RouteTable
 metadata:
-  name: private-{{ .Values.routeTables.name }}
+  name: private-{{ .Values.routeTables.name }}-1
 spec:
   forProvider:
     region: {{ .Values.region }}
     associations:
       - subnetIdSelector:
           matchLabels:
-            name: {{ .Values.subnets.private.name }}
+            name: {{ .Values.subnets.private.name }}-1
     routes:
       - destinationCidrBlock: 0.0.0.0/0
         natGatewayIdSelector:
           matchLabels:
-            name: {{ .Values.gateways.nat.name }}
+            name: {{ .Values.gateways.nat.name }}-1
     vpcIdSelector:
       matchLabels:
         name: {{ .Values.vpc.name }}
     tags:
       - key: Name
-        value: private-{{ .Values.routeTables.name }}
+        value: private-{{ .Values.routeTables.name }}-1
   providerConfigRef:
     name: aws
 ---
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: RouteTable
 metadata:
-  name: public-{{ .Values.routeTables.name }}
+  name: private-{{ .Values.routeTables.name }}-2
 spec:
   forProvider:
     region: {{ .Values.region }}
     associations:
       - subnetIdSelector:
           matchLabels:
-            name: {{ .Values.subnets.public.name }}
+            name: {{ .Values.subnets.private.name }}-2
+    routes:
+      - destinationCidrBlock: 0.0.0.0/0
+        natGatewayIdSelector:
+          matchLabels:
+            name: {{ .Values.gateways.nat.name }}-2
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name }}
+    tags:
+      - key: Name
+        value: private-{{ .Values.routeTables.name }}-2
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: RouteTable
+metadata:
+  name: public-{{ .Values.routeTables.name }}-1
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    associations:
+      - subnetIdSelector:
+          matchLabels:
+            name: {{ .Values.subnets.public.name }}-1
     routes:
       - destinationCidrBlock: 0.0.0.0/0
         gatewayIdSelector:
@@ -44,6 +69,31 @@ spec:
         name: {{ .Values.vpc.name }}
     tags:
       - key: Name
-        value: public-{{ .Values.routeTables.name }}
+        value: public-{{ .Values.routeTables.name }}-1
+  providerConfigRef:
+    name: aws
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: RouteTable
+metadata:
+  name: public-{{ .Values.routeTables.name }}-2
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    associations:
+      - subnetIdSelector:
+          matchLabels:
+            name: {{ .Values.subnets.public.name }}-2
+    routes:
+      - destinationCidrBlock: 0.0.0.0/0
+        gatewayIdSelector:
+          matchLabels:
+            name: {{ .Values.gateways.internet.name }}
+    vpcIdSelector:
+      matchLabels:
+        name: {{ .Values.vpc.name }}
+    tags:
+      - key: Name
+        value: public-{{ .Values.routeTables.name }}-2
   providerConfigRef:
     name: aws

@@ -20,7 +20,7 @@ spec:
         name: bastion
     subnetIdSelector:
       matchLabels:
-        name: {{ .Values.subnets.private.name }}
+        name: {{ .Values.subnets.private.name }}-1
     tags:
       - key: Name
         value: {{ .Values.bastion.name }}

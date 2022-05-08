@@ -45,7 +45,6 @@ spec:
           - groupIdSelector:
               matchLabels:
                 name: bastion
-                argocd.argoproj.io/instance: crossplane-resources
     egress:
       - ipProtocol: "-1"
         ipRanges:
