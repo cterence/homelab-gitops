@@ -1,73 +1,36 @@
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: NATGateway
 metadata:
-  name: {{ .Values.gateways.nat.name }}-1
+  name: {{ .Values.gateways.nat.name }}
   labels:
-    name: {{ .Values.gateways.nat.name }}-1
+    name: {{ .Values.gateways.nat.name }}
 spec:
   forProvider:
     region: {{ .Values.region }}
     connectivityType: public
     allocationIdSelector:
       matchLabels:
-        name: {{ .Values.gateways.nat.eip.name }}-1
+        name: {{ .Values.gateways.nat.eip.name }}
     subnetIdSelector:
       matchLabels:
-        name: {{ .Values.subnets.public.name }}-1
+        name: {{ .Values.subnets.public.name }}
     tags:
       - key: Name
-        value: {{ .Values.gateways.nat.name }}-1
-  providerConfigRef:
-    name: aws
----
-apiVersion: ec2.aws.crossplane.io/v1beta1
-kind: NATGateway
-metadata:
-  name: {{ .Values.gateways.nat.name }}-2
-  labels:
-    name: {{ .Values.gateways.nat.name }}-2
-spec:
-  forProvider:
-    region: {{ .Values.region }}
-    connectivityType: public
-    allocationIdSelector:
-      matchLabels:
-        name: {{ .Values.gateways.nat.eip.name }}-2
-    subnetIdSelector:
-      matchLabels:
-        name: {{ .Values.subnets.public.name }}-2
-    tags:
-      - key: Name
-        value: {{ .Values.gateways.nat.name }}-2
+        value: {{ .Values.gateways.nat.name }}
   providerConfigRef:
     name: aws
 ---
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: Address
 metadata:
-  name: {{ .Values.gateways.nat.eip.name }}-1
+  name: {{ .Values.gateways.nat.eip.name }}
   labels:
-    name: {{ .Values.gateways.nat.eip.name }}-1
+    name: {{ .Values.gateways.nat.eip.name }}
 spec:
   forProvider:
     region: {{ .Values.region }}
     tags:
       - key: Name
-        value: {{ .Values.gateways.nat.eip.name }}-1
-  providerConfigRef:
-    name: aws
----
-apiVersion: ec2.aws.crossplane.io/v1beta1
-kind: Address
-metadata:
-  name: {{ .Values.gateways.nat.eip.name }}-2
-  labels:
-    name: {{ .Values.gateways.nat.eip.name }}-2
-spec:
-  forProvider:
-    region: {{ .Values.region }}
-    tags:
-      - key: Name
-        value: {{ .Values.gateways.nat.eip.name }}-2
+        value: {{ .Values.gateways.nat.eip.name }}
   providerConfigRef:
     name: aws
