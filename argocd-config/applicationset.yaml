@@ -127,27 +127,27 @@ spec:
               syncOptions:
                 - RespectIgnoreDifferences=true
 
-    # - list:
-    #     elements:
-    #       - name: crossplane-resources
-    #         namespace: crossplane-system
-    #         syncWave: "10"
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         # perpetual tag diff breaks sync loop.
-    #         ignoreDifferences:
-    #           - group: "*.aws.crossplane.io"
-    #             kind: "*"
-    #             jqPathExpressions:
-    #               - .spec.forProvider.tags
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - RespectIgnoreDifferences=true
+    - list:
+        elements:
+          - name: crossplane-resources
+            namespace: crossplane-system
+            syncWave: "10"
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              repoURL: ""
+            # perpetual tag diff breaks sync loop.
+            ignoreDifferences:
+              - group: "*.aws.crossplane.io"
+                kind: "*"
+                jqPathExpressions:
+                  - .spec.forProvider.tags
+            destination: {}
+            syncPolicy:
+              syncOptions:
+                - RespectIgnoreDifferences=true
 
   template:
     metadata:

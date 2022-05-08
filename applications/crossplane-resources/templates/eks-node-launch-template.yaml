@@ -1,35 +1,35 @@
-apiVersion: ec2.aws.crossplane.io/v1alpha1
-kind: LaunchTemplate
-metadata:
-  name: eks-node
-  labels:
-    name: eks-node
-spec:
-  forProvider:
-    region: eu-west-3
-    launchTemplateName: eks-node
-    versionDescription: Launch template for an EKS node
-    launchTemplateData:
-      imageID: ami-021d41cbdefc0c994
-      instanceType: t3.medium
-      securityGroupIDs:
-        - {{ (lookup "ec2.aws.crossplane.io/v1beta1" "SecurityGroup" "crossplane-system" "cluster").metadata.annotations }}
-      userData: |-
-        #!/bin/bash
+# apiVersion: ec2.aws.crossplane.io/v1alpha1
+# kind: LaunchTemplate
+# metadata:
+#   name: eks-node
+#   labels:
+#     name: eks-node
+# spec:
+#   forProvider:
+#     region: eu-west-3
+#     launchTemplateName: eks-node
+#     versionDescription: Launch template for an EKS node
+#     launchTemplateData:
+#       imageID: ami-021d41cbdefc0c994
+#       instanceType: t3.medium
+#       securityGroupIDs:
+#         - {{ (lookup "ec2.aws.crossplane.io/v1beta1" "SecurityGroup" "crossplane-system" "cluster").metadata.annotations }}
+#       userData: |-
+#         #!/bin/bash
 
-        # Install SSM agent
-        yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+#         # Install SSM agent
+#         yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
 
-        # Execute the script to join the cluster
-        /etc/eks/bootstrap.sh {{ .Values.eks.cluster.name }}
+#         # Execute the script to join the cluster
+#         /etc/eks/bootstrap.sh {{ .Values.eks.cluster.name }}
         
-    tagSpecifications:
-      - resourceType: instance
-        tags:
-          - key: Name
-            value: eks-node
-    tags:
-      - key: Name
-        value: eks-node
-  providerConfigRef:
-    name: aws
+#     tagSpecifications:
+#       - resourceType: instance
+#         tags:
+#           - key: Name
+#             value: eks-node
+#     tags:
+#       - key: Name
+#         value: eks-node
+#   providerConfigRef:
+#     name: aws
