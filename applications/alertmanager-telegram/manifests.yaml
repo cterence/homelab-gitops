@@ -7,7 +7,7 @@ items:
     spec:
       secretStoreRef:
         kind: ClusterSecretStore
-        name: gitlab-store
+        name: gitlab-secret-store
       target:
         name: alertmanager-bot
         creationPolicy: Owner
