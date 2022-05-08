@@ -20,7 +20,7 @@ spec:
         {{- toYaml .Values.securityGroups.labels | nindent 10 }}
     subnetIdSelector:
       matchLabels:
-        name: {{ .Values.subnets.private.name }}-1
+        name: {{ .Values.subnets.private.name }}
     tags:
       - key: Name
         value: {{ .Values.bastion.name }}

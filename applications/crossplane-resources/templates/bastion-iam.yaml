@@ -37,3 +37,20 @@ spec:
         name: {{ .Values.bastion.name }}
   providerConfigRef:
     name: aws
+---
+apiVersion: iam.aws.crossplane.io/v1alpha1
+kind: InstanceProfile
+metadata:
+  name: {{ .Values.bastion.name }}
+  labels:
+    name: {{ .Values.bastion.name }}
+spec:
+  forProvider:
+    roleSelector:
+      matchLabels:
+        name: {{ .Values.bastion.name }}
+    tags:
+      - key: Name
+        value: {{ .Values.bastion.name }}
+  providerConfigRef:
+    name: aws
