@@ -133,6 +133,7 @@ spec:
           # - name: crossplane-resources
           #   namespace: crossplane-system
           #   syncWave: "10"
+          # Tech Radar !
         template:
           metadata: {}
           spec:
