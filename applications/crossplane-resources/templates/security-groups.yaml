@@ -3,8 +3,8 @@ kind: SecurityGroup
 metadata:
   name: {{ .Values.securityGroups.name }}
   labels:
-    name: {{ .Values.securityGroups.name }}
-    {{- toYaml .Values.securityGroups.labels | nindent 4 }}
+    sg-name: {{ .Values.securityGroups.name }}
+    group: {{ .Values.securityGroups.name }}
 spec:
   forProvider:
     region: {{ .Values.region }}
@@ -25,7 +25,7 @@ metadata:
   name: allow-{{ .Values.securityGroups.name }}-traffic
   labels:
     name: allow-{{ .Values.securityGroups.name }}-traffic
-    {{- toYaml .Values.securityGroups.labels | nindent 4 }}
+    group: {{ .Values.securityGroups.name }}
 spec:
   forProvider:
     region: {{ .Values.region }}
@@ -36,9 +36,8 @@ spec:
         toPort: 0
         ipProtocol: "-1"
         userIdGroupPairs:
-          - groupIdSelector:
-              matchLabels:
-                name: {{ .Values.securityGroups.name }}
+          - groupIdRef:
+              name: {{ .Values.securityGroups.name }}
             vpcIdSelector:
               matchLabels:
                 name: {{ .Values.vpc.name}}

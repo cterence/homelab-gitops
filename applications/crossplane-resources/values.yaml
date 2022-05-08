@@ -8,8 +8,6 @@ bastion:
 
 securityGroups:
   name: compute
-  labels:
-    group: compute
 
 eks:
   cluster:
@@ -64,5 +62,3 @@ gateways:
 
 routeTables:
   name: rtb
-
-rds:
