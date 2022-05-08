@@ -60,6 +60,9 @@ spec:
           - name: crossplane
             namespace: crossplane-system
             syncWave: "5"
+          - name: crossplane-resources
+            namespace: crossplane-system
+            syncWave: "10"
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
