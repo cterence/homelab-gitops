@@ -7,9 +7,6 @@ metadata:
 spec:
   forProvider:
     region: {{ .Values.region }}
-    # launchTemplate:
-    #   launchTemplateName: bastion
-    #   launchTemplateId: ""
     imageId: {{ .Values.bastion.imageId }}
     iamInstanceProfile:
       name: {{ .Values.bastion.name }}
