@@ -13,10 +13,7 @@ spec:
       imageID: ami-021d41cbdefc0c994
       instanceType: t3.medium
       securityGroupIDs:
-        - securityGroupIdSelector:
-            matchLabels:
-              name: cluster
-
+        - {{ (lookup "ec2.aws.crossplane.io/v1beta1" "SecurityGroup" "crossplane-system" "cluster").metadata.annotations }}
       userData: |-
         #!/bin/bash
 
