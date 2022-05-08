@@ -17,7 +17,6 @@ spec:
       securityGroupIdSelector:
         matchLabels:
           name: cluster
-          argocd.argoproj.io/instance: crossplane-resources
       subnetIdSelector:
         matchLabels:
           {{- toYaml .Values.subnets.private.labels | nindent 10 }}
