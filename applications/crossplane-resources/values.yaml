@@ -3,7 +3,7 @@ region: eu-west-3
 
 bastion:
   name: bastion
-  imageId: ami-0042da0ea9ad6dd83
+  imageId: ami-021d41cbdefc0c994
   instanceType: t3a.nano
 
 securityGroups:
