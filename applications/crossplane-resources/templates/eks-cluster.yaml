@@ -16,7 +16,7 @@ spec:
       endpointPublicAccess: false
       securityGroupIdSelector:
         matchLabels:
-          name: cluster
+          name: {{ .Values.eks.cluster.name }}
       subnetIdSelector:
         matchLabels:
           {{- toYaml .Values.subnets.private.labels | nindent 10 }}

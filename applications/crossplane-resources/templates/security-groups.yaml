@@ -1,20 +1,20 @@
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: SecurityGroup
 metadata:
-  name: bastion
+  name: {{ .Values.bastion.name }}
   labels:
-    name: bastion
+    name: {{ .Values.bastion.name }}
 spec:
   forProvider:
     region: {{ .Values.region }}
     description: Bastion security group
-    groupName: bastion
+    groupName: {{ .Values.bastion.name }}
     vpcIdSelector:
       matchLabels:
         name: {{ .Values.vpc.name}}
     tags:
       - key: Name
-        value: bastion
+        value: {{ .Values.bastion.name }}
     egress:
       - ipProtocol: "-1"
         ipRanges:
@@ -25,26 +25,26 @@ spec:
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: SecurityGroup
 metadata:
-  name: cluster
+  name: {{ .Values.eks.cluster.name }}
   labels:
-    name: cluster
+    name: {{ .Values.eks.cluster.name }}
 spec:
   forProvider:
     region: {{ .Values.region }}
     description: Cluster security group
-    groupName: cluster
+    groupName: {{ .Values.eks.cluster.name }}
     vpcIdSelector:
       matchLabels:
         name: {{ .Values.vpc.name}}
     tags:
       - key: Name
-        value: cluster
+        value: {{ .Values.eks.cluster.name }}
     ingress:
       - ipProtocol: "-1"
         userIdGroupPairs:
           - groupIdSelector:
               matchLabels:
-                name: bastion
+                name: {{ .Values.bastion.name }}
     egress:
       - ipProtocol: "-1"
         ipRanges:

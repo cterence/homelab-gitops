@@ -14,7 +14,7 @@ spec:
     keyName: {{ .Values.bastion.name }}
     securityGroupSelector:
       matchLabels:
-        name: bastion
+        name: {{ .Values.bastion.name }}
     subnetIdSelector:
       matchLabels:
         name: {{ .Values.subnets.private.name }}-1
