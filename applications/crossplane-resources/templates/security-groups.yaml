@@ -3,7 +3,6 @@ kind: SecurityGroup
 metadata:
   name: bastion
   labels:
-    name: bastion
     toto: toto
 spec:
   forProvider:
@@ -39,11 +38,10 @@ spec:
         userIdGroupPairs:
           - groupIdSelector:
               matchLabels:
-                name: bastion
                 toto: toto
-            vpcIdSelector:
-              matchLabels:
-                name: {{ .Values.vpc.name }}
+            # vpcIdSelector:
+            #   matchLabels:
+            #     name: {{ .Values.vpc.name }}
     egress:
       - ipProtocol: "-1"
         ipRanges:
