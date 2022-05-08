@@ -128,10 +128,11 @@ spec:
                 - RespectIgnoreDifferences=true
 
     - list:
-        elements: []
-        # - name: crossplane-resources
-        #   namespace: crossplane-system
-        #   syncWave: "10"
+        elements:
+          # []
+          - name: crossplane-resources
+            namespace: crossplane-system
+            syncWave: "10"
         template:
           metadata: {}
           spec:
@@ -153,6 +154,7 @@ spec:
     metadata:
       name: "{{name}}"
       annotations:
+        argocd.argoproj.io/manifest-generate-paths: "."
         argocd.argoproj.io/sync-wave: "{{syncWave}}"
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
     spec:
