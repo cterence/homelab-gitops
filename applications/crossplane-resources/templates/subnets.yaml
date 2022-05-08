@@ -1,9 +1,9 @@
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: Subnet
 metadata:
-  name: {{ .Values.subnets.private.name }}-1
+  name: {{ .Values.subnets.private.name }}
   labels:
-    name: {{ .Values.subnets.private.name }}-1
+    name: {{ .Values.subnets.private.name }}
     {{- toYaml .Values.subnets.private.labels | nindent 4 }}
 spec:
   forProvider:
@@ -12,42 +12,20 @@ spec:
     vpcIdSelector:
       matchLabels:
         name: {{ .Values.vpc.name }}
-    cidrBlock: "10.0.0.0/18"
+    cidrBlock: "10.0.0.0/17"
     mapPublicIPOnLaunch: false
     tags:
       - key: Name
-        value: {{ .Values.subnets.private.name }}-1
+        value: {{ .Values.subnets.private.name }}
   providerConfigRef:
     name: aws
 ---
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: Subnet
 metadata:
-  name: {{ .Values.subnets.private.name }}-2
+  name: {{ .Values.subnets.public.name }}
   labels:
-    name: {{ .Values.subnets.private.name }}-2
-    {{- toYaml .Values.subnets.private.labels | nindent 4 }}
-spec:
-  forProvider:
-    region: {{ .Values.region }}
-    availabilityZone: {{ .Values.region }}b
-    vpcIdSelector:
-      matchLabels:
-        name: {{ .Values.vpc.name }}
-    cidrBlock: "10.0.64.0/18"
-    mapPublicIPOnLaunch: false
-    tags:
-      - key: Name
-        value: {{ .Values.subnets.private.name }}-2
-  providerConfigRef:
-    name: aws
----
-apiVersion: ec2.aws.crossplane.io/v1beta1
-kind: Subnet
-metadata:
-  name: {{ .Values.subnets.public.name }}-1
-  labels:
-    name: {{ .Values.subnets.public.name }}-1
+    name: {{ .Values.subnets.public.name }}
     {{- toYaml .Values.subnets.public.labels | nindent 4 }}
 spec:
   forProvider:
@@ -56,32 +34,10 @@ spec:
     vpcIdSelector:
       matchLabels:
         name: {{ .Values.vpc.name }}
-    cidrBlock: "10.0.128.0/18"
+    cidrBlock: "10.0.128.0/17"
     mapPublicIPOnLaunch: false
     tags:
       - key: Name
-        value: {{ .Values.subnets.public.name }}-1
-  providerConfigRef:
-    name: aws
----
-apiVersion: ec2.aws.crossplane.io/v1beta1
-kind: Subnet
-metadata:
-  name: {{ .Values.subnets.public.name }}-2
-  labels:
-    name: {{ .Values.subnets.public.name }}-2
-    {{- toYaml .Values.subnets.public.labels | nindent 4 }}
-spec:
-  forProvider:
-    region: {{ .Values.region }}
-    availabilityZone: {{ .Values.region }}b
-    vpcIdSelector:
-      matchLabels:
-        name: {{ .Values.vpc.name }}
-    cidrBlock: "10.0.192.0/18"
-    mapPublicIPOnLaunch: false
-    tags:
-      - key: Name
-        value: {{ .Values.subnets.public.name }}-2
+        value: {{ .Values.subnets.public.name }}
   providerConfigRef:
     name: aws
