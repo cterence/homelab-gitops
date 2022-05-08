@@ -17,7 +17,7 @@ spec:
     keyName: {{ .Values.bastion.name }}
     securityGroupSelector:
       matchLabels:
-        {{- toYaml .Values.securityGroups.labels | nindent 10 }}
+        name: bastion
     subnetIdSelector:
       matchLabels:
         name: {{ .Values.subnets.private.name }}

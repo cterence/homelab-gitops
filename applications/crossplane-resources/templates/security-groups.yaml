@@ -1,50 +1,51 @@
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: SecurityGroup
 metadata:
-  name: {{ .Values.securityGroups.name }}
+  name: bastion
   labels:
-    sg-name: {{ .Values.securityGroups.name }}
-    group: {{ .Values.securityGroups.name }}
+    name: bastion
+    toto: toto
 spec:
   forProvider:
     region: {{ .Values.region }}
-    description: Compute security group
-    groupName: {{ .Values.securityGroups.name }}
+    description: Bastion security group
+    groupName: bastion
     vpcIdSelector:
       matchLabels:
         name: {{ .Values.vpc.name}}
     tags:
       - key: Name
-        value: {{ .Values.securityGroups.name }}
+        value: bastion
+    egress:
+      - ipProtocol: "-1"
+        ipRanges:
+          - cidrIp: 0.0.0.0/0
   providerConfigRef:
     name: aws
 ---
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: SecurityGroup
 metadata:
-  name: allow-{{ .Values.securityGroups.name }}-traffic
+  name: vpc-endpoint
   labels:
-    name: allow-{{ .Values.securityGroups.name }}-traffic
-    group: {{ .Values.securityGroups.name }}
+    name: vpc-endpoint
 spec:
   forProvider:
     region: {{ .Values.region }}
-    description: Security group that allows traffic from all the members of the {{ .Values.securityGroups.name }} group
-    groupName: allow-{{ .Values.securityGroups.name }}-traffic
+    description: VPC endpoints security group
+    groupName: vpc-endpoint
     ingress:
-      - fromPort: 0
-        toPort: 0
-        ipProtocol: "-1"
+      - ipProtocol: "-1"
         userIdGroupPairs:
-          - groupIdRef:
-              name: {{ .Values.securityGroups.name }}
+          - groupIdSelector:
+              matchLabels:
+                name: bastion
+                toto: toto
             vpcIdSelector:
               matchLabels:
-                name: {{ .Values.vpc.name}}
+                name: {{ .Values.vpc.name }}
     egress:
-      - fromPort: 0
-        toPort: 0
-        ipProtocol: "-1"
+      - ipProtocol: "-1"
         ipRanges:
           - cidrIp: 0.0.0.0/0
     vpcIdSelector:
@@ -52,6 +53,6 @@ spec:
         name: {{ .Values.vpc.name}}
     tags:
       - key: Name
-        value: allow-{{ .Values.securityGroups.name }}-traffic
+        value: vpc-endpoint
   providerConfigRef:
     name: aws

@@ -12,7 +12,7 @@ spec:
     serviceName: com.amazonaws.{{ .Values.region }}.ssm
     securityGroupIdSelector:
       matchLabels:
-        {{- toYaml .Values.securityGroups.labels | nindent 8 }}
+        name: vpc-endpoint
     subnetIdSelector:
       matchLabels:
         {{- toYaml .Values.subnets.private.labels | nindent 8 }}
@@ -36,7 +36,7 @@ spec:
     serviceName: com.amazonaws.{{ .Values.region }}.ssmmessages
     securityGroupIdSelector:
       matchLabels:
-        {{- toYaml .Values.securityGroups.labels | nindent 8 }}
+        name: vpc-endpoint
     subnetIdSelector:
       matchLabels:
         {{- toYaml .Values.subnets.private.labels | nindent 8 }}
@@ -60,7 +60,7 @@ spec:
     serviceName: com.amazonaws.{{ .Values.region }}.ec2messages
     securityGroupIdSelector:
       matchLabels:
-        {{- toYaml .Values.securityGroups.labels | nindent 8 }}
+        name: vpc-endpoint
     subnetIdSelector:
       matchLabels:
         {{- toYaml .Values.subnets.private.labels | nindent 8 }}
