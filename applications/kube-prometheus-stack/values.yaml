@@ -44,9 +44,10 @@ kube-prometheus-stack:
                 storage: 10Gi
 
       thanos:
-        objectStorageConfig:
-          key: objstore.yml
-          name: thanos-objstore-secret
+        {}
+        # objectStorageConfig:
+        #   key: objstore.yml
+        #   name: thanos-objstore-secret
 
     ingress:
       enabled: true
