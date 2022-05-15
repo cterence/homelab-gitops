@@ -54,9 +54,9 @@ spec:
           - name: metrics-server
             namespace: metrics-server
             syncWave: "5"
-          - name: thanos
-            namespace: monitoring
-            syncWave: "5"
+          # - name: thanos
+          #   namespace: monitoring
+          #   syncWave: "5"
           - name: crossplane
             namespace: crossplane-system
             syncWave: "5"
