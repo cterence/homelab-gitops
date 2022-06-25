@@ -208,7 +208,6 @@ kube-prometheus-stack:
             type: prometheus
             url: http://thanos-query-frontend:9090
             access: proxy
-            isDefault: true
 
     plugins:
       - grafana-piechart-panel
