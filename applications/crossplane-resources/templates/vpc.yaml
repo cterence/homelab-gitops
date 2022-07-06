@@ -1,17 +1,14 @@
 apiVersion: ec2.aws.crossplane.io/v1beta1
 kind: VPC
 metadata:
-  name: {{ .Values.vpc.name }}
+  name: sandbox-vpc
   labels:
-    name: {{ .Values.vpc.name }}
+    name: sandbox-vpc
 spec:
   forProvider:
-    region: {{ .Values.region }}
-    cidrBlock: {{ .Values.vpc.cidrBlock }}
+    region: eu-west-3
+    cidrBlock: 10.10.0.0/16
     enableDnsSupport: true
     enableDnsHostNames: true
-    tags:
-      - key: Name
-        value: {{ .Values.vpc.name }}
   providerConfigRef:
     name: aws

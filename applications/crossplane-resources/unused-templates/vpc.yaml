@@ -1,0 +1,17 @@
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: VPC
+metadata:
+  name: {{ .Values.vpc.name }}
+  labels:
+    name: {{ .Values.vpc.name }}
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    cidrBlock: {{ .Values.vpc.cidrBlock }}
+    enableDnsSupport: true
+    enableDnsHostNames: true
+    tags:
+      - key: Name
+        value: {{ .Values.vpc.name }}
+  providerConfigRef:
+    name: aws

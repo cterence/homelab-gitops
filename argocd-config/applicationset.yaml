@@ -148,10 +148,9 @@ spec:
 
     - list:
         elements:
-          []
-          # - name: crossplane-resources
-          # namespace: crossplane-system
-          # syncWave: "10"
+          - name: crossplane-resources
+            namespace: crossplane-system
+            syncWave: "10"
         template:
           metadata: {}
           spec:
