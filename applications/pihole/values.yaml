@@ -19,7 +19,7 @@ pihole:
     # -- the repostory to pull the image from
     repository: "pihole/pihole"
     # -- the docker tag
-    tag: "2022.05"
+    tag: "2022.07"
     # -- the pull policy
     pullPolicy: IfNotPresent
 
