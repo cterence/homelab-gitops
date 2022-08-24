@@ -4,7 +4,7 @@ metallb:
     namespace: monitoring
     podMonitor:
       enabled: true
-addresspools:
+addressPools:
   - name: default
     autoassign: true
     addresses:
