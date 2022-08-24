@@ -24,9 +24,6 @@ spec:
           - name: sealed-secrets
             namespace: sealed-secrets
             syncWave: "3"
-          - name: longhorn
-            namespace: longhorn-system
-            syncWave: "4"
           - name: alertmanager-telegram
             namespace: monitoring
             syncWave: "5"
@@ -163,6 +160,28 @@ spec:
                 kind: "*"
                 jqPathExpressions:
                   - .spec.forProvider.tags
+            destination: {}
+            syncPolicy:
+              syncOptions:
+                - RespectIgnoreDifferences=true
+
+    - list:
+        elements:
+          - name: longhorn
+            namespace: longhorn-system
+            syncWave: "4"
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              repoURL: ""
+            # caBundle injection breaks the sync loop.
+            ignoreDifferences:
+              - group: apiextensions.k8s.io
+                kind: "*"
+                jqPathExpressions:
+                  - .spec.preserveUnknownFields
             destination: {}
             syncPolicy:
               syncOptions:
