@@ -1,12 +1,11 @@
 metallb:
-  configInline:
-    address-pools:
-      - name: default
-        protocol: layer2
-        addresses:
-          - 192.168.1.240-192.168.1.255
   prometheus:
     serviceAccount: kube-prometheus-stack-prometheus
     namespace: monitoring
     podMonitor:
       enabled: true
+addresspools:
+  - name: default
+    autoassign: true
+    addresses:
+      - 192.168.1.240-192.168.1.255
