@@ -11,6 +11,7 @@ oauth2-proxy:
 
     # Gitlab
     provider: gitlab
+    oidc-issuer-url: https://gitlab.com
 
     # Google
     # provider: google
