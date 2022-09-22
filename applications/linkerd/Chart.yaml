@@ -6,4 +6,4 @@ version: 2.11.1
 dependencies:
   - name: linkerd2
     repository: https://helm.linkerd.io/stable
-    version: 2.11.4
+    version: 2.11.5
