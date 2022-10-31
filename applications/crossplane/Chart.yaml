@@ -6,4 +6,4 @@ version: 1.6.2
 dependencies:
   - name: crossplane
     repository: https://charts.crossplane.io/stable
-    version: 1.10.0
+    version: 1.10.1
