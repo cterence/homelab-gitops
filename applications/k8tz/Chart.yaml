@@ -6,4 +6,4 @@ version: 0.2.3
 dependencies:
   - name: k8tz
     repository: https://k8tz.github.io/k8tz/
-    version: 0.9.0
+    version: 0.10.0
