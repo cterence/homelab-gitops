@@ -51,9 +51,9 @@ spec:
           # - name: thanos
           #   namespace: monitoring
           #   syncWave: "5"
-          - name: crossplane
-            namespace: crossplane-system
-            syncWave: "5"
+          # - name: crossplane
+          #   namespace: crossplane-system
+          #   syncWave: "5"
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
@@ -166,27 +166,27 @@ spec:
               syncOptions:
                 - RespectIgnoreDifferences=true
 
-    - list:
-        elements:
-          - name: crossplane-resources
-            namespace: crossplane-system
-            syncWave: "10"
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              repoURL: ""
-            # perpetual tag diff breaks sync loop.
-            ignoreDifferences:
-              - group: "*.aws.crossplane.io"
-                kind: "*"
-                jqPathExpressions:
-                  - .spec.forProvider.tags
-            destination: {}
-            syncPolicy:
-              syncOptions:
-                - RespectIgnoreDifferences=true
+    # - list:
+    #     elements:
+    #       - name: crossplane-resources
+    #         namespace: crossplane-system
+    #         syncWave: "10"
+    #     template:
+    #       metadata: {}
+    #       spec:
+    #         project: ""
+    #         source:
+    #           repoURL: ""
+    #         # perpetual tag diff breaks sync loop.
+    #         ignoreDifferences:
+    #           - group: "*.aws.crossplane.io"
+    #             kind: "*"
+    #             jqPathExpressions:
+    #               - .spec.forProvider.tags
+    #         destination: {}
+    #         syncPolicy:
+    #           syncOptions:
+    #             - RespectIgnoreDifferences=true
 
     - list:
         elements:
