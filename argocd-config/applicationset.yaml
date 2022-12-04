@@ -219,7 +219,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: git@github.com:cterence/homelab.git
+        repoURL: git@github.com:cterence/homelab-gitops.git
         targetRevision: HEAD
         path: "applications/{{name}}"
       destination:
