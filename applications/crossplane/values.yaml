@@ -3,7 +3,7 @@ crossplane:
 
   provider:
     packages:
-      - crossplane/provider-aws:v0.26.1
+      # - crossplane/provider-aws:v0.26.1
       # - crossplane/provider-sql:master
       # - crossplane/provider-terraform:master
       # - crossplane/provider-jet-aws:v0.4.0-preview
