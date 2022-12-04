@@ -1,6 +1,6 @@
 image:
   repository: mendhak/http-https-echo
-  tag: 25
+  tag: 28
 
 service:
   port: 80
