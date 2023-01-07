@@ -1,0 +1,9 @@
+apiVersion: v2
+name: ghost
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: ghost
+    repository: https://charts.bitnami.com/bitnami
+    version: 19.1.55
