@@ -36,9 +36,9 @@ spec:
           - name: external-endpoints
             namespace: external-endpoints
             syncWave: "5"
-          - name: gitlab-runner
-            namespace: gitlab
-            syncWave: "5"
+          # - name: gitlab-runner
+          #   namespace: gitlab
+          #   syncWave: "5"
           - name: httpbin
             namespace: apps
             syncWave: "5"
@@ -57,8 +57,11 @@ spec:
           # - name: crossplane
           #   namespace: crossplane-system
           #   syncWave: "5"
-          - name: ghost
-            namespace: apps
+          # - name: ghost
+          #   namespace: apps
+          #   syncWave: "5"
+          - name: vault
+            namespace: hashicorp
             syncWave: "5"
 
     # Dedicated generator for this application.
