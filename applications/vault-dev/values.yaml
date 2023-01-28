@@ -363,12 +363,13 @@ vault:
     # If deployment is on OpenShift, the following block is ignored.
     # In order to expose the service, use the route section below
     ingress:
-      enabled: false
+      enabled: true
       labels:
         {}
         # traffic: external
       annotations:
-        {}
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: terence.cloud
         # |
         # kubernetes.io/ingress.class: nginx
         # kubernetes.io/tls-acme: "true"
@@ -378,7 +379,7 @@ vault:
 
       # Optionally use ingressClassName instead of deprecated annotation.
       # See: https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation
-      ingressClassName: ""
+      ingressClassName: nginx
 
       # As of Kubernetes 1.19, all Ingress Paths must have a pathType configured. The default value below should be sufficient in most cases.
       # See: https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types for other possible values.
@@ -388,8 +389,9 @@ vault:
       # configure the ingress to point to the Vault active service.
       activeService: true
       hosts:
-        - host: chart-example.local
-          paths: []
+        - host: vault.terence.cloud
+          paths:
+            - /
       ## Extra paths to prepend to the host configuration. This is useful when working with annotation based services.
       extraPaths: []
       # - path: /*
@@ -398,10 +400,10 @@ vault:
       #       name: ssl-redirect
       #       port:
       #         number: use-annotation
-      tls: []
-      #  - secretName: chart-example-tls
-      #    hosts:
-      #      - chart-example.local
+      tls:
+        - secretName: vault-tls
+          hosts:
+            - vault.terence.cloud
 
     # OpenShift only - create a route to expose the service
     # By default the created route will be of type passthrough
@@ -702,7 +704,7 @@ vault:
     # use dev mode for anything other than experimenting.
     # See https://www.vaultproject.io/docs/concepts/dev-server.html to know more
     dev:
-      enabled: false
+      enabled: true
 
       # Set VAULT_DEV_ROOT_TOKEN_ID value
       devRootToken: "root"

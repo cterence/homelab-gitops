@@ -60,7 +60,7 @@ spec:
           # - name: ghost
           #   namespace: apps
           #   syncWave: "5"
-          - name: vault
+          - name: vault-dev
             namespace: hashicorp
             syncWave: "5"
 
