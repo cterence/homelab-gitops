@@ -24,15 +24,15 @@ spec:
           - name: sealed-secrets
             namespace: sealed-secrets
             syncWave: "3"
-          - name: alertmanager-telegram
-            namespace: monitoring
-            syncWave: "5"
+          # - name: alertmanager-telegram
+          #   namespace: monitoring
+          #   syncWave: "5"
           # - name: atlantis
           #   namespace: atlantis
           #   syncWave: "5"
-          - name: blackbox-exporter
-            namespace: monitoring
-            syncWave: "5"
+          # - name: blackbox-exporter
+          #   namespace: monitoring
+          #   syncWave: "5"
           - name: external-endpoints
             namespace: external-endpoints
             syncWave: "5"
@@ -66,26 +66,26 @@ spec:
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
-    - list:
-        elements:
-          - name: kube-prometheus-stack-crds
-            namespace: monitoring
-            syncWave: "1"
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              directory:
-                recurse: true
-              repoURL: https://github.com/prometheus-community/helm-charts.git
-              path: charts/kube-prometheus-stack/crds/
-              targetRevision: kube-prometheus-stack-45.7.1
-            destination: {}
-            syncPolicy:
-              syncOptions:
-                - CreateNamespace=true
-                - Replace=true
+    # - list:
+    #     elements:
+    #       - name: kube-prometheus-stack-crds
+    #         namespace: monitoring
+    #         syncWave: "1"
+    #     template:
+    #       metadata: {}
+    #       spec:
+    #         project: ""
+    #         source:
+    #           directory:
+    #             recurse: true
+    #           repoURL: https://github.com/prometheus-community/helm-charts.git
+    #           path: charts/kube-prometheus-stack/crds/
+    #           targetRevision: kube-prometheus-stack-45.7.1
+    #         destination: {}
+    #         syncPolicy:
+    #           syncOptions:
+    #             - CreateNamespace=true
+    #             - Replace=true
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo.
@@ -108,20 +108,20 @@ spec:
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
-    - list:
-        elements:
-          - name: kube-prometheus-stack
-            namespace: monitoring
-            syncWave: "5"
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              repoURL: ""
-              helm:
-                skipCrds: true
-            destination: {}
+    # - list:
+    #     elements:
+    #       - name: kube-prometheus-stack
+    #         namespace: monitoring
+    #         syncWave: "5"
+    #     template:
+    #       metadata: {}
+    #       spec:
+    #         project: ""
+    #         source:
+    #           repoURL: ""
+    #           helm:
+    #             skipCrds: true
+    #         destination: {}
 
     - list:
         elements:
