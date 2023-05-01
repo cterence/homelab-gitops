@@ -63,6 +63,9 @@ spec:
           # - name: vault-dev
           #   namespace: hashicorp
           #   syncWave: "5"
+          - name: tailscale
+            namespace: tailscale
+            syncWave: "5"
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.

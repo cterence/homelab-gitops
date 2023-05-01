@@ -1,0 +1,31 @@
+# Copyright (c) Tailscale Inc & AUTHORS
+# SPDX-License-Identifier: BSD-3-Clause
+apiVersion: v1
+kind: Pod
+metadata:
+  name: subnet-router
+  labels:
+    app: tailscale
+spec:
+  serviceAccountName: "tailscale"
+  containers:
+    - name: tailscale
+      imagePullPolicy: Always
+      image: "ghcr.io/tailscale/tailscale:latest"
+      env:
+        # Store the state in a k8s secret
+        - name: TS_KUBE_SECRET
+          value: "tailscale-auth"
+        - name: TS_USERSPACE
+          value: "true"
+        - name: TS_AUTHKEY
+          valueFrom:
+            secretKeyRef:
+              name: tailscale-auth
+              key: TS_AUTHKEY
+              optional: true
+        - name: TS_ROUTES
+          value: "10.96.0.0/12,10.244.0.0/24"
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
