@@ -33,9 +33,9 @@ spec:
           # - name: blackbox-exporter
           #   namespace: monitoring
           #   syncWave: "5"
-          - name: external-endpoints
-            namespace: external-endpoints
-            syncWave: "5"
+          # - name: external-endpoints
+          #   namespace: external-endpoints
+          #   syncWave: "5"
           # - name: gitlab-runner
           #   namespace: gitlab
           #   syncWave: "5"
