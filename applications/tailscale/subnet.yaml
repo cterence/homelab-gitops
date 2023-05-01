@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: subnet-router
+  name: tailscale-subnet-router
   labels:
     app: tailscale
 spec:
@@ -29,6 +29,8 @@ spec:
               value: "true"
             - name: TS_ACCEPT_DNS
               value: "true"
+            - name: TS_HOSTNAME
+              value: "kubernetes-subnet-router"
             - name: TS_AUTHKEY
               valueFrom:
                 secretKeyRef:
