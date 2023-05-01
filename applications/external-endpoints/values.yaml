@@ -1,12 +1,12 @@
 externalEndpoints:
-  - name: nextcloud
-    ingressAnnotations:
-      nginx.ingress.kubernetes.io/proxy-body-size: 10g
-      external-dns.alpha.kubernetes.io/target: terence.cloud
-      cert-manager.io/cluster-issuer: letsencrypt
-    host: next.terence.cloud
-    ip: 192.168.1.32
-    port: 8080
+  # - name: nextcloud
+  #   ingressAnnotations:
+  #     nginx.ingress.kubernetes.io/proxy-body-size: 10g
+  #     external-dns.alpha.kubernetes.io/target: terence.cloud
+  #     cert-manager.io/cluster-issuer: letsencrypt
+  #   host: next.terence.cloud
+  #   ip: 192.168.1.32
+  #   port: 8080
   - name: duplicati
     ingressAnnotations:
       external-dns.alpha.kubernetes.io/target: terence.cloud
