@@ -4,6 +4,9 @@ image:
 
 service:
   port: 80
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "httpbin"
 
 serviceAccount:
   create: true
