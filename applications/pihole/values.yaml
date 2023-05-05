@@ -36,10 +36,10 @@ pihole:
   # -- Configuration for the DNS service on port 53
   serviceDns:
     # -- deploys a mixed (TCP + UDP) Service instead of separate ones
-    mixedService: false
+    mixedService: true
 
     # -- `spec.type` for the DNS Service
-    type: LoadBalancer
+    type: ClusterIP
 
     # -- The port of the DNS service
     port: 53
@@ -51,13 +51,15 @@ pihole:
     externalTrafficPolicy: Local
 
     # -- A fixed `spec.loadBalancerIP` for the DNS Service
-    loadBalancerIP: "192.168.1.241"
+    # loadBalancerIP: "192.168.1.241"
     # -- A fixed `spec.loadBalancerIP` for the IPv6 DNS Service
     loadBalancerIPv6: ""
 
     # -- Annotations for the DNS service
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-dns
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: "pihole"
 
   # -- Configuration for the DHCP service on port 67
   serviceDhcp:
@@ -112,7 +114,8 @@ pihole:
 
     # -- Annotations for the DHCP service
     annotations:
-      {}
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: "pihole-ui"
       # metallb.universe.tf/address-pool: network-services
       # metallb.universe.tf/allow-shared-ip: pihole-svc
 
@@ -121,7 +124,7 @@ pihole:
   # -- Configuration for the Ingress
   ingress:
     # -- Generate a Ingress resource
-    enabled: true
+    enabled: false
 
     # -- Specify an ingressClassName
     ingressClassName: nginx
