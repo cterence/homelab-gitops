@@ -96,24 +96,25 @@ spec:
                 - CreateNamespace=true
                 - Replace=true
 
-    # Dedicated generator for this application.
-    # Needed because the source is not internal to this repo.
-    - list:
-        elements:
-          - name: flannel
-            namespace: kube-system
-            # syncWave: "1"
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              directory:
-                include: kube-flannel.yml
-              repoURL: https://github.com/flannel-io/flannel.git
-              path: Documentation/
-              targetRevision: v0.17.0
-            destination: {}
+            # Dedicated generator for this application.
+            # Needed because the source is not internal to this repo.
+
+            # - list:
+            #     elements:
+            #       - name: flannel
+            #         namespace: kube-system
+            #         # syncWave: "1"
+            #     template:
+            #       metadata: {}
+            #       spec:
+            #         project: ""
+            #         source:
+            #           directory:
+            #             include: kube-flannel.yml
+            #           repoURL: https://github.com/flannel-io/flannel.git
+            #           path: Documentation/
+            #           targetRevision: v0.17.0
+            #         destination: {}
 
             # Dedicated generator for this application.
             # Needed because the source is not internal to this repo and the sync policy is not the same.
