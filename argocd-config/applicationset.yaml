@@ -21,9 +21,9 @@ spec:
           - name: oauth2-proxy
             namespace: oauth2-proxy
             syncWave: "3"
-          - name: sealed-secrets
-            namespace: sealed-secrets
-            syncWave: "3"
+          # - name: sealed-secrets
+          #   namespace: sealed-secrets
+          #   syncWave: "3"
           # - name: alertmanager-telegram
           #   namespace: monitoring
           #   syncWave: "5"
