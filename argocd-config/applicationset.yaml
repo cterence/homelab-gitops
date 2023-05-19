@@ -78,28 +78,28 @@ spec:
             # Dedicated generator for this application.
             # Needed because the source is not internal to this repo.
 
-            # - list:
-            #     elements:
-            #       - name: flannel
-            #         namespace: kube-system
-            #     template:
-            #       metadata: {}
-            #       spec:
-            #         project: ""
-            #         source:
-            #           directory:
-            #             include: kube-flannel.yml
-            #           repoURL: https://github.com/flannel-io/flannel.git
-            #           path: Documentation/
-            #           targetRevision: v0.17.0
-            #         destination: {}
+    - list:
+        elements:
+          - name: flannel
+            namespace: kube-system
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              directory:
+                include: kube-flannel.yml
+              repoURL: https://github.com/flannel-io/flannel.git
+              path: Documentation/
+              targetRevision: master
+            destination: {}
 
-            # Dedicated generator for this application.
-            # Needed because the source is not internal to this repo and the sync policy is not the same.
-            # - list:
-            #     elements:
-            #       - name: kube-prometheus-stack
-            #         namespace: monitoring
+    # Dedicated generator for this application.
+    # Needed because the source is not internal to this repo and the sync policy is not the same.
+    # - list:
+    #     elements:
+    #       - name: kube-prometheus-stack
+    #         namespace: monitoring
     #     template:
     #       metadata: {}
     #       spec:
