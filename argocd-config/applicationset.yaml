@@ -30,8 +30,8 @@ spec:
           #   namespace: gitlab
           - name: httpbin
             namespace: apps
-          # - name: k8tz
-          #   namespace: k8tz
+          - name: homer
+            namespace: apps
           - name: loki-stack
             namespace: monitoring
           - name: metrics-server
