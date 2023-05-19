@@ -1,0 +1,8 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: twig
+  namespace: burrito
+spec:
+  repository:
+    url: https://github.com/cterence/twig.git

@@ -52,7 +52,8 @@ spec:
             namespace: ntfy
           # - name: pihole
           #   namespace: pihole
-
+          - name: burrito-resources
+            namespace: burrito
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
     - list:
