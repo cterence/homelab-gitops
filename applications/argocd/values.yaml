@@ -281,7 +281,8 @@ argo-cd:
         enabled: false
 
     ingress:
-      enabled: true
+      # enabled: true
+      enabled: false
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: terence.cloud
@@ -336,12 +337,13 @@ argo-cd:
         ignoreAggregatedRoles: true
         ignoreResourceStatusField: all
 
-      dex.config: |
-        connectors:
-          - type: authproxy
-            id: oauth2-proxy
-            name: OAuth2 Proxy
-      admin.enabled: "false"
+      # TODO: reenable, for debugging purposes
+      # dex.config: |
+      #   connectors:
+      #     - type: authproxy
+      #       id: oauth2-proxy
+      #       name: OAuth2 Proxy
+      # admin.enabled: "false"
 
     rbacConfig:
       policy.default: role:readonly
