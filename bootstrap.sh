@@ -6,6 +6,10 @@ set -e -u -o pipefail
 # and assign it to the variable GITLAB_TOKEN
 GITLAB_TOKEN=$1
 
+cilium-cli install
+
+kubectl taint nodes homelab node-role.kubernetes.io/control-plane:NoSchedule-
+
 kubectl create ns external-secrets --dry-run=client -o yaml | kubectl apply -f -
 kubectl create ns argocd --dry-run=client -o yaml | kubectl apply -f -
 
@@ -14,7 +18,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
-  name: gitlab-token
+  name: gitlab-secret
   namespace: external-secrets
 type: Opaque
 stringData:
@@ -24,12 +28,12 @@ EOF
 # Install the external secrets operator from the chart in the applications directory
 cd applications/external-secrets
 helm dependency build
-helm template external-secrets --namespace external-secrets . | kubectl apply -f - 
+helm template external-secrets --namespace external-secrets . | kubectl apply --namespace external-secrets -f - 
 
 # Install argocd from the chart in the applications directory
 cd ../argocd
 helm dependency build
-helm template argocd  --namespace argocd . | kubectl apply -f - 
+helm template argocd  --namespace argocd . | kubectl apply --namespace argocd -f - 
 
 # Install the app of apps
 cd ../../argocd-config

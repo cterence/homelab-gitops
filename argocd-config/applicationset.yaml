@@ -157,6 +157,7 @@ spec:
             destination: {}
             syncPolicy:
               syncOptions:
+                - CreateNamespace=true
                 - RespectIgnoreDifferences=true
 
     - list:
@@ -183,6 +184,7 @@ spec:
             destination: {}
             syncPolicy:
               syncOptions:
+                - CreateNamespace=true
                 - RespectIgnoreDifferences=true
 
             # - list:
@@ -226,6 +228,7 @@ spec:
             destination: {}
             syncPolicy:
               syncOptions:
+                - CreateNamespace=true
                 - RespectIgnoreDifferences=true
 
   template:
