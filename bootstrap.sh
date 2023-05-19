@@ -6,7 +6,13 @@ set -e -u -o pipefail
 # and assign it to the variable GITLAB_TOKEN
 GITLAB_TOKEN=$1
 
-cilium-cli install
+ssh -tt terence@homelab "sudo kubeadm init --apiserver-cert-extra-sans homelab --pod-network-cidr 10.244.0.0/16; mkdir -p $HOME/.kube; sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config;   sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+
+scp -q terence@homelab:/home/terence/.kube/config ~/.kube/config || true
+
+sed -i 's/192.168.1.32/homelab/g' ~/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
 kubectl taint nodes homelab node-role.kubernetes.io/control-plane:NoSchedule-
 
@@ -27,12 +33,12 @@ EOF
 
 # Install the external secrets operator from the chart in the applications directory
 cd applications/external-secrets
-helm dependency build
+helm dependency update
 helm template external-secrets --namespace external-secrets . | kubectl apply --namespace external-secrets -f - 
 
 # Install argocd from the chart in the applications directory
 cd ../argocd
-helm dependency build
+helm dependency update
 helm template argocd  --namespace argocd . | kubectl apply --namespace argocd -f - 
 
 # Install the app of apps
