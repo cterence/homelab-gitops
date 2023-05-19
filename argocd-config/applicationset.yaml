@@ -32,8 +32,8 @@ spec:
             namespace: apps
           # - name: k8tz
           #   namespace: k8tz
-          # - name: loki-stack
-          #   namespace: monitoring
+          - name: loki-stack
+            namespace: monitoring
           - name: metrics-server
             namespace: metrics-server
           # - name: thanos
@@ -96,19 +96,19 @@ spec:
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
-    # - list:
-    #     elements:
-    #       - name: kube-prometheus-stack
-    #         namespace: monitoring
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #           helm:
-    #             skipCrds: true
-    #         destination: {}
+    - list:
+        elements:
+          - name: kube-prometheus-stack
+            namespace: monitoring
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              repoURL: ""
+              helm:
+                skipCrds: true
+            destination: {}
 
     - list:
         elements:

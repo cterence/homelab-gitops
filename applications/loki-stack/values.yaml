@@ -1,9 +1,13 @@
 loki-stack:
   loki:
     enabled: true
-
     persistence:
       enabled: true
+    loki:
+      compactor:
+        retention_enabled: true
+      limits_config:
+        retention_period: 3d
 
     serviceMonitor:
       enabled: true

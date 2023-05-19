@@ -5,7 +5,7 @@ kube-prometheus-stack:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
       scrapeInterval: 15s
 
-      retention: 6h
+      retention: 3d
 
       # Watch all PrometheusRules in the cluster.
       ruleNamespaceSelector:
@@ -66,10 +66,10 @@ kube-prometheus-stack:
             - prometheus.terence.cloud
 
     thanosService:
-      enabled: true
+      enabled: false
 
     thanosServiceMonitor:
-      enabled: true
+      enabled: false
 
   # ==============================================================================
   # Grafana
@@ -140,22 +140,22 @@ kube-prometheus-stack:
       extra:
         pihole-overview:
           gnetId: 10176
-          datasource: Thanos
+          datasource: Prometheus
         argocd-overview:
           gnetId: 14584
-          datasource: Thanos
+          datasource: Prometheus
         cert-manager-overview:
           gnetId: 11001
-          datasource: Thanos
+          datasource: Prometheus
         external-dns-overview:
           gnetId: 15038
-          datasource: Thanos
+          datasource: Prometheus
         blackbox-exporter-overview:
           gnetId: 5345
-          datasource: Thanos
-        thanos-overview:
-          gnetId: 12937
-          datasource: Thanos
+          datasource: Prometheus
+        # thanos-overview:
+        #   gnetId: 12937
+        #   datasource: Thanos
 
     # Configure dashboard providers.
     # ref: http://docs.grafana.org/administration/provisioning/#dashboards
@@ -204,10 +204,10 @@ kube-prometheus-stack:
             type: loki
             url: http://loki-stack:3100
             access: proxy
-          - name: Thanos
-            type: prometheus
-            url: http://thanos-query-frontend:9090
-            access: proxy
+          # - name: Thanos
+          #   type: prometheus
+          #   url: http://thanos-query-frontend:9090
+          #   access: proxy
 
     plugins:
       - grafana-piechart-panel
