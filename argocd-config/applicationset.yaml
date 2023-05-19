@@ -75,9 +75,8 @@ spec:
                 - CreateNamespace=true
                 - Replace=true
 
-            # Dedicated generator for this application.
-            # Needed because the source is not internal to this repo.
-
+    # Dedicated generator for this application.
+    # Needed because the source is not internal to this repo.
     - list:
         elements:
           - name: flannel
@@ -92,6 +91,24 @@ spec:
               repoURL: https://github.com/flannel-io/flannel.git
               path: Documentation/
               targetRevision: master
+            destination: {}
+
+    # Dedicated generator for this application.
+    # Needed because the source is not internal to this repo.
+    - list:
+        elements:
+          - name: burrito
+            namespace: burrito
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              directory:
+                include: install.yaml
+              repoURL: https://github.com/padok-team/burrito.git
+              path: manifests/
+              targetRevision: v0.1.0
             destination: {}
 
     # Dedicated generator for this application.
@@ -162,10 +179,10 @@ spec:
                 - CreateNamespace=true
                 - RespectIgnoreDifferences=true
 
-            # - list:
-            #     elements:
-            #       - name: crossplane-resources
-            #         namespace: crossplane-system
+    # - list:
+    #     elements:
+    #       - name: crossplane-resources
+    #         namespace: crossplane-system
     #     template:
     #       metadata: {}
     #       spec:
