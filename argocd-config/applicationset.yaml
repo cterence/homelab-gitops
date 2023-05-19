@@ -8,70 +8,50 @@ spec:
         elements:
           - name: ingress-nginx
             namespace: ingress-nginx
-            # syncWave: "1"
           - name: argocd
             namespace: argocd
-            # syncWave: "2"
           - name: external-dns
             namespace: external-dns
-            # syncWave: "3"
           - name: cert-manager
             namespace: cert-manager
-            # syncWave: "3"
           - name: oauth2-proxy
             namespace: oauth2-proxy
-            # syncWave: "3"
           # - name: sealed-secrets
           #   namespace: sealed-secrets
-          #   syncWave: "3"
           # - name: alertmanager-telegram
           #   namespace: monitoring
-          #   syncWave: "5"
           # - name: atlantis
           #   namespace: atlantis
-          #   syncWave: "5"
           # - name: blackbox-exporter
           #   namespace: monitoring
-          #   syncWave: "5"
           # - name: external-endpoints
           #   namespace: external-endpoints
-          #   syncWave: "5"
           # - name: gitlab-runner
           #   namespace: gitlab
-          #   syncWave: "5"
           - name: httpbin
             namespace: apps
-            # syncWave: "5"
           # - name: k8tz
           #   namespace: k8tz
-          #   syncWave: "5"
           # - name: loki-stack
           #   namespace: monitoring
-          #   syncWave: "5"
           - name: metrics-server
             namespace: metrics-server
-            # syncWave: "5"
           # - name: thanos
           #   namespace: monitoring
-          #   syncWave: "5"
           # - name: crossplane
           #   namespace: crossplane-system
-          #   syncWave: "5"
           # - name: ghost
           #   namespace: apps
-          #   syncWave: "5"
           # - name: vault-dev
           #   namespace: hashicorp
-          #   syncWave: "5"
           # - name: tailscale
           #   namespace: tailscale
-          #   syncWave: "5"
           - name: tailscale-operator
             namespace: tailscale
-            # syncWave: "5"
+          - name: ntfy
+            namespace: ntfy
           # - name: pihole
           #   namespace: pihole
-          #   syncWave: "5"
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
@@ -79,7 +59,6 @@ spec:
         elements:
           - name: kube-prometheus-stack-crds
             namespace: monitoring
-            # syncWave: "1"
         template:
           metadata: {}
           spec:
@@ -103,7 +82,6 @@ spec:
             #     elements:
             #       - name: flannel
             #         namespace: kube-system
-            #         # syncWave: "1"
             #     template:
             #       metadata: {}
             #       spec:
@@ -122,7 +100,6 @@ spec:
             #     elements:
             #       - name: kube-prometheus-stack
             #         namespace: monitoring
-            #         syncWave: "5"
     #     template:
     #       metadata: {}
     #       spec:
@@ -137,7 +114,6 @@ spec:
         elements:
           - name: metallb
             namespace: metallb
-            # syncWave: "1"
         template:
           metadata: {}
           spec:
@@ -164,7 +140,6 @@ spec:
         elements:
           - name: external-secrets
             namespace: external-secrets
-            # syncWave: "2"
         template:
           metadata: {}
           spec:
@@ -191,7 +166,6 @@ spec:
             #     elements:
             #       - name: crossplane-resources
             #         namespace: crossplane-system
-            #         syncWave: "10"
     #     template:
     #       metadata: {}
     #       spec:
@@ -213,7 +187,6 @@ spec:
         elements:
           - name: longhorn
             namespace: longhorn-system
-            # syncWave: "4"
         template:
           metadata: {}
           spec:
@@ -236,7 +209,6 @@ spec:
       name: "{{name}}"
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
-        argocd.argoproj.io/sync-wave: "{{syncWave}}"
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
     spec:
       project: default
