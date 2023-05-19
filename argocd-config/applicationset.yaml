@@ -122,7 +122,7 @@ spec:
             #     elements:
             #       - name: kube-prometheus-stack
             #         namespace: monitoring
-            syncWave: "5"
+            #         syncWave: "5"
     #     template:
     #       metadata: {}
     #       spec:
@@ -191,7 +191,7 @@ spec:
             #     elements:
             #       - name: crossplane-resources
             #         namespace: crossplane-system
-            syncWave: "10"
+            #         syncWave: "10"
     #     template:
     #       metadata: {}
     #       spec:
