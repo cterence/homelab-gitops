@@ -44,3 +44,6 @@ helm template argocd  --namespace argocd . | kubectl apply --namespace argocd -f
 # Install the app of apps
 cd ../../argocd-config
 kubectl apply --namespace argocd -f app-of-apps.yaml
+
+rm ~/.kube/config
+tailscale configure kubeconfig k8s-tailscale-operator

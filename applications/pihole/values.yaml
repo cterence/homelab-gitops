@@ -59,7 +59,7 @@ pihole:
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-dns
       tailscale.com/expose: "true"
-      tailscale.com/hostname: "pihole"
+      tailscale.com/hostname: "k8s-pihole"
 
   # -- Configuration for the DHCP service on port 67
   serviceDhcp:

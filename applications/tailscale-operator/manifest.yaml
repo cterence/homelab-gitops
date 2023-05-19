@@ -145,7 +145,7 @@ spec:
               memory: 100Mi
           env:
             - name: OPERATOR_HOSTNAME
-              value: tailscale-operator
+              value: k8s-tailscale-operator
             - name: OPERATOR_SECRET
               value: operator
             - name: OPERATOR_LOGGING
