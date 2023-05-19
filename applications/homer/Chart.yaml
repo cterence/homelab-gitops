@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homer
+description: A helm chart for an app
+type: application
+version: 8.1.7
+dependencies:
+  - name: homer
+    repository: https://djjudas21.github.io/charts/
+    version: 8.1.7

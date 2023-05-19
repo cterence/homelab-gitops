@@ -3,11 +3,13 @@ loki-stack:
     enabled: true
     persistence:
       enabled: true
-    loki:
+    config:
       compactor:
         retention_enabled: true
       limits_config:
-        retention_delete_enabled: true
+        retention_period: 3d
+      table_manager:
+        retention_deletes_enabled: true
         retention_period: 3d
 
     serviceMonitor:
