@@ -54,6 +54,8 @@ spec:
           #   namespace: pihole
           - name: burrito-resources
             namespace: burrito
+          - name: cloudflared
+            namespace: cloudflared
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
