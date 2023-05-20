@@ -212,10 +212,10 @@ linkerd-jaeger:
     logLevel: info
 
     namespaceSelector:
-      #matchExpressions:
-      #- key: runlevel
-      #  operator: NotIn
-      #  values: ["0","1"]
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values: ["apps", "ingress-nginx"]
     objectSelector:
       #matchLabels:
       #  foo: bar
