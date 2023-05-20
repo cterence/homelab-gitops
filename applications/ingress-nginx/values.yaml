@@ -3,6 +3,8 @@ ingress-nginx:
     service:
       # Forces MetalLB to set this IP
       # loadBalancerIP: "192.168.1.240"
+
+      # ClusterIP for use with cloudflare tunnels
       type: ClusterIP
 
     metrics:
