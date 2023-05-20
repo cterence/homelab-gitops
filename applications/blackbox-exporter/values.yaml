@@ -21,7 +21,7 @@ prometheus-blackbox-exporter:
         url: http://youtube.com
         module: http_2xx
       - name: argocd
-        url: http://argocd.terence.cloud
+        url: http://argocd.k8s.terence.cloud
         module: http_2xx
       - name: nextcloud
         url: http://next.terence.cloud

@@ -35,7 +35,7 @@ argo-cd:
     secret:
       create: false
       name: argocd-notifications-controller-secret
-    argocdUrl: https://argocd.terence.cloud
+    argocdUrl: https://argocd.k8s.terence.cloud
     extraEnv:
       - name: TZ
         value: Europe/Paris
@@ -284,7 +284,7 @@ argo-cd:
       enabled: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: k8s.terence.cloud
         nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
@@ -295,16 +295,16 @@ argo-cd:
           proxy_set_header 'x-remote-user' $auth_header;
       pathType: ImplementationSpecific
       hosts:
-        - argocd.terence.cloud
+        - argocd.k8s.terence.cloud
       tls:
         - secretName: argocd-tls-certificate
           hosts:
-            - argocd.terence.cloud
+            - argocd.k8s.terence.cloud
       ingressClassName: nginx
       https: true
 
     config:
-      url: https://argocd.terence.cloud
+      url: https://argocd.k8s.terence.cloud
       # The application customization allows to do sync waves of Argo applications.
       # Very useful to counteract race conditions. Ex : deploy Prometheus operator CRDs before the kube-prometheus-stack chart
       # Or deploy nginx-ingress-controller and external-dns before cert-manager.

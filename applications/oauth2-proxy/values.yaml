@@ -40,7 +40,7 @@ oauth2-proxy:
     # Every host that needs oauth authentication
     hosts:
       - alertmanager.terence.cloud
-      - argocd.terence.cloud
+      - argocd.k8s.terence.cloud
       - atlantis.terence.cloud
       - duplicati.terence.cloud
       - grafana.terence.cloud

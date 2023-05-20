@@ -5,6 +5,36 @@ global:
   branch: "main"
   secretStoreName: gitlab-secret-store
 
+externalSecrets:
+  - name: burrito-twig-deploy-key
+    data:
+      - secretKey: sshPrivateKey
+        remoteRefKey: burrito_twig_deploy_key
+  - name: cloudflare-r2-credentials
+    data:
+      - secretKey: AWS_ACCESS_KEY_ID
+        remoteRefKey: cloudflare_r2_access_key_id
+      - secretKey: AWS_SECRET_ACCESS_KEY
+        remoteRefKey: cloudflare_r2_secret_access_key
+  - name: cloudflare-backend-credentials
+    data:
+      - secretKey: CLOUDFLARE_EMAIL
+        remoteRefKey: cloudflare_email
+      - secretKey: CLOUDFLARE_API_KEY
+        remoteRefKey: cloudflare_api_key
+  - name: gitlab-token
+    data:
+      - secretKey: GITLAB_TOKEN
+        remoteRefKey: burrito_gitlab_token
+      - secretKey: TF_VAR_secrets_project
+        remoteRefKey: project
+  - name: tailscale-credentials
+    data:
+      - secretKey: TAILSCALE_TAILNET
+        remoteRefKey: tailscale_tailnet
+      - secretKey: TAILSCALE_API_KEY
+        remoteRefKey: tailscale_api_key
+
 repository:
   name: twig
   url: git@github.com:cterence/twig.git
@@ -42,33 +72,14 @@ layers:
       envFrom:
         - secretRef:
             name: tailscale-credentials
-
-externalSecrets:
-  - name: burrito-twig-deploy-key
-    data:
-      - secretKey: sshPrivateKey
-        remoteRefKey: burrito_twig_deploy_key
-  - name: cloudflare-r2-credentials
-    data:
-      - secretKey: AWS_ACCESS_KEY_ID
-        remoteRefKey: cloudflare_r2_access_key_id
-      - secretKey: AWS_SECRET_ACCESS_KEY
-        remoteRefKey: cloudflare_r2_secret_access_key
-  - name: cloudflare-backend-credentials
-    data:
-      - secretKey: CLOUDFLARE_EMAIL
-        remoteRefKey: cloudflare_email
-      - secretKey: CLOUDFLARE_API_KEY
-        remoteRefKey: cloudflare_api_key
-  - name: gitlab-token
-    data:
-      - secretKey: GITLAB_TOKEN
-        remoteRefKey: burrito_gitlab_token
-      - secretKey: TF_VAR_secrets_project
-        remoteRefKey: project
-  - name: tailscale-credentials
-    data:
-      - secretKey: TAILSCALE_TAILNET
-        remoteRefKey: tailscale_tailnet
-      - secretKey: TAILSCALE_API_KEY
-        remoteRefKey: tailscale_api_key
+  # TODO: how to pass the GCP credentials ?
+  # - name: gcp
+  #   path: "layers/gcp"
+  #   terragrunt:
+  #     enabled: true
+  #   overrideRunnerSpec:
+  #     envFrom:
+  #       - secretRef:
+  #           name: gcp-credentials
+  #       - secretRef:
+  #           name: cloudflare-r2-credentials
