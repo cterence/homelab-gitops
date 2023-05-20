@@ -18,6 +18,12 @@
 
 I also use this machine to host a Nextcloud instance for my files.
 
+## 🌐 Network topology
+
+Here's a macroscopic overview of the state of my network, connecting all my devices together, including this lab.
+
+![network](./assets/topology.excalidraw.png)
+
 ## ⏫ Bootstrap
 
 How to setup a cluster just like mine with a Linux node and `kubeadm`.
