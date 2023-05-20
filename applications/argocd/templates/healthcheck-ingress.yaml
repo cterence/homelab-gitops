@@ -3,13 +3,13 @@ kind: Ingress
 metadata:
   name: argocd-healthcheck-ingress
   annotations:
-    external-dns.alpha.kubernetes.io/target: k8s.terence.cloud
+    external-dns.alpha.kubernetes.io/target: terence.cloud
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-    - host: argocd.k8s.terence.cloud
+    - host: argocd.terence.cloud
       http:
         paths:
           - backend:

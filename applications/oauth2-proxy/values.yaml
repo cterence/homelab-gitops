@@ -40,16 +40,16 @@ oauth2-proxy:
     # Every host that needs oauth authentication
     hosts:
       - alertmanager.terence.cloud
-      - argocd.k8s.terence.cloud
+      - argocd.terence.cloud
       - atlantis.terence.cloud
       - duplicati.terence.cloud
-      - grafana.k8s.terence.cloud
+      - grafana.terence.cloud
       - httpbin.terence.cloud
       - kibana.terence.cloud
       - loki.terence.cloud
       - longhorn.terence.cloud
       - pihole.terence.cloud
-      - prometheus.k8s.terence.cloud
+      - prometheus.terence.cloud
       - qbittorrent.terence.cloud
       - thanos-bucketweb.terence.cloud
       - thanos-minio.terence.cloud

@@ -15,5 +15,5 @@ spec:
             ingressTemplate:
               metadata:
                 annotations:
-                  external-dns.alpha.kubernetes.io/target: k8s.terence.cloud
+                  external-dns.alpha.kubernetes.io/target: terence.cloud
                   external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
