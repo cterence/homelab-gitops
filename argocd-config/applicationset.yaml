@@ -56,8 +56,6 @@ spec:
             namespace: cloudflared
           - name: linkerd-control-plane
             namespace: linkerd
-          - name: linkerd-crds
-            namespace: linkerd
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
@@ -226,6 +224,27 @@ spec:
         elements:
           - name: longhorn
             namespace: longhorn-system
+        template:
+          metadata: {}
+          spec:
+            project: ""
+            source:
+              repoURL: ""
+            ignoreDifferences:
+              - group: apiextensions.k8s.io
+                kind: "*"
+                jqPathExpressions:
+                  - .spec.preserveUnknownFields
+            destination: {}
+            syncPolicy:
+              syncOptions:
+                - CreateNamespace=true
+                - RespectIgnoreDifferences=true
+
+    - list:
+        elements:
+          - name: linkerd-crds
+            namespace: linkerd
         template:
           metadata: {}
           spec:
