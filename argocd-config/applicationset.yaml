@@ -54,10 +54,10 @@ spec:
             namespace: burrito
           - name: cloudflared
             namespace: cloudflared
-          - name: linkerd-control-plane
-            namespace: linkerd
-          - name: linkerd-jaeger
-            namespace: linkerd-jaeger
+          # - name: linkerd-control-plane
+          #   namespace: linkerd
+          # - name: linkerd-jaeger
+          #   namespace: linkerd-jaeger
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
@@ -116,22 +116,6 @@ spec:
               path: manifests/
               targetRevision: main
             destination: {}
-
-    # - list:
-    #     elements:
-    #       - name: burrito-resources
-    #         namespace: burrito
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - CreateNamespace=true
-    #             - Validate=false
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
