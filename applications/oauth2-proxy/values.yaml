@@ -43,7 +43,7 @@ oauth2-proxy:
       - argocd.k8s.terence.cloud
       - atlantis.terence.cloud
       - duplicati.terence.cloud
-      - grafana.terence.cloud
+      - grafana.k8s.terence.cloud
       - httpbin.terence.cloud
       - kibana.terence.cloud
       - loki.terence.cloud

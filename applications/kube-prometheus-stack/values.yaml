@@ -94,22 +94,22 @@ kube-prometheus-stack:
 
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: k8s.terence.cloud
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
       hosts:
-        - grafana.terence.cloud
+        - grafana.k8s.terence.cloud
       tls:
         - secretName: grafana-general-tls
           hosts:
-            - grafana.terence.cloud
+            - grafana.k8s.terence.cloud
 
     # The oAuth2 proxy handles authentication, not Grafana.
     grafana.ini:
       auth:
         disable_login_form: true
-        signout_redirect_url: "https://grafana.terence.cloud/oauth2/sign_out"
+        signout_redirect_url: "https://grafana.k8s.terence.cloud/oauth2/sign_out"
       auth.basic:
         enabled: false
       auth.proxy:
