@@ -49,7 +49,7 @@ oauth2-proxy:
       - loki.terence.cloud
       - longhorn.terence.cloud
       - pihole.terence.cloud
-      - prometheus.terence.cloud
+      - prometheus.k8s.terence.cloud
       - qbittorrent.terence.cloud
       - thanos-bucketweb.terence.cloud
       - thanos-minio.terence.cloud
