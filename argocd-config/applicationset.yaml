@@ -30,8 +30,6 @@ spec:
           #   namespace: gitlab
           - name: httpbin
             namespace: apps
-          - name: homer
-            namespace: apps
           - name: loki-stack
             namespace: monitoring
           - name: metrics-server
@@ -56,6 +54,10 @@ spec:
             namespace: burrito
           - name: cloudflared
             namespace: cloudflared
+          - name: linkerd-control-plane
+            namespace: linkerd
+          - name: linkerd-crds
+            namespace: linkerd
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
