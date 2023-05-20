@@ -4,18 +4,27 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
+    env:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
 
   dex:
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
+    env:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
 
   redis:
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
+    env:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
 
   repoServer:
     logLevel: warn
@@ -23,12 +32,19 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
+    env:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
 
   applicationSet:
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
+
+    extraEnv:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
 
   notifications:
     enabled: true
@@ -39,6 +55,9 @@ argo-cd:
     extraEnv:
       - name: TZ
         value: Europe/Paris
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
+
     notifiers:
       service.telegram: |
         token: $telegram-token
@@ -349,6 +368,10 @@ argo-cd:
       policy.csv: |
         g, terence.chateigne@posteo.net, role:admin
       scopes: "[groups, email]"
+
+    env:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
 
   configs:
     secret:

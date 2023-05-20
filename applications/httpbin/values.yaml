@@ -14,10 +14,6 @@ serviceAccount:
 autoscaling:
   enabled: false
 
-env:
-  - name: OC_AGENT_HOST
-    value: collector.linkerd-jaeger:55678
-
 ingress:
   enabled: true
   className: "nginx"
