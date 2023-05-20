@@ -1,0 +1,5 @@
+apiVersion: v2
+name: burrito-resources
+description: A helm chart for an app
+type: application
+version: v0.1.0
