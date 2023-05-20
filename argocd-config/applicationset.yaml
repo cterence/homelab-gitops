@@ -56,6 +56,8 @@ spec:
             namespace: cloudflared
           - name: linkerd-control-plane
             namespace: linkerd
+          - name: linkerd-jaeger
+            namespace: linkerd-jaeger
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.

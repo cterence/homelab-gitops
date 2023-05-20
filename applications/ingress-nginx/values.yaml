@@ -11,3 +11,6 @@ ingress-nginx:
       enabled: true
       serviceMonitor:
         enabled: true
+    extraEnvs:
+      - name: OC_AGENT_HOST
+        value: collector.linkerd-jaeger:55678
