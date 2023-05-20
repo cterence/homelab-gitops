@@ -16,4 +16,4 @@ spec:
               metadata:
                 annotations:
                   external-dns.alpha.kubernetes.io/target: k8s.terence.cloud
-                  external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+                  external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
