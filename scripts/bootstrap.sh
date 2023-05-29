@@ -10,7 +10,7 @@ ssh -tt terence@homelab "sudo kubeadm init --apiserver-cert-extra-sans homelab -
 
 scp -q terence@homelab:/home/terence/.kube/config ~/.kube/config || true
 
-sed -i 's/192.168.1.32/homelab/g' ~/.kube/config
+sed -i 's/192.168.2.64/homelab/g' ~/.kube/config
 
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 

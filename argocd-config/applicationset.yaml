@@ -6,6 +6,8 @@ spec:
   generators:
     - list:
         elements:
+          - name: flannel
+            namespace: kube-flannel
           - name: ingress-nginx
             namespace: ingress-nginx
           - name: argocd
@@ -80,24 +82,6 @@ spec:
               syncOptions:
                 - CreateNamespace=true
                 - Replace=true
-
-    # Dedicated generator for this application.
-    # Needed because the source is not internal to this repo.
-    - list:
-        elements:
-          - name: flannel
-            namespace: kube-system
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              directory:
-                include: kube-flannel.yml
-              repoURL: https://github.com/flannel-io/flannel.git
-              path: Documentation/
-              targetRevision: master
-            destination: {}
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo.
