@@ -101,21 +101,21 @@ spec:
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo.
-    - list:
-        elements:
-          - name: burrito
-            namespace: burrito
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              directory:
-                include: install.yaml
-              repoURL: https://github.com/padok-team/burrito.git
-              path: manifests/
-              targetRevision: main
-            destination: {}
+    # - list:
+    #     elements:
+    #       - name: burrito
+    #         namespace: burrito
+    #     template:
+    #       metadata: {}
+    #       spec:
+    #         project: ""
+    #         source:
+    #           directory:
+    #             include: install.yaml
+    #           repoURL: https://github.com/padok-team/burrito.git
+    #           path: manifests/
+    #           targetRevision: main
+    #         destination: {}
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
