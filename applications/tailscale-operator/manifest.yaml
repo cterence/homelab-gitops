@@ -138,7 +138,7 @@ spec:
             secretName: operator-oauth
       containers:
         - name: operator
-          image: tailscale/k8s-operator:unstable-v1.41.62
+          image: tailscale/k8s-operator:unstable
           resources:
             requests:
               cpu: 500m
@@ -159,7 +159,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:unstable-v1.41.62
+              value: tailscale/tailscale:unstable
             - name: PROXY_TAGS
               value: tag:k8s
             - name: AUTH_PROXY
