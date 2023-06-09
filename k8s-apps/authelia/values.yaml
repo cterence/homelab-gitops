@@ -896,10 +896,9 @@ authelia:
       #   networks:
       #   - 10.9.0.0/16
 
-      rules: []
-      # rules:
-      # - domain_regex: '^.*\.example.com$'
-      #   policy: bypass
+      rules:
+        - domain_regex: '^.*\.terence.cloud$'
+          policy: two_factor
       # - domain: public.example.com
       #   policy: bypass
       # - domain: "*.example.com"
