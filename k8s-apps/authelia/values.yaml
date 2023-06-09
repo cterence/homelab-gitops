@@ -776,7 +776,7 @@ authelia:
       ## Important: Kubernetes (or HA) users must read https://www.authelia.com/overview/authorization/statelessness/
       ##
       file:
-        enabled: false
+        enabled: true
         path: /config/users_database.yml
         watch: true
         search:
@@ -1159,7 +1159,7 @@ authelia:
       ## Important: Kubernetes (or HA) users must read https://www.authelia.com/overview/authorization/statelessness/
       ##
       filesystem:
-        enabled: false
+        enabled: true
         filename: /config/notification.txt
 
       ##
@@ -1668,7 +1668,7 @@ authelia:
   ## Configuration Use Case: when you want to manually configure the configuration entirely (set configMap.enabled = false).
   ##
   persistence:
-    enabled: false
+    enabled: true
 
     annotations: {}
     # annotations:
