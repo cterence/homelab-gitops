@@ -60,6 +60,8 @@ spec:
           #   namespace: linkerd
           # - name: linkerd-jaeger
           #   namespace: linkerd-jaeger
+          - name: authelia
+            namespace: authelia
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: authelia
+description: A helm chart for an app
+type: application
+version: 0.8.57
+dependencies:
+  - name: authelia
+    repository: https://charts.authelia.com
+    version: 0.8.57
