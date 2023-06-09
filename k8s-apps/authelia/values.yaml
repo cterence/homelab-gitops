@@ -645,7 +645,7 @@ authelia:
       ## production.
       ldap:
         ## Enable LDAP Backend.
-        enabled: true
+        enabled: false
 
         ## The LDAP implementation, this affects elements like the attribute utilised for resetting a password.
         ## Acceptable options are as follows:
@@ -1173,7 +1173,7 @@ authelia:
       ##   - validate the SMTP server x509 certificate during the TLS handshake against the hosts trusted certificates
       ##     (configure in tls section)
       smtp:
-        enabled: true
+        enabled: false
         enabledSecret: false
         host: smtp.mail.svc.cluster.local
         port: 25
