@@ -975,7 +975,7 @@ authelia:
       ##
       ## The redis connection details
       redis:
-        enabled: true
+        enabled: false
         enabledSecret: false
         host: redis.databases.svc.cluster.local
         port: 6379
@@ -1075,7 +1075,7 @@ authelia:
       ## Important: Kubernetes (or HA) users must read https://www.authelia.com/overview/authorization/statelessness/
       ##
       local:
-        enabled: false
+        enabled: true
         path: /config/db.sqlite3
 
       ##
@@ -1115,7 +1115,7 @@ authelia:
       ## PostgreSQL (Storage Provider)
       ##
       postgres:
-        enabled: true
+        enabled: false
         host: postgres.databases.svc.cluster.local
         port: 5432
         database: authelia
