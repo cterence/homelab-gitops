@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: git@github.com:cterence/homelab-gitops.git
-    path: argocd-config
+    path: argocd-apps/
     targetRevision: HEAD
   destination:
     name: in-cluster

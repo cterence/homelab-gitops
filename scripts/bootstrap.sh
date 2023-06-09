@@ -32,7 +32,7 @@ stringData:
 EOF
 
 # Install the external secrets operator from the chart in the applications directory
-cd applications/external-secrets
+cd k8s-apps/external-secrets
 helm dependency update
 helm template external-secrets --namespace external-secrets . | kubectl apply --namespace external-secrets -f - 
 
@@ -42,7 +42,7 @@ helm dependency update
 helm template argocd  --namespace argocd . | kubectl apply --namespace argocd -f - 
 
 # Install the app of apps
-cd ../../argocd-config
+cd ../../argocd-apps/
 kubectl apply --namespace argocd -f app-of-apps.yaml
 
 rm ~/.kube/config

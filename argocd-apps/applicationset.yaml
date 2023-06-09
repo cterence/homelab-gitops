@@ -243,7 +243,7 @@ spec:
       source:
         repoURL: git@github.com:cterence/homelab-gitops.git
         targetRevision: HEAD
-        path: "applications/{{name}}"
+        path: "k8s-apps/{{name}}"
       destination:
         name: in-cluster
         namespace: "{{namespace}}"

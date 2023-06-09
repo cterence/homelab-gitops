@@ -9,7 +9,6 @@
 </p></div>
 </div>
 
-
 ## ⚙️ Hardware
 
 | Device                    | Count | Specs                                          | Purpose         |
@@ -89,9 +88,9 @@ On your Kubernetes node :
       --controller-name=sealed-secrets \
       --controller-namespace sealed-secrets \
       --format yaml \
-      < applications/"$1"/"$2"-cleartext.yaml \
-      > applications/"$1"/"$2".yaml \
-      && rm applications/"$1"/"$2"-cleartext.yaml
+      < k8s-apps/"$1"/"$2"-cleartext.yaml \
+      > k8s-apps/"$1"/"$2".yaml \
+      && rm k8s-apps/"$1"/"$2"-cleartext.yaml
   }
   ```
 
@@ -105,7 +104,7 @@ On your Kubernetes node :
 
   - Add the public ssh key to your git remote repository (for Github, add a [deploy key](https://docs.github.com/en/developers/overview/managing-deploy-keys#deploy-keys))
 
-  - Create a temporary secret manifest named `applications/argocd/argo-github-repository-credentials-cleartext.yaml` from the ssh private key
+  - Create a temporary secret manifest named `k8s-apps/argocd/argo-github-repository-credentials-cleartext.yaml` from the ssh private key
 
     ```yaml
     apiVersion: v1
@@ -139,9 +138,9 @@ On your Kubernetes node :
       --controller-namespace sealed-secrets \
       --format yaml \
       --scope cluster-wide \
-      < applications/argocd/argo-github-repository-credentials-cleartext.yaml \
-      > applications/argocd/argo-github-repository-credentials.yaml \
-    && rm applications/argocd/argo-github-repository-credentials-cleartext.yaml
+      < k8s-apps/argocd/argo-github-repository-credentials-cleartext.yaml \
+      > k8s-apps/argocd/argo-github-repository-credentials.yaml \
+    && rm k8s-apps/argocd/argo-github-repository-credentials-cleartext.yaml
     ```
 
 <!-- TODO: more details on this part -->
@@ -161,7 +160,7 @@ On your Kubernetes node :
 - Install ArgoCD with the provided values in your cluster
 
   ```bash
-  cd applications/argocd
+  cd k8s-apps/argocd
   helm dependency build
   kubectl create namespace argocd
   helm template argocd . -n argocd --set argo-cd.server.metrics.serviceMonitor.enabled=false --set argo-cd.redis.metrics.serviceMonitor.enabled=false --set argo-cd.dex.metrics.serviceMonitor.enabled=false --set argo-cd.repoServer.metrics.serviceMonitor.enabled=false --set argo-cd.notifications.metrics.serviceMonitor.enabled=false --set argo-cd.applicationSet.metrics.serviceMonitor.enabled=false   --set argo-cd.controller.metrics.serviceMonitor.enabled=false | kubectl apply -n argocd -f -
@@ -170,13 +169,13 @@ On your Kubernetes node :
 - Apply the secret containing the repository credentials
 
   ```bash
-  kubectl apply -f applications/argocd/argo-github-repository-credentials.yaml -n argocd
+  kubectl apply -f k8s-apps/argocd/argo-github-repository-credentials.yaml -n argocd
   ```
 
 - Apply the app of apps
 
   ```bash
-  kubectl apply -f argo-applications/app-of-apps.yaml -n argocd
+  kubectl apply -f argo-k8s-apps/app-of-apps.yaml -n argocd
   ```
 
 You should be done ! 👌
