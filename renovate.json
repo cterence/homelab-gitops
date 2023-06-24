@@ -4,11 +4,19 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["pin", "digest", "patch", "minor"],
+      "matchUpdateTypes": [
+        "pin",
+        "digest",
+        "patch",
+        "minor"
+      ],
       "ignoreTests": true,
       "automerge": true,
       "automergeType": "branch"
     }
   ],
-  "ignorePaths": ["**/atlantis/**","**/blackbox-exporter/**"]
+  "ignorePaths": [
+    "**/atlantis/**",
+    "**/blackbox-exporter/**"
+  ]
 }
