@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: gotify/server
   pullPolicy: IfNotPresent
-  tag: "2.3"
+  tag: "2.4"
 
 serviceAccount:
   create: true
