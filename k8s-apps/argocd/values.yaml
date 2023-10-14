@@ -362,7 +362,7 @@ argo-cd:
             id: oauth2-proxy
             name: OAuth2 Proxy
 
-          - type: keycloak
+          - type: oidc
             id: keycloak
             name: Keycloak
             config:
