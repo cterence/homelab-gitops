@@ -369,6 +369,7 @@ argo-cd:
               issuer: https://keycloak.terence.cloud/realms/relampago
               clientID: argocd
               clientSecret: $keycloak-client-secret:dex.keycloak.clientSecret
+              logoutURL: https://keycloak.terence.cloud/realms/relampago/protocol/openid-connect/logout?client_id=argocd&post_logout_redirect_uri=https%3A%2F%2Fargocd.terence.cloud%2Flogin
       admin.enabled: "false"
 
     rbacConfig:
