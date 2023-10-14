@@ -361,6 +361,14 @@ argo-cd:
           - type: authproxy
             id: oauth2-proxy
             name: OAuth2 Proxy
+
+          - type: keycloak
+            id: keycloak
+            name: Keycloak
+            config:
+              issuer: https://keycloak.terence.cloud/realms/relampago
+              clientID: argocd
+              clientSecret: $keycloak-client-secret:dex.keycloak.clientSecret
       admin.enabled: "false"
 
     rbacConfig:

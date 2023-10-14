@@ -60,30 +60,8 @@ spec:
           #   namespace: linkerd
           # - name: linkerd-jaeger
           #   namespace: linkerd-jaeger
-          - name: authelia
-            namespace: authelia
-
-    # Dedicated generator for this application.
-    # Needed because the source is not internal to this repo and the sync policy is not the same.
-    - list:
-        elements:
-          - name: kube-prometheus-stack-crds
-            namespace: monitoring
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              directory:
-                recurse: true
-              repoURL: https://github.com/prometheus-community/helm-charts.git
-              path: charts/kube-prometheus-stack/crds/
-              targetRevision: kube-prometheus-stack-45.7.1
-            destination: {}
-            syncPolicy:
-              syncOptions:
-                - CreateNamespace=true
-                - Replace=true
+          # - name: authelia
+          #   namespace: authelia
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo.
@@ -115,9 +93,11 @@ spec:
             project: ""
             source:
               repoURL: ""
-              helm:
-                skipCrds: true
             destination: {}
+            syncPolicy:
+              syncOptions:
+                - CreateNamespace=true
+                - ServerSideApply=true
 
     # - list:
     #     elements:
