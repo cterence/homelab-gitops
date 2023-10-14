@@ -10,6 +10,9 @@ ingress-nginx:
       # ClusterIP for use with cloudflare tunnels
       type: ClusterIP
 
+    config:
+      allow-snippet-annotations: "true"
+
     metrics:
       enabled: true
       serviceMonitor:
@@ -17,3 +20,7 @@ ingress-nginx:
     extraEnvs:
       - name: OC_AGENT_HOST
         value: collector.linkerd-jaeger:55678
+
+  ingress:
+    options:
+      allow-snippet-annotations: "true"
