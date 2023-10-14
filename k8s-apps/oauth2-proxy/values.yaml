@@ -1,33 +1,71 @@
 oauth2-proxy:
+  proxyVarsAsSecrets: true
   config:
-    existingSecret: gitlab-oauth2-credentials
+    # existingSecret: google-oauth2-credentials
     # Configuring email_domains as an empty array acts as a deny all
     configFile: |-
-      email_domains = []
+      email_domains = ["*"]
 
-  extraArgs:
-    # For ingress-nginx
-    set-xauthrequest: true
+  # extraArgs:
+  # For ingress-nginx
+  # set-xauthrequest: true
 
-    # Gitlab
-    provider: gitlab
-    oidc-issuer-url: https://gitlab.com
+  # Gitlab
+  # provider: gitlab
+  # oidc-issuer-url: https://gitlab.com
 
-    # Google
-    # provider: google
+  # Google
+  # provider: google
 
-    # Nextcloud
-    # provider: nextcloud
-    # login-url: https://next.terence.cloud/index.php/apps/oauth2/authorize
-    # redeem-url: https://next.terence.cloud/index.php/apps/oauth2/api/v1/token
-    # validate-url: https://next.terence.cloud/ocs/v2.php/cloud/user?format=json
+  # Nextcloud
+  # provider: nextcloud
+  # login-url: https://next.terence.cloud/index.php/apps/oauth2/authorize
+  # redeem-url: https://next.terence.cloud/index.php/apps/oauth2/api/v1/token
+  # validate-url: https://next.terence.cloud/ocs/v2.php/cloud/user?format=json
 
-  authenticatedEmailsFile:
+  # authenticatedEmailsFile:
+  #   enabled: false
+  #   # Restrict access to specific email addresses
+  #   restricted_access: |-
+  #     terence.chateigne@posteo.net
+  #     terence.chateigne@gmail.com
+
+  alphaConfig:
     enabled: true
-    # Restrict access to specific email addresses
-    restricted_access: |-
-      terence.chateigne@posteo.net
-      terence.chateigne@gmail.com
+    configData:
+      providers:
+        # - id: google
+        #   name: Google
+        #   clientId: 602698434371-n8g8cpp5faibnn7ldet4q09j176umpnb.apps.googleusercontent.com
+        #   clientSecretFile: /mnt/google/clientSecret
+        #   provider: google
+        #   code_challenge_method: S256
+        #   scope: "openid email"
+        #   # gitlabConfig:
+        #   #   group:
+        #   #     - terencec_homelab
+        #   oidcConfig:
+        #     issuerURL: https://accounts.google.com
+        - id: gitlab
+          name: Gitlab
+          clientId: 83a36c7adbff7e7ad71b81ee9a605042ecd254b57abc679a6747e53243c8a7f9
+          clientSecretFile: /mnt/gitlab/clientSecret
+          provider: gitlab
+          code_challenge_method: S256
+          scope: "openid email"
+          gitlabConfig:
+            group:
+              - terencec_homelab
+          oidcConfig:
+            issuerURL: https://gitlab.com
+            audienceClaims: ["aud"]
+      injectResponseHeaders:
+        - name: X-Auth-Request-Email
+          values:
+            - claim: email
+        - name: X-Auth-Request-User
+          values:
+            - claim: user
 
   ingress:
     enabled: true
@@ -59,3 +97,22 @@ oauth2-proxy:
     enabled: true
     servicemonitor:
       enabled: true
+
+  extraVolumes:
+    - name: gitlab-client-secret
+      secret:
+        secretName: gitlab-oauth2-credentials
+        items:
+          - key: client-secret
+            path: clientSecret
+    - name: google-client-secret
+      secret:
+        secretName: google-oauth2-credentials
+        items:
+          - key: client-secret
+            path: clientSecret
+  extraVolumeMounts:
+    - name: gitlab-client-secret
+      mountPath: /mnt/gitlab
+    - name: google-client-secret
+      mountPath: /mnt/google
