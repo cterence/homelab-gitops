@@ -9,6 +9,7 @@ argo-cd:
         value: collector.linkerd-jaeger:55678
 
   dex:
+    enabled: false
     metrics:
       enabled: true
       serviceMonitor:
@@ -307,12 +308,12 @@ argo-cd:
         external-dns.alpha.kubernetes.io/target: terence.cloud
         nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email, X-Auth-Request-User
-        nginx.ingress.kubernetes.io/configuration-snippet: |
-          auth_request_set $auth_header $upstream_http_x_auth_request_email;
-          proxy_set_header 'x-remote-user' $auth_header;
+        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email, X-Auth-Request-User
+        # nginx.ingress.kubernetes.io/configuration-snippet: |
+        #   auth_request_set $auth_header $upstream_http_x_auth_request_email;
+        #   proxy_set_header 'x-remote-user' $auth_header;
       pathType: ImplementationSpecific
       hosts:
         - argocd.terence.cloud
@@ -356,21 +357,27 @@ argo-cd:
         ignoreAggregatedRoles: true
         ignoreResourceStatusField: all
 
-      dex.config: |
-        connectors:
-          - type: authproxy
-            id: oauth2-proxy
-            name: OAuth2 Proxy
+      # dex.config: |
+      #   connectors:
+      #     - type: authproxy
+      #       id: oauth2-proxy
+      #       name: OAuth2 Proxy
 
-          - type: oidc
-            id: keycloak
-            name: Keycloak
-            config:
-              issuer: https://keycloak.terence.cloud/realms/relampago
-              clientID: argocd
-              clientSecret: $keycloak-client-secret:dex.keycloak.clientSecret
-              logoutURL: https://keycloak.terence.cloud/realms/relampago/protocol/openid-connect/logout?client_id=argocd&post_logout_redirect_uri=https%3A%2F%2Fargocd.terence.cloud%2Flogin
+      #     - type: oidc
+      #       id: keycloak
+      #       name: Keycloak
+      #       config:
+      #         issuer: https://keycloak.terence.cloud/realms/relampago
+      #         clientID: argocd
+      #         clientSecret: $keycloak-client-secret:dex.keycloak.clientSecret
+      #         logoutURL: https://keycloak.terence.cloud/realms/relampago/protocol/openid-connect/logout?client_id=argocd&post_logout_redirect_uri=https%3A%2F%2Fargocd.terence.cloud%2Flogin
       admin.enabled: "false"
+      oidc.config: |
+        name: Keycloak
+        issuer: https://keycloak.terence.cloud/realms/relampago
+        clientID: argocd
+        clientSecret: $keycloak-client-secret:dex.keycloak.clientSecret
+        logoutURL: https://keycloak.terence.cloud/realms/relampago/protocol/openid-connect/logout?client_id=argocd&post_logout_redirect_uri=https%3A%2F%2Fargocd.terence.cloud%2Flogin
 
     rbacConfig:
       policy.default: role:readonly
