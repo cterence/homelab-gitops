@@ -201,6 +201,7 @@ kube-prometheus-stack:
             type: prometheus
             url: http://kube-prometheus-stack-prometheus:9090
             access: proxy
+            isDefault: true
           - name: Loki
             type: loki
             url: http://loki-stack:3100
