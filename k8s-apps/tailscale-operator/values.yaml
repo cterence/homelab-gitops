@@ -6,7 +6,7 @@ operatorConfig:
     repo: tailscale/k8s-operator
     # Digest will be prioritized over tag. If neither are set appVersion will be
     # used.
-    tag: ""
+    tag: "v1.52.0"
     digest: ""
   logging: "info"
   hostname: "k8s-tailscale-operator"
