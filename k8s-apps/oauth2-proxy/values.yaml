@@ -83,6 +83,7 @@ oauth2-proxy:
       - duplicati.terence.cloud
       - grafana.terence.cloud
       - httpbin.terence.cloud
+      - k8s-ingress.snow-delta.ts.net
       - kibana.terence.cloud
       - loki.terence.cloud
       - longhorn.terence.cloud
