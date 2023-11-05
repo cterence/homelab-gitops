@@ -138,6 +138,12 @@ spec:
                       - amd64
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      dnsConfig:
+        nameservers:
+          - 100.100.100.100
+          - 169.254.169.254
+        searches:
+          - snow-delta.ts.net
       priorityClassName: system-node-critical
       tolerations:
         - operator: Exists
