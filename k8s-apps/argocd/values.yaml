@@ -316,14 +316,15 @@ argo-cd:
           proxy_set_header 'x-remote-user' $auth_header;
       pathType: ImplementationSpecific
       paths:
-        - /argocd(/|$)(.*)
+        # - /argocd(/|$)(.*)
+        - /
       hosts:
-        # - argocd.terence.cloud
-        - k8s-ingress.snow-delta.ts.net
-      # tls:
-      #   - secretName: argocd-tls-certificate
-      #     hosts:
-      #       - argocd.terence.cloud
+        - argocd.terence.cloud
+        # - k8s-ingress.snow-delta.ts.net
+      tls:
+        - secretName: argocd-tls-certificate
+          hosts:
+            - argocd.terence.cloud
       ingressClassName: nginx
       https: true
 

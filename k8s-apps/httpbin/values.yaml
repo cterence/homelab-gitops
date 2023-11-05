@@ -17,22 +17,21 @@ autoscaling:
 ingress:
   enabled: true
   className: "nginx"
-  # className: "tailscale"
   annotations:
     external-dns.alpha.kubernetes.io/target: terence.cloud
     cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/use-regex: "true"
-    # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-    # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-    # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
   hosts:
-    # - host: httpbin.terence.cloud
-    - host: k8s-ingress.snow-delta.ts.net
+    - host: httpbin.terence.cloud
+      # - host: k8s-ingress.snow-delta.ts.net
       paths:
         - path: /httpbin(/|$)(.*)
           pathType: ImplementationSpecific
-  # tls:
-  #   - secretName: httpbin-tls
-  #     hosts:
-  #       - k8s-ingress
+  tls:
+    - secretName: httpbin-tls
+      hosts:
+        - k8s-ingress

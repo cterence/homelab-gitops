@@ -137,6 +137,7 @@ spec:
                     values:
                       - amd64
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       priorityClassName: system-node-critical
       tolerations:
         - operator: Exists
@@ -199,6 +200,10 @@ spec:
                   fieldPath: metadata.namespace
             - name: EVENT_QUEUE_DEPTH
               value: "5000"
+            - name: KUBERNETES_SERVICE_HOST
+              value: "homelab"
+            - name: KUBERNETES_SERVICE_PORT
+              value: "6443"
           volumeMounts:
             - name: run
               mountPath: /run/flannel

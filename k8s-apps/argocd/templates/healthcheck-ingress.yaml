@@ -9,8 +9,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    # - host: argocd.terence.cloud
-    - host: k8s-ingress.snow-delta.ts.net
+    - host: argocd.terence.cloud
+    # - host: k8s-ingress.snow-delta.ts.net
       http:
         paths:
           - backend:
@@ -18,5 +18,6 @@ spec:
                 name: argocd-server
                 port:
                   name: https
-            path: /argocd/healthz
+            # path: /argocd/healthz
+            path: /healthz
             pathType: ImplementationSpecific
