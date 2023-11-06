@@ -6,8 +6,8 @@ spec:
   generators:
     - list:
         elements:
-          - name: flannel
-            namespace: kube-flannel
+          # - name: flannel
+          #   namespace: kube-flannel
           - name: ingress-nginx
             namespace: ingress-nginx
           - name: argocd
