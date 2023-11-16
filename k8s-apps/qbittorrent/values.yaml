@@ -57,11 +57,9 @@ persistentVolumes:
   - name: qbittorrent-downloads
     accessMode: ReadWriteOnce
     size: 50Gi
-    storageClassName: longhorn
   - name: qbittorrent-config
     accessMode: ReadWriteOnce
     size: 100Mi
-    storageClassName: longhorn
 
 configmaps:
   - name: qbittorrent-configmap

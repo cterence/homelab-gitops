@@ -38,7 +38,6 @@ kube-prometheus-stack:
         volumeClaimTemplate:
           spec:
             accessModes: ["ReadWriteOnce"]
-            storageClassName: longhorn
             resources:
               requests:
                 storage: 10Gi
@@ -187,7 +186,6 @@ kube-prometheus-stack:
     persistence:
       enabled: true
       size: 10Gi
-      storageClassName: longhorn
       accessModes:
         - ReadWriteOnce
       finalizers:
@@ -228,7 +226,6 @@ kube-prometheus-stack:
         volumeClaimTemplate:
           spec:
             accessModes: ["ReadWriteOnce"]
-            storageClassName: longhorn
             resources:
               requests:
                 storage: 1Gi

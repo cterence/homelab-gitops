@@ -46,7 +46,6 @@ persistentVolumes:
   - name: gotify-data
     accessMode: ReadWriteOnce
     size: 1Gi
-    storageClassName: longhorn
 
 configMaps:
   - name: gotify-env
