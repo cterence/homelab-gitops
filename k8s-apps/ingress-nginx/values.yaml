@@ -12,6 +12,8 @@ ingress-nginx:
 
     config:
       allow-snippet-annotations: "true"
+      proxy-body-size: "512k"
+      proxy-buffer-size: "512k"
 
     metrics:
       enabled: true
