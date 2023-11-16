@@ -34,8 +34,8 @@ spec:
             namespace: apps
           - name: loki-stack
             namespace: monitoring
-          - name: metrics-server
-            namespace: metrics-server
+          # - name: metrics-server
+          #   namespace: metrics-server
           # - name: thanos
           #   namespace: monitoring
           # - name: crossplane
@@ -52,8 +52,8 @@ spec:
             namespace: ntfy
           # - name: pihole
           #   namespace: pihole
-          - name: burrito-resources
-            namespace: burrito
+          # - name: burrito-resources
+          #   namespace: burrito
           - name: cloudflared
             namespace: cloudflared
           # - name: linkerd-control-plane
@@ -172,26 +172,26 @@ spec:
     #           syncOptions:
     #             - RespectIgnoreDifferences=true
 
-    - list:
-        elements:
-          - name: longhorn
-            namespace: longhorn-system
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              repoURL: ""
-            ignoreDifferences:
-              - group: apiextensions.k8s.io
-                kind: "*"
-                jqPathExpressions:
-                  - .spec.preserveUnknownFields
-            destination: {}
-            syncPolicy:
-              syncOptions:
-                - CreateNamespace=true
-                - RespectIgnoreDifferences=true
+    # - list:
+    #     elements:
+    #       - name: longhorn
+    #         namespace: longhorn-system
+    #     template:
+    #       metadata: {}
+    #       spec:
+    #         project: ""
+    #         source:
+    #           repoURL: ""
+    #         ignoreDifferences:
+    #           - group: apiextensions.k8s.io
+    #             kind: "*"
+    #             jqPathExpressions:
+    #               - .spec.preserveUnknownFields
+    #         destination: {}
+    #         syncPolicy:
+    #           syncOptions:
+    #             - CreateNamespace=true
+    #             - RespectIgnoreDifferences=true
 
     - list:
         elements:
