@@ -6,4 +6,4 @@ version: 1.12.3
 dependencies:
   - name: linkerd-control-plane
     repository: https://helm.linkerd.io/stable
-    version: 1.16.4
+    version: 1.16.5
