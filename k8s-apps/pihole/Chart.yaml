@@ -6,4 +6,4 @@ version: 2.5.2
 dependencies:
   - name: pihole
     repository: https://mojo2600.github.io/pihole-kubernetes
-    version: 2.19.0
+    version: 2.20.0
