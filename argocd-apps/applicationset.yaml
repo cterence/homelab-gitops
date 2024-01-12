@@ -54,8 +54,8 @@ spec:
           #   namespace: pihole
           # - name: burrito-resources
           #   namespace: burrito
-          - name: cloudflared
-            namespace: cloudflared
+          # - name: cloudflared
+          #   namespace: cloudflared
           # - name: linkerd-control-plane
           #   namespace: linkerd
           # - name: linkerd-jaeger
