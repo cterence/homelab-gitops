@@ -81,7 +81,7 @@ oauth2-proxy:
       - argocd.terence.cloud
       - grafana.terence.cloud
       - httpbin.terence.cloud
-      - k8s-ingress.snow-delta.ts.net
+      - ntfy.terence.cloud
       - prometheus.terence.cloud
 
   metrics:
