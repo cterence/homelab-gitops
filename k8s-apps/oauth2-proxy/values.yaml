@@ -79,20 +79,10 @@ oauth2-proxy:
     hosts:
       - alertmanager.terence.cloud
       - argocd.terence.cloud
-      - atlantis.terence.cloud
-      - duplicati.terence.cloud
       - grafana.terence.cloud
       - httpbin.terence.cloud
       - k8s-ingress.snow-delta.ts.net
-      - kibana.terence.cloud
-      - loki.terence.cloud
-      - longhorn.terence.cloud
-      - pihole.terence.cloud
       - prometheus.terence.cloud
-      - qbittorrent.terence.cloud
-      - thanos-bucketweb.terence.cloud
-      - thanos-minio.terence.cloud
-      - thanos.terence.cloud
 
   metrics:
     enabled: true
