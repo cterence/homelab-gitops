@@ -10,7 +10,6 @@ spec:
     k0sApiPort: 9443
     port: 6443
     sans:
-      - 192.168.1.31
       - 100.89.6.102
       - 172.18.0.1
       - 172.17.0.1
@@ -85,7 +84,7 @@ spec:
   storage:
     etcd:
       externalCluster: null
-      peerAddress: 192.168.1.31
+      peerAddress: 100.89.6.102
     type: etcd
   telemetry:
     enabled: false
