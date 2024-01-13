@@ -36,7 +36,7 @@ cilium:
   # @default -- `"~/.kube/config"`
   kubeConfigPath: ""
   # -- (string) Kubernetes service host
-  k8sServiceHost: "100.89.6.102"
+  k8sServiceHost: "192.168.1.31"
   # -- (string) Kubernetes service port
   k8sServicePort: "6443"
 
