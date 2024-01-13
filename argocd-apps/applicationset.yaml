@@ -12,6 +12,8 @@ spec:
             namespace: ingress-nginx
           - name: argocd
             namespace: argocd
+          - name: cilium
+            namespace: kube-system
           - name: external-dns
             namespace: external-dns
           - name: cert-manager
