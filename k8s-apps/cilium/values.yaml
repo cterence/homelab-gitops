@@ -36,9 +36,9 @@ cilium:
   # @default -- `"~/.kube/config"`
   kubeConfigPath: ""
   # -- (string) Kubernetes service host
-  k8sServiceHost: ""
+  k8sServiceHost: "192.168.1.31"
   # -- (string) Kubernetes service port
-  k8sServicePort: ""
+  k8sServicePort: "6443"
 
   # -- Configure the client side rate limit for the agent and operator
   #
@@ -539,7 +539,7 @@ cilium:
     #  - flannel
     #  - generic-veth
     #  - portmap
-    chainingMode: ~
+    chainingMode: none
 
     # -- A CNI network name in to which the Cilium plugin should be added as a chained plugin.
     # This will cause the agent to watch for a CNI network with this network name. When it is
