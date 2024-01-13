@@ -74,7 +74,7 @@ spec:
     kubeProxy:
       disabled: true
     nodeLocalLoadBalancing:
-      enabled: true
+      enabled: false
       envoyProxy:
         apiServerBindPort: 7443
         konnectivityServerBindPort: 7132
