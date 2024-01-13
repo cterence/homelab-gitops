@@ -30,16 +30,14 @@ I use k0s for installation now, it's much easier to setup and maintain.
 The install assumes that all external secrets are already created in GitLab.
 
 ```bash
+cd ~/homelab-gitops
 sudo k0s install controller --enable-worker -c ./k0s.yaml
 sudo k0s start
+sleep 5
 sudo k0s status
 sudo k0s kubeconfig admin > ~/.kube/config
-```
-
-Create cilium
-
-```bash
-cd k8s-apps/cilium && helm dependency update && helm template cilium . | kubectl apply -n kube-system -f -
+kubectl taint nodes --all node-role.kubernetes.io/master-
+cd k8s-apps/cilium && helm dependency update && helm template cilium . -n kube-system | kubectl apply -n kube-system -f -
 ```
 
 Create the GitLab token secret used by external-secrets
@@ -61,13 +59,9 @@ stringData:
 Create external-secrets
 
 ```bash
-cd ../../k8s-apps/external-secrets && helm dependency update && helm template external-secrets . | kubectl apply -n external-secrets -f -
-```
-
-Create argocd and app of apps
-
-```bash
-cd ../../k8s-apps/argocd && helm dependency update && helm template argocd . | kubectl apply -n argocd -f -
+cd ../../k8s-apps/external-secrets && helm dependency update && helm template external-secrets -n external-secrets . | kubectl apply -n external-secrets -f -
+kubectl create ns argocd
+cd ../../k8s-apps/argocd && helm dependency update && helm template argocd . -n argocd | kubectl apply -n argocd -f -
 kubectl apply -f ../../argocd-apps/app-of-apps.yaml -n argocd
 ```
 
