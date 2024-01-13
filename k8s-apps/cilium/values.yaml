@@ -153,11 +153,11 @@ cilium:
   # -- Affinity for cilium-agent.
   affinity:
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - topologyKey: kubernetes.io/hostname
-        labelSelector:
-          matchLabels:
-            k8s-app: cilium
+      requiredDuringSchedulingIgnoredDuringExecution: []
+      # - topologyKey: kubernetes.io/hostname
+      #   labelSelector:
+      #     matchLabels:
+      #       k8s-app: cilium
 
   # -- Node selector for cilium-agent.
   nodeSelector:
@@ -1968,11 +1968,11 @@ cilium:
     # -- Affinity for cilium-envoy.
     affinity:
       podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        - topologyKey: kubernetes.io/hostname
-          labelSelector:
-            matchLabels:
-              k8s-app: cilium-envoy
+        requiredDuringSchedulingIgnoredDuringExecution: []
+        # - topologyKey: kubernetes.io/hostname
+        #   labelSelector:
+        #     matchLabels:
+        #       k8s-app: cilium-envoy
 
     # -- Node selector for cilium-envoy.
     nodeSelector:
@@ -2288,11 +2288,11 @@ cilium:
     # -- Affinity for cilium-operator
     affinity:
       podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        - topologyKey: kubernetes.io/hostname
-          labelSelector:
-            matchLabels:
-              io.cilium/app: operator
+        requiredDuringSchedulingIgnoredDuringExecution: []
+        # - topologyKey: kubernetes.io/hostname
+        #   labelSelector:
+        #     matchLabels:
+        #       io.cilium/app: operator
 
     # -- Pod topology spread constraints for cilium-operator
     topologySpreadConstraints: []
@@ -2855,11 +2855,11 @@ cilium:
       # -- Affinity for clustermesh.apiserver
       affinity:
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchLabels:
-                k8s-app: clustermesh-apiserver
+          requiredDuringSchedulingIgnoredDuringExecution: []
+          # - topologyKey: kubernetes.io/hostname
+          #   labelSelector:
+          #     matchLabels:
+          #       k8s-app: clustermesh-apiserver
 
       # -- Pod topology spread constraints for clustermesh-apiserver
       topologySpreadConstraints: []
