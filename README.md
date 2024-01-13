@@ -23,178 +23,67 @@ Here's a macroscopic overview of the state of my network, connecting all my devi
 
 ![network](./assets/topology.excalidraw.png)
 
-## ⏫ Bootstrap
+## k0s quick install
 
-How to setup a cluster just like mine with a Linux node and `kubeadm`.
+I use k0s for installation now, it's much easier to setup and maintain.
 
-### Cluster initialization
+The install assumes that all external secrets are already created in GitLab.
 
-On your Kubernetes node :
+```bash
+sudo k0s install controller --enable-worker -c ./k0s.yaml
+sudo k0s start
+sudo k0s status
+sudo k0s kubeconfig admin > ~/.kube/config
+```
 
-- Create the cluster using `kubeadm`
+Create cilium
 
-  ```bash
-  sudo kubeadm init \
-    --pod-network-cidr "10.244.0.0/16" \
-    --control-plane-endpoint "_external_ip_:6443" \
-    --apiserver-cert-extra-sans "_external_domain_name_"
-  ```
+```bash
+cd k8s-apps/cilium && helm dependency update && helm template cilium . | kubectl apply -n kube-system -f -
+```
 
-- Copy the admin kubeconfig to your home directory
+Create the GitLab token secret used by external-secrets
 
-  ```bash
-  mkdir -p $HOME/.kube
-  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-  sudo chown $(id -u):$(id -g) $HOME/.kube/config
-  ```
+```bash
+kubectl create ns external-secrets
+kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-secret
+  namespace: external-secrets
+type: Opaque
+stringData:
+  token: xxx
+# Enter + CTRL+D
+```
 
-- Install the flannel CNI
+Create external-secrets
 
-  ```bash
-  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-  ```
+```bash
+cd ../../k8s-apps/external-secrets && helm dependency update && helm template external-secrets . | kubectl apply -n external-secrets -f -
+```
 
-- Remove the master node taint (if you are running a single node cluster)
+Create argocd and app of apps
 
-  ```bash
-  kubectl taint nodes _node_name_ node-role.kubernetes.io/master:NoSchedule-
-  ```
+```bash
+cd ../../k8s-apps/argocd && helm dependency update && helm template argocd . | kubectl apply -n argocd -f -
+kubectl apply -f ../../argocd-apps/app-of-apps.yaml -n argocd
+```
 
-### Important secrets creation
-
-- Install sealed-secrets in your cluster
-
-  ```bash
-  helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
-  helm repo update
-  helm install --wait sealed-secrets sealed-secrets/sealed-secrets -n sealed-secrets --create-namespace=true
-  ```
-
-- Install the `kubeseal` CLI
-
-  - Arch
-
-    ```bash
-    yay -S kubeseal
-    ```
-
-  - Other OSes : see https://github.com/bitnami-labs/sealed-secrets#installation
-
-- OPTIONAL: declare a shell function to seal a secret
-
-  ```bash
-  seal () {
-    kubeseal \
-      --controller-name=sealed-secrets \
-      --controller-namespace sealed-secrets \
-      --format yaml \
-      < k8s-apps/"$1"/"$2"-cleartext.yaml \
-      > k8s-apps/"$1"/"$2".yaml \
-      && rm k8s-apps/"$1"/"$2"-cleartext.yaml
-  }
-  ```
-
-- **Repository credentials**
-
-  - Generate an ssh key
-
-    ```bash
-    ssh-keygen -t ed25519 -C "ArgoCD" -f argocd -N ""
-    ```
-
-  - Add the public ssh key to your git remote repository (for Github, add a [deploy key](https://docs.github.com/en/developers/overview/managing-deploy-keys#deploy-keys))
-
-  - Create a temporary secret manifest named `k8s-apps/argocd/argo-github-repository-credentials-cleartext.yaml` from the ssh private key
-
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: argo-github-repository-credentials
-      namespace: argocd
-      labels:
-        argocd.argoproj.io/secret-type: repository
-    stringData:
-      sshPrivateKey: |
-        -----BEGIN OPENSSH PRIVATE KEY-----
-        _key_material_
-        -----END OPENSSH PRIVATE KEY-----
-      url: _your_repo_ssh_uri_
-    ```
-
-  - Delete the ssh keys
-
-    ```bash
-    rm argocd argocd.pub
-    ```
-
-  - Seal the secret
-
-    ```bash
-    seal argocd argo-github-repository-credentials
-    # OR
-    kubeseal \
-      --controller-name=sealed-secrets \
-      --controller-namespace sealed-secrets \
-      --format yaml \
-      --scope cluster-wide \
-      < k8s-apps/argocd/argo-github-repository-credentials-cleartext.yaml \
-      > k8s-apps/argocd/argo-github-repository-credentials.yaml \
-    && rm k8s-apps/argocd/argo-github-repository-credentials-cleartext.yaml
-    ```
-
-<!-- TODO: more details on this part -->
-
-- Seal the secrets for external-secrets.
-
-- Setup all the secrets in the Gitlab backend with the correct names (search for ExternalSecret resources).
-
-- Commit and push
-
-  ```bash
-  git add . && git commit -am "add sealed secrets" && git push
-  ```
-
-### ArgoCD installation
-
-- Install ArgoCD with the provided values in your cluster
-
-  ```bash
-  cd k8s-apps/argocd
-  helm dependency build
-  kubectl create namespace argocd
-  helm template argocd . -n argocd --set argo-cd.server.metrics.serviceMonitor.enabled=false --set argo-cd.redis.metrics.serviceMonitor.enabled=false --set argo-cd.dex.metrics.serviceMonitor.enabled=false --set argo-cd.repoServer.metrics.serviceMonitor.enabled=false --set argo-cd.notifications.metrics.serviceMonitor.enabled=false --set argo-cd.applicationSet.metrics.serviceMonitor.enabled=false   --set argo-cd.controller.metrics.serviceMonitor.enabled=false | kubectl apply -n argocd -f -
-  ```
-
-- Apply the secret containing the repository credentials
-
-  ```bash
-  kubectl apply -f k8s-apps/argocd/argo-github-repository-credentials.yaml -n argocd
-  ```
-
-- Apply the app of apps
-
-  ```bash
-  kubectl apply -f argo-k8s-apps/app-of-apps.yaml -n argocd
-  ```
-
-You should be done ! 👌
+Cluster should be ready !
 
 ## 💣 Teardown
 
-- Save all secrets (in `/tmp/kube-secrets`)
+- Save the GitLab token secret
 
   ```bash
-  mkdir /tmp/kube-secrets && for ns in $(kubectl ns); do for secret in $(kubectl get secret -n $ns | grep Opaque | awk '{print $1}'); do kubectl get secrets -n $ns $secret -o yaml | kubectl neat > /tmp/kube-secrets/$secret-cleartext.yaml; done; done
+  kubectl get secret -n external-secrets gitlab-secret -o yaml > gitlab-secret.yaml
   ```
 
 - Teardown the cluster
 
   ```bash
-  sudo kubeadm reset -f
-  sudo rm -rf /etc/cni /etc/kubernetes /var/lib/dockershim /var/lib/etcd /var/lib/kubelet /var/run/kubernetes ~/.kube/*
-  sudo iptables -F
-  sudo iptables -t nat -F
-  sudo iptables -t mangle -F
-  sudo iptables -X
+  sudo k0s stop
+  sudo k0s reset -v -d
   ```
