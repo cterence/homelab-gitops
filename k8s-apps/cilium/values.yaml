@@ -1105,7 +1105,7 @@ cilium:
 
     relay:
       # -- Enable Hubble Relay (requires hubble.enabled=true)
-      enabled: false
+      enabled: true
 
       # -- Roll out Hubble Relay pods automatically when configmap is updated.
       rollOutPods: false
