@@ -1299,7 +1299,7 @@ cilium:
 
     ui:
       # -- Whether to enable the Hubble UI.
-      enabled: false
+      enabled: true
 
       standalone:
         # -- When true, it will allow installing the Hubble UI only, without checking dependencies.
