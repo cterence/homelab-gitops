@@ -27,8 +27,10 @@ stringData:
   token: $GITLAB_TOKEN
 EOF
 
+cd k8s-apps/cilium && helm dependency update && helm template cilium . -n kube-system | kubectl apply -n kube-system -f -
+
 # Install the external secrets operator from the chart in the applications directory
-cd k8s-apps/external-secrets
+cd ../external-secrets
 helm dependency update
 helm template external-secrets --namespace external-secrets . | kubectl apply --namespace external-secrets -f - 
 
