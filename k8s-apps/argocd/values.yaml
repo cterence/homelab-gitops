@@ -27,6 +27,7 @@ argo-cd:
         value: collector.linkerd-jaeger:55678
 
   repoServer:
+    useEphemeralHelmWorkingDir: false
     logLevel: warn
     metrics:
       enabled: true
