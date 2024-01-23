@@ -944,7 +944,7 @@ cilium:
     image:
       override: ~
       repository: "quay.io/cilium/certgen"
-      tag: "v0.1.9"
+      tag: "v0.1.10"
       digest: "sha256:89a0847753686444daabde9474b48340993bd19c7bea66a46e45b2974b82041f"
       useDigest: true
       pullPolicy: "IfNotPresent"
