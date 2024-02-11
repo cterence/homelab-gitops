@@ -318,17 +318,14 @@ argo-cd:
       pathType: ImplementationSpecific
       # paths:
       #   - /argocd(/|$)(.*)
-      hosts:
-        - argocd.terence.cloud
+      hostname:
+        argocd.terence.cloud
         # - k8s-ingress.snow-delta.ts.net
-      tls:
-        - secretName: argocd-tls-certificate
-          hosts:
-            - argocd.terence.cloud
+      tls: true
       ingressClassName: nginx
       https: true
-
-    config:
+  configs:
+    cm:
       url: https://argocd.terence.cloud
       # The application customization allows to do sync waves of Argo applications.
       # Very useful to counteract race conditions. Ex : deploy Prometheus operator CRDs before the kube-prometheus-stack chart
@@ -382,17 +379,12 @@ argo-cd:
       #   clientSecret: $keycloak-client-secret:dex.keycloak.clientSecret
       #   logoutURL: https://keycloak.terence.cloud/realms/relampago/protocol/openid-connect/logout?client_id=argocd&post_logout_redirect_uri=https%3A%2F%2Fargocd.terence.cloud%2Flogin
 
-    rbacConfig:
+    rbac:
       policy.default: role:readonly
       policy.csv: |
         g, terence.chateigne@posteo.net, role:admin
       scopes: "[groups, email]"
 
-    env:
-      - name: OC_AGENT_HOST
-        value: collector.linkerd-jaeger:55678
-
-  configs:
     secret:
       createSecret: true
       # TODO: hide
