@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: ghost
     repository: https://charts.bitnami.com/bitnami
-    version: 19.9.0
+    version: 19.10.1
