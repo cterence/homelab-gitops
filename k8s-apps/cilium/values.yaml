@@ -3159,7 +3159,7 @@ cilium:
           # SPIRE agent configuration
           agent:
             # -- SPIRE agent image
-            image: ghcr.io/spiffe/spire-agent:1.8.7@sha256:dc83e448e1ce8a6c37b9989679426deae409f0a159257f014797698648c4486e
+            image: ghcr.io/spiffe/spire-agent:1.9.0@sha256:a51cc8d6ae37fd4221c6fd6c7a19d138fbd2fe005ae42e725666726fc735e600
             # -- SPIRE agent service account
             serviceAccount:
               create: true
