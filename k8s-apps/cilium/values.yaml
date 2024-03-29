@@ -2726,7 +2726,7 @@ cilium:
         image:
           override: ~
           repository: "quay.io/coreos/etcd"
-          tag: "v3.5.12"
+          tag: "v3.5.13"
           digest: "sha256:795d8660c48c439a7c3764c2330ed9222ab5db5bb524d8d0607cac76f7ba82a3"
           useDigest: true
           pullPolicy: "IfNotPresent"
