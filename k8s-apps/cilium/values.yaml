@@ -3188,7 +3188,7 @@ cilium:
             securityContext: {}
           server:
             # -- SPIRE server image
-            image: ghcr.io/spiffe/spire-server:1.9.5@sha256:0faede5e6d116c549359a2606a0c7814c579c7ea55218f1d528bd864d4168565
+            image: ghcr.io/spiffe/spire-server:1.9.6@sha256:59a0b92b39773515e25e68a46c40d3b931b9c1860bc445a79ceb45a805cab8b4
             # -- SPIRE server service account
             serviceAccount:
               create: true
