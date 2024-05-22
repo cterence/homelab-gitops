@@ -552,7 +552,7 @@ ghost:
     image:
       registry: docker.io
       repository: bitnami/bitnami-shell
-      tag: 11-debian-11-r69
+      tag: 11-debian-11-r136
       digest: ""
       pullPolicy: IfNotPresent
       ## Optionally specify an array of imagePullSecrets.
