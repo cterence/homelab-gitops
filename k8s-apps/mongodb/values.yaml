@@ -100,7 +100,7 @@ mongodb:
   image:
     registry: docker.io
     repository: bitnami/mongodb
-    tag: 5.0.24-debian-11-r20
+    tag: 7.0.12-debian-12-r2
     ## Specify a imagePullPolicy
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     ##
