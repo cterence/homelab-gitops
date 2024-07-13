@@ -6,7 +6,7 @@ externalEndpoints:
       cert-manager.io/cluster-issuer: letsencrypt
     host: next.terence.cloud
     ip: 192.168.1.31
-    port: 8080
+    port: 8443
   - name: duplicati
     ingressAnnotations:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
@@ -15,7 +15,7 @@ externalEndpoints:
       nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
     host: duplicati.terence.cloud
     ip: 192.168.1.31
-    port: 8200
+    port: 8443
   - name: immich
     ingressAnnotations:
       nginx.ingress.kubernetes.io/proxy-body-size: 20g
@@ -23,4 +23,4 @@ externalEndpoints:
       cert-manager.io/cluster-issuer: letsencrypt
     host: immich.terence.cloud
     ip: 192.168.1.31
-    port: 8080
+    port: 8443
