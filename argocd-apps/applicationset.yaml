@@ -85,21 +85,21 @@ spec:
 
     # Dedicated generator for this application.
     # Needed because the source is not internal to this repo and the sync policy is not the same.
-    - list:
-        elements:
-          - name: kube-prometheus-stack
-            namespace: monitoring
-        template:
-          metadata: {}
-          spec:
-            project: ""
-            source:
-              repoURL: ""
-            destination: {}
-            syncPolicy:
-              syncOptions:
-                - CreateNamespace=true
-                - ServerSideApply=true
+    # - list:
+    #     elements:
+    #       - name: kube-prometheus-stack
+    #         namespace: monitoring
+    #     template:
+    #       metadata: {}
+    #       spec:
+    #         project: ""
+    #         source:
+    #           repoURL: ""
+    #         destination: {}
+    #         syncPolicy:
+    #           syncOptions:
+    #             - CreateNamespace=true
+    #             - ServerSideApply=true
 
     # - list:
     #     elements:
@@ -221,7 +221,6 @@ spec:
       name: "{{name}}"
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
-        notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
     spec:
       project: default
       source:
@@ -237,3 +236,4 @@ spec:
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+          - ServerSideApply=true
