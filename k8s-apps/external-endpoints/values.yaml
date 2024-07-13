@@ -4,6 +4,7 @@ externalEndpoints:
       nginx.ingress.kubernetes.io/proxy-body-size: 20g
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       cert-manager.io/cluster-issuer: letsencrypt
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     host: next.terence.cloud
     ip: 192.168.1.31
     port: 8443
@@ -13,6 +14,7 @@ externalEndpoints:
       cert-manager.io/cluster-issuer: letsencrypt
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
       nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     host: duplicati.terence.cloud
     ip: 192.168.1.31
     port: 8443
@@ -21,6 +23,7 @@ externalEndpoints:
       nginx.ingress.kubernetes.io/proxy-body-size: 20g
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       cert-manager.io/cluster-issuer: letsencrypt
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     host: immich.terence.cloud
     ip: 192.168.1.31
     port: 8443
