@@ -60,7 +60,7 @@ thanos:
       hostname: thanos.terence.cloud
       ingressClassName: "nginx"
       annotations:
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
@@ -77,7 +77,7 @@ thanos:
       hostname: thanos-bucketweb.terence.cloud
       ingressClassName: "nginx"
       annotations:
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
@@ -131,7 +131,7 @@ thanos:
     ingress:
       enabled: true
       annotations:
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"

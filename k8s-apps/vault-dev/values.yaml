@@ -369,7 +369,7 @@ vault:
         # traffic: external
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # |
         # kubernetes.io/ingress.class: nginx
         # kubernetes.io/tls-acme: "true"

@@ -35,7 +35,7 @@ homer:
       ingressClassName: nginx
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: terence.cloud
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
       hosts:
         - host: homer.terence.cloud
           paths:
@@ -94,7 +94,7 @@ homer:
 
           # Optional: Proxy / hosting option
           proxy:
-            useCredentials: false # send cookies & authorization headers when fetching service specific data. Set to `true` if you use an authentication proxy. Can be overrided on service level. 
+            useCredentials: false # send cookies & authorization headers when fetching service specific data. Set to `true` if you use an authentication proxy. Can be overrided on service level.
 
           # Set the default layout and color scheme
           defaults:

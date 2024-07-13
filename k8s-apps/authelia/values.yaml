@@ -93,7 +93,7 @@ authelia:
 
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
-      external-dns.alpha.kubernetes.io/target: terence.cloud
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
 
     labels: {}
     # labels:

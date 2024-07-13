@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: argocd-webhook-ingress
   annotations:
-    external-dns.alpha.kubernetes.io/target: terence.cloud
+    external-dns.alpha.kubernetes.io/target: home.terence.cloud
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:

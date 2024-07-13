@@ -47,7 +47,7 @@ ingress:
   className: "nginx"
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
-    external-dns.alpha.kubernetes.io/target: terence.cloud
+    external-dns.alpha.kubernetes.io/target: home.terence.cloud
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: ntfy-basic-auth
     nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - ntfy"

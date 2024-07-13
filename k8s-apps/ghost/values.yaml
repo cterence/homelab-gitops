@@ -421,7 +421,7 @@ ghost:
     ##
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
-      external-dns.alpha.kubernetes.io/target: terence.cloud
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
     ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.hostname` parameter
     ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" .Values.ingress.hostname }}`
     ## You can:
