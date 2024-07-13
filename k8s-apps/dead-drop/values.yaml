@@ -1,6 +1,8 @@
 # Default values for dead-drop.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+libsql-server:
+  nameOverride: "libsql-server"
 
 replicaCount: 1
 
