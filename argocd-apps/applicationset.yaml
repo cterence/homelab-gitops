@@ -28,14 +28,14 @@ spec:
           #   namespace: atlantis
           # - name: blackbox-exporter
           #   namespace: monitoring
-          - name: external-endpoints
-            namespace: external-endpoints
+          # - name: external-endpoints
+          #   namespace: external-endpoints
           # - name: gitlab-runner
           #   namespace: gitlab
           - name: httpbin
             namespace: apps
-          - name: loki-stack
-            namespace: monitoring
+          # - name: loki-stack
+          #   namespace: monitoring
           # - name: metrics-server
           #   namespace: metrics-server
           # - name: thanos
@@ -50,8 +50,8 @@ spec:
           #   namespace: tailscale
           - name: tailscale-operator
             namespace: tailscale
-          - name: ntfy
-            namespace: ntfy
+          # - name: ntfy
+          #   namespace: ntfy
           # - name: pihole
           #   namespace: pihole
           # - name: burrito-resources
