@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 libsql-server:
   fullnameOverride: "libsql-server"
+  replicaCount: 0
 
 replicaCount: 1
 
