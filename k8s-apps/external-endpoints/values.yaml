@@ -16,3 +16,11 @@ externalEndpoints:
     host: duplicati.terence.cloud
     ip: 192.168.1.31
     port: 8200
+  - name: immich
+    ingressAnnotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 20g
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      cert-manager.io/cluster-issuer: letsencrypt
+    host: immich.terence.cloud
+    ip: 192.168.1.31
+    port: 8080

@@ -28,8 +28,8 @@ spec:
           #   namespace: atlantis
           # - name: blackbox-exporter
           #   namespace: monitoring
-          # - name: external-endpoints
-          #   namespace: external-endpoints
+          - name: external-endpoints
+            namespace: external-endpoints
           # - name: gitlab-runner
           #   namespace: gitlab
           - name: httpbin
