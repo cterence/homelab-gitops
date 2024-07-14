@@ -448,7 +448,8 @@ velero:
     namespace:
     # additional command-line arguments that will be passed to the `velero server`
     # e.g.: extraArgs: ["--foo=bar"]
-    extraArgs: []
+    extraArgs:
+      - --use-restic
 
     # additional key/value pairs to be used as environment variables such as "AWS_CLUSTER_NAME: 'yourcluster.domain.tld'"
     extraEnvVars: {}
@@ -566,8 +567,7 @@ velero:
 
     # Additional command-line arguments that will be passed to the node-agent. Optional.
     # e.g.: extraArgs: ["--foo=bar"]
-    extraArgs:
-      - --use-restic
+    extraArgs: []
 
     # Configure the dnsPolicy of the node-agent daemonset
     # See: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
