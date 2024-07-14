@@ -448,8 +448,7 @@ velero:
     namespace:
     # additional command-line arguments that will be passed to the `velero server`
     # e.g.: extraArgs: ["--foo=bar"]
-    extraArgs:
-      - --use-restic
+    extraArgs: []
 
     # additional key/value pairs to be used as environment variables such as "AWS_CLUSTER_NAME: 'yourcluster.domain.tld'"
     extraEnvVars: {}
@@ -526,10 +525,10 @@ velero:
   snapshotsEnabled: false
 
   # Whether to deploy the node-agent daemonset.
-  deployNodeAgent: false
+  deployNodeAgent: true
 
   nodeAgent:
-    podVolumePath: /var/lib/kubelet/pods
+    podVolumePath: /mnt/mx500/k8s
     # Pod priority class name to use for the node-agent daemonset. Optional.
     priorityClassName: ""
     # Resource requests/limits to specify for the node-agent daemonset deployment. Optional.

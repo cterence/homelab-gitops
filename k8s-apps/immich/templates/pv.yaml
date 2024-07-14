@@ -12,7 +12,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   local:
-    path: "/mnt/mx500/immich-k8s/library"
+    path: "/mnt/mx500/k8s/immich/library"
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -36,7 +36,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   local:
-    path: "/mnt/mx500/immich-k8s/postgresql"
+    path: "/mnt/mx500/k8s/immich/postgresql"
   nodeAffinity:
     required:
       nodeSelectorTerms:
