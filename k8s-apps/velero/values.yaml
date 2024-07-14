@@ -528,7 +528,7 @@ velero:
   deployNodeAgent: true
 
   nodeAgent:
-    podVolumePath: /var/openebs/local
+    podVolumePath: /var/lib/k0s/kubelet/pods
     # Pod priority class name to use for the node-agent daemonset. Optional.
     priorityClassName: ""
     # Resource requests/limits to specify for the node-agent daemonset deployment. Optional.
