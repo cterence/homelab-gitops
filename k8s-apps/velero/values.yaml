@@ -566,7 +566,8 @@ velero:
 
     # Additional command-line arguments that will be passed to the node-agent. Optional.
     # e.g.: extraArgs: ["--foo=bar"]
-    extraArgs: []
+    extraArgs:
+      - --use-restic
 
     # Configure the dnsPolicy of the node-agent daemonset
     # See: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
