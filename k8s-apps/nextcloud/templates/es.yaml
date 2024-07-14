@@ -12,6 +12,7 @@ spec:
     template:
       engineVersion: v2
       data:
+        DB_USERNAME: {{ .Values.nextcloud.externalDatabase.user }}
         DB_HOSTNAME: {{ .Values.nextcloud.externalDatabase.host }}
         DB_NAME: {{ .Values.nextcloud.externalDatabase.database }}
         DB_PASSWORD: "{{"{{ .DB_PASSWORD }}"}}"
