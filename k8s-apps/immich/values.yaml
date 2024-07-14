@@ -42,6 +42,8 @@ immich:
         duplicateDetection:
           enabled: true
           maxDistance: 0.03
+      server:
+        externalDomain: immich.terence.cloud
       # trash:
       #   enabled: false
       #   days: 30
