@@ -5,5 +5,5 @@ type: application
 version: 0.1.0
 dependencies:
   - name: openebs
-    repository: https://openebs.github.io/charts
-    version: 3.10.0
+    repository: https://openebs.github.io/openebs
+    version: 4.1.0
