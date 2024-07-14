@@ -6,12 +6,21 @@ metadata:
     app: immich-library
 spec:
   storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 100Gi
   accessModes:
     - ReadWriteOnce
-  hostPath:
+  local:
     path: "/mnt/mx500/immich-k8s/library"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - homelab
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -21,9 +30,18 @@ metadata:
     app: immich-postgresql
 spec:
   storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
-  hostPath:
+  local:
     path: "/mnt/mx500/immich-k8s/postgresql"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - homelab
