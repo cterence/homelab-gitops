@@ -7,7 +7,7 @@ data:
     version: v1
     resourceModifierRules:
       - conditions:
-          groupResource: "serviceaccounts"
+          groupResource: "*"
           resourceNameRegex: ".*"
         patches:
           - operation: remove
