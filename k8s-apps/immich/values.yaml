@@ -50,8 +50,6 @@ immich:
           username: immich
           database: immich
           password: immich
-    containerSecurityContext:
-      enabled: false
     primary:
       initdb:
         scripts:
@@ -59,6 +57,8 @@ immich:
             CREATE EXTENSION cube;
             CREATE EXTENSION earthdistance;
             CREATE EXTENSION vectors;
+      containerSecurityContext:
+        enabled: false
       persistence:
         existingClaim: immich-postgresql-data
 
