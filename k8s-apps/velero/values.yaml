@@ -454,7 +454,7 @@ velero:
     extraEnvVars: {}
 
     # Set true for backup all pod volumes without having to apply annotation on the pod when used file system backup Default: false.
-    defaultVolumesToFsBackup:
+    defaultVolumesToFsBackup: true
 
     # How often repository maintain is run for repositories by default.
     defaultRepoMaintainFrequency:
