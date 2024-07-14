@@ -21,7 +21,7 @@ spec:
           - name: oauth2-proxy
             namespace: oauth2-proxy
           - name: dead-drop
-            namespace: apps
+            namespace: dead-drop
           - name: immich
             namespace: immich
           - name: velero
@@ -41,7 +41,7 @@ spec:
           # - name: gitlab-runner
           #   namespace: gitlab
           - name: httpbin
-            namespace: apps
+            namespace: httpbin
           # - name: loki-stack
           #   namespace: monitoring
           # - name: metrics-server
