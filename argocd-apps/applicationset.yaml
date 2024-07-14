@@ -22,6 +22,8 @@ spec:
             namespace: oauth2-proxy
           - name: dead-drop
             namespace: apps
+          - name: immich
+            namespace: immich
           # - name: sealed-secrets
           #   namespace: sealed-secrets
           # - name: alertmanager-telegram

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: immich
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: immich
+    repository: https://immich-app.github.io/immich-charts
+    version: 0.7.0
