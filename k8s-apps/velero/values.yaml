@@ -658,6 +658,7 @@ velero:
   #         runAsGroup: 999
   configMaps:
     remove-argocd-instance-label:
+      labels: {}
       data:
         version: v1
         resourceModifierRules:
