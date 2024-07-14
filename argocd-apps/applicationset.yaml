@@ -24,6 +24,8 @@ spec:
             namespace: apps
           - name: immich
             namespace: immich
+          - name: velero
+            namespace: velero
           # - name: sealed-secrets
           #   namespace: sealed-secrets
           # - name: alertmanager-telegram
