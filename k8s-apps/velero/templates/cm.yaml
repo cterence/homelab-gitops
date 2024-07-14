@@ -9,12 +9,6 @@ data:
       - conditions:
           groupResource: "serviceaccounts"
           resourceNameRegex: ".*"
-        mergePatches:
-          - patchData: |
-              {
-                "metadata": {
-                  "labels": {
-                    "argocd.argoproj.io/instance": null
-                  }
-                }
-              }
+        patches:
+          - operation: remove
+            path: "/metadata/labels/argocd.argoproj.io~1instance"
