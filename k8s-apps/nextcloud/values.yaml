@@ -29,7 +29,7 @@ nextcloud:
     annotations:
      nginx.ingress.kubernetes.io/proxy-body-size: 4G
      kubernetes.io/tls-acme: "true"
-     cert-manager.io/cluster-issuer: letsencrypt-staging
+     cert-manager.io/cluster-issuer: letsencrypt
      # Keep this in sync with the README.md:
      nginx.ingress.kubernetes.io/server-snippet: |-
        server_tokens off;
