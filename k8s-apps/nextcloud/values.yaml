@@ -320,6 +320,7 @@ nextcloud:
             userPasswordKey: "DB_PASSWORD"
             replicationPasswordKey: "REPLICATION_PASSWORD"
     primary:
+      resourcesPreset: "small"
       persistence:
         enabled: true
         # Use an existing Persistent Volume Claim (must be created ahead of time)
