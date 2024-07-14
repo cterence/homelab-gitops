@@ -90,13 +90,13 @@ immich:
           cert-manager.io/cluster-issuer: letsencrypt
         ingressClassName: nginx
         hosts:
-          - host: immich-test.terence.cloud
+          - host: immich.terence.cloud
             paths:
               - path: "/"
         tls:
-          - secretName: immich-test-tls
+          - secretName: immich-tls
             hosts:
-              - immich-test.terence.cloud
+              - immich.terence.cloud
 
   machine-learning:
     enabled: true

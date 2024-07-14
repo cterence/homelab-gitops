@@ -24,6 +24,6 @@ externalEndpoints:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       cert-manager.io/cluster-issuer: letsencrypt
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    host: immich.terence.cloud
+    host: immich-old.terence.cloud
     ip: 192.168.1.31
     port: 8443
