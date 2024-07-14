@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: remove-argocd-instance-label
+data:
+  cm.yaml: |
+    version: v1
+    resourceModifierRules:
+      - conditions:
+          groupResource: "*.*"
+          resourceNameRegex: "^.*$"
+        patches:
+          - operation: remove
+            path: "/metadata/labels/argocd.argoproj.io~1instance"
