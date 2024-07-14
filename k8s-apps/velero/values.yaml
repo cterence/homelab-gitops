@@ -626,10 +626,10 @@ velero:
         # - nextcloud
         # - immich
           - dead-drop
-        includeClusterResources: false
         includedResources:
           - po
           - pv
+          - pvc
           - cm
           - sa
           - secret
