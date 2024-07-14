@@ -14,7 +14,7 @@ immich:
     IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
 
   image:
-    tag: v1.106.1
+    tag: v1.108.0
 
   immich:
     metrics:
@@ -57,6 +57,8 @@ immich:
             CREATE EXTENSION cube;
             CREATE EXTENSION earthdistance;
             CREATE EXTENSION vectors;
+      persistence:
+        existingClaim: immich-postgresql-data
 
   redis:
     enabled: true

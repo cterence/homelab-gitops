@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: immich-library-data
+  labels:
+    app: immich-library
 spec:
   storageClassName: manual
   capacity:
@@ -9,4 +11,19 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/mx500/immich-test-data"
+    path: "/mnt/mx500/immich-k8s/library"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-postgresql-data
+  labels:
+    app: immich-postgresql
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/mx500/immich-k8s/postgresql"
