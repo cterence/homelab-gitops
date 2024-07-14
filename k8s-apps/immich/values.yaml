@@ -58,7 +58,9 @@ immich:
             CREATE EXTENSION earthdistance;
             CREATE EXTENSION vectors;
       containerSecurityContext:
-        enabled: false
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
       persistence:
         existingClaim: immich-postgresql-data
 
