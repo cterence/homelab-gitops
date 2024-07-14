@@ -25,7 +25,11 @@ immich:
       library:
         # Automatically creating the library volume is not supported by this chart
         # You have to specify an existing PVC to use
-        existingClaim: immich-library-data
+        # existingClaim: immich-library-data
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 100Gi
     # configuration is immich-config.json converted to yaml
     # ref: https://immich.app/docs/install/config-file/
     #
@@ -65,7 +69,8 @@ immich:
       podSecurityContext:
         enabled: false
       persistence:
-        existingClaim: immich-postgresql-data
+        enabled: true
+        # existingClaim: immich-postgresql-data
 
   redis:
     enabled: true
@@ -110,6 +115,6 @@ immich:
         enabled: true
         size: 10Gi
         # Optional: Set this to pvc to avoid downloading the ML models every start.
-        type: emptyDir
-        accessMode: ReadWriteMany
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
         # storageClass: your-class
