@@ -621,9 +621,8 @@ velero:
       template:
         storageLocation: default
         includedNamespaces:
-        # - nextcloud
-        # - immich
-          - dead-drop
+          - nextcloud
+          - immich
         includedResources:
           - po
           - pv

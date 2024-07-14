@@ -12,3 +12,5 @@ data:
         patches:
           - operation: remove
             path: "/metadata/labels/argocd.argoproj.io~1instance"
+
+# velero restore create --from-backup velero-default-20240714214042 --namespace-mappings dead-drop:dead-drop-bkp1 --resource-modifier-configmap remove-argocd-instance-label
