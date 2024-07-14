@@ -623,8 +623,9 @@ velero:
       template:
         storageLocation: default
         includedNamespaces:
-        - nextcloud
-        - immich
+        # - nextcloud
+        # - immich
+          - dead-drop
         includeClusterResources: false
         includedResources:
           - deploy
