@@ -200,7 +200,7 @@ velero:
                 aws_access_key_id = "{{"{{ .access_key }}"}}"
                 aws_secret_access_key = "{{"{{ .secret_key }}"}}"
                 endpoint_url = s3.eu-central-003.backblazeb2.com
-                region = us-east-1
+                region = eu-central-003
         data:
           - secretKey: access_key
             remoteRef:
@@ -344,10 +344,10 @@ velero:
         key:
       # Additional provider-specific configuration. See link above
       # for details of required/optional fields for your provider.
-      config: {}
-      #  region:
-      #  s3ForcePathStyle:
-      #  s3Url:
+      config:
+        region: eu-central-003
+        s3ForcePathStyle: true
+        s3Url: s3.eu-central-003.backblazeb2.com
       #  kmsKeyId:
       #  resourceGroup:
       #  The ID of the subscription containing the storage account, if different from the cluster’s subscription. (Azure only)
