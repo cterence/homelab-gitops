@@ -658,14 +658,15 @@ velero:
   #         runAsGroup: 999
   configMaps:
     remove-argocd-instance-label:
-      version: v1
-      resourceModifierRules:
-      - conditions:
-          groupResource: "*"
-          resourceNameRegex: "^.*$"
-        patches:
-        - operation: remove
-          path: "/metadata/labels/argocd.argoproj.io~1instance"
+      data:
+        version: v1
+        resourceModifierRules:
+        - conditions:
+            groupResource: "*"
+            resourceNameRegex: "^.*$"
+          patches:
+          - operation: remove
+            path: "/metadata/labels/argocd.argoproj.io~1instance"
 
   ##
   ## End of additional Velero resource settings.
