@@ -79,7 +79,7 @@ immich:
           nginx.ingress.kubernetes.io/proxy-body-size: "0"
           external-dns.alpha.kubernetes.io/target: home.terence.cloud
           cert-manager.io/cluster-issuer: letsencrypt
-        className: nginx
+        ingressClassName: nginx
         hosts:
           - host: immich-test.terence.cloud
             paths:
