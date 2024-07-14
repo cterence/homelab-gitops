@@ -245,7 +245,7 @@ nextcloud:
     type: postgresql
 
     ## Database host
-    host:
+    host: nextcloud-postgresql
 
     ## Database user
     user: nextcloud
@@ -258,10 +258,10 @@ nextcloud:
 
     ## Use a existing secret
     existingSecret:
-      enabled: false
-      # secretName: nameofsecret
-      usernameKey: db-username
-      passwordKey: db-password
+      enabled: true
+      secretName: nextcloud-postgres-user-password
+      # usernameKey: db-username
+      passwordKey: DB_PASSWORD
       # hostKey: db-hostname-or-ip
       # databaseKey: db-name
 
