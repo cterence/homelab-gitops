@@ -618,27 +618,26 @@ velero:
       schedule: "0 0 * * *"
       useOwnerReferencesInBackup: false
       paused: false
+      annotations:
+        argocd.argoproj.io/sync-options: Delete=false,Prune=false
       template:
-        ttl: "240h"
         storageLocation: default
         includedNamespaces:
         - nextcloud
         - immich
-      includeClusterResources: false
-      includedResources:
-        - deploy
-        - sts
-        - ds
-        - pv
-        - pvc
-        - cm
-        - sa
-        - secret
-        - job
-        - cronjob
-      ttl: 720h0m0s
-      annotations:
-        argocd.argoproj.io/sync-options: Delete=false,Prune=false
+        includeClusterResources: false
+        includedResources:
+          - deploy
+          - sts
+          - ds
+          - pv
+          - pvc
+          - cm
+          - sa
+          - secret
+          - job
+          - cronjob
+        ttl: 720h
 
   # Velero ConfigMaps.
   # Eg:
