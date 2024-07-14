@@ -13,3 +13,9 @@ spec:
     - secretKey: DB_PASSWORD
       remoteRef:
         key: immich_postgres_user_password
+    - secretKey: ADMIN_PASSWORD
+      remoteRef:
+        key: immich_postgres_admin_password
+    - secretKey: REPLICATION_PASSWORD
+      remoteRef:
+        key: immich_postgres_replication_password

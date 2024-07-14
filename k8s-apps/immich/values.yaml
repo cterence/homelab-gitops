@@ -60,6 +60,8 @@ immich:
           existingSecret: immich-postgres-user-password
           secretKeys:
             userPasswordKey: "DB_PASSWORD"
+            adminPasswordKey: "ADMIN_PASSWORD"
+            replicationPasswordKey: "REPLICATION_PASSWORD"
     primary:
       initdb:
         scripts:
