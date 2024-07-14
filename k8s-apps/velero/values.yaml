@@ -628,16 +628,12 @@ velero:
           - dead-drop
         includeClusterResources: false
         includedResources:
-          - deploy
-          - sts
-          - ds
+          - po
           - pv
           - pvc
           - cm
           - sa
           - secret
-          - job
-          - cronjob
         ttl: 720h
 
   # Velero ConfigMaps.
