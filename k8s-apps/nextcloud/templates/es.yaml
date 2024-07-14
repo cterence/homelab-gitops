@@ -1,0 +1,21 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: nextcloud-postgres-user-password
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: nextcloud-postgres-user-password
+    creationPolicy: Owner
+  data:
+    - secretKey: DB_PASSWORD
+      remoteRef:
+        key: nextcloud_postgres_user_password
+    - secretKey: ADMIN_PASSWORD
+      remoteRef:
+        key: nextcloud_postgres_admin_password
+    - secretKey: REPLICATION_PASSWORD
+      remoteRef:
+        key: nextcloud_postgres_replication_password

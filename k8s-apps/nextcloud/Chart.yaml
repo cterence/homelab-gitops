@@ -1,0 +1,9 @@
+apiVersion: v2
+name: nextcloud
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: nextcloud
+    repository: https://nextcloud.github.io/helm/
+    version: 5.2.0
