@@ -26,6 +26,8 @@ spec:
             namespace: immich
           - name: velero
             namespace: velero
+          - name: reloader
+            namespace: reloader
           # - name: sealed-secrets
           #   namespace: sealed-secrets
           # - name: alertmanager-telegram
