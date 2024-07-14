@@ -1,9 +1,0 @@
-apiVersion: v2
-name: linkerd-crds
-description: A helm chart for an app
-type: application
-version: 1.6.1
-dependencies:
-  - name: linkerd-crds
-    repository: https://helm.linkerd.io/stable
-    version: 1.8.0

@@ -1,9 +1,0 @@
-apiVersion: v2
-name: linkerd-control-plane
-description: A helm chart for an app
-type: application
-version: 1.12.3
-dependencies:
-  - name: linkerd-control-plane
-    repository: https://helm.linkerd.io/stable
-    version: 1.16.11

@@ -1,9 +1,0 @@
-apiVersion: v2
-name: atlantis
-description: A helm chart for an app
-type: application
-version: 3.15.2
-dependencies:
-  - name: atlantis
-    repository: https://runatlantis.github.io/helm-charts
-    version: 3.19.0

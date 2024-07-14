@@ -1,9 +1,0 @@
-apiVersion: v2
-name: jaeger
-description: A helm chart for an app
-type: application
-version: 30.8.3
-dependencies:
-  - name: linkerd-jaeger
-    repository: https://helm.linkerd.io/stable
-    version: 30.12.11
