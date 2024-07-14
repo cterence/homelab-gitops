@@ -200,7 +200,7 @@ velero:
                 aws_access_key_id = "{{"{{ .access_key }}"}}"
                 aws_secret_access_key = "{{"{{ .secret_key }}"}}"
                 endpoint_url = s3.eu-central-003.backblazeb2.com
-                region = eu-central-003
+                region = us-east-1
         data:
           - secretKey: access_key
             remoteRef:
