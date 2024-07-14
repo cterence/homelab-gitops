@@ -616,7 +616,7 @@ velero:
     default:
       disabled: false
       schedule: "0 0 * * *"
-      useOwnerReferencesInBackup: false
+      useOwnerReferencesInBackup: true
       paused: false
       annotations:
         argocd.argoproj.io/sync-options: Delete=false,Prune=false
