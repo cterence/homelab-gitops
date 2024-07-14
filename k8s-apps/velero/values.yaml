@@ -616,11 +616,12 @@ velero:
     default:
       disabled: false
       schedule: "0 0 * * *"
-      useOwnerReferencesInBackup: true
+      useOwnerReferencesInBackup: false
       paused: false
-      annotations:
-        argocd.argoproj.io/sync-options: Delete=false,Prune=false
       template:
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: Delete=false,Prune=false
         storageLocation: default
         includedNamespaces:
         # - nextcloud
