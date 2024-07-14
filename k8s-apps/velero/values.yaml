@@ -346,6 +346,7 @@ velero:
         region: eu-central-003
         s3ForcePathStyle: true
         s3Url: https://s3.eu-central-003.backblazeb2.com
+        checksumAlgorithm: ""
       #  kmsKeyId:
       #  resourceGroup:
       #  The ID of the subscription containing the storage account, if different from the cluster’s subscription. (Azure only)
