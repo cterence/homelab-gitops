@@ -629,6 +629,7 @@ velero:
         includeClusterResources: false
         includedResources:
           - po
+          - pv
           - cm
           - sa
           - secret
