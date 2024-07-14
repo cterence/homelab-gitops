@@ -57,7 +57,9 @@ immich:
         auth:
           username: immich
           database: immich
-          password: immich
+          existingSecret: immich-postgres-user-password
+          secretKeys:
+            userPasswordKey: "DB_PASSWORD"
     primary:
       initdb:
         scripts:
