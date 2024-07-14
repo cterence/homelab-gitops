@@ -619,9 +619,6 @@ velero:
       useOwnerReferencesInBackup: false
       paused: false
       template:
-        metadata:
-          annotations:
-            argocd.argoproj.io/sync-options: Delete=false,Prune=false
         storageLocation: default
         includedNamespaces:
         # - nextcloud
@@ -659,7 +656,16 @@ velero:
   #         readOnlyRootFilesystem: true
   #         runAsUser: 1001
   #         runAsGroup: 999
-  configMaps: {}
+  configMaps:
+    remove-argocd-instance-label:
+      version: v1
+      resourceModifierRules:
+      - conditions:
+          groupResource: "*"
+          resourceNameRegex: "^.*$"
+        patches:
+        - operation: remove
+          path: "/metadata/labels/argocd.argoproj.io~1instance"
 
   ##
   ## End of additional Velero resource settings.
