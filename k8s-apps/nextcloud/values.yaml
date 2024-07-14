@@ -260,10 +260,10 @@ nextcloud:
     existingSecret:
       enabled: true
       secretName: nextcloud-postgres-user-password
-      # usernameKey: db-username
+      usernameKey: DB_USERNAME
       passwordKey: DB_PASSWORD
-      # hostKey: db-hostname-or-ip
-      # databaseKey: db-name
+      hostKey: DB_HOSTNAME
+      databaseKey: DB_NAME
 
   ##
   ## MariaDB chart configuration

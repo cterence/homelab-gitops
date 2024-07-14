@@ -9,6 +9,14 @@ spec:
   target:
     name: nextcloud-postgres-user-password
     creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        DB_HOSTNAME: {{ .Values.nextcloud.externalDatabase.host }}
+        DB_NAME: {{ .Values.nextcloud.externalDatabase.database }}
+        DB_PASSWORD: "{{"{{ .DB_PASSWORD }}"}}"
+        ADMIN_PASSWORD: "{{"{{ .ADMIN_PASSWORD }}"}}"
+        REPLICATION_PASSWORD: "{{"{{ .REPLICATION_PASSWORD }}"}}"
   data:
     - secretKey: DB_PASSWORD
       remoteRef:
