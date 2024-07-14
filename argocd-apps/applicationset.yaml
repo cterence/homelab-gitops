@@ -56,8 +56,8 @@ spec:
           #   namespace: hashicorp
           # - name: tailscale
           #   namespace: tailscale
-          - name: tailscale-operator
-            namespace: tailscale
+          # - name: tailscale-operator
+          #   namespace: tailscale
           # - name: ntfy
           #   namespace: ntfy
           # - name: pihole
