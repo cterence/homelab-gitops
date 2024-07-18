@@ -7,5 +7,5 @@ metadata:
 data:
   DEAD_DROP_PORT: {{ .Values.service.port }}
   {{- range $key, $value := .Values.config }}
-  {{- printf "DEAD_DROP_%s: %s" $key $value | nindent 2 }}
+  {{- printf "DEAD_DROP_%s: \"%s\"" $key $value | nindent 2 }}
   {{- end }}
