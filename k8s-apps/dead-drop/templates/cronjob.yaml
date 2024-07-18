@@ -9,9 +9,6 @@ spec:
   jobTemplate:
     spec:
       template:
-        metadata:
-          labels:
-            {{- include "dead-drop.labels" . | nindent 8 }}
         spec:
           containers:
             - name: {{ .Chart.Name }}
