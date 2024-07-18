@@ -11,7 +11,7 @@ spec:
       template:
         metadata:
           labels:
-            {{- include "dead-drop.selectorLabels" . | nindent 8 }}
+            {{- include "dead-drop.labels" . | nindent 8 }}
         spec:
           containers:
             - name: {{ .Chart.Name }}
