@@ -1,5 +1,5 @@
 zitadel:
-  enabled: false
+  enabled: true
   replicaCount: 1
   ingress:
     enabled: true
