@@ -9,35 +9,22 @@ spec:
     - list:
         elements:
           - name: ingress-nginx
-            namespace: ingress-nginx
           - name: argocd
-            namespace: argocd
           - name: external-dns
-            namespace: external-dns
           - name: cert-manager
-            namespace: cert-manager
           - name: oauth2-proxy
-            namespace: oauth2-proxy
           - name: dead-drop
-            namespace: dead-drop
           - name: immich
-            namespace: immich
           - name: velero
-            namespace: velero
           - name: reloader
           - name: openebs
-            namespace: openebs
           - name: nextcloud
-            namespace: nextcloud
           - name: external-endpoints
-            namespace: external-endpoints
           - name: httpbin
-            namespace: httpbin
 
     - list:
         elements:
           - name: external-secrets
-            namespace: external-secrets
         template:
           metadata: {}
           spec:
