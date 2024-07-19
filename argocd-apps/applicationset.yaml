@@ -76,7 +76,7 @@ spec:
         path: "k8s-apps/{{ .name }}"
       destination:
         name: in-cluster
-        namespace: {{ ternary .namespace .name (hasKey . "namespace") }}
+        namespace: "{{ ternary (dig \"namespace\" \"\" .) .name (hasKey . \"namespace\") }}"
       syncPolicy:
         automated:
           prune: true
