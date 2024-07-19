@@ -76,7 +76,7 @@ spec:
         path: "k8s-apps/{{ .name }}"
       destination:
         name: in-cluster
-        namespace: "{{ dig "namespace" .name . }}"
+        namespace: {{ dig "namespace" .name . }}
       syncPolicy:
         automated:
           prune: true
