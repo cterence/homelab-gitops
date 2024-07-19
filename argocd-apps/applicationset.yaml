@@ -25,7 +25,6 @@ spec:
           - name: velero
             namespace: velero
           - name: reloader
-            namespace: reloader
           - name: openebs
             namespace: openebs
           - name: nextcloud
