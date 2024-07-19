@@ -7,6 +7,7 @@ dependencies:
   - name: zitadel
     repository: https://charts.zitadel.com
     version: 8.1.0
+    condition: zitadel.enabled
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 15.5.17
