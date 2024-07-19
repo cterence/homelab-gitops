@@ -20,7 +20,7 @@ zitadel:
         Enabled: false
       Database:
         Postgres:
-          Host: db-postgresql
+          Host: zitadel-postgresql
           Port: 5432
           Database: zitadel
           MaxOpenConns: 20
