@@ -3,17 +3,15 @@ kind: ApplicationSet
 metadata:
   name: applications
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - list:
         elements:
-          # - name: flannel
-          #   namespace: kube-flannel
           - name: ingress-nginx
             namespace: ingress-nginx
           - name: argocd
             namespace: argocd
-          # - name: cilium
-          #   namespace: kube-system
           - name: external-dns
             namespace: external-dns
           - name: cert-manager
@@ -32,112 +30,10 @@ spec:
             namespace: openebs
           - name: nextcloud
             namespace: nextcloud
-          # - name: sealed-secrets
-          #   namespace: sealed-secrets
-          # - name: alertmanager-telegram
-          #   namespace: monitoring
-          # - name: atlantis
-          #   namespace: atlantis
-          # - name: blackbox-exporter
-          #   namespace: monitoring
           - name: external-endpoints
             namespace: external-endpoints
-          # - name: gitlab-runner
-          #   namespace: gitlab
           - name: httpbin
             namespace: httpbin
-          # - name: loki-stack
-          #   namespace: monitoring
-          # - name: metrics-server
-          #   namespace: metrics-server
-          # - name: thanos
-          #   namespace: monitoring
-          # - name: crossplane
-          #   namespace: crossplane-system
-          # - name: ghost
-          #   namespace: apps
-          # - name: vault-dev
-          #   namespace: hashicorp
-          # - name: tailscale
-          #   namespace: tailscale
-          # - name: tailscale-operator
-          #   namespace: tailscale
-          # - name: ntfy
-          #   namespace: ntfy
-          # - name: pihole
-          #   namespace: pihole
-          # - name: burrito-resources
-          #   namespace: burrito
-          # - name: cloudflared
-          #   namespace: cloudflared
-          # - name: linkerd-control-plane
-          #   namespace: linkerd
-          # - name: linkerd-jaeger
-          #   namespace: linkerd-jaeger
-          # - name: authelia
-          #   namespace: authelia
-
-    # Dedicated generator for this application.
-    # Needed because the source is not internal to this repo.
-    # - list:
-    #     elements:
-    #       - name: burrito
-    #         namespace: burrito
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           directory:
-    #             include: install.yaml
-    #           repoURL: https://github.com/padok-team/burrito.git
-    #           path: manifests/
-    #           targetRevision: main
-    #         destination: {}
-
-    # Dedicated generator for this application.
-    # Needed because the source is not internal to this repo and the sync policy is not the same.
-    # - list:
-    #     elements:
-    #       - name: kube-prometheus-stack
-    #         namespace: monitoring
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - CreateNamespace=true
-    #             - ServerSideApply=true
-
-    # - list:
-    #     elements:
-    #       - name: metallb
-    #         namespace: metallb
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         # caBundle injection breaks the sync loop.
-    #         ignoreDifferences:
-    #           - group: admissionregistration.k8s.io
-    #             kind: "*"
-    #             jqPathExpressions:
-    #               - .webhooks[].clientConfig.caBundle
-    #           - group: apiextensions.k8s.io
-    #             kind: "*"
-    #             jsonPointers:
-    #               - /spec/conversion/webhook/clientConfig
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - CreateNamespace=true
-    #             - RespectIgnoreDifferences=true
 
     - list:
         elements:
@@ -165,72 +61,10 @@ spec:
                 - CreateNamespace=true
                 - RespectIgnoreDifferences=true
 
-    # - list:
-    #     elements:
-    #       - name: crossplane-resources
-    #         namespace: crossplane-system
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         # perpetual tag diff breaks sync loop.
-    #         ignoreDifferences:
-    #           - group: "*.aws.crossplane.io"
-    #             kind: "*"
-    #             jqPathExpressions:
-    #               - .spec.forProvider.tags
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - RespectIgnoreDifferences=true
-
-    # - list:
-    #     elements:
-    #       - name: longhorn
-    #         namespace: longhorn-system
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         ignoreDifferences:
-    #           - group: apiextensions.k8s.io
-    #             kind: "*"
-    #             jqPathExpressions:
-    #               - .spec.preserveUnknownFields
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - CreateNamespace=true
-    #             - RespectIgnoreDifferences=true
-
-    # - list:
-    #     elements:
-    #       - name: linkerd-crds
-    #         namespace: linkerd
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         ignoreDifferences:
-    #           - group: apiextensions.k8s.io
-    #             kind: "*"
-    #             jqPathExpressions:
-    #               - .spec.preserveUnknownFields
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - CreateNamespace=true
-    #             - RespectIgnoreDifferences=true
 
   template:
     metadata:
-      name: "{{name}}"
+      name: "{{ .name }}"
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
@@ -240,10 +74,10 @@ spec:
       source:
         repoURL: git@github.com:cterence/homelab-gitops.git
         targetRevision: HEAD
-        path: "k8s-apps/{{name}}"
+        path: "k8s-apps/{{ .name }}"
       destination:
         name: in-cluster
-        namespace: "{{namespace}}"
+        namespace: "{{ .namespace }}"
       syncPolicy:
         automated:
           prune: true
