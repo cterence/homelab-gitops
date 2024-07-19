@@ -21,6 +21,7 @@ zitadel:
     configmapConfig:
       ExternalSecure: true
       ExternalDomain: zitadel.terence.cloud
+      ExternalPort: 443
       TLS:
         Enabled: false
       Database:
