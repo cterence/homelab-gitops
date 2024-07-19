@@ -4,6 +4,6 @@ description: A helm chart for an app
 type: application
 version: 0.1.0
 dependencies:
-  - name: gha-runner-scale-set-controller
+  - name: gha-runner-scale-set
     repository: oci://ghcr.io/actions/actions-runner-controller-charts
     version: 0.9.3
