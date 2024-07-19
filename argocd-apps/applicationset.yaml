@@ -24,32 +24,6 @@ spec:
           - name: velero
           - name: zitadel
 
-    # - list:
-    #     elements:
-    #       - name: external-secrets
-    #     template:
-    #       metadata: {}
-    #       spec:
-    #         project: ""
-    #         source:
-    #           repoURL: ""
-    #         # caBundle injection breaks the sync loop.
-    #         ignoreDifferences:
-    #           - group: admissionregistration.k8s.io
-    #             kind: "*"
-    #             jqPathExpressions:
-    #               - .webhooks[].clientConfig.caBundle
-    #           - group: apiextensions.k8s.io
-    #             kind: "*"
-    #             jsonPointers:
-    #               - /spec/conversion/webhook/clientConfig
-    #         destination: {}
-    #         syncPolicy:
-    #           syncOptions:
-    #             - CreateNamespace=true
-    #             - RespectIgnoreDifferences=true
-
-
   template:
     metadata:
       name: "{{ .name }}"
