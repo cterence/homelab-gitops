@@ -7,6 +7,11 @@ zitadel:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
       external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
+    hosts:
+      - host: zitadel.terence.cloud
+        paths:
+          - path: /
+            pathType: Prefix
     tls:
       - secretName: zitadel-tls
         hosts:
