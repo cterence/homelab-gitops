@@ -19,6 +19,7 @@ spec:
             serverSideOps: true
           - name: gha-homelab-runners
             namespace: arc-runners
+            serverSideOps: true
           - name: httpbin
           - name: immich
           - name: ingress-nginx
