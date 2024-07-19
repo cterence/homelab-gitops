@@ -199,6 +199,6 @@ gha-runner-scale-set:
   ## In case the helm chart can't find the right service account, you can explicitly pass in the following value
   ## to help it finish RoleBinding with the right service account.
   ## Note: if your controller is installed to only watch a single namespace, you have to pass these values explicitly.
-  # controllerServiceAccount:
-  #   namespace: arc-system
-  #   name: test-arc-gha-runner-scale-set-controller
+  controllerServiceAccount:
+    namespace: arc-systems
+    name: gha-runner-scale-set-controller-gha-rs-controller
