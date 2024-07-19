@@ -17,6 +17,8 @@ spec:
           - name: gha-runner-scale-set-controller
             namespace: arc-systems
             serverSideOps: true
+          - name: gha-homelab-runners
+            namespace: arc-runners
           - name: httpbin
           - name: immich
           - name: ingress-nginx

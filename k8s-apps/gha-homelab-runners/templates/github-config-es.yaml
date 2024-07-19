@@ -1,0 +1,21 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: github-config-secrets
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: github-config-secrets
+    creationPolicy: Owner
+  data:
+    - secretKey: github_app_id
+      remoteRef:
+        key: gha_runner_app_id
+    - secretKey: github_app_installation_id
+      remoteRef:
+        key: gha_runner_app_installation_id
+    - secretKey: github_app_private_key
+      remoteRef:
+        key: gha_runner_app_private_key
