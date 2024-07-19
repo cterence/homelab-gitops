@@ -22,7 +22,7 @@ spec:
           - name: openebs
           - name: reloader
           - name: velero
-          - name: zitadel
+          # - name: zitadel
 
   template:
     metadata:
