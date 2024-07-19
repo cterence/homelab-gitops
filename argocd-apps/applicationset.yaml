@@ -33,7 +33,7 @@ spec:
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
-        argocd.argoproj.io/compare-options: "{{ printf \"%s=%s\" \"ServerSideDiff\" (dig \"serverSideOps\" \"false\" .) }}"
+        argocd.argoproj.io/compare-options: "{{ printf \"%s=%s\" \"ServerSideDiff\" (dig \"serverSideOps\" \"false\" . | toString) }}"
     spec:
       project: default
       source:
@@ -50,4 +50,4 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - RespectIgnoreDifferences=true
-          - "{{ printf \"%s=%s\" \"ServerSideApply\" (dig \"serverSideOps\" \"false\" .) }}"
+          - "{{ printf \"%s=%s\" \"ServerSideApply\" (dig \"serverSideOps\" \"false\" . | toString) }}"
