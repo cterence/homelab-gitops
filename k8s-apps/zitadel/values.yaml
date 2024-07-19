@@ -1,0 +1,40 @@
+zitadel:
+  replicaCount: 1
+  masterkey: Ho5wZxih604zs1NdxwBHy6QUQwfziBTW
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
+    tls:
+      - secretName: zitadel-tls
+        hosts:
+          - zitadel.terence.cloud
+  configmapConfig:
+    ExternalSecure: true
+    ExternalDomain: zitadel.terence.cloud
+    TLS:
+      Enabled: false
+    Database:
+      Postgres:
+        Host: db-postgresql
+        Port: 5432
+        Database: zitadel
+        MaxOpenConns: 20
+        MaxIdleConns: 10
+        MaxConnLifetime: 30m
+        MaxConnIdleTime: 5m
+        User:
+          Username: postgres
+          SSL:
+            Mode: disable
+        Admin:
+          Username: postgres
+          SSL:
+            Mode: disable
+
+postgresql:
+  primary:
+    pgHbaConfiguration: |
+      host all all all trust

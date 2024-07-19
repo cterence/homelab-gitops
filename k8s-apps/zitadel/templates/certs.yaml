@@ -1,0 +1,77 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: "zitadel-pki-ca"
+spec:
+  commonName: "zitadel-ca"
+  secretName: "zitadel-pki-ca"
+  duration: 87600h # 3650d
+  renewBefore: 8760h # 365d
+  subject:
+    organizations:
+    - "ZITADEL PKI CA"
+  usages:
+  - "signing"
+  - "key encipherment"
+  - "cert sign"
+  isCA: true
+  issuerRef:
+    name: "selfsigned"
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: "zitadel-issuer"
+spec:
+  ca:
+    secretName: "zitadel-pki-ca"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Release.Name }}-postgres
+spec:
+  commonName: "db-postgresql"
+  secretName: "postgres-cert"
+  duration: 87600h # 3650d
+  renewBefore: 8760h # 365d
+  subject:
+    organizations:
+      - "ZITADEL POSTGRES"
+  usages:
+    - "key encipherment"
+    - "server auth"
+    - "data encipherment"
+  dnsNames:
+    - zitadel
+    - postgres
+    - postgresql
+  issuerRef:
+    name: zitadel-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Release.Name }}-zitadel
+spec:
+  commonName: "db-postgresql"
+  secretName: "zitadel-cert"
+  duration: 87600h # 3650d
+  renewBefore: 8760h # 365d
+  subject:
+    organizations:
+      - "ZITADEL POSTGRES"
+  usages:
+    - "key encipherment"
+    - "server auth"
+    - "data encipherment"
+  dnsNames:
+    - zitadel
+    - postgres
+    - postgresql
+  issuerRef:
+    name: zitadel-issuer
+    kind: Issuer

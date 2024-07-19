@@ -1,0 +1,12 @@
+apiVersion: v2
+name: zitadel
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: zitadel
+    repository: https://charts.zitadel.com
+    version: 8.1.0
+  - name: postgresql
+    repository: https://charts.bitnami.com/bitnami
+    version: 15.5.17
