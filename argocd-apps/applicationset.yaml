@@ -16,6 +16,7 @@ spec:
           - name: external-secrets
           - name: gha-runner-scale-set-controller
             namespace: arc-systems
+            serverSideOps: true
           - name: httpbin
           - name: immich
           - name: ingress-nginx
@@ -32,7 +33,7 @@ spec:
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
-        # argocd.argoproj.io/compare-options: ServerSideDiff=true
+        argocd.argoproj.io/compare-options: "{{ printf \"%s=%s\" \"ServerSideDiff\" (dig \"serverSideOps\" \"false\" . | quote) }}"
     spec:
       project: default
       source:
@@ -49,4 +50,4 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - RespectIgnoreDifferences=true
-          # - ServerSideApply=true
+          - "{{ printf \"%s=%s\" \"ServerSideApply\" (dig \"serverSideOps\" \"false\" . | quote) }}"
