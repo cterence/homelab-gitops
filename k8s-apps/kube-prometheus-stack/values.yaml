@@ -200,14 +200,6 @@ kube-prometheus-stack:
             url: http://kube-prometheus-stack-prometheus:9090
             access: proxy
             # isDefault: true
-          - name: Loki
-            type: loki
-            url: http://loki-stack:3100
-            access: proxy
-          # - name: Thanos
-          #   type: prometheus
-          #   url: http://thanos-query-frontend:9090
-          #   access: proxy
 
     plugins:
       - grafana-piechart-panel
