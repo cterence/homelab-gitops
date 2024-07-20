@@ -14,12 +14,6 @@ spec:
           - name: external-dns
           - name: external-endpoints
           - name: external-secrets
-          - name: gha-runner-scale-set-controller
-            namespace: arc-systems
-            serverSideOps: true
-          - name: gha-homelab-runners
-            namespace: arc-runners
-            serverSideOps: true
           - name: httpbin
           - name: immich
           - name: ingress-nginx
@@ -28,7 +22,12 @@ spec:
           - name: openebs
           - name: reloader
           - name: velero
-          # - name: zitadel
+          # - name: gha-runner-scale-set-controller
+          #   namespace: arc-systems
+          #   serverSideOps: true
+          # - name: gha-homelab-runners
+          #   namespace: arc-runners
+          #   serverSideOps: true
 
   template:
     metadata:
