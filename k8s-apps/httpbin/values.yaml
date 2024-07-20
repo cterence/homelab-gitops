@@ -4,15 +4,9 @@ image:
 
 service:
   port: 80
-  annotations:
-    tailscale.com/expose: "true"
-    tailscale.com/hostname: "k8s-httpbin"
 
 serviceAccount:
   create: true
-
-autoscaling:
-  enabled: false
 
 ingress:
   enabled: true
@@ -20,19 +14,12 @@ ingress:
   annotations:
     external-dns.alpha.kubernetes.io/target: home.terence.cloud
     cert-manager.io/cluster-issuer: letsencrypt
-    # nginx.ingress.kubernetes.io/rewrite-target: /$2
-    # nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
     nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
     nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
-    tailscale.com/expose: "true"
-    tailscale.com/hostname: "k8s-httpbin-funnel"
-    tailscale.com/funnel: "true"
   hosts:
     - host: httpbin.terence.cloud
       paths:
-        # - path: /httpbin(/|$)(.*)
-        #   pathType: ImplementationSpecific
         - path: /
           pathType: ImplementationSpecific
   tls:
