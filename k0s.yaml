@@ -44,9 +44,7 @@ spec:
       charts: null
       concurrencyLevel: 5
       repositories: null
-    storage:
-      create_default_storage_class: true
-      type: openebs_local_storage
+    storage: {}
   installConfig:
     users:
       etcdUser: etcd
