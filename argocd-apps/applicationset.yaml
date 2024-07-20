@@ -17,6 +17,9 @@ spec:
           - name: httpbin
           - name: immich
           - name: ingress-nginx
+          - name: kube-prometheus-stack
+            namespace: monitoring
+            serverSideApply: true
           - name: nextcloud
           - name: oauth2-proxy
           - name: openebs
