@@ -21,13 +21,8 @@ spec:
           - name: oauth2-proxy
           - name: openebs
           - name: reloader
+          - name: tailscale-operator
           - name: velero
-          # - name: gha-runner-scale-set-controller
-          #   namespace: arc-systems
-          #   serverSideOps: true
-          # - name: gha-homelab-runners
-          #   namespace: arc-runners
-          #   serverSideOps: true
 
   template:
     metadata:
