@@ -5,49 +5,39 @@ metadata:
   name: k0s
 spec:
   api:
-    externalAddress: 100.89.6.102
     address: 192.168.1.31
     k0sApiPort: 9443
     port: 6443
     sans:
-      - 192.168.1.31
-      - 100.89.6.102
-      - 172.18.0.1
-      - 172.17.0.1
-      - 10.0.0.47
-      - homelab
-      - homelab.snow-delta.ts.net
-      - fe80::6e4b:90ff:feea:561f
-      - fd7a:115c:a1e0:ab12:4843:cd96:6259:666
-      - fe80::ebbb:ea3b:7f42:7a5f
-      - fe80::42:78ff:fe53:a82e
-      - fe80::8806:e8ff:fee8:40c7
-      - fe80::2830:9cff:fe52:7c4b
-      - fe80::b836:23ff:fe59:1a2d
-      - fe80::6c22:93ff:fe4d:ba28
-      - fe80::80e3:56ff:fe6c:5506
-      - fe80::c8d0:e1ff:fe7f:a725
-      - fe80::7cd4:e5ff:fe5f:c5be
-      - fe80::1c2b:5ff:fee0:7587
-      - fe80::54:66ff:fe0f:3d44
-      - fe80::1c46:79ff:feae:bb94
-      - fe80::84d7:b8ff:fe62:cd15
-      - fe80::1863:7eff:fe1b:f1a3
-      - fe80::c8fe:beff:fe80:c725
-      - fe80::a44a:98ff:fed2:4f23
-      - fe80::f8f5:27ff:fe2c:2e35
-      - fe80::8c79:5ff:fe8d:e19
-      - fe80::1c17:a5ff:fe50:c8c1
-      - fe80::24cf:9aff:feab:eed8
-      - fe80::484c:bdff:fecb:645a
-      - fe80::8cd9:61ff:fefb:5b49
-      - fe80::84ff:a3ff:fe7d:fb9a
-      - fe80::5874:f9ff:fea0:e7c3
-      - fe80::c01c:32ff:fe56:4798
-      - fe80::b432:a7ff:fe25:ec09
-      - fe80::1802:eaff:fee6:8783
-      - fe80::470:37ff:fe17:13ed
-      - fe80::6c6b:11ff:fe60:1d92
+    - 192.168.1.31
+    - 172.18.0.1
+    - 172.19.0.1
+    - 172.22.0.1
+    - 172.20.0.1
+    - 172.17.0.1
+    - 100.75.180.13
+    - fe80::987c:cf64:426a:4e6
+    - fe80::42:35ff:fec5:670a
+    - fe80::42:41ff:fec9:8efd
+    - fe80::42:dff:fe9d:22fb
+    - fe80::42:6aff:feb5:37f5
+    - fe80::d07e:2ff:fe4b:db1b
+    - fe80::8c3a:a5ff:fe93:d39c
+    - fe80::209f:deff:fec4:213c
+    - fe80::5027:ccff:fed2:517
+    - fe80::9480:bfff:fe15:ebeb
+    - fe80::6c4e:18ff:fead:f736
+    - fe80::bc34:f7ff:fed4:aad9
+    - fe80::4865:fff:fe0d:b5c0
+    - fe80::e859:5fff:fed3:5f25
+    - fe80::6ceb:9cff:fe6a:b3b3
+    - fe80::f850:30ff:fe9f:de90
+    - fe80::8ce7:4aff:fe9d:1088
+    - fe80::f0eb:8bff:fea2:1905
+    - fe80::48d8:5ff:fe29:d7f4
+    - fe80::e4ed:d9ff:fed2:50d3
+    - fd7a:115c:a1e0::a501:b40d
+    - fe80::ceef:d0ff:eae1:f67d
   controllerManager: {}
   extensions:
     helm:
@@ -68,18 +58,36 @@ spec:
     adminPort: 8133
     agentPort: 8132
   network:
-    provider: custom
+    calico: null
     clusterDomain: cluster.local
     dualStack: {}
     kubeProxy:
-      disabled: true
+      iptables:
+        minSyncPeriod: 0s
+        syncPeriod: 0s
+      ipvs:
+        minSyncPeriod: 0s
+        syncPeriod: 0s
+        tcpFinTimeout: 0s
+        tcpTimeout: 0s
+        udpTimeout: 0s
+      metricsBindAddress: 0.0.0.0:10249
+      mode: iptables
+    kuberouter:
+      autoMTU: true
+      hairpin: Enabled
+      ipMasq: false
+      metricsPort: 8081
+      mtu: 0
+      peerRouterASNs: ""
+      peerRouterIPs: ""
     nodeLocalLoadBalancing:
-      enabled: false
       envoyProxy:
         apiServerBindPort: 7443
         konnectivityServerBindPort: 7132
       type: EnvoyProxy
     podCIDR: 10.244.0.0/16
+    provider: kuberouter
     serviceCIDR: 10.96.0.0/12
   scheduler: {}
   storage:
