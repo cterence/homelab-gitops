@@ -447,6 +447,5 @@ cnpg-cluster:
     # See: https://cloudnative-pg.io/documentation/current/cloudnative-pg.v1/#postgresql-cnpg-io-v1-bootstrapinitdb
     initdb:
       database: sonarqube
-      owner: "" # Defaults to the database name
       # postInitSQL:
       #   - CREATE EXTENSION IF NOT EXISTS vector;
