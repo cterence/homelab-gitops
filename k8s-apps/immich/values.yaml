@@ -132,3 +132,32 @@ immich:
         type: pvc
         accessMode: ReadWriteOnce
         # storageClass: your-class
+
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  cluster:
+    instances: 1
+    imageName: "ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.3-v0.3.0"
+    storage:
+      size: 8Gi
+      storageClass: ""
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles: []
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql:
+      shared_preload_libraries:
+        - "vectors.so"
+    initdb:
+      database: sonarqube
+      postInitSQL:
+        - ALTER SYSTEM SET search_path TO "$user", public, vectors;
+        - CREATE EXTENSION IF NOT EXISTS "vectors";
+      #   - CREATE EXTENSION IF NOT EXISTS vector;
