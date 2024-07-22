@@ -152,7 +152,8 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
-    postgresql: {}
+    postgresql:
+      shared_preload_libraries: "vectors.so"
     initdb:
       database: sonarqube
       postInitSQL:
