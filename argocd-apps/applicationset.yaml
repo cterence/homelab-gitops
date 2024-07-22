@@ -12,6 +12,7 @@ spec:
           - name: cert-manager
           - name: cloudnative-pg
             namespace: cnpg-system
+            serverSideApply: true
           - name: dead-drop
           - name: external-dns
           - name: external-endpoints
