@@ -135,6 +135,7 @@ immich:
 
 
 cnpg-cluster:
+  enabled: false
   type: postgresql
   mode: standalone
   cluster:
@@ -153,6 +154,7 @@ cnpg-cluster:
       podMonitor:
         enabled: true
     postgresql:
+      # TODO: cannot setup shared_preload_libraries in the helm chart
       shared_preload_libraries: "vectors.so"
     initdb:
       database: sonarqube
