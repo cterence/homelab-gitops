@@ -51,7 +51,7 @@ sonarqube:
         add: ["CHOWN"]
 
   prometheusExporter:
-    enabled: true
+    enabled: false
     version: "0.17.2"
     noCheckCertificate: false
 
@@ -76,7 +76,7 @@ sonarqube:
 
   prometheusMonitoring:
     podMonitor:
-      enabled: true
+      enabled: false
       interval: 30s
 
   # List of plugins to install.
