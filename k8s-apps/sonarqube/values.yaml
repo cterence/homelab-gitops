@@ -423,14 +423,14 @@ cnpg-cluster:
     # -- This feature enables declarative management of existing roles, as well as the creation of new roles if they are not
     # already present in the database.
     # See: https://cloudnative-pg.io/documentation/current/declarative_role_management/
-    roles:
-      - name: sonarqube
-        ensure: present
-        login: true
-        superuser: false
-        # inRoles:
-        #   - pg_monitor
-        #   - pg_signal_backend
+    roles: []
+      # - name: dante
+      #   ensure: present
+      #   login: true
+      #   superuser: false
+      #   inRoles:
+      #     - pg_monitor
+      #     - pg_signal_backend
 
     monitoring:
       enabled: true
@@ -445,9 +445,9 @@ cnpg-cluster:
     # -- BootstrapInitDB is the configuration of the bootstrap process when initdb is used.
     # See: https://cloudnative-pg.io/documentation/current/bootstrap/
     # See: https://cloudnative-pg.io/documentation/current/cloudnative-pg.v1/#postgresql-cnpg-io-v1-bootstrapinitdb
-    initdb: {}
-      # database: app
-      # owner: "" # Defaults to the database name
-      # secret: "" # Name of the secret containing the initial credentials for the owner of the user database. If empty a new secret will be created from scratch
+    initdb:
+      database: sonarqube
+      owner: "" # Defaults to the database name
+      secret: "" # Name of the secret containing the initial credentials for the owner of the user database. If empty a new secret will be created from scratch
       # postInitSQL:
       #   - CREATE EXTENSION IF NOT EXISTS vector;
