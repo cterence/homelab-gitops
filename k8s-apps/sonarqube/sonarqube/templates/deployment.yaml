@@ -1,0 +1,16 @@
+{{- if eq .Values.deploymentType "Deployment"}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "sonarqube.fullname" . }}
+  labels: {{- include "sonarqube.workloadLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels: {{- include "sonarqube.selectorLabels" . | nindent 6 }}
+  {{- with .Values.deploymentStrategy }}
+  strategy: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template: {{- include "sonarqube.pod" . | nindent 4 }}
+{{- end }}

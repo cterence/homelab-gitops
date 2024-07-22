@@ -1,0 +1,92 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "required": [
+        "replicaCount"
+    ],
+    "properties": {
+        "prometheusMonitoring": {
+            "type": "object",
+            "properties": {
+                "podMonitor": {
+                    "type": "object",
+                    "properties": {
+                        "namespace": {
+                            "type": "string",
+                            "deprecated": true,
+                            "$comment": "(DEPRECATED) This value should not be set, as the PodMonitor's namespace has to match the Release Namespace"
+                        }
+                    }
+                }
+            }
+        },
+        "nginx": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "deprecated": true,
+                    "$comment": "(DEPRECATED) Please use `ingress-nginx.enabled` instead"
+                }
+            }
+        },
+        "postgresql": {
+            "type": "object",
+            "deprecated": true,
+            "$comment": "(DEPRECATED) Please use an external database instead of the embedded one. Please visit https://artifacthub.io/packages/helm/sonarqube/sonarqube#production-use-case for more information"
+        },
+        "replicaCount": {
+            "type": "integer",
+            "enum": [0, 1]
+        },
+        "jvmOpts": {
+            "type": "string",
+            "deprecated": true,
+            "$comment": "(DEPRECATED) Please use SONAR_WEB_JAVAOPTS or sonar.web.javaOpts"
+        },
+        "jvmCeOpts": {
+            "type": "string",
+            "deprecated": true,
+            "$comment": "(DEPRECATED) Please use SONAR_CE_JAVAOPTS or sonar.ce.javaOpts"
+        },
+        "livenessProbe": {
+            "type": "object",
+            "properties": {
+                "sonarWebContext": {
+                    "type": "string",
+                    "deprecated": true,
+                    "$comment": "(DEPRECATED) please use sonarWebContext at the value top level"
+                }
+            }
+        },
+        "startupProbe": {
+            "type": "object",
+            "properties": {
+                "sonarWebContext": {
+                    "type": "string",
+                    "deprecated": true,
+                    "$comment": "(DEPRECATED) please use sonarWebContext at the value top level"
+                }
+            }
+        },
+        "readinessProbe": {
+            "type": "object",
+            "properties": {
+                "sonarWebContext": {
+                    "type": "string",
+                    "deprecated": true,
+                    "$comment": "(DEPRECATED) please use sonarWebContext at the value top level"
+                }
+            }
+        },
+        "account": {
+            "type": "object",
+            "properties": {
+                "sonarWebContext": {
+                    "type": "string",
+                    "deprecated": true,
+                    "$comment": "(DEPRECATED) please use sonarWebContext at the value top level"
+                }
+            }
+        }
+    }
+ }

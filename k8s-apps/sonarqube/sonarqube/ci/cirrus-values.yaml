@@ -1,0 +1,5 @@
+image:
+  pullSecrets:
+    - name: pullsecret
+  repository: "sonarsource/sonarqube"
+  tag: "10.6.0-community"

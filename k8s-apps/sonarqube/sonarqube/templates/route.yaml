@@ -1,0 +1,26 @@
+{{- if .Values.route.enabled -}}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ template "sonarqube.fullname" . }}
+  labels:
+    {{- include "sonarqube.labels" . | nindent 4 }}
+    {{- with .Values.route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.route.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.route.host }}
+  host: {{ . }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ include "sonarqube.fullname" . }}
+  port:
+    targetPort: http
+  {{- with .Values.route.tls }}
+  tls: {{- toYaml . | nindent 4 }}
+  {{- end -}}
+{{- end -}}

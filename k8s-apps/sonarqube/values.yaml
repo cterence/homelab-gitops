@@ -1,5 +1,4 @@
 sonarqube:
-  enabled: true
   edition: "community"
   image:
     repository: sonarqube
