@@ -8,6 +8,7 @@ dependencies:
     repository: https://sonarsource.github.io/helm-chart-sonarqube
     version: 10.6.1
     condition: sonarqube.enabled
-  - name: cnpg-cluster
-    repository: file://../cnpg-cluster
-    version: 0.1.0
+  - name: cluster
+    alias: cnpg-cluster
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.0.9
