@@ -10,6 +10,8 @@ spec:
         elements:
           - name: argocd
           - name: cert-manager
+          - name: cloudnative-pg
+            namespace: cnpg-system
           - name: dead-drop
           - name: external-dns
           - name: external-endpoints
