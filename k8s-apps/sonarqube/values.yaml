@@ -448,6 +448,5 @@ cnpg-cluster:
     initdb:
       database: sonarqube
       owner: "" # Defaults to the database name
-      secret: "" # Name of the secret containing the initial credentials for the owner of the user database. If empty a new secret will be created from scratch
       # postInitSQL:
       #   - CREATE EXTENSION IF NOT EXISTS vector;
