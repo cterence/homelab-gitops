@@ -1,5 +1,5 @@
 sonarqube:
-  enabled: false
+  enabled: true
   edition: "community"
   image:
     repository: sonarqube
@@ -197,15 +197,15 @@ sonarqube:
     # If enable the JDBC Overwrite, make sure to set `postgresql.enabled=false`
     enable: true
     # The JDBC url of the external DB
-    jdbcUrl: "jdbc:postgresql://myPostgress/myDatabase?socketTimeout=1500"
+    jdbcUrl: "jdbc:postgresql://sonarqube-cnpg-cluster-rw/sonarqube?socketTimeout=1500"
     # The DB user that should be used for the JDBC connection
-    jdbcUsername: "sonarUser"
+    jdbcUsername: "sonarqube"
     # Use this if you don't mind the DB password getting stored in plain text within the values file
-    jdbcPassword: "sonarPass"
+    # jdbcPassword: "sonarPass"
     ## Alternatively, use a pre-existing k8s secret containing the DB password
-    # jdbcSecretName: "sonarqube-jdbc"
+    jdbcSecretName: "sonarqube-cnpg-cluster-app"
     ## and the secretValueKey of the password found within that secret
-    # jdbcSecretPasswordKey: "jdbc-password"
+    jdbcSecretPasswordKey: "password"
 
   ## (DEPRECATED) Configuration values for postgresql dependency
   ## ref: https://github.com/bitnami/charts/blob/master/bitnami/postgresql/README.md
