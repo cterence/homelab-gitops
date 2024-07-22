@@ -21,7 +21,7 @@ sonarqube:
           - sonarqube.terence.cloud
 
   initSysctl:
-    enabled: false
+    enabled: true
     vmMaxMapCount: 524288
     fsFileMax: 131072
     nofile: 131072
@@ -36,11 +36,11 @@ sonarqube:
 
   # This should not be required anymore, used to chown/chmod folder created by faulty CSI driver that are not applying properly POSIX fsgroup.
   initFs:
-    enabled: false
+    enabled: true
     # Image: busybox:1.36
     # Compatible with podSecurity standard baseline.
     securityContext:
-      privileged: false
+      privileged: true
       runAsNonRoot: false
       runAsUser: 0
       runAsGroup: 0
@@ -132,15 +132,15 @@ sonarqube:
   ## the usage of SonarQube and the surrounding infrastructure.
   ## Those default are based on the default Web -Xmx1G -Xms128m and CE -Xmx2G -Xms128m and Search -Xmx2G -Xms2G settings of SQ sub processes
   ## Adjust these values to your needs, you can find more details on the main README of the chart.
-  resources:
-    limits:
-      cpu: 800m
-      memory: 6144M
-      ephemeral-storage: 512000M
-    requests:
-      cpu: 400m
-      memory: 2048M
-      ephemeral-storage: 1536M
+  # resources:
+  #   limits:
+  #     cpu: 800m
+  #     memory: 6144M
+  #     ephemeral-storage: 512000M
+  #   requests:
+  #     cpu: 400m
+  #     memory: 2048M
+  #     ephemeral-storage: 1536M
 
   persistence:
     enabled: true
@@ -169,9 +169,9 @@ sonarqube:
     mounts: []
 
   # In case you want to specify different resources for emptyDir than {}
-  emptyDir:
-    medium: Memory
-    sizeLimit: 16Mi
+  emptyDir: {}
+    # medium: Memory
+    # sizeLimit: 16Mi
 
   # A custom sonar.properties file can be provided via dictionary.
   # For example:
