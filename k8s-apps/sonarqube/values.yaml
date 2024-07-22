@@ -120,10 +120,10 @@ sonarqube:
 
   ## Environment variables to attach to the pods
   ##
-  env:
+  env: []
     # If you use a different ingress path from /, you have to add it here as the value of SONAR_WEB_CONTEXT
-    - name: SONAR_WEB_JAVAOPTS
-      value: "-Djansi.tmpdir=/tmp"
+    # - name: SONAR_WEB_JAVAOPTS
+    #   value: "-Djansi.tmpdir=/tmp"
 
   # Set annotations for pods
   annotations: {}
@@ -169,10 +169,9 @@ sonarqube:
     mounts: []
 
   # In case you want to specify different resources for emptyDir than {}
-  emptyDir: {}
-    # Example of resouces that might be used:
-    # medium: Memory
-    # sizeLimit: 16Mi
+  emptyDir:
+    medium: Memory
+    sizeLimit: 16Mi
 
   # A custom sonar.properties file can be provided via dictionary.
   # For example:
