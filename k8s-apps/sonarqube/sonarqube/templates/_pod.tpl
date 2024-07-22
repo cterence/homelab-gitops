@@ -170,9 +170,6 @@ spec:
         - mountPath: {{ .Values.sonarqubeFolder }}/data
           name: sonarqube
           subPath: data
-        - mountPath: {{ .Values.sonarqubeFolder }}/temp
-          name: sonarqube
-          subPath: temp
         - mountPath: {{ .Values.sonarqubeFolder }}/logs
           name: sonarqube
           subPath: logs
@@ -296,9 +293,6 @@ spec:
         - mountPath: {{ .Values.sonarqubeFolder }}/data
           name: sonarqube
           subPath: data
-        - mountPath: {{ .Values.sonarqubeFolder }}/temp
-          name: sonarqube
-          subPath: temp
         - mountPath: {{ .Values.sonarqubeFolder }}/logs
           name: sonarqube
           subPath: logs
