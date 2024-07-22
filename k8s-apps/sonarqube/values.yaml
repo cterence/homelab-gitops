@@ -21,7 +21,7 @@ sonarqube:
           - sonarqube.terence.cloud
 
   initSysctl:
-    enabled: true
+    enabled: false
     vmMaxMapCount: 524288
     fsFileMax: 131072
     nofile: 131072
@@ -36,7 +36,7 @@ sonarqube:
 
   # This should not be required anymore, used to chown/chmod folder created by faulty CSI driver that are not applying properly POSIX fsgroup.
   initFs:
-    enabled: true
+    enabled: false
     # Image: busybox:1.36
     # Compatible with podSecurity standard baseline.
     securityContext:
