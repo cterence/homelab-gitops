@@ -1,0 +1,13 @@
+apiVersion: v2
+name: sonarqube
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: sonarqube
+    repository: https://sonarsource.github.io/helm-chart-sonarqube
+    version: 10.6.1
+    condition: sonarqube.enabled
+  - name: cnpg-cluster
+    repository: file://../cnpg-cluster
+    version: 0.1.0

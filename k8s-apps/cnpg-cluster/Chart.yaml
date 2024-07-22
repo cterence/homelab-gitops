@@ -1,0 +1,9 @@
+apiVersion: v2
+name: cnpg-cluster
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: cluster
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.0.9
