@@ -156,7 +156,7 @@ cnpg-cluster:
       - "vectors.so"
     postgresql:
     initdb:
-      database: sonarqube
+      database: immich
       postInitSQL:
         - ALTER SYSTEM SET search_path TO "$user", public, vectors;
         - CREATE EXTENSION IF NOT EXISTS "vectors";
