@@ -303,7 +303,7 @@ nextcloud:
   ## for more options see https://github.com/bitnami/charts/tree/main/bitnami/postgresql
   ##
   postgresql:
-    enabled: true
+    enabled: false
     global:
       postgresql:
         # global.postgresql.auth overrides postgresql.auth
