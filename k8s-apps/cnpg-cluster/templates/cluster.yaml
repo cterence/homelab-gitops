@@ -48,7 +48,7 @@ spec:
     name: {{ . }}
   {{ end }}
   postgresql:
-    {{- with .Values.cluster.shared_preload_libraries }}
+    {{- with .Values.cluster.sharedPreloadLibraries }}
     shared_preload_libraries:
       {{- if eq $.Values.type "timescaledb" }}
       - timescaledb
