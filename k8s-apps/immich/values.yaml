@@ -6,15 +6,27 @@
 immich:
   env:
     REDIS_HOSTNAME: '{{ printf "%s-redis-master" .Release.Name }}'
-    DB_HOSTNAME: "{{ .Release.Name }}-postgresql"
-    DB_USERNAME: "{{ .Values.postgresql.global.postgresql.auth.username }}"
-    DB_DATABASE_NAME: "{{ .Values.postgresql.global.postgresql.auth.database }}"
+    DB_HOSTNAME:
+      valueFrom:
+        secretKeyRef:
+          name: immich-cnpg-cluster-app
+          key: host
+    DB_USERNAME:
+      valueFrom:
+        secretKeyRef:
+          name: immich-cnpg-cluster-app
+          key: username
+    DB_DATABASE_NAME:
+      valueFrom:
+        secretKeyRef:
+          name: immich-cnpg-cluster-app
+          key: dbname
     # -- You should provide your own secret outside of this helm-chart and use `postgresql.global.postgresql.auth.existingSecret` to provide credentials to the postgresql instance
     DB_PASSWORD:
       valueFrom:
         secretKeyRef:
-          name: immich-postgres-user-password
-          key: DB_PASSWORD
+          name: immich-cnpg-cluster-app
+          key: password
     IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
 
   image:
