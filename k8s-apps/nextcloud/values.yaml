@@ -260,11 +260,11 @@ nextcloud:
     ## Use a existing secret
     existingSecret:
       enabled: true
-      secretName: nextcloud-postgres-user-password
-      usernameKey: DB_USERNAME
-      passwordKey: DB_PASSWORD
-      hostKey: DB_HOSTNAME
-      databaseKey: DB_NAME
+      secretName: nextcloud-cnpg-cluster-app
+      usernameKey: username
+      passwordKey: password
+      hostKey: host
+      databaseKey: dbname
 
   ##
   ## MariaDB chart configuration
