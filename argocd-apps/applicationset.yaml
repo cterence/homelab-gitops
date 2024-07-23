@@ -27,7 +27,6 @@ spec:
           - name: oauth2-proxy
           - name: openebs
           - name: reloader
-          - name: sonarqube
           - name: tailscale-operator
           - name: velero
 
