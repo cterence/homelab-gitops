@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "dead-drop.labels" . | nindent 4 }}
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "0 * * * *"
   jobTemplate:
     spec:
       template:
