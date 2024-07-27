@@ -202,6 +202,7 @@ nextcloud:
         volumeMounts:
           - name: nextcloud-main
             mountPath: /import
+            subPath: data/terence/files/Images
             readOnly: true
 
     # Extra mounts for the pods. Example shown is for connecting a legacy NFS volume
