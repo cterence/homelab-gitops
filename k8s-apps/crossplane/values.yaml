@@ -42,7 +42,6 @@ crossplane:
           argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
           argocd.argoproj.io/sync-wave: "2"
       spec:
-        assumeRoleARN: arn:aws:iam::964066691632:role/administrator
         credentials:
           source: Secret
           secretRef:
