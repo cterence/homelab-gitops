@@ -29,9 +29,6 @@ immich:
           key: password
     IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
 
-  image:
-    tag: v1.108.0
-
   immich:
     metrics:
       # Enabling this will create the service monitors needed to monitor immich with the prometheus operator
@@ -111,6 +108,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
+      tag: v1.110.0
     ingress:
       main:
         enabled: true
@@ -134,6 +132,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
+      tag: v1.110.0
     env:
       TRANSFORMERS_CACHE: /cache
     persistence:
