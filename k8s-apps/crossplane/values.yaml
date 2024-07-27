@@ -8,7 +8,7 @@ crossplane:
   configuration:
     packages: []
 
-  functions:
+  function:
     packages:
       - xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
       - xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.4.1
