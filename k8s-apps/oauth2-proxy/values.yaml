@@ -81,6 +81,7 @@ oauth2-proxy:
       - argocd.terence.cloud
       - grafana.terence.cloud
       - httpbin.terence.cloud
+      - komoplane.terence.cloud
       - ntfy.terence.cloud
       - prometheus.terence.cloud
 
