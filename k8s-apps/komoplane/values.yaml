@@ -14,3 +14,6 @@ komoplane:
       - secretName: komoplane-tls
         hosts:
           - komoplane.terence.cloud
+  extraArgs:
+    - --bind=0.0.0.0
+    - --no-analytics
