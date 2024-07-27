@@ -2,18 +2,17 @@ crossplane:
   leaderElection: false
 
   provider:
-    packages:
-      - xpkg.upbound.io/upbound/provider-aws-iam:v1.9.1
+    packages: []
 
   configuration:
     packages: []
 
   functions:
-    packages:
-      - xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
-      - xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.4.1
-      - xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.6.0
-      - xpkg.upbound.io/crossplane-contrib/function-extra-resources:v0.0.3
+    packages: []
+      # - xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
+      # - xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.4.1
+      # - xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.6.0
+      # - xpkg.upbound.io/crossplane-contrib/function-extra-resources:v0.0.3
 
   metrics:
     enabled: true
@@ -34,12 +33,20 @@ crossplane:
           - secretKey: credentials
             remoteRef:
               key: crossplane_aws_credentials
+    - apiVersion: pkg.crossplane.io/v1
+      kind: Provider
+      metadata:
+        name: provider-aws-iam
+        annotations:
+          argocd.argoproj.io/sync-wave: "1"
+      spec:
+        package: xpkg.upbound.io/upbound/provider-aws-iam:v1.9.1
     - apiVersion: aws.crossplane.io/v1beta1
       kind: ProviderConfig
       metadata:
         name: aws
         annotations:
-          argocd.argoproj.io/sync-wave: "1"
+          argocd.argoproj.io/sync-wave: "2"
       spec:
         assumeRoleARN: arn:aws:iam::964066691632:role/administrator
         credentials:
