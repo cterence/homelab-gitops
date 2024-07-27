@@ -23,6 +23,9 @@ crossplane:
       kind: ExternalSecret
       metadata:
         name: aws-credentials
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+          argocd.argoproj.io/sync-wave: "1"
       spec:
         secretStoreRef:
           kind: ClusterSecretStore

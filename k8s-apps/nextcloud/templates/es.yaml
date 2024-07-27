@@ -1,30 +1,15 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: nextcloud-postgres-user-password
+  name: immich-nextcloud-uploader-api-key
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
     name: gitlab-secret-store
   target:
-    name: nextcloud-postgres-user-password
+    name: immich-nextcloud-uploader-api-key
     creationPolicy: Owner
-    template:
-      engineVersion: v2
-      data:
-        DB_USERNAME: {{ .Values.nextcloud.externalDatabase.user }}
-        DB_HOSTNAME: {{ .Values.nextcloud.externalDatabase.host }}
-        DB_NAME: {{ .Values.nextcloud.externalDatabase.database }}
-        DB_PASSWORD: "{{"{{ .DB_PASSWORD }}"}}"
-        ADMIN_PASSWORD: "{{"{{ .ADMIN_PASSWORD }}"}}"
-        REPLICATION_PASSWORD: "{{"{{ .REPLICATION_PASSWORD }}"}}"
   data:
-    - secretKey: DB_PASSWORD
+    - secretKey: api-key
       remoteRef:
-        key: nextcloud_postgres_user_password
-    - secretKey: ADMIN_PASSWORD
-      remoteRef:
-        key: nextcloud_postgres_admin_password
-    - secretKey: REPLICATION_PASSWORD
-      remoteRef:
-        key: nextcloud_postgres_replication_password
+        key: immich_nextcloud_uploader_api_key
