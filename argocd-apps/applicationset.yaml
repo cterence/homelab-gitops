@@ -22,6 +22,7 @@ spec:
           - name: httpbin
           - name: immich
           - name: ingress-nginx
+          - name: komoplane
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true

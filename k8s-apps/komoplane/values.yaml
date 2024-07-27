@@ -1,0 +1,16 @@
+komoplane:
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+    hosts:
+      - host: komoplane.terence.cloud
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: komoplane-tls
+        hosts:
+          - komoplane.terence.cloud
