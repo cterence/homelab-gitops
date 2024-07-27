@@ -190,7 +190,7 @@ nextcloud:
           - -c
           - |
               while true; do
-                node /usr/src/app/dist upload /import -r -n
+                node /usr/src/app/dist upload /import --recursive
                 sleep 1800
               done
         env:
