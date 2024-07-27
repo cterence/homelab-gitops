@@ -185,7 +185,14 @@ nextcloud:
     extraSidecarContainers:
       - name: immich-nextcloud-uploader
         image: ghcr.io/immich-app/immich-cli:2.2.12
-        args: ["upload", "/import", "-r", "-n"]
+        command:
+          - /bin/sh
+          - -c
+          - |
+              while true; do
+                node /usr/src/app/dist upload /import -r -n
+                sleep 1800
+              done
         env:
           - name: IMMICH_API_KEY
             valueFrom:
