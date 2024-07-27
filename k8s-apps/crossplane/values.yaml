@@ -38,6 +38,8 @@ crossplane:
       kind: ProviderConfig
       metadata:
         name: aws
+        annotations:
+          argocd.argoproj.io/sync-wave: "1"
       spec:
         assumeRoleARN: arn:aws:iam::964066691632:role/administrator
         credentials:
