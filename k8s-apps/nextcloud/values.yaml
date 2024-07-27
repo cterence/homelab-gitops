@@ -173,14 +173,7 @@ nextcloud:
 
     ##
     ## Extra environment variables
-    extraEnv:
-     - name: IMMICH_API_KEY
-       valueFrom:
-         secretKeyRef:
-           name: immich-nextcloud-uploader-api-key
-           key: api-key
-     - name: IMMICH_INSTANCE_URL
-       value: https://immich.terence.cloud/api
+    extraEnv: []
 
     # Extra init containers that runs before pods start.
     extraInitContainers: []
@@ -193,6 +186,14 @@ nextcloud:
       - name: immich-nextcloud-uploader
         image: ghcr.io/immich-app/immich-cli:2.2.12
         args: ["upload", "/import", "-r", "-n"]
+        env:
+          - name: IMMICH_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: immich-nextcloud-uploader-api-key
+                key: api-key
+          - name: IMMICH_INSTANCE_URL
+            value: https://immich.terence.cloud/api
         securityContext:
           runAsUser: 33
           runAsGroup: 33
