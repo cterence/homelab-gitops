@@ -194,7 +194,7 @@ nextcloud:
         image: ghcr.io/immich-app/immich-cli:2.2.12
         command: ["immich", "upload", "/import", "-r", "-n"]
         volumeMounts:
-          - name: nextcloud-data
+          - name: nextcloud-main
             mountPath: /import
             readOnly: true
 
