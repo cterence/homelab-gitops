@@ -3,13 +3,17 @@ crossplane:
 
   provider:
     packages:
-      # - crossplane/provider-aws:v0.26.1
-      # - crossplane/provider-sql:master
-      # - crossplane/provider-terraform:master
-      # - crossplane/provider-jet-aws:v0.4.0-preview
+      - xpkg.upbound.io/upbound/provider-aws-iam:v1.9.1
 
   configuration:
     packages: []
+
+  functions:
+    packages:
+      - xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
+      - xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.4.1
+      - xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.6.0
+      - xpkg.upbound.io/crossplane-contrib/function-extra-resources:v0.0.3
 
   metrics:
     enabled: true

@@ -2,7 +2,7 @@ apiVersion: v2
 name: crossplane
 description: A helm chart for an app
 type: application
-version: 1.6.2
+version: 0.1.0
 dependencies:
   - name: crossplane
     repository: https://charts.crossplane.io/stable

@@ -13,6 +13,8 @@ spec:
           - name: cloudnative-pg
             namespace: cnpg-system
             serverSideApply: true
+          - name: crossplane
+            namespace: crossplane-system
           - name: dead-drop
           - name: external-dns
           - name: external-endpoints
