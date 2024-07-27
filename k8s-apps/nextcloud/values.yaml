@@ -183,6 +183,7 @@ nextcloud:
 
     # Extra sidecar containers.
     extraSidecarContainers:
+      # Daily upload of Nextcloud images to immich
       - name: immich-nextcloud-uploader
         image: ghcr.io/immich-app/immich-cli:2.2.12
         command:
@@ -191,7 +192,7 @@ nextcloud:
           - |
               while true; do
                 node /usr/src/app/dist upload /import --recursive
-                sleep 1800
+                sleep 86400
               done
         env:
           - name: IMMICH_API_KEY
