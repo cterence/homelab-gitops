@@ -17,3 +17,32 @@ crossplane:
 
   metrics:
     enabled: true
+
+  extraObjects:
+    - apiVersion: external-secrets.io/v1beta1
+      kind: ExternalSecret
+      metadata:
+        name: aws-credentials
+      spec:
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: gitlab-secret-store
+        target:
+          name: aws-credentials
+          creationPolicy: Owner
+        data:
+          - secretKey: credentials
+            remoteRef:
+              key: crossplane_aws_credentials
+    - apiVersion: aws.crossplane.io/v1beta1
+      kind: ProviderConfig
+      metadata:
+        name: aws
+      spec:
+        assumeRoleARN: arn:aws:iam::964066691632:role/administrator
+        credentials:
+          source: Secret
+          secretRef:
+            namespace: crossplane-system
+            name: aws-credentials
+            key: credentials
