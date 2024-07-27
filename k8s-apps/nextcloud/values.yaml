@@ -192,7 +192,12 @@ nextcloud:
     extraSidecarContainers:
       - name: immich-nextcloud-uploader
         image: ghcr.io/immich-app/immich-cli:2.2.12
-        command: ["immich", "upload", "/import", "-r", "-n"]
+        args: ["upload", "/import", "-r", "-n"]
+        securityContext:
+          runAsUser: 33
+          runAsGroup: 33
+          runAsNonRoot: true
+          readOnlyRootFilesystem: false
         volumeMounts:
           - name: nextcloud-main
             mountPath: /import
