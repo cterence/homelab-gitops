@@ -79,6 +79,7 @@ oauth2-proxy:
     hosts:
       - alertmanager.terence.cloud
       - argocd.terence.cloud
+      - calibre.terence.cloud
       - grafana.terence.cloud
       - httpbin.terence.cloud
       - komoplane.terence.cloud
