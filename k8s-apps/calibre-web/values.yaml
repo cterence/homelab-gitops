@@ -1,13 +1,13 @@
 ---
 # Configure options applied to all pods
 app-template:
-  defaultPodOptions:
-    automountServiceAccountToken: false
-    securityContext:
-      runAsUser: 1000
-      runAsGroup: 1000
-      fsGroup: 1000
-      fsGroupChangePolicy: "OnRootMismatch"
+  # defaultPodOptions:
+  #   automountServiceAccountToken: false
+  #   securityContext:
+  #     runAsUser: 568
+  #     runAsGroup: 568
+  #     fsGroup: 568
+  #     fsGroupChangePolicy: "OnRootMismatch"
 
   controllers:
     # Configure the main controller
