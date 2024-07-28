@@ -1,0 +1,69 @@
+---
+# Configure options applied to all pods
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    # Configure the main controller
+    main:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        # Configure the main application container
+        main:
+          image:
+            # -- image repository
+            repository: linuxserver/calibre-web
+            # -- image tag
+            # this example is not automatically updated, so be sure to use the latest image
+            tag: 0.6.22
+
+  service:
+    # Configure a service for the main application
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8083
+
+  ingress:
+    # Configure an Ingress for the main application
+    main:
+      className: "nginx"
+      hosts:
+        - host: &host calibre.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - hosts:
+            - *host
+
+  persistence:
+    # Configure the main configuration storage location
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      globalMounts:
+        - path: /config
+    books:
+      enabled: true
+      size: 10Gi
+      accessMode: ReadWriteOnce
+      type: persistentVolumeClaim
+      globalMounts:
+        - path: /books
