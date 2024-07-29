@@ -1,28 +1,50 @@
-image:
-  repository: mendhak/http-https-echo
-  tag: 33
+app-template:
+  controllers:
+    main:
+      type: deployment
+      containers:
+        main:
+          image:
+            repository: mendhak/http-https-echo
+            tag: 33
+          ports:
+            - name: http
+              containerPort: 80
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
 
-service:
-  port: 80
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 3000
 
-serviceAccount:
-  create: true
-
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    external-dns.alpha.kubernetes.io/target: home.terence.cloud
-    cert-manager.io/cluster-issuer: letsencrypt
-    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-    nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
-  hosts:
-    - host: httpbin.terence.cloud
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-    - secretName: httpbin-tls
+  ingress:
+    main:
+      enabled: true
+      className: "nginx"
+      annotations:
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        cert-manager.io/cluster-issuer: letsencrypt
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
       hosts:
-        - httpbin.terence.cloud
+        - host: httpbin.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: httpbin-tls
+          hosts:
+            - httpbin.terence.cloud
