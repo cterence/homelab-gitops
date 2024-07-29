@@ -1,117 +1,126 @@
-# Default values for dead-drop.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-libsql-server:
-  fullnameOverride: "libsql-server"
-  replicaCount: 1
+app-template:
+  configMaps:
+    config:
+      enabled: true
+      data:
+        DB_HOST: "libsql-server"
+        DB_PORT: "8080"
+        ADDRESS: "0.0.0.0"
 
-replicaCount: 1
+  controllers:
+    server:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      initContainers:
+        init:
+          image:
+            repository: ghcr.io/cterence/dead-drop
+            tag: latest
+          args:
+            - init
+          envFrom:
+            - configMapRef:
+                identifier: config
+      containers:
+        main:
+          image:
+            repository: ghcr.io/cterence/dead-drop
+            tag: latest
+          args:
+            - serve
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                identifier: config
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+              spec:
+                path: /health
+            readiness:
+              enabled: true
+              type: HTTP
+              spec:
+                path: /health
 
-image:
-  repository: ghcr.io/cterence/dead-drop
-  pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+    db:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/tursodatabase/libsql-server
+            tag: v0.24.18
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+              spec:
+                path: /health
+            readiness:
+              enabled: true
+              type: HTTP
+              spec:
+                path: /health
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+    purge:
+      type: cronjob
+      cronjob:
+        schedule: "0 * * * *"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/cterence/dead-drop
+            tag: latest
+          args:
+            - purge
+          envFrom:
+            - configMapRef:
+                identifier: config
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  service:
+    main:
+      controller: server
+      type: ClusterIP
+      ports:
+        http:
+          port: 3000
 
-podAnnotations: {}
-podLabels: {}
+  ingress:
+    main:
+      enabled: true
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
 
-podSecurityContext: {}
-  # fsGroup: 2000
+      hosts:
+        - host: dead-drop.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: main
+                port: http
+      tls:
+      - secretName: dead-drop-tls
+        hosts:
+          - dead-drop.terence.cloud
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: ClusterIP
-  port: 3000
-
-config:
-  DB_HOST: "libsql-server"
-  DB_PORT: "8080"
-  ADDRESS: "0.0.0.0"
-
-
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
-    external-dns.alpha.kubernetes.io/target: home.terence.cloud
-
-  hosts:
-    - host: dead-drop.terence.cloud
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-   - secretName: dead-drop-tls
-     hosts:
-       - dead-drop.terence.cloud
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-livenessProbe:
-  httpGet:
-    path: /health
-    port: http
-readinessProbe:
-  httpGet:
-    path: /health
-    port: http
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+  persistence:
+    data:
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      advancedMounts:
+        db:
+          main:
+            - path: /var/lib/sqld
