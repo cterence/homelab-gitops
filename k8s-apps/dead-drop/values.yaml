@@ -107,17 +107,17 @@ libsql-server:
           ports:
             - name: http
               containerPort: 8080
-          probes:
-            liveness:
-              enabled: true
-              type: HTTP
-              spec:
-                path: /
-            readiness:
-              enabled: true
-              type: HTTP
-              spec:
-                path: /
+          # probes:
+          #   liveness:
+          #     enabled: true
+          #     type: HTTP
+          #     spec:
+          #       path: /
+          #   readiness:
+          #     enabled: true
+          #     type: HTTP
+          #     spec:
+          #       path: /
 
   service:
     main:
