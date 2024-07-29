@@ -112,12 +112,12 @@ libsql-server:
               enabled: true
               type: HTTP
               spec:
-                path: /health
+                path: /
             readiness:
               enabled: true
               type: HTTP
               spec:
-                path: /health
+                path: /
 
   service:
     main:
