@@ -1,10 +1,9 @@
 dead-drop:
   configMaps:
     config:
-      enabled: true
       data:
-        DB_HOST: "libsql-server"
-        DB_PORT: "8080"
+        DEAD_DROP_DB_HOST: "libsql-server"
+        DEAD_DROP_DB_PORT: "8080"
         ADDRESS: "0.0.0.0"
 
   controllers:
