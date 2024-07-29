@@ -6,5 +6,10 @@ version: 0.1.0
 appVersion: "1.16.0"
 dependencies:
   - name: app-template
+    alias: dead-drop
+    repository: https://bjw-s.github.io/helm-charts
+    version: 3.3.0
+  - name: app-template
+    alias: libsql-server
     repository: https://bjw-s.github.io/helm-charts
     version: 3.3.0

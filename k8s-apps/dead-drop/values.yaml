@@ -1,4 +1,4 @@
-app-template:
+dead-drop:
   configMaps:
     config:
       enabled: true
@@ -115,12 +115,46 @@ app-template:
         hosts:
           - dead-drop.terence.cloud
 
+libsql-server:
+  controllers:
+    server:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/tursodatabase/libsql-server
+            tag: v0.24.18
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+              spec:
+                path: /health
+            readiness:
+              enabled: true
+              type: HTTP
+              spec:
+                path: /health
+
+  service:
+    main:
+      controller: server
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
   persistence:
     data:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
       size: 10Gi
       advancedMounts:
-        db:
+        server:
           main:
             - path: /var/lib/sqld
