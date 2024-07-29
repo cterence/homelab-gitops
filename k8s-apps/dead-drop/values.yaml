@@ -47,30 +47,6 @@ dead-drop:
               spec:
                 path: /health
 
-    db:
-      type: statefulset
-      annotations:
-        reloader.stakater.com/auto: "true"
-      containers:
-        main:
-          image:
-            repository: ghcr.io/tursodatabase/libsql-server
-            tag: v0.24.18
-          ports:
-            - name: http
-              containerPort: 8080
-          probes:
-            liveness:
-              enabled: true
-              type: HTTP
-              spec:
-                path: /health
-            readiness:
-              enabled: true
-              type: HTTP
-              spec:
-                path: /health
-
     purge:
       type: cronjob
       cronjob:
@@ -116,6 +92,8 @@ dead-drop:
           - dead-drop.terence.cloud
 
 libsql-server:
+  global:
+    fullnameOverride: "libsql-server"
   controllers:
     server:
       type: statefulset
