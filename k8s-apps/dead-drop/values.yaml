@@ -37,14 +37,18 @@ dead-drop:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
               spec:
-                path: /health
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
               spec:
-                path: /health
+                httpGet:
+                  port: http
+                  path: /health
 
     purge:
       type: cronjob
