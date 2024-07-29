@@ -9,7 +9,7 @@ app-template:
             tag: 33
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
           probes:
             liveness:
               enabled: true
@@ -24,7 +24,7 @@ app-template:
       type: ClusterIP
       ports:
         http:
-          port: 80
+          port: 8080
 
   ingress:
     main:
