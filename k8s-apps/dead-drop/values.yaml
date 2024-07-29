@@ -4,7 +4,7 @@ dead-drop:
       data:
         DEAD_DROP_DB_HOST: "libsql-server"
         DEAD_DROP_DB_PORT: "8080"
-        ADDRESS: "0.0.0.0"
+        DEAD_DROP_ADDRESS: "0.0.0.0"
 
   controllers:
     server:
