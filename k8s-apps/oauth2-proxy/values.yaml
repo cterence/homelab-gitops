@@ -85,6 +85,7 @@ oauth2-proxy:
       - komoplane.terence.cloud
       - ntfy.terence.cloud
       - prometheus.terence.cloud
+      - tailout.terence.cloud
 
   metrics:
     enabled: true

@@ -1,0 +1,75 @@
+app-template:
+  configMaps:
+    config:
+      data:
+        TAILOUT_UI_PORT: "3000"
+        TAILOUT_UI_ADDRESS: "0.0.0.0"
+        TAILOUT_CREATE_SHUTDOWN: 30m
+        TAILOUT_REGION: eu-west-3
+
+  controllers:
+    server:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/cterence/tailout
+            tag: latest
+          args:
+            - ui
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                identifier: config
+            - secretRef:
+                name: tailout-aws-credentials
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+  service:
+    main:
+      controller: server
+      type: ClusterIP
+      ports:
+        http:
+          port: 3000
+
+  ingress:
+    main:
+      enabled: true
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+      hosts:
+        - host: tailout.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: main
+                port: http
+      tls:
+      - secretName: tailout-tls
+        hosts:
+          - tailout.terence.cloud
