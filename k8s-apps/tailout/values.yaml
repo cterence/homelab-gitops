@@ -26,7 +26,7 @@ app-template:
             - configMapRef:
                 identifier: config
             - secretRef:
-                name: tailout-aws-credentials
+                name: tailout-credentials
           probes:
             liveness:
               enabled: true
