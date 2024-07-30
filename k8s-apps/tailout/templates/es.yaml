@@ -19,6 +19,9 @@ spec:
     - secretKey: TAILOUT_TAILSCALE_API_KEY
       remoteRef:
         key: tailout_tailscale_api_key
+    - secretKey: TAILOUT_TAILSCALE_AUTH_KEY
+      remoteRef:
+        key: tailout_tailscale_auth_key
     - secretKey: TAILOUT_TAILSCALE_TAILNET
       remoteRef:
         key: tailout_tailscale_tailnet
