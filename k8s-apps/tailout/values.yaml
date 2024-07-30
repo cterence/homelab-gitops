@@ -4,8 +4,9 @@ app-template:
       data:
         TAILOUT_UI_PORT: "3000"
         TAILOUT_UI_ADDRESS: "0.0.0.0"
+        # TODO: Allow setting these values from the UI
         TAILOUT_CREATE_SHUTDOWN: 30m
-        TAILOUT_REGION: eu-west-3
+        TAILOUT_REGION: us-east-1
 
   controllers:
     server:
