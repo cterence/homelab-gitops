@@ -235,7 +235,7 @@ kube-prometheus-stack:
         receiver: telegram
         routes:
           - matchers:
-              - alertname=~"CNPGClusterHA.*"
+              - alertname=~"CNPGClusterHA.*|Watchdog"
             receiver: empty
 
     ingress:
