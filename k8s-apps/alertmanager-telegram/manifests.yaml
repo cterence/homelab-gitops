@@ -3,13 +3,13 @@ items:
   - apiVersion: external-secrets.io/v1beta1
     kind: ExternalSecret
     metadata:
-      name: alertmanager-bot
+      name: alertmanager-telegram-bot
     spec:
       secretStoreRef:
         kind: ClusterSecretStore
         name: gitlab-secret-store
       target:
-        name: alertmanager-bot
+        name: alertmanager-telegram-bot
         creationPolicy: Owner
       data:
         - secretKey: admin
@@ -22,8 +22,8 @@ items:
     kind: Service
     metadata:
       labels:
-        app.kubernetes.io/name: alertmanager-bot
-      name: alertmanager-bot
+        app.kubernetes.io/name: alertmanager-telegram-bot
+      name: alertmanager-telegram-bot
       namespace: monitoring
     spec:
       ports:
@@ -31,26 +31,26 @@ items:
           port: 8080
           targetPort: 8080
       selector:
-        app.kubernetes.io/name: alertmanager-bot
+        app.kubernetes.io/name: alertmanager-telegram-bot
   - apiVersion: apps/v1
     kind: StatefulSet
     metadata:
       labels:
-        app.kubernetes.io/name: alertmanager-bot
-      name: alertmanager-bot
+        app.kubernetes.io/name: alertmanager-telegram-bot
+      name: alertmanager-telegram-bot
       namespace: monitoring
     spec:
       podManagementPolicy: OrderedReady
       replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: alertmanager-bot
-      serviceName: alertmanager-bot
+          app.kubernetes.io/name: alertmanager-telegram-bot
+      serviceName: alertmanager-telegram-bot
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: alertmanager-bot
-          name: alertmanager-bot
+            app.kubernetes.io/name: alertmanager-telegram-bot
+          name: alertmanager-telegram-bot
           namespace: monitoring
         spec:
           containers:
@@ -64,15 +64,15 @@ items:
                   valueFrom:
                     secretKeyRef:
                       key: admin
-                      name: alertmanager-bot
+                      name: alertmanager-telegram-bot
                 - name: TELEGRAM_TOKEN
                   valueFrom:
                     secretKeyRef:
                       key: token
-                      name: alertmanager-bot
+                      name: alertmanager-telegram-bot
               image: metalmatze/alertmanager-bot:0.4.3
               imagePullPolicy: IfNotPresent
-              name: alertmanager-bot
+              name: alertmanager-telegram-bot
               ports:
                 - containerPort: 8080
                   name: http
@@ -90,14 +90,14 @@ items:
           volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: alertmanager-bot-alertmanager-bot-0
+                claimName: alertmanager-telegram-bot-alertmanager-telegram-bot-0
       volumeClaimTemplates:
         - apiVersion: v1
           kind: PersistentVolumeClaim
           metadata:
             labels:
-              app.kubernetes.io/name: alertmanager-bot
-            name: alertmanager-bot
+              app.kubernetes.io/name: alertmanager-telegram-bot
+            name: alertmanager-telegram-bot
             namespace: monitoring
           spec:
             accessModes:

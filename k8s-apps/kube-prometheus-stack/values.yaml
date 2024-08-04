@@ -209,7 +209,7 @@ kube-prometheus-stack:
   # ==============================================================================
 
   alertmanager:
-    enabled: false
+    enabled: true
     alertmanagerSpec:
       # useExistingSecret: true
       # secrets:
@@ -225,13 +225,13 @@ kube-prometheus-stack:
     config:
       receivers:
         - name: empty
-        - name: alertmanager-bot
+        - name: alertmanager-telegram-bot
           webhook_configs:
             - send_resolved: true
-              url: "http://alertmanager-bot:8080"
+              url: "http://alertmanager-telegram-bot:8080"
       route:
         group_by: ["alertname"]
-        receiver: alertmanager-bot
+        receiver: alertmanager-telegram-bot
         routes:
           - matchers:
               - alertname=~"etcdInsufficientMembers|Watchdog|KubeProxyDown|KubeSchedulerDown|KubeControllerManagerDown"
