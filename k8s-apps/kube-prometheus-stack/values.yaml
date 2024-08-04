@@ -228,7 +228,7 @@ kube-prometheus-stack:
         - name: telegram
           telegram_configs:
             - send_resolved: true
-              bot_token: telegram-bot-token
+              bot_token_file: /etc/secrets/telegram-bot-token
       route:
         group_by: ["alertname"]
         receiver: telegram
@@ -243,6 +243,12 @@ kube-prometheus-stack:
           - matchers:
               - alertname="PrometheusOperatorRejectedResources"
             receiver: empty
+    extraSecretMounts:
+      - name: telegram-bot-token
+        mountPath: /etc/secrets/telegram-bot-token
+        subPath: ""
+        secretName: telegram-bot-token
+        readOnly: true
 
     ingress:
       enabled: false
