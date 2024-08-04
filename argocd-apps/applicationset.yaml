@@ -9,6 +9,7 @@ spec:
     - list:
         elements:
           - name: argocd
+          - name: alertmanager-telegram-bot
           - name: calibre-web
           - name: cert-manager
           - name: cloudnative-pg

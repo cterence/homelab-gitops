@@ -24,7 +24,6 @@ items:
       labels:
         app.kubernetes.io/name: alertmanager-telegram-bot
       name: alertmanager-telegram-bot
-      namespace: monitoring
     spec:
       ports:
         - name: http
@@ -38,7 +37,6 @@ items:
       labels:
         app.kubernetes.io/name: alertmanager-telegram-bot
       name: alertmanager-telegram-bot
-      namespace: monitoring
     spec:
       podManagementPolicy: OrderedReady
       replicas: 1
@@ -51,7 +49,6 @@ items:
           labels:
             app.kubernetes.io/name: alertmanager-telegram-bot
           name: alertmanager-telegram-bot
-          namespace: monitoring
         spec:
           containers:
             - args:
@@ -98,7 +95,6 @@ items:
             labels:
               app.kubernetes.io/name: alertmanager-telegram-bot
             name: alertmanager-telegram-bot
-            namespace: monitoring
           spec:
             accessModes:
               - ReadWriteOnce
