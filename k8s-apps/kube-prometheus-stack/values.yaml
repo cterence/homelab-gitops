@@ -225,13 +225,13 @@ kube-prometheus-stack:
     config:
       receivers:
         - name: empty
-        - name: alertmanager-telegram-bot
-          webhook_configs:
+        - name: telegram
+          telegram_configs:
             - send_resolved: true
-              url: "http://alertmanager-telegram-bot:8080"
+              bot_token: telegram-bot-token
       route:
         group_by: ["alertname"]
-        receiver: alertmanager-telegram-bot
+        receiver: telegram
         routes:
           - matchers:
               - alertname=~"etcdInsufficientMembers|Watchdog|KubeProxyDown|KubeSchedulerDown|KubeControllerManagerDown"

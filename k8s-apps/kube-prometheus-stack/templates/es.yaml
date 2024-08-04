@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: telegram-bot-token
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: telegram-bot-token
+    creationPolicy: Owner
+  data:
+    - secretKey: token
+      remoteRef:
+        key: alertmanager_bot_token
