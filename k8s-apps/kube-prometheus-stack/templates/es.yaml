@@ -12,4 +12,7 @@ spec:
   data:
     - secretKey: token
       remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
         key: alertmanager_bot_token
