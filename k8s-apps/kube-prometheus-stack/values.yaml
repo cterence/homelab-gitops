@@ -229,7 +229,7 @@ kube-prometheus-stack:
           telegram_configs:
             - send_resolved: true
               bot_token_file: /etc/alertmanager/secrets/telegram-bot-token/token
-              chat_id: -4229294694
+              chat_id: -1002235030838
       route:
         group_by: ["alertname"]
         receiver: telegram
