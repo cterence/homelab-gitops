@@ -235,14 +235,7 @@ kube-prometheus-stack:
         receiver: telegram
         routes:
           - matchers:
-              - alertname=~"etcdInsufficientMembers|Watchdog|KubeProxyDown|KubeSchedulerDown|KubeControllerManagerDown"
-            receiver: empty
-          - matchers:
-              - alertname="TargetDown"
-              - job=~"kube-controller-manager|kube-etcd|kube-proxy|kube-scheduler"
-            receiver: empty
-          - matchers:
-              - alertname="PrometheusOperatorRejectedResources"
+              - alertname=~"CNPGClusterHA.*"
             receiver: empty
 
     ingress:
