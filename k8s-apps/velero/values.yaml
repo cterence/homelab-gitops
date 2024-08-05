@@ -226,7 +226,7 @@ velero:
 
     serviceMonitor:
       autodetect: true
-      enabled: false
+      enabled: true
       annotations: {}
       additionalLabels: {}
 
@@ -243,7 +243,7 @@ velero:
       # tlsConfig: {}
     nodeAgentPodMonitor:
       autodetect: true
-      enabled: false
+      enabled: true
       annotations: {}
       additionalLabels: {}
       # ServiceMonitor namespace. Default to Velero namespace.
@@ -255,7 +255,7 @@ velero:
 
     prometheusRule:
       autodetect: true
-      enabled: false
+      enabled: true
       # Additional labels to add to deployed PrometheusRule
       additionalLabels: {}
       # PrometheusRule namespace. Defaults to Velero namespace.

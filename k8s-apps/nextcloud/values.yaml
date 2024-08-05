@@ -484,7 +484,7 @@ nextcloud:
   ## Prometheus Exporter / Metrics
   ##
   metrics:
-    enabled: false
+    enabled: true
 
     replicaCount: 1
     # Optional: becomes NEXTCLOUD_SERVER env var in the nextcloud-exporter container.
@@ -536,7 +536,7 @@ nextcloud:
     serviceMonitor:
       ## @param metrics.serviceMonitor.enabled Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
       ##
-      enabled: false
+      enabled: true
 
       ## @param metrics.serviceMonitor.namespace Namespace in which Prometheus is running
       ##
