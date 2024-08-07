@@ -24,7 +24,7 @@ app-template:
             repository: lscr.io/linuxserver/calibre-web
             # -- image tag
             # this example is not automatically updated, so be sure to use the latest image
-            tag: 0.6.23
+            tag: version-0.6.23
           ports:
             - name: http
               containerPort: 8083
