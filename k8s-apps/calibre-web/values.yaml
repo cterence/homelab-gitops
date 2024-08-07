@@ -21,7 +21,7 @@ app-template:
         main:
           image:
             # -- image repository
-            repository: linuxserver/calibre-web
+            repository: lscr.io/linuxserver/calibre-web
             # -- image tag
             # this example is not automatically updated, so be sure to use the latest image
             tag: 0.6.23
