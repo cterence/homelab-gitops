@@ -17,7 +17,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/cterence/tailout
-            tag: latest
+            tag: main
           args:
             - ui
           ports:
