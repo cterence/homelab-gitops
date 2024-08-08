@@ -450,6 +450,19 @@ headscale:
               service:
                 identifier: api
                 port: http
+      tls:
+        - secretName: headscale-tls
+          hosts:
+            - *host
+
+    admin:
+      annotations:
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+      className: "nginx"
+      hosts:
+        - host: *host
+          paths:
             - path: /admin
               pathType: Prefix
               service:
