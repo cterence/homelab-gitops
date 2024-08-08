@@ -380,10 +380,18 @@ headscale:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
     admin:
       type: deployment
       annotations:
