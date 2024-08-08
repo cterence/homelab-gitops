@@ -365,8 +365,7 @@ headscale:
             repository: headscale/headscale
             tag: 0.23.0-beta1
           args:
-            - sleep
-            - infinity
+            - serve
           ports:
             - name: http
               containerPort: 8080
@@ -378,13 +377,13 @@ headscale:
                 secretKeyRef:
                   name: headscale-cnpg-cluster-app
                   key: password
-          # probes:
-          #   liveness:
-          #     enabled: true
-          #     type: HTTP
-          #   readiness:
-          #     enabled: true
-          #     type: HTTP
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
     admin:
       type: deployment
       annotations:
