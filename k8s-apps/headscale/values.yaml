@@ -148,7 +148,7 @@ headscale:
             # # Postgres config
             postgres:
               # If using a Unix socket to connect to Postgres, set the socket path in the 'host' field and leave 'port' blank.
-              host: cnpg-cluster-rw
+              host: headscale-cnpg-cluster-rw
               port: 5432
               name: headscale
               user: headscale
