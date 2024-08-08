@@ -365,6 +365,7 @@ headscale:
             repository: headscale/headscale
             tag: 0.22.3
           args:
+            - headscale
             - serve
           ports:
             - name: http
