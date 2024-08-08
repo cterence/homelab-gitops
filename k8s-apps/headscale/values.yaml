@@ -460,6 +460,13 @@ headscale:
         main:
           main:
             - path: /etc/headscale
+    data:
+      type: persistentVolumeClaim
+      name: data
+      advancedMounts:
+        main:
+          main:
+            - path: /var/lib/headscale
 
 cnpg-cluster:
   type: postgresql
