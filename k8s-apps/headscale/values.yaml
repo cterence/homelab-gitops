@@ -364,6 +364,8 @@ headscale:
           image:
             repository: headscale/headscale
             tag: 0.22.3
+          args:
+            - serve
           ports:
             - name: http
               containerPort: 8080
@@ -395,6 +397,7 @@ headscale:
           ports:
             - name: http
               containerPort: 80
+              port: 8080
           probes:
             liveness:
               enabled: true
