@@ -363,7 +363,7 @@ headscale:
         main:
           image:
             repository: headscale/headscale
-            tag: 0.22.3
+            tag: 0.23.0-beta1
           args:
             - sleep
             - infinity
