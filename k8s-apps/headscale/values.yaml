@@ -462,7 +462,6 @@ headscale:
             - path: /etc/headscale
     data:
       type: persistentVolumeClaim
-      name: data
       advancedMounts:
         main:
           main:
