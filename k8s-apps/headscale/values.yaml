@@ -1,6 +1,6 @@
 headscale:
   configMaps:
-    headscale-config:
+    config:
       data:
         config.yaml: |
           # The url clients will connect to.
@@ -445,8 +445,10 @@ headscale:
     config:
       type: configMap
       name: headscale-config
-      globalMounts:
-        - path: /etc/headscale
+      advancedMounts:
+        main:
+          main:
+            - path: /etc/headscale
 
 cnpg-cluster:
   type: postgresql
