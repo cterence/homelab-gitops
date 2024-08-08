@@ -6,3 +6,4 @@ external-dns:
     enabled: true
     serviceMonitor:
       enabled: true
+  annotationFilter: external-dns.alpha.kubernetes.io/exclude notin (true)

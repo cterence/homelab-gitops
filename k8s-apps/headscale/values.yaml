@@ -459,7 +459,7 @@ headscale:
       annotations:
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        external-dns.alpha.kubernetes.io/hostname: ""
+        external-dns.alpha.kubernetes.io/exclude: "true"
       className: "nginx"
       hosts:
         - host: *host
