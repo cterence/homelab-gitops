@@ -397,14 +397,21 @@ headscale:
           ports:
             - name: http
               containerPort: 80
-              port: 8080
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
   service:
     # Configure a service for the main application
     api:
