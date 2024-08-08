@@ -404,14 +404,14 @@ headscale:
               spec:
                 httpGet:
                   port: http
-                  path: /health
+                  path: /
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /health
+                  path: /
   service:
     # Configure a service for the main application
     api:
