@@ -396,7 +396,7 @@ headscale:
             repository: goodieshq/headscale-admin
             tag: 0.1.12b
           env:
-            ENDPOINT: "/"
+            ENDPOINT: ""
           ports:
             - name: http
               containerPort: 80
