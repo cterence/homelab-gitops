@@ -395,8 +395,6 @@ headscale:
           image:
             repository: goodieshq/headscale-admin
             tag: 0.1.12b
-          env:
-            ENDPOINT: ""
           ports:
             - name: http
               containerPort: 80
@@ -407,14 +405,14 @@ headscale:
               spec:
                 httpGet:
                   port: http
-                  path: /
+                  path: /admin
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /
+                  path: /admin
   service:
     # Configure a service for the main application
     api:
