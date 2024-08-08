@@ -20,6 +20,7 @@ spec:
           - name: external-dns
           - name: external-endpoints
           - name: external-secrets
+          - name: headscale
           - name: httpbin
           - name: immich
           - name: ingress-nginx
