@@ -462,6 +462,8 @@ headscale:
             - path: /etc/headscale
     data:
       type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 1Gi
       advancedMounts:
         main:
           main:
