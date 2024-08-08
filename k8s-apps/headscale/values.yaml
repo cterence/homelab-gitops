@@ -450,18 +450,7 @@ headscale:
               service:
                 identifier: api
                 port: http
-      tls:
-        - secretName: headscale-tls
-          hosts:
-            - *host
-    admin:
-      className: "nginx"
-      annotations:
-        nginx.ingress.kubernetes.io/app-root: /admin
-      hosts:
-        - host: &host headscale.terence.cloud
-          paths:
-            - path: /
+            - path: /admin
               pathType: Prefix
               service:
                 identifier: admin
@@ -470,6 +459,7 @@ headscale:
         - secretName: headscale-tls
           hosts:
             - *host
+
   persistence:
     config:
       type: configMap
