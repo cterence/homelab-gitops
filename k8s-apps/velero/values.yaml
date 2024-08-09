@@ -621,8 +621,9 @@ velero:
       template:
         storageLocation: default
         includedNamespaces:
-          - nextcloud
+          - calibre-web
           - immich
+          - nextcloud
           - vaultwarden
         includedResources:
           - po
