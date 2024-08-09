@@ -1,0 +1,701 @@
+vaultwarden:
+  ## Instruction: when adding a new value, follow https://github.com/dani-garcia/vaultwarden/blob/main/.env.template as much as possible.
+
+  ## @section Kubernetes settings
+  ##
+  image:
+    ## @param image.registry Vaultwarden image registry
+    ##
+    registry: docker.io
+    ## @param image.repository Vaultwarden image repository
+    ##
+    repository: vaultwarden/server
+    ##
+    ## @param image.tag Vaultwarden image tag
+    ## Ref: https://hub.docker.com/r/vaultwarden/server/tags
+    ##
+    tag: "1.31.0-alpine"
+    ## @param image.pullPolicy Vaultwarden image pull policy
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## @param image.pullSecrets Specify docker-registry secret names
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## @param image.extraSecrets Vaultwarden image extra secrets
+    ## Example:
+    ## extraSecrets:
+    ##   - key: SSO_CLIENT_SECRET
+    ##     value: secretStuff
+    ##
+    extraSecrets:
+    ## @param image.extraVars Vaultwarden image extra vars
+    ## Example:
+    ## extraVars:
+    ##   - key: SSO_AUTHORITY
+    ##     value: https://bananaguy.com/auth
+    ##
+    extraVars: []
+
+  ## @param fullnameOverride String to override the application name.
+  ##
+  fullnameOverride: ""
+
+  ## @param resourceType Can be either Deployment or StatefulSet
+  ## Overwrite automatic resource type detection by specifying the resource type
+  ##
+  resourceType: ""
+
+  ## @param commonAnnotations Annotations for the deployment or statefulset
+  ##
+  commonAnnotations: {}
+
+  ## @param configMapAnnotations Add extra annotations to the configmap
+  ##
+  configMapAnnotations: {}
+
+  ## @param podAnnotations Add extra annotations to the pod
+  ##
+  podAnnotations: {}
+
+  ## @param commonLabels Additional labels for the deployment or statefulset
+  ##
+  commonLabels: {}
+
+  ## @param podLabels Add extra labels to the pod
+  ##
+  podLabels: {}
+
+  ## @param initContainers extra init containers for initializing the vaultwarden instance
+  ##
+  initContainers: []
+
+  ## @param sidecars extra containers running alongside the vaultwarden instance
+  ##
+  sidecars: []
+
+  ## @param nodeSelector Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  ##
+  nodeSelector: {}
+
+  ## @param affinity Affinity for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
+
+  ## @param tolerations Tolerations for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+
+  ## @param serviceAccount.create Create a service account
+  ## @param serviceAccount.name Name of the service account to create
+  ##
+  serviceAccount:
+    create: true
+    name: "vaultwarden-svc"
+
+  ## @param podSecurityContext Pod security options
+  ##
+  podSecurityContext: {}
+    # fsGroup: 1001
+    # supplementalGroups:
+    #   - 1001
+
+  ## @param securityContext Default security options to run vault as read only container without privilege escalation
+  securityContext: {}
+    # allowPrivilegeEscalation: false
+    # privileged: false
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsGroup: 1001
+    # runAsUser: 1001
+    # capabilities:
+    #   drop:
+    #     - ALL
+
+  ## @param dnsConfig Pod DNS options
+  ## Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+  dnsConfig: {}
+
+
+  ## @section Reliability configuration
+  ##
+
+  ## Liveness probe configuration
+  ##
+  livenessProbe:
+    ## @param livenessProbe.enabled Enable liveness probe
+    ##
+    enabled: true
+    ## @param livenessProbe.initialDelaySeconds Delay before liveness probe is initiated
+    ##
+    initialDelaySeconds: 5
+    ## @param livenessProbe.timeoutSeconds How long to wait for the probe to succeed
+    ##
+    timeoutSeconds: 1
+    ## @param livenessProbe.periodSeconds How often to perform the probe
+    ##
+    periodSeconds: 10
+    ## @param livenessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful
+    ##
+    successThreshold: 1
+    ## @param livenessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed
+    ##
+    failureThreshold: 10
+
+  ## Readiness probe configuration
+  ##
+  readinessProbe:
+    ## @param readinessProbe.enabled Enable readiness probe
+    ##
+    enabled: true
+    ## @param readinessProbe.initialDelaySeconds Delay before readiness probe is initiated
+    ##
+    initialDelaySeconds: 5
+    ## @param readinessProbe.timeoutSeconds How long to wait for the probe to succeed
+    ##
+    timeoutSeconds: 1
+    ## @param readinessProbe.periodSeconds How often to perform the probe
+    ##
+    periodSeconds: 10
+    ## @param readinessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful
+    ##
+    successThreshold: 1
+    ## @param readinessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed
+    ##
+    failureThreshold: 3
+
+  ## Startup probe configuration
+  ##
+  startupProbe:
+    ## @param startupProbe.enabled Enable startup probe
+    ##
+    enabled: false
+    ## @param startupProbe.initialDelaySeconds Delay before startup probe is initiated
+    ##
+    initialDelaySeconds: 5
+    ## @param startupProbe.timeoutSeconds How long to wait for the probe to succeed
+    ##
+    timeoutSeconds: 1
+    ## @param startupProbe.periodSeconds How often to perform the probe
+    ##
+    periodSeconds: 10
+    ## @param startupProbe.successThreshold Minimum consecutive successes for the probe to be considered successful
+    ##
+    successThreshold: 1
+    ## @param startupProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed
+    ##
+    failureThreshold: 10
+
+  ## @param resources Resource configurations
+  ##
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 300m
+    #   memory: 1Gi
+    # requests:
+    #   cpu: 50m
+    #   memory: 256Mi
+
+  ## @param strategy Resource configurations
+  ##
+  strategy: {}
+    # type: RollingUpdate
+    # rollingUpdate:
+    #   maxSurge: 1
+    #   maxUnavailable: 0
+
+  podDisruptionBudget:
+    ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget settings
+    # ref: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
+    enabled: false
+    ## @param podDisruptionBudget.minAvailable Minimum number/percentage of pods that should remain scheduled.
+    # When it's set, maxUnavailable must be disabled by `maxUnavailable: null`
+    minAvailable: 1
+    ## @param podDisruptionBudget.maxUnavailable Maximum number/percentage of pods that may be made unavailable
+    maxUnavailable: null
+
+
+  ## @section Persistent data configuration
+  ##
+
+  ## @param data Data directory configuration, refer to values.yaml for parameters.
+  ##
+  data:
+    name: "vaultwarden-data"
+    size: "5Gi"
+    class: ""
+    path: "/data"
+    keepPvc: true
+
+  ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
+  ## By default, attachments/ is located inside the data directory.
+  ##
+  attachments:
+    name: "vaultwarden-files"
+    size: "10Gi"
+    class: ""
+    path: /files
+    keepPvc: true
+
+  ## @param webVaultEnabled Enable Web Vault
+  ##
+  webVaultEnabled: "true"
+
+  ## @section Database settings
+  ##
+
+  database:
+    ## @param database.type Database type, either mysql or postgresql
+    ## Default is a sqlite database.
+    ##
+    type: "postgresql"
+    ## @param database.host Database hostname or IP address
+    ##
+    host: ""
+    ## @param database.port Database port
+    ## Default for MySQL is 3306, default for PostgreSQL is 5432
+    port: ""
+    ## @param database.username Database username
+    ##
+    username: ""
+    ## @param database.password Database password
+    ##
+    password: ""
+    ## @param database.dbName Database name
+    ##
+    dbName: ""
+    ## @param database.uriOverride Manually specify the DB connection string
+    ##
+    uriOverride: ""
+    ## @param database.existingSecret Name of an existing secret containing the database URI
+    ##
+    existingSecret: "vaultwarden-cnpg-cluster-app"
+    ## @param database.existingSecretKey Key in the existing secret
+    ##
+    existingSecretKey: "uri"
+    ## @param database.connectionRetries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely.
+    ##
+    connectionRetries: 15
+    ## @param database.maxConnections Define the size of the connection pool used for connecting to the database.
+    ##
+    maxConnections: 10
+
+  ## @section Push notifications
+  ##
+
+  ## @param pushNotifications Enable mobile push notifications, see values.yaml for parameters
+  ## Supported since 1.29.0.
+  ## Refer to https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification for details
+  ##
+  # TODO: Uncomment and configure the following block
+  pushNotifications: {}
+    # installationId: ""
+    # installationKey: ""
+    # relayUri: "https://push.bitwarden.com"
+    # identityUri: "https://identity.bitwarden.com"
+
+  ## @section Scheduled jobs
+  ##
+
+  ## @param emergencyNotifReminderSched Cron schedule of the job that sends expiration reminders to emergency access grantors.
+  ## Set to blank to disable this job.
+  ##
+  emergencyNotifReminderSched: "0 3 * * * *"
+
+  ## @param emergencyRqstTimeoutSched Cron schedule of the job that grants emergency access requests that have met the required wait time.
+  ## Set to blank to disable this job.
+  ##
+  emergencyRqstTimeoutSched: "0 7 * * * *"
+
+  ## @param eventCleanupSched Cron schedule of the job that cleans old events from the event table.
+  ## Set to blank to disable this job. Also without eventsDayRetain set, this job will not start.
+  ##
+  eventCleanupSched: "0 10 0 * * *"
+
+  ## @param eventsDayRetain Number of days to retain events stored in the database.
+  ## If unset (the default), events are kept indefinitely and the scheduled job is disabled!
+  ##
+  eventsDayRetain: ""
+
+  ## @section General settings
+  ##
+
+  ## @param domain Domain name where the application is accessed
+  ## Example: https://warden.contoso.com:8443
+  ##
+  domain: "https://bw.terence.cloud"
+
+  ## @param sendsAllowed Controls whether users are allowed to create Bitwarden Sends.
+  ##
+  sendsAllowed: "true"
+
+  ## @param hibpApiKey HaveIBeenPwned API Key
+  ##
+  hibpApiKey: ""
+
+  ## @param orgAttachmentLimit Max Kilobytes of attachment storage allowed per organization.
+  ## When this limit is reached, organization members will not be allowed to upload further attachments for ciphers owned by that organization.
+  ##
+  orgAttachmentLimit: ""
+
+  ## @param userAttachmentLimit Max kilobytes of attachment storage allowed per user.
+  ## When this limit is reached, the user will not be allowed to upload further attachments.
+  ##
+  userAttachmentLimit: ""
+
+  ## @param userSendLimit Max kilobytes of send storage allowed per user.
+  ## When this limit is reached, the user will not be allowed to upload further sends.
+  ##
+  userSendLimit: ""
+
+  ## @param trashAutoDeleteDays Number of days to wait before auto-deleting a trashed item.
+  ## If unset (the default), trashed items are not auto-deleted.
+  ## This setting applies globally, so make sure to inform all users of any changes to this setting.
+  ##
+  trashAutoDeleteDays: ""
+
+  ## @param signupsAllowed By default, anyone who can access your instance can register for a new account.
+  ## To disable this, set this parameter to false. Even when signupsAllowed=false, an existing user who is
+  ## an organization owner or admin can still invite new users. If you want to disable this as well, set
+  ## invitationsAllowed to false. The vaultwarden admin can invite anyone via the admin page, regardless
+  ## of any of the restrictions above
+  ##
+  ## If signupDomains is set, then the value of signupsAllowed is ignored
+  signupsAllowed: true
+
+  ## @param signupsVerify Whether to require account verification for newly-registered users.
+  ##
+  signupsVerify: "true"
+
+  ## @param signupDomains List of domain names for users allowed to register. For example:
+  ## example.com,example.net,example.org.
+  ##
+  signupDomains: ""
+
+  ## @param orgEventsEnabled Controls whether event logging is enabled for organizations
+  ##
+  orgEventsEnabled: "false"
+
+  ## @param orgCreationUsers Controls which users can create new orgs.
+  ## Blank or 'all' means all users can create orgs.
+  ## 'none' means no users can create orgs.
+  ## A comma-separated list means only those users can create orgs.
+  ##
+  orgCreationUsers: ""
+
+  ## @param invitationsAllowed Even when registration is disabled, organization administrators or owners can
+  ## invite users to join organization. After they are invited, they can register with the invited email even
+  ## if signupsAllowed is actually set to false. You can disable this functionality completely by setting
+  ## invitationsAllowed env variable to false
+  ##
+  invitationsAllowed: true
+
+  ## @param invitationOrgName String Name shown in the invitation emails that don't come from a specific organization
+  ##
+  invitationOrgName: "bw.terence.cloud"
+
+  ## @param invitationExpirationHours The number of hours after which an organization invite token, emergency access invite token,
+  ## email verification token and deletion request token will expire (must be at least 1)
+  ##
+  invitationExpirationHours: "120"
+
+  ## @param emergencyAccessAllowed Controls whether users can enable emergency access to their accounts.
+  ##
+  emergencyAccessAllowed: "true"
+
+  ## @param emailChangeAllowed Controls whether users can change their email.
+  ## This setting applies globally to all users
+  ##
+  emailChangeAllowed: "true"
+
+  ## @param showPassHint Controls whether a password hint should be shown directly in the web page if
+  ## SMTP service is not configured. Not recommended for publicly-accessible instances
+  ## as this provides unauthenticated access to potentially sensitive data.
+  ##
+  showPassHint: "false"
+
+
+  ## @section Advanced settings
+  ##
+
+  ## @param ipHeader Client IP Header, used to identify the IP of the client
+  ##
+  ipHeader: "X-Real-IP"
+
+  ## @param iconService The predefined icon services are: internal, bitwarden, duckduckgo, google.
+  ##
+  iconService: "internal"
+
+  ## @param iconRedirectCode Icon redirect code
+  ##
+  iconRedirectCode: "302"
+
+  ## @param iconBlacklistNonGlobalIps Whether block non-global IPs.
+  ## Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block
+  ##
+  iconBlacklistNonGlobalIps: "true"
+
+  ## @param experimentalClientFeatureFlags Comma separated list of experimental features to enable in clients, make sure to check which features are already enabled by default (.env.template)
+  ## Possible values:
+  ##  - "autofill-overlay": Add an overlay menu to form fields for quick access to credentials.
+  ##  - "autofill-v2": Use the new autofill implementation.
+  ##  - "browser-fileless-import": Directly import credentials from other providers without a file.
+  ##  - "fido2-vault-credentials": Enable the use of FIDO2 security keys as second factor.
+  ##
+  experimentalClientFeatureFlags: null
+
+  ## @param requireDeviceEmail Require new device emails. When a user logs in an email is required to be sent.
+  ##
+  requireDeviceEmail: "false"
+
+  ## @param extendedLogging Enable extended logging, which shows timestamps and targets in the logs
+  ##
+  extendedLogging: "true"
+
+  ## @param logTimestampFormat Timestamp format used in extended logging.
+  ##
+  logTimestampFormat: "%Y-%m-%d %H:%M:%S.%3f"
+
+  logging:
+    ## @param logging.logLevel Specify the log level
+    ##
+    logLevel: ""
+    ## @param logging.logFile Log to a file
+    ##
+    logFile: ""
+
+  ## Token for the admin interface, preferably an Argon2 PCH string
+  adminToken:
+    ## @param adminToken.existingSecret Specify an existing Kubernetes secret containing the admin token. Also set adminToken.existingSecretKey.
+    ## Example: admincreds_secret
+    ##
+    existingSecret: "vaultwarden-admin-token"
+    ## @param adminToken.existingSecretKey When using adminToken.existingSecret, specify the key containing the token.
+    ## Example: ADMIN_TOKEN
+    ##
+    existingSecretKey: "token"
+    ## @param adminToken.value Plain or argon2 string containing the admin token.
+    ## This example is the argon2 has of "R@ndomTokenString" (no quotes).
+    ##
+    value: ""
+
+  ## @param adminRateLimitSeconds Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.
+  ##
+  adminRateLimitSeconds: "300"
+
+  ## @param adminRateLimitMaxBurst Allow a burst of requests of up to this size, while maintaining the average indicated by adminRateLimitSeconds.
+  ##
+  adminRateLimitMaxBurst: "3"
+
+  ## @param timeZone Specify timezone different from the default (UTC).
+  ## For example: "Europe/Berlin"
+  ##
+  timeZone: "Europe/Paris"
+
+
+  ## @section BETA Features
+  ##
+
+  ## @param orgGroupsEnabled Controls whether group support is enabled for organizations
+  orgGroupsEnabled: "false"
+
+
+  ## @section MFA/2FA settings
+  ##
+
+  ## Yubico (Yubikey) settings
+  yubico:
+    ## @param yubico.clientId Yubico client ID
+    ##
+    clientId: ""
+    ## @param yubico.secretKey Yubico secret key
+    ##
+    secretKey: ""
+    ## @param yubico.server Specify a Yubico server, otherwise the default servers will be used
+    ##
+    server: ""
+
+  ## Duo settings
+  duo:
+    ## @param duo.ikey Duo Integration Key
+    ##
+    ikey: ""
+    ## @param duo.secretKey Duo Secret Key
+    ##
+    secretKey: ""
+    ## @param duo.hostname Duo API hostname
+    ##
+    hostname: ""
+
+
+  ## @section SMTP Configuration
+  ##
+  smtp:
+    ## @param smtp.existingSecret Name of an existing secret containing the SMTP username and password. Also set smtp.username.existingSecretKey and smtp.password.existingSecretKey.
+    ##
+    existingSecret: ""
+    ## @param smtp.host SMTP host
+    ##
+    host: ""
+    ## @param smtp.security SMTP Encryption method
+    ## Possible values:
+    ##  - starttls: explicit TLS using ports 587 or 25
+    ##  - force_tls: implicit TLS using port 465
+    ##  - off: no encryption, using port 25, unless using STARTTLS
+    ##
+    security: "starttls"
+    ## @param smtp.port SMTP port
+    ##
+    port: 25
+    ## @param smtp.from SMTP sender email address
+    ## Example: juan.delacruz@gmail.com
+    ##
+    from: ""
+    ## @param smtp.fromName SMTP sender FROM
+    ##
+    fromName: ""
+    ## Username for SMTP authentication.
+    ##
+    username:
+      ## @param smtp.username.value Username string for the SMTP authentication.
+      ## Example: juan
+      ##
+      value: ""
+      ## @param smtp.username.existingSecretKey When using an existing secret, specify the key which contains the username.
+      ## Example: SMTP_USERNAME
+      ##
+      existingSecretKey: ""
+    ## Password for SMTP authentication.
+    ##
+    password:
+      ## @param smtp.password.value Password string for the SMTP authentication.
+      ## Example: Sup3rsecurepa$$word
+      ##
+      value: ""
+      ## @param smtp.password.existingSecretKey When using an existing secret, specify the key which contains the password.
+      ## Example: SMTP_PASSWORD
+      ##
+      existingSecretKey: ""
+    ## @param smtp.authMechanism SMTP authentication mechanism
+    ## Possible values: "Plain", "Login", "Xoauth2"
+    ## Multiple options need to be separated by a comma. (not tested)
+    ##
+    authMechanism: "Plain"
+    ## @param smtp.acceptInvalidHostnames Accept Invalid Hostnames
+    ##
+    acceptInvalidHostnames: "false"
+    ## @param smtp.acceptInvalidCerts Accept Invalid Certificates
+    ##
+    acceptInvalidCerts: "false"
+    ## @param smtp.debug SMTP debugging
+    ##
+    debug: false
+
+
+  ## @section Exposure settings
+  ##
+
+  ## @param rocket.address Address to bind to
+  ## @param rocket.port Rocket port
+  ## @param rocket.workers Rocket number of workers
+  ##
+  rocket:
+    address: "0.0.0.0"
+    port: "8080"
+    workers: "10"
+
+  ## Service configuration
+  service:
+    ## @param service.type Service type
+    ##
+    type: "ClusterIP"
+    ## @param service.annotations Additional annotations for the vaultwarden service
+    ##
+    annotations: {}
+    ## @param service.labels Additional labels for the service
+    ##
+    labels: {}
+    ## @param service.ipFamilyPolicy IP family policy for the service
+    ipFamilyPolicy: "SingleStack"
+
+  ## Ingress configuration
+  ## Refer to the README for some examples
+  ##
+  ingress:
+    ## @param ingress.enabled Deploy an ingress resource.
+    ##
+    enabled: true
+    ## @param ingress.class Ingress resource class
+    ## The Ingress class to use, e. g. "nginx" for a nginx ingress controller or "alb" for a AWS LB controller.
+    #
+    class: "nginx"
+    ## @param ingress.nginxIngressAnnotations Add nginx specific ingress annotations
+    ## This annotations are only makes sense for the kubernetes nginx ingress controller (https://kubernetes.github.io/ingress-nginx/)
+    ##
+    nginxIngressAnnotations: true
+    ## @param ingress.additionalAnnotations Additional annotations for the ingress resource.
+    ##
+    additionalAnnotations:
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
+    ## @param ingress.labels Additional labels for the ingress resource.
+    ##
+    labels: {}
+    ## @param ingress.tls Enable TLS on the ingress resource.
+    ##
+    tls: true
+    ## @param ingress.hostname Hostname for the ingress.
+    ##
+    hostname: "bw.terence.cloud"
+    ## @param ingress.additionalHostnames Additional hostnames for the ingress.
+    ##
+    additionalHostnames: []
+    ## @param ingress.path Default application path for the ingress
+    ##
+    path: "/"
+    ## @param ingress.pathType Path type for the ingress
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+    ##
+    pathType: "Prefix"
+    ## @param ingress.tlsSecret Kubernetes secret containing the SSL certificate when using the "nginx" class.
+    ##
+    tlsSecret: "vaultwarden-tls"
+    ## @param ingress.nginxAllowList Comma-separated list of IP addresses and subnets to allow.
+    ##
+    nginxAllowList: ""
+    ## TODO:
+    ##   - Add support for using cert-manager.
+    ##   - Support for multiple TLS hostnames.
+    ##
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  cluster:
+    instances: 1
+    imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles: []
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: vaultwarden

@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: vaultwarden-admin-token
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: vaultwarden-admin-token
+    creationPolicy: Owner
+  data:
+    - secretKey: token
+      remoteRef:
+        key: vaultwarden_admin_token

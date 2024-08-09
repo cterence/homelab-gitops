@@ -1,0 +1,13 @@
+apiVersion: v2
+name: vaultwarden
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: vaultwarden
+    repository: https://guerzon.github.io/vaultwarden
+    version: 0.24.0
+  - name: cluster
+    alias: cnpg-cluster
+    repository: file://../cnpg-cluster
+    version: 0.0.9
