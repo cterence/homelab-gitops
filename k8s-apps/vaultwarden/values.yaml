@@ -372,7 +372,7 @@ vaultwarden:
   ## of any of the restrictions above
   ##
   ## If signupDomains is set, then the value of signupsAllowed is ignored
-  signupsAllowed: true
+  signupsAllowed: false
 
   ## @param signupsVerify Whether to require account verification for newly-registered users.
   ##
