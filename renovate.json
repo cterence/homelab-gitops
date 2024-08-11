@@ -14,9 +14,5 @@
       "automerge": true,
       "automergeType": "branch"
     }
-  ],
-  "ignorePaths": [
-    "**/atlantis/**",
-    "**/blackbox-exporter/**"
   ]
 }
