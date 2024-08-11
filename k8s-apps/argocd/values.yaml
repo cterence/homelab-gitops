@@ -38,6 +38,9 @@ argo-cd:
         value: collector.linkerd-jaeger:55678
 
   applicationSet:
+    # FIXME: https://github.com/argoproj/argo-cd/issues/18905
+    image:
+      tag: v2.11.7
     metrics:
       enabled: true
       serviceMonitor:
