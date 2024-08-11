@@ -14,17 +14,12 @@ spec:
           - name: cloudnative-pg
             namespace: cnpg-system
             serverSideApply: true
-          - name: crossplane
-            namespace: crossplane-system
           - name: dead-drop
           - name: external-dns
-          - name: external-endpoints
           - name: external-secrets
-          - name: headscale
           - name: httpbin
           - name: immich
           - name: ingress-nginx
-          - name: komoplane
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
