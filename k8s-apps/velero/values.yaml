@@ -314,6 +314,9 @@ velero:
   ## and additional server settings.
   ##
   configuration:
+    repositoryMaintenanceJob:
+      latestJobsCount: 1
+
     # Parameters for the BackupStorageLocation(s). Configure multiple by adding other element(s) to the backupStorageLocation slice.
     # See https://velero.io/docs/v1.6/api-types/backupstoragelocation/
     backupStorageLocation:
