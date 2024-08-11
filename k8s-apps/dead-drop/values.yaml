@@ -15,7 +15,7 @@ dead-drop:
         init:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: latest
+            tag: main
           args:
             - init
           envFrom:
@@ -25,7 +25,7 @@ dead-drop:
         main:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: latest
+            tag: main
           args:
             - serve
           ports:
@@ -58,7 +58,7 @@ dead-drop:
         main:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: latest
+            tag: main
           args:
             - purge
           envFrom:
