@@ -15,6 +15,7 @@ loki:
         object_store: filesystem # we're storing on filesystem so there's no real persistence here.
         schema: v13
   singleBinary:
+    enabled: true
     replicas: 1
     # -- Volume mounts to add to the single binary pods
     extraVolumeMounts:
