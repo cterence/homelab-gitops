@@ -21,10 +21,10 @@ dead-drop:
           envFrom:
             - configMapRef:
                 identifier: config
-      # pod:
-      #   annotations:
-      #     instrumentation.opentelemetry.io/inject-go: opentelemetry-collector/go
-      #     instrumentation.opentelemetry.io/otel-go-auto-target-exe: /app
+      pod:
+        annotations:
+          instrumentation.opentelemetry.io/inject-go: opentelemetry-collector/go
+          instrumentation.opentelemetry.io/otel-go-auto-target-exe: /app
       containers:
         main:
           image:
