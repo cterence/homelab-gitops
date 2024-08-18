@@ -5,7 +5,7 @@ kube-prometheus-stack:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
       scrapeInterval: 15s
 
-      retention: 3d
+      retention: 7d
 
       # Watch all PrometheusRules in the cluster.
       ruleNamespaceSelector:
