@@ -27,6 +27,7 @@ spec:
           - name: nextcloud
           - name: oauth2-proxy
           - name: openebs
+          - name: opentelemetry-operator
           - name: reloader
           - name: tailout
           - name: tailscale-operator
