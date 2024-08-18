@@ -1,11 +1,10 @@
 loki:
   deploymentMode: SingleBinary
   loki:
-    config:
-      compactor:
-        retention_enabled: true
-      limits_config:
-        retention_period: 3d
+    compactor:
+      retention_enabled: true
+    limits_config:
+      retention_period: 3d
     commonConfig:
       replication_factor: 1
     storage:
