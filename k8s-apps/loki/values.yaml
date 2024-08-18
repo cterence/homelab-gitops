@@ -1,6 +1,7 @@
 loki:
   deploymentMode: SingleBinary
   loki:
+    auth_enabled: false
     compactor:
       retention_enabled: true
       delete_request_store: filesystem
