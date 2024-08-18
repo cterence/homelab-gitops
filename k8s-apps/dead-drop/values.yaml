@@ -34,6 +34,10 @@ dead-drop:
           envFrom:
             - configMapRef:
                 identifier: config
+          pod:
+            annotations:
+              instrumentation.opentelemetry.io/inject-go: 'true'
+              instrumentation.opentelemetry.io/otel-go-auto-target-exe: '/app'
           probes:
             liveness:
               enabled: true
