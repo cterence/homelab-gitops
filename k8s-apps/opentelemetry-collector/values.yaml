@@ -33,7 +33,7 @@ opentelemetry-collector:
     processors:
       batch:
         send_batch_size: 10000
-        timeout: 10s
+        timeout: 1s
       # Default memory limiter configuration for the collector based on k8s resource limits.
       memory_limiter:
         # check_interval is the time between measurements of memory usage.
