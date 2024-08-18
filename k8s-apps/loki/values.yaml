@@ -20,8 +20,6 @@ loki:
         schema: v13
   singleBinary:
     replicas: 1
-  compactor:
-    replicas: 1
   read:
     replicas: 0
   backend:
