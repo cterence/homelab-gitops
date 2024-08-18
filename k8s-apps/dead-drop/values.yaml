@@ -11,6 +11,8 @@ dead-drop:
       type: deployment
       annotations:
         reloader.stakater.com/auto: "true"
+        instrumentation.opentelemetry.io/inject-go: 'true'
+        instrumentation.opentelemetry.io/otel-go-auto-target-exe: '/app'
       initContainers:
         init:
           image:
@@ -21,10 +23,6 @@ dead-drop:
           envFrom:
             - configMapRef:
                 identifier: config
-      pod:
-        annotations:
-          instrumentation.opentelemetry.io/inject-go: 'true'
-          instrumentation.opentelemetry.io/otel-go-auto-target-exe: '/app'
       containers:
         main:
           image:
