@@ -1,6 +1,11 @@
 loki:
   deploymentMode: SingleBinary
   loki:
+    config:
+      compactor:
+        retention_enabled: true
+      limits_config:
+        retention_period: 3d
     commonConfig:
       replication_factor: 1
     storage:
@@ -15,6 +20,8 @@ loki:
         object_store: filesystem # we're storing on filesystem so there's no real persistence here.
         schema: v13
   singleBinary:
+    replicas: 1
+  compactor:
     replicas: 1
   read:
     replicas: 0
