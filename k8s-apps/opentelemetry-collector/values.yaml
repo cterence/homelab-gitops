@@ -3,6 +3,8 @@ opentelemetry-collector:
     repository: otel/opentelemetry-collector-k8s
     tag: 0.107.0
   mode: daemonset
+  service:
+    enabled: true
   presets:
     logsCollection:
       enabled: true
