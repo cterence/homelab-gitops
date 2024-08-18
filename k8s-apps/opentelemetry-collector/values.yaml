@@ -1,0 +1,83 @@
+opentelemetry-collector:
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: 0.107.0
+  mode: daemonset
+  presets:
+    logsCollection:
+      enabled: true
+  ports:
+    metrics:
+      enabled: true
+  podMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true
+    defaultRules:
+      enabled: true
+  config:
+    exporters:
+      debug: {}
+    extensions:
+      # The health_check extension is mandatory for this chart.
+      # Without the health_check extension the collector will fail the readiness and liveliness probes.
+      # The health_check extension can be modified, but should never be removed.
+      health_check:
+        endpoint: ${env:MY_POD_IP}:13133
+    processors:
+      batch: {}
+      # Default memory limiter configuration for the collector based on k8s resource limits.
+      memory_limiter:
+        # check_interval is the time between measurements of memory usage.
+        check_interval: 5s
+        # By default limit_mib is set to 80% of ".Values.resources.limits.memory"
+        limit_percentage: 80
+        # By default spike_limit_mib is set to 25% of ".Values.resources.limits.memory"
+        spike_limit_percentage: 25
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: opentelemetry-collector
+              scrape_interval: 10s
+              static_configs:
+                - targets:
+                    - ${env:MY_POD_IP}:8888
+    service:
+      telemetry:
+        metrics:
+          address: ${env:MY_POD_IP}:8888
+      extensions:
+        - health_check
+      pipelines:
+        logs:
+          exporters:
+            - debug
+          processors:
+            - memory_limiter
+            - batch
+          receivers:
+            - otlp
+        metrics:
+          exporters:
+            - debug
+          processors:
+            - memory_limiter
+            - batch
+          receivers:
+            - otlp
+            - prometheus
+        traces:
+          exporters:
+            - debug
+          processors:
+            - memory_limiter
+            - batch
+          receivers:
+            - otlp
