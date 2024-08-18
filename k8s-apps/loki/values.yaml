@@ -7,6 +7,7 @@ loki:
       delete_request_store: filesystem
     limits_config:
       retention_period: 3d
+      allow_structured_metadata: true
     commonConfig:
       replication_factor: 1
     storage:
