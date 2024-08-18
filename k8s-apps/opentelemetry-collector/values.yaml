@@ -19,7 +19,7 @@ opentelemetry-collector:
     exporters:
       debug: {}
       otlphttp:
-        endpoint: http://loki.loki:3100/otlp/v1/logs
+        endpoint: http://loki.loki:3100/otlp
     extensions:
       # The health_check extension is mandatory for this chart.
       # Without the health_check extension the collector will fail the readiness and liveliness probes.
