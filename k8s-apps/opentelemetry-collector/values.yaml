@@ -39,7 +39,9 @@ opentelemetry-collector:
       health_check:
         endpoint: ${env:MY_POD_IP}:13133
     processors:
-      batch: {}
+      batch:
+        send_batch_size: 10000
+        timeout: 10s
       k8sattributes:
         auth_type: "serviceAccount"
         passthrough: false
