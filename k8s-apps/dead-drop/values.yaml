@@ -23,8 +23,8 @@ dead-drop:
                 identifier: config
       pod:
         annotations:
-          instrumentation.opentelemetry.io/inject-go: 'opentelemetry-operator/go'
-          instrumentation.opentelemetry.io/otel-go-auto-target-exe: '/app'
+          instrumentation.opentelemetry.io/inject-go: opentelemetry-collector/go
+          instrumentation.opentelemetry.io/otel-go-auto-target-exe: /app
       containers:
         main:
           image:
