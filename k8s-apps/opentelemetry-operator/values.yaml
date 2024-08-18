@@ -1,0 +1,10 @@
+opentelemetry-operator:
+  manager:
+    collectorImage:
+      repository: otel/opentelemetry-collector-k8s
+      tag: 0.107.0
+    serviceMonitor:
+      enabled: true
+    prometheusRule:
+      enabled: true
+    createRbacPermissions: true
