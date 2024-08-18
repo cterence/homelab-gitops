@@ -1,6 +1,5 @@
 opentelemetry-operator:
   manager:
-    featureGates: operator.autoinstrumentation.go
     collectorImage:
       repository: otel/opentelemetry-collector-k8s
       tag: 0.107.0
@@ -9,3 +8,5 @@ opentelemetry-operator:
     prometheusRule:
       enabled: true
     createRbacPermissions: true
+    extraArgs:
+      - --enable-go-instrumentation
