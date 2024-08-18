@@ -20,6 +20,11 @@ loki:
           period: 24h
         object_store: filesystem
         schema: v13
+  monitoring:
+    serviceMonitor:
+      enabled: true
+    rules:
+      enabled: true
   singleBinary:
     replicas: 1
   read:
