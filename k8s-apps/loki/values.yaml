@@ -21,6 +21,10 @@ loki:
           period: 24h
         object_store: filesystem
         schema: v13
+  gateway:
+    service:
+      labels:
+        prometheus.io/service-monitor: "false"
   monitoring:
     serviceMonitor:
       enabled: true
