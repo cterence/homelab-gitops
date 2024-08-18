@@ -1,9 +1,0 @@
-apiVersion: v2
-name: opentelemetry-operator
-description: A helm chart for an app
-type: application
-version: 0.1.0
-dependencies:
-  - name: opentelemetry-operator
-    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-    version: 0.68.0

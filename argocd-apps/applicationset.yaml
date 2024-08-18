@@ -28,7 +28,6 @@ spec:
           - name: oauth2-proxy
           - name: openebs
           - name: opentelemetry-collector
-          - name: opentelemetry-operator
           - name: reloader
           - name: tailout
           - name: tailscale-operator
