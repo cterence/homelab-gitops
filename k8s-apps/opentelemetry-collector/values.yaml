@@ -19,7 +19,7 @@ opentelemetry-collector:
   ports:
     metrics:
       enabled: true
-    prometheus-metrics:
+    prom-exp:
       enabled: true
       containerPort: 1234
       servicePort: 1234
@@ -28,7 +28,7 @@ opentelemetry-collector:
     enabled: true
     metricsEndpoints:
       - port: metrics
-      - port: 9090
+      - port: prom-exp
   prometheusRule:
     enabled: true
     defaultRules:
