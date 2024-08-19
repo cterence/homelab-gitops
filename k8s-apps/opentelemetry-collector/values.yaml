@@ -45,7 +45,7 @@ opentelemetry-collector:
         limit_percentage: 80
         # By default spike_limit_mib is set to 25% of ".Values.resources.limits.memory"
         spike_limit_percentage: 25
-      k8sattributes/service:
+      k8sattributes:
         extract:
           labels:
             - tag_name: service.name
@@ -81,7 +81,6 @@ opentelemetry-collector:
             - debug
             - otlphttp/loki
           processors:
-            - k8sattributes/service
             - memory_limiter
             - batch
           receivers:
