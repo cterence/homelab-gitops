@@ -23,8 +23,9 @@ opentelemetry-collector:
     create: true
   config:
     exporters:
-      debug: {}
-      otlphttp:
+      debug:
+        verbosity: detailed
+      otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
     extensions:
       # The health_check extension is mandatory for this chart.
@@ -78,7 +79,7 @@ opentelemetry-collector:
         logs:
           exporters:
             - debug
-            - otlphttp
+            - otlphttp/loki
           processors:
             - k8sattributes/service
             - memory_limiter
