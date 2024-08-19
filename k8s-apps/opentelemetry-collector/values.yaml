@@ -21,6 +21,9 @@ opentelemetry-collector:
       enabled: true
   podMonitor:
     enabled: true
+    metricsEndpoints:
+      - port: metrics
+      - port: 9090
   prometheusRule:
     enabled: true
     defaultRules:
@@ -34,7 +37,7 @@ opentelemetry-collector:
       otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
       prometheus:
-        endpoint: kube-prometheus-stack-prometheus.monitoring:9090
+        endpoint: 0.0.0.0:9090
         send_timestamps: true
         enable_open_metrics: true
         add_metric_suffixes: false
