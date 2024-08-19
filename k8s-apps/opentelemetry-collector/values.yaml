@@ -48,9 +48,9 @@ opentelemetry-collector:
       otlp:
         protocols:
           grpc:
-            endpoint: 0.0.0.0:4317
+            endpoint: ${env:MY_POD_IP}:4317
           http:
-            endpoint: 0.0.0.0:4318
+            endpoint: ${env:MY_POD_IP}:4318
       prometheus:
         config:
           scrape_configs:
@@ -71,7 +71,6 @@ opentelemetry-collector:
             - debug
             - otlphttp
           processors:
-            - k8sattributes
             - memory_limiter
             - batch
           receivers:
