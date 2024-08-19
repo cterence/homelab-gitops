@@ -47,12 +47,12 @@ opentelemetry-collector:
       k8sattributes/service:
         extract:
           labels:
-              - tag_name: service.name
-                key: app.kubernetes.io/name
-                from: pod
-              - tag_name: service.version
-                key: app.kubernetes.io/version
-                from: pod
+            - tag_name: service.name
+              key: app.kubernetes.io/name
+              from: pod
+            - tag_name: service.version
+              key: app.kubernetes.io/version
+              from: pod
     receivers:
       otlp:
         protocols:
