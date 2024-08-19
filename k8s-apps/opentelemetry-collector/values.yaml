@@ -10,6 +10,14 @@ opentelemetry-collector:
       enabled: true
     kubernetesAttributes:
       enabled: true
+    kubeletMetrics:
+      enabled: true
+    clusterMetrics:
+      enabled: true
+    kubernetesEvents:
+      enabled: true
+    hostMetrics:
+      enabled: true
   ports:
     metrics:
       enabled: true
