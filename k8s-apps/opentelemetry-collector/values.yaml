@@ -24,7 +24,7 @@ opentelemetry-collector:
   config:
     exporters:
       debug:
-        verbosity: detailed
+        verbosity: basic
       otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
     extensions:
@@ -45,6 +45,7 @@ opentelemetry-collector:
         limit_percentage: 80
         # By default spike_limit_mib is set to 25% of ".Values.resources.limits.memory"
         spike_limit_percentage: 25
+      # Merges with the k8sattributes preset.
       k8sattributes:
         extract:
           labels:
