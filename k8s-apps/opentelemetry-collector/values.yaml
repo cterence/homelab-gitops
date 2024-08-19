@@ -37,7 +37,7 @@ opentelemetry-collector:
       otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
       prometheus:
-        endpoint: 0.0.0.0:9090
+        endpoint: ${env:MY_POD_IP}:1234
         send_timestamps: true
         enable_open_metrics: true
         add_metric_suffixes: false
