@@ -12,8 +12,6 @@ opentelemetry-collector:
       enabled: true
     kubeletMetrics:
       enabled: true
-    clusterMetrics:
-      enabled: true
     kubernetesEvents:
       enabled: true
     hostMetrics:
