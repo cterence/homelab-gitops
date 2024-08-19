@@ -44,6 +44,15 @@ opentelemetry-collector:
         limit_percentage: 80
         # By default spike_limit_mib is set to 25% of ".Values.resources.limits.memory"
         spike_limit_percentage: 25
+      k8sattributes/service:
+        extract:
+          labels:
+              - tag_name: service.name
+                key: app.kubernetes.io/name
+                from: pod
+              - tag_name: service.version
+                key: app.kubernetes.io/version
+                from: pod
     receivers:
       otlp:
         protocols:
@@ -71,6 +80,7 @@ opentelemetry-collector:
             - debug
             - otlphttp
           processors:
+            - k8sattributes/service
             - memory_limiter
             - batch
           receivers:
