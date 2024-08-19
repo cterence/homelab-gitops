@@ -33,6 +33,14 @@ opentelemetry-collector:
         verbosity: basic
       otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
+      prometheus:
+        endpoint: kube-prometheus-stack-prometheus.monitoring:9090
+        send_timestamps: true
+        enable_open_metrics: true
+        add_metric_suffixes: false
+        metric_expiration: 180m
+        resource_to_telemetry_conversion:
+          enabled: true
     extensions:
       # The health_check extension is mandatory for this chart.
       # Without the health_check extension the collector will fail the readiness and liveliness probes.
@@ -95,6 +103,7 @@ opentelemetry-collector:
         metrics:
           exporters:
             - debug
+            - prometheus
           processors:
             - memory_limiter
             - batch
