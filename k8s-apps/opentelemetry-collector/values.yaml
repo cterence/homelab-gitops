@@ -19,6 +19,11 @@ opentelemetry-collector:
   ports:
     metrics:
       enabled: true
+    prometheus-metrics:
+      enabled: true
+      containerPort: 1234
+      servicePort: 1234
+      protocol: TCP
   podMonitor:
     enabled: true
     metricsEndpoints:
