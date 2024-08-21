@@ -27,8 +27,35 @@ prometheus-blackbox-exporter:
       - name: argocd
         url: http://argocd-server.argocd/healthz?full=true
         module: http_2xx_insecure
+      - name: calibre-web
+        url: https://calibre-web.terence.cloud
+        module: http_2xx
+      - name: dead-drop
+        url: https://dead-drop.terence.cloud/health
+        module: http_2xx
       - name: grafana
         url: http://kube-prometheus-stack-grafana.monitoring/api/health
+        module: http_2xx
+      - name: httpbin
+        url: http://httpbin.httpbin:8080/health
+        module: http_2xx
+      - name: immich
+        url: https://immich.terence.cloud/api/server-info/ping
+        module: http_2xx
+      - name: ingress-nginx
+        url: http://ingress-nginx-controller.ingress-nginx/healthz
+        module: http_2xx
+      - name: nextcloud
+        url: https://next.terence.cloud/status.php
+        module: http_2xx
+      - name: oauth2-proxy
+        url: http://oauth2-proxy.oauth2-proxy/ping
+        module: http_2xx
+      - name: tailout
+        url: http://tailout.tailout:3000/health
+        module: http_2xx
+      - name: vaultwarden
+        url: https://bw.terence.cloud/alive
         module: http_2xx
   configReloader:
     enabled: true
