@@ -130,5 +130,8 @@ prometheus-blackbox-exporter:
       - name: vaultwarden
         url: https://bw.terence.cloud/alive
         module: http_2xx
+      - name: fake
+        url: https://fake.terence.cloud/alive
+        module: http_2xx
   configReloader:
     enabled: true
