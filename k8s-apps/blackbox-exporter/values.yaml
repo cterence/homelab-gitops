@@ -28,7 +28,7 @@ prometheus-blackbox-exporter:
         url: http://argocd-server.argocd/healthz?full=true
         module: http_2xx_insecure
       - name: calibre-web
-        url: https://calibre-web.terence.cloud
+        url: https://calibre.terence.cloud
         module: http_2xx
       - name: dead-drop
         url: https://dead-drop.terence.cloud/health
