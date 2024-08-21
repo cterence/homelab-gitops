@@ -6,26 +6,6 @@ app-template:
         PAPERLESS_PORT: '{{ quote .Values.service.main.ports.http.port }}'
         PAPERLESS_URL: https://{{ first .Values.ingress.main.hosts }}
         PAPERLESS_DBENGINE: postgresql
-        PAPERLESS_DBHOST:
-          valueFrom:
-            secretKeyRef:
-              name: '{{ .Release.Name }}-cnpg-cluster-app'
-              key: host
-        PAPERLESS_DBNAME:
-          valueFrom:
-            secretKeyRef:
-              name: '{{ .Release.Name }}-cnpg-cluster-app'
-              key: dbname
-        PAPERLESS_DBUSER:
-          valueFrom:
-            secretKeyRef:
-              name: '{{ .Release.Name }}-cnpg-cluster-app'
-              key: user
-        PAPERLESS_DBPASS:
-          valueFrom:
-            secretKeyRef:
-              name: '{{ .Release.Name }}-cnpg-cluster-app'
-              key: password
         PAPERLESS_REDIS: redis://{{ .Release.Name }}-redis-master
 
   controllers:
@@ -44,6 +24,27 @@ app-template:
           envFrom:
             - configMapRef:
                 identifier: config
+          env:
+            PAPERLESS_DBHOST:
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  key: host
+            PAPERLESS_DBNAME:
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  key: dbname
+            PAPERLESS_DBUSER:
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  key: user
+            PAPERLESS_DBPASS:
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  key: password
           probes:
             liveness:
               enabled: true
@@ -63,6 +64,7 @@ app-template:
 
   service:
     main:
+      controller: main
       ports:
         http:
           port: 8000
