@@ -1,0 +1,16 @@
+apiVersion: v2
+name: paperless-ngx
+description: A helm chart for an app
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s.github.io/helm-charts
+    version: 3.3.2
+  - name: cluster
+    alias: cnpg-cluster
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.0.9
+  - name: redis
+    repository: https://charts.bitnami.com/bitnami
+    version: 18.6.4

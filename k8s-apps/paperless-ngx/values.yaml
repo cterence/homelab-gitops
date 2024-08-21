@@ -1,0 +1,153 @@
+app-template:
+  configMaps:
+    config:
+      data:
+        PAPERLESS_TIME_ZONE: Europe/Paris
+        PAPERLESS_PORT: '{{ quote .Values.service.main.ports.http.port }}'
+        PAPERLESS_URL: https://{{ first .Values.ingress.main.hosts }}
+        PAPERLESS_DBENGINE: postgresql
+        PAPERLESS_DBHOST:
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Release.Name }}-cnpg-cluster-app'
+              key: host
+        PAPERLESS_DBNAME:
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Release.Name }}-cnpg-cluster-app'
+              key: dbname
+        PAPERLESS_DBUSER:
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Release.Name }}-cnpg-cluster-app'
+              key: user
+        PAPERLESS_DBPASS:
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Release.Name }}-cnpg-cluster-app'
+              key: password
+        PAPERLESS_REDIS: redis://{{ .Release.Name }}-redis-master
+
+  controllers:
+    main:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/paperless-ngx/paperless-ngx
+            tag: 2.11.2
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                identifier: config
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+
+  service:
+    main:
+      ports:
+        http:
+          port: 8000
+
+  ingress:
+    main:
+      enabled: true
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+      hosts:
+        - host: paperless.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: main
+                port: http
+      tls:
+      - secretName: paperless-tls
+        hosts:
+          - paperless.terence.cloud
+
+  persistence:
+    data:
+      enabled: true
+      retain: true
+      globalMounts:
+        path: /usr/src/paperless/data
+      accessMode: ReadWriteOnce
+      size: 1Gi
+    media:
+      enabled: true
+      retain: true
+      globalMounts:
+        path: /usr/src/paperless/media
+      accessMode: ReadWriteOnce
+      size: 8Gi
+    export:
+      enabled: true
+      retain: true
+      globalMounts:
+        path: /usr/src/paperless/export
+      accessMode: ReadWriteOnce
+      size: 1Gi
+    consume:
+      enabled: true
+      retain: true
+      globalMounts:
+        path: /usr/src/paperless/consume
+      accessMode: ReadWriteOnce
+      size: 4Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+    username: ""
+  master:
+    persistence:
+      enabled: false
+  replica:
+    replicaCount: 0
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  cluster:
+    instances: 1
+    imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles: []
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: paperless-ngx
