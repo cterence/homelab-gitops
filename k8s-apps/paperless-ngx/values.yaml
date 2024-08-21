@@ -76,6 +76,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/proxy-body-size: 100m
       hosts:
         - host: paperless.terence.cloud
           paths:
