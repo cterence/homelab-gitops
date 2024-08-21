@@ -9,23 +9,23 @@ immich:
     DB_HOSTNAME:
       valueFrom:
         secretKeyRef:
-          name: immich-cnpg-cluster-app
+          name: '{{ .Release.Name }}-cnpg-cluster-app'
           key: host
     DB_USERNAME:
       valueFrom:
         secretKeyRef:
-          name: immich-cnpg-cluster-app
+          name: '{{ .Release.Name }}-cnpg-cluster-app'
           key: username
     DB_DATABASE_NAME:
       valueFrom:
         secretKeyRef:
-          name: immich-cnpg-cluster-app
+          name: '{{ .Release.Name }}-cnpg-cluster-app'
           key: dbname
     # -- You should provide your own secret outside of this helm-chart and use `postgresql.global.postgresql.auth.existingSecret` to provide credentials to the postgresql instance
     DB_PASSWORD:
       valueFrom:
         secretKeyRef:
-          name: immich-cnpg-cluster-app
+          name: '{{ .Release.Name }}-cnpg-cluster-app'
           key: password
     IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
 
