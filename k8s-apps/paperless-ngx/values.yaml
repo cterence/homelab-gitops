@@ -52,14 +52,14 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /health
+                  path: /
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /health
+                  path: /
 
 
   service:
