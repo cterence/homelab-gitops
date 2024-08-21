@@ -1,7 +1,7 @@
 prometheus-blackbox-exporter:
   prometheusRule:
     enabled: true
-  podMonitor:
+  podMonitoring:
     enabled: true
     selfMonitor:
       enabled: true
