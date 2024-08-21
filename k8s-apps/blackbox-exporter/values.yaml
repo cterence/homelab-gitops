@@ -1,37 +1,16 @@
 prometheus-blackbox-exporter:
-  serviceMonitor:
+  prometheusRule:
     enabled: true
+  podMonitor:
+    enabled: true
+    selfMonitor:
+      enabled: true
     targets:
-      - name: reddit
-        url: http://reddit.com
-        module: http_2xx
-      - name: padok
-        url: http://padok.fr
-        module: http_2xx
-      - name: google
-        url: http://google.fr
-        module: http_2xx
-      - name: twitter
-        url: http://twitter.com
-        module: http_2xx
-      - name: senscritique
-        url: http://senscritique.fr
-        module: http_2xx
-      - name: youtube
-        url: http://youtube.com
-        module: http_2xx
       - name: argocd
-        url: http://argocd.terence.cloud
+        url: http://argocd-server.argocd/healthz?full=true
         module: http_2xx
-      - name: nextcloud
-        url: http://next.terence.cloud
+      - name: grafana
+        url: http://kube-prometheus-stack-grafana.monitoring/api/health
         module: http_2xx
-      - name: betteruptime
-        url: http://status.terence.cloud
-        module: http_2xx
-      - name: longhorn
-        url: http://longhorn.terence.cloud
-        module: http_2xx
-      - name: duplicati
-        url: http://duplicati.terence.cloud
-        module: http_2xx
+  configReloader:
+    enabled: true

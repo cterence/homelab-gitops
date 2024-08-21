@@ -9,6 +9,8 @@ spec:
     - list:
         elements:
           - name: argocd
+          - name: blackbox-exporter
+            namespace: monitoring
           - name: calibre-web
           - name: cert-manager
           - name: cloudnative-pg
