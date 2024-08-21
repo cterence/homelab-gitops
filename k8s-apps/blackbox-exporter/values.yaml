@@ -1,6 +1,6 @@
 prometheus-blackbox-exporter:
   prometheusRule:
-    enabled: true
+    enabled: false
   serviceMonitor:
     enabled: true
     selfMonitor:
