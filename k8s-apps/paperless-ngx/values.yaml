@@ -4,7 +4,7 @@ app-template:
       data:
         PAPERLESS_TIME_ZONE: Europe/Paris
         PAPERLESS_PORT: '{{ quote .Values.service.main.ports.http.port }}'
-        PAPERLESS_URL: 'https://{{ .Values.ingress.main.hosts.0.host }}'
+        PAPERLESS_URL: 'https://{{ (first .Values.ingress.main.hosts).host }}'
         PAPERLESS_DBENGINE: postgresql
         PAPERLESS_REDIS: redis://{{ .Release.Name }}-redis-master
 
