@@ -37,7 +37,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.11.2
+            tag: 2.11.4
           ports:
             - name: http
               containerPort: 8000
