@@ -78,7 +78,7 @@ app-template:
             - |
               while true; do
                 echo "Starting backup"
-                python3 /usr/src/paperless/src/manage.py /usr/src/paperless/export -d -f -p -sm -z
+                python3 /usr/src/paperless/src/manage.py document_exporter /usr/src/paperless/export -d -f -p -sm -z
                 sleep 86400
               done
           env:
