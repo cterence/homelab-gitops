@@ -65,6 +65,43 @@ app-template:
                 httpGet:
                   port: http
                   path: /
+        backup:
+          image:
+            repository: ghcr.io/paperless-ngx/paperless-ngx
+            tag: 2.11.4
+          envFrom:
+            - configMapRef:
+                identifier: config
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                echo "Starting backup"
+                python3 /usr/src/paperless/src/manage.py /usr/src/paperless/export -d -f -p -sm -z
+                sleep 86400
+              done
+          env:
+            PAPERLESS_DBHOST:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: host
+            PAPERLESS_DBNAME:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: dbname
+            PAPERLESS_DBUSER:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: user
+            PAPERLESS_DBPASS:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: password
 
   service:
     main:
