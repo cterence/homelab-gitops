@@ -3,9 +3,13 @@ app-template:
     config:
       data:
         PAPERLESS_TIME_ZONE: Europe/Paris
-        PAPERLESS_PORT: '{{ .Values.service.main.ports.http.port }}'
-        PAPERLESS_URL: 'https://{{ (first .Values.ingress.main.hosts).host }}'
+        PAPERLESS_PORT: "{{ .Values.service.main.ports.http.port }}"
+        PAPERLESS_URL: "https://{{ (first .Values.ingress.main.hosts).host }}"
         PAPERLESS_DBENGINE: postgresql
+        PAPERLESS_ENABLE_HTTP_REMOTE_USER: "true"
+        PAPERLESS_OCR_LANGUAGE: fra+eng
+        PAPERLESS_TASK_WORKERS: "2"
+        PAPERLESS_THREADS_PER_WORKER: "4"
         PAPERLESS_REDIS: redis://{{ .Release.Name }}-redis-master
 
   controllers:
@@ -28,22 +32,22 @@ app-template:
             PAPERLESS_DBHOST:
               valueFrom:
                 secretKeyRef:
-                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: host
             PAPERLESS_DBNAME:
               valueFrom:
                 secretKeyRef:
-                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: dbname
             PAPERLESS_DBUSER:
               valueFrom:
                 secretKeyRef:
-                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: user
             PAPERLESS_DBPASS:
               valueFrom:
                 secretKeyRef:
-                  name: '{{ .Release.Name }}-cnpg-cluster-app'
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: password
           probes:
             liveness:
@@ -61,7 +65,6 @@ app-template:
                   port: http
                   path: /
 
-
   service:
     main:
       controller: main
@@ -77,6 +80,11 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         nginx.ingress.kubernetes.io/proxy-body-size: 100m
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+          auth_request_set $auth_header $upstream_http_x_auth_request_user;
+          proxy_set_header 'remote-user' $auth_header;
       hosts:
         - host: paperless.terence.cloud
           paths:
@@ -86,9 +94,9 @@ app-template:
                 identifier: main
                 port: http
       tls:
-      - secretName: paperless-tls
-        hosts:
-          - paperless.terence.cloud
+        - secretName: paperless-tls
+          hosts:
+            - paperless.terence.cloud
 
   persistence:
     data:
