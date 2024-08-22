@@ -4,6 +4,26 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
+      rules:
+        enabled: true
+        spec:
+          - alert: ArgocdApplicationNotSynced
+            expr: argocd_app_info{sync_status!="Synced"} != 0
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: ArgoCD application not synced (instance {{ $labels.instance }})
+              description: "Application {{ $labels.name }} run by argo is currently not in sync.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          - alert: ArgocdApplicationUnhealthy
+            expr: argocd_app_info{health_status!="Healthy"} != 0
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: ArgoCD application unhealthy (instance {{ $labels.instance }})
+              description: "Application {{ $labels.name }} run by argo is currently not healthy.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
     env:
       - name: OC_AGENT_HOST
         value: collector.linkerd-jaeger:55678
