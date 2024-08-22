@@ -627,6 +627,7 @@ velero:
           - calibre-web
           - immich
           - nextcloud
+          - paperless-ngx
           - vaultwarden
         includedResources:
           - po
