@@ -124,6 +124,9 @@ prometheus-blackbox-exporter:
       - name: oauth2-proxy
         url: http://oauth2-proxy.oauth2-proxy/ping
         module: http_2xx
+      - name: paperless
+        url: https://paperless.terence.cloud
+        module: http_2xx
       - name: tailout
         url: http://tailout.tailout:3000/health
         module: http_2xx
