@@ -127,7 +127,7 @@ redis:
     username: ""
   master:
     persistence:
-      enabled: false
+      enabled: true
   replica:
     replicaCount: 0
 
