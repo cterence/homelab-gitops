@@ -102,13 +102,15 @@ vaultwarden:
 
   ## @param podSecurityContext Pod security options
   ##
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 1001
     # supplementalGroups:
     #   - 1001
 
   ## @param securityContext Default security options to run vault as read only container without privilege escalation
-  securityContext: {}
+  securityContext:
+    {}
     # allowPrivilegeEscalation: false
     # privileged: false
     # readOnlyRootFilesystem: true
@@ -122,7 +124,6 @@ vaultwarden:
   ## @param dnsConfig Pod DNS options
   ## Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
   dnsConfig: {}
-
 
   ## @section Reliability configuration
   ##
@@ -195,7 +196,8 @@ vaultwarden:
 
   ## @param resources Resource configurations
   ##
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -209,7 +211,8 @@ vaultwarden:
 
   ## @param strategy Resource configurations
   ##
-  strategy: {}
+  strategy:
+    {}
     # type: RollingUpdate
     # rollingUpdate:
     #   maxSurge: 1
@@ -225,7 +228,6 @@ vaultwarden:
     ## @param podDisruptionBudget.maxUnavailable Maximum number/percentage of pods that may be made unavailable
     maxUnavailable: null
 
-
   ## @section Persistent data configuration
   ##
 
@@ -236,6 +238,7 @@ vaultwarden:
     size: "5Gi"
     class: ""
     path: "/data"
+    accessMode: "ReadWriteOnce"
     keepPvc: true
 
   ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
@@ -246,6 +249,7 @@ vaultwarden:
     size: "10Gi"
     class: ""
     path: /files
+    accessMode: "ReadWriteOnce"
     keepPvc: true
 
   ## @param webVaultEnabled Enable Web Vault
@@ -299,7 +303,8 @@ vaultwarden:
   ## Refer to https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification for details
   ##
   # TODO: Uncomment and configure the following block
-  pushNotifications: {}
+  pushNotifications:
+    {}
     # installationId: ""
     # installationKey: ""
     # relayUri: "https://push.bitwarden.com"
@@ -425,7 +430,6 @@ vaultwarden:
   ##
   showPassHint: "false"
 
-
   ## @section Advanced settings
   ##
 
@@ -503,13 +507,11 @@ vaultwarden:
   ##
   timeZone: "Europe/Paris"
 
-
   ## @section BETA Features
   ##
 
   ## @param orgGroupsEnabled Controls whether group support is enabled for organizations
   orgGroupsEnabled: "false"
-
 
   ## @section MFA/2FA settings
   ##
@@ -537,7 +539,6 @@ vaultwarden:
     ## @param duo.hostname Duo API hostname
     ##
     hostname: ""
-
 
   ## @section SMTP Configuration
   ##
@@ -601,7 +602,6 @@ vaultwarden:
     ## @param smtp.debug SMTP debugging
     ##
     debug: false
-
 
   ## @section Exposure settings
   ##
