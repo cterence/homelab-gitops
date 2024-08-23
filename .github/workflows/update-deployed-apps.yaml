@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - argocd-apps/applicationset.yaml
-      - k8s-apps/*
+      - k8s-apps/**
 
 jobs:
   update-deployed-apps-table:
@@ -12,7 +12,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            argocd-apps:
+              - 'argocd-apps/**'
+            k8s-apps:
+              - deleted: 'k8s-apps/**'
       - uses: jaxxstorm/action-install-gh-release@v1.12.0
+        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true'
         with:
           repo: mikefarah/yq
       - name: Update deployed apps table
