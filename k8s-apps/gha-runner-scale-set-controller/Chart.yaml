@@ -1,3 +1,4 @@
+# deployed-apps:exclude
 apiVersion: v2
 name: gha-runner-scale-set-controller
 description: A helm chart for an app

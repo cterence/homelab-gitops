@@ -1,6 +1,6 @@
 apiVersion: v2
 name: headscale
-description: A helm chart for an app
+description: An open source, self-hosted implementation of the Tailscale control server
 type: application
 version: 0.1.0
 dependencies:

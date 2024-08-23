@@ -1,3 +1,4 @@
+# deployed-apps:exclude
 apiVersion: v2
 name: vault
 description: A helm chart for an app

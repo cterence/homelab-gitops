@@ -1,6 +1,6 @@
 apiVersion: v2
 name: pihole
-description: A helm chart for an app
+description: Network-wide Ad Blocking
 type: application
 version: 2.5.2
 dependencies:

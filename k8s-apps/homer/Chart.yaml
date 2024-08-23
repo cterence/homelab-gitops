@@ -1,6 +1,6 @@
 apiVersion: v2
 name: homer
-description: A helm chart for an app
+description: A very simple static homepage for your server
 type: application
 version: 8.1.7
 dependencies:

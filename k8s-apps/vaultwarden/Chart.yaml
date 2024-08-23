@@ -1,6 +1,6 @@
 apiVersion: v2
 name: vaultwarden
-description: A helm chart for an app
+description: Unofficial Bitwarden compatible server written in Rust
 type: application
 version: 0.1.0
 dependencies:

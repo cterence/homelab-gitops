@@ -1,6 +1,6 @@
 apiVersion: v2
 name: loki
-description: A helm chart for an app
+description: Like Prometheus, but for logs
 type: application
 version: 0.1.0
 dependencies:

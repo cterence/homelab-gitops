@@ -1,6 +1,6 @@
 apiVersion: v2
 name: zitadel
-description: A helm chart for an app
+description: Identity infrastructure, simplified for you
 type: application
 version: 0.1.0
 dependencies:

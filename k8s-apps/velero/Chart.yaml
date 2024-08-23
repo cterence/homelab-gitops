@@ -1,6 +1,6 @@
 apiVersion: v2
 name: velero
-description: A helm chart for an app
+description: Backup and migrate Kubernetes applications and their persistent volumes
 type: application
 version: 0.1.0
 dependencies:

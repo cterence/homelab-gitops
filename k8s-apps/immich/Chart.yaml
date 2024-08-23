@@ -1,6 +1,6 @@
 apiVersion: v2
 name: immich
-description: A helm chart for an app
+description: High performance self-hosted photo and video management solution
 type: application
 version: 0.1.0
 dependencies:

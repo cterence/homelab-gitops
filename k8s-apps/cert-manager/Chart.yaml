@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cert-manager
-description: A helm chart for an app
+description: Automatically provision and manage TLS certificates in Kubernetes
 type: application
 version: v1.7.0
 dependencies:

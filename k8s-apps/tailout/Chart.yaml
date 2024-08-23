@@ -1,6 +1,6 @@
 apiVersion: v2
 name: httpbin
-description: A Helm chart for Kubernetes
+description: Spawn an exit node for your tailnet anywhere
 type: application
 version: 0.1.0
 dependencies:

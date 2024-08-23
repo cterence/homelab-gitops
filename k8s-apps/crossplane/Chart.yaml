@@ -1,6 +1,6 @@
 apiVersion: v2
 name: crossplane
-description: A helm chart for an app
+description: The Cloud Native Control Plane
 type: application
 version: 0.1.0
 dependencies:

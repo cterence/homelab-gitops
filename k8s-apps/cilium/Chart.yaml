@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cilium
-description: A helm chart for an app
+description: eBPF-based Networking, Security, and Observability
 type: application
 version: 0.1.0
 dependencies:

@@ -1,3 +1,4 @@
+# deployed-apps:exclude
 apiVersion: v2
 name: external-endoints
 description: A Helm chart for Kubernetes

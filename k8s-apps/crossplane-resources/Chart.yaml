@@ -1,3 +1,4 @@
+# deployed-apps:exclude
 apiVersion: v2
 name: crossplane-resources
 description: A helm chart for an app

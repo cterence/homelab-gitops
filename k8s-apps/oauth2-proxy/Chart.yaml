@@ -1,6 +1,6 @@
 apiVersion: v2
 name: oauth2-proxy
-description: A helm chart for an app
+description: A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers
 type: application
 version: 5.0.6
 dependencies:

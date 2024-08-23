@@ -1,6 +1,6 @@
 apiVersion: v2
 name: reloader
-description: A helm chart for an app
+description: A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig
 type: application
 version: 0.1.0
 dependencies:

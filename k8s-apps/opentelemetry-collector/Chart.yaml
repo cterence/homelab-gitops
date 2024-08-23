@@ -1,6 +1,6 @@
 apiVersion: v2
 name: opentelemetry-collector
-description: A helm chart for an app
+description: Vendor-agnostic implementation on how to receive, process and export telemetry data
 type: application
 version: 0.1.0
 dependencies:

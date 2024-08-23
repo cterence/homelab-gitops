@@ -1,6 +1,6 @@
 apiVersion: v2
 name: paperless-ngx
-description: A helm chart for an app
+description: Scan, index and archive all your physical documents
 type: application
 version: 0.1.0
 dependencies:

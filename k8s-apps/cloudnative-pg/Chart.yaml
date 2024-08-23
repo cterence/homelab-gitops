@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cnpg
-description: A helm chart for an app
+description: CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance
 type: application
 version: 0.1.0
 dependencies:

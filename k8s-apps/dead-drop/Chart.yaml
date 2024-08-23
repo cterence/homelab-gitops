@@ -1,6 +1,6 @@
 apiVersion: v2
 name: dead-drop
-description: A Helm chart for Kubernetes
+description: My recreation of a dead drop application to securely share information
 type: application
 version: 0.1.0
 dependencies:

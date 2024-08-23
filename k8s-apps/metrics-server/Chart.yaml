@@ -1,6 +1,6 @@
 apiVersion: v2
 name: metrics-server
-description: A helm chart for an app
+description: Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines
 type: application
 version: 3.7.0
 dependencies:

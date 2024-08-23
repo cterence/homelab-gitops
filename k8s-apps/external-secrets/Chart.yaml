@@ -1,6 +1,6 @@
 apiVersion: v2
 name: external-secrets
-description: A helm chart for an app
+description: External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets
 type: application
 version: 0.4.4
 dependencies:

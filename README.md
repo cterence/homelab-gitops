@@ -10,9 +10,57 @@
 
 ## ⚙️ Hardware
 
-| Device                    | Count | Specs                                          | Purpose         |
-| ------------------------- | ----- | ---------------------------------------------- | --------------- |
+| Device                    | Count | Specs                                          | Purpose                  |
+| ------------------------- | ----- | ---------------------------------------------- | ------------------------ |
 | Lenovo ThinkCentre M75q-1 | 1     | Ryzen 5 Pro 3400GE + 16GB RAM + 512GB NVMe SSD | k8s master & worker node |
+
+## What's deployed in my cluster ?
+
+<!-- BEGIN deployed-apps -->
+| App | Description | Is deployed |
+| --- | --- | --- |
+| [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
+| [authelia](./scripts/../k8s-apps/authelia) | The Single Sign-On Multi-Factor portal for web apps | ❌ |
+| [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ✅ |
+| [calibre-web](./scripts/../k8s-apps/calibre-web) | Web app for browsing, reading and downloading eBooks stored in a Calibre database | ✅ |
+| [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes | ✅ |
+| [cilium](./scripts/../k8s-apps/cilium) | eBPF-based Networking, Security, and Observability | ❌ |
+| [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance | ✅ |
+| [crossplane](./scripts/../k8s-apps/crossplane) | The Cloud Native Control Plane | ❌ |
+| [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ✅ |
+| [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
+| [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
+| [gitlab-runner](./scripts/../k8s-apps/gitlab-runner) | Run your CI/CD jobs and send the results back to GitLab | ❌ |
+| [gotify](./scripts/../k8s-apps/gotify) | A simple server for sending and receiving messages in real-time per WebSocket | ❌ |
+| [headscale](./scripts/../k8s-apps/headscale) | An open source, self-hosted implementation of the Tailscale control server | ❌ |
+| [homer](./scripts/../k8s-apps/homer) | A very simple static homepage for your server | ❌ |
+| [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
+| [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution | ✅ |
+| [ingress-nginx](./scripts/../k8s-apps/ingress-nginx) | Ingress-NGINX Controller for Kubernetes | ✅ |
+| [k8tz](./scripts/../k8s-apps/k8tz) | Kubernetes admission controller and a CLI tool to inject timezones into Pods and CronJobs | ❌ |
+| [komoplane](./scripts/../k8s-apps/komoplane) | Crossplane Troubleshooting Tool by Komodor | ❌ |
+| [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
+| [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
+| [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ❌ |
+| [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ❌ |
+| [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
+| [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
+| [ntfy](./scripts/../k8s-apps/ntfy) | Send push notifications to your phone or desktop using PUT/POST | ❌ |
+| [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
+| [openebs](./scripts/../k8s-apps/openebs) | Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes | ✅ |
+| [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
+| [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
+| [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
+| [pihole](./scripts/../k8s-apps/pihole) | Network-wide Ad Blocking | ❌ |
+| [qbittorrent](./scripts/../k8s-apps/qbittorrent) | qBittorrent BitTorrent client | ❌ |
+| [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
+| [tailout](./scripts/../k8s-apps/tailout) | Spawn an exit node for your tailnet anywhere | ✅ |
+| [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
+| [thanos](./scripts/../k8s-apps/thanos) | Highly available Prometheus setup with long term storage capabilities | ❌ |
+| [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
+| [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes | ✅ |
+| [zitadel](./scripts/../k8s-apps/zitadel) | Identity infrastructure, simplified for you | ❌ |
+<!-- END deployed-apps -->
 
 ## k0s quick install
 

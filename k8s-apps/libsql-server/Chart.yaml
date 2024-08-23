@@ -1,3 +1,4 @@
+# deployed-apps:exclude
 apiVersion: v2
 name: libsql-server
 description: A Helm chart for Kubernetes

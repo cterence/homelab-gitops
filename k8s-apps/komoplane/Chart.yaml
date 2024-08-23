@@ -1,6 +1,6 @@
 apiVersion: v2
 name: komoplane
-description: A helm chart for an app
+description: Crossplane Troubleshooting Tool by Komodor
 type: application
 version: 0.1.0
 dependencies:

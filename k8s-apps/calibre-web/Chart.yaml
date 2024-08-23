@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cnpg
-description: A helm chart for an app
+description: Web app for browsing, reading and downloading eBooks stored in a Calibre database
 type: application
 version: 0.1.0
 dependencies:

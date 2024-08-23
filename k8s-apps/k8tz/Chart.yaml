@@ -1,6 +1,6 @@
 apiVersion: v2
 name: k8tz
-description: A helm chart for an app
+description: Kubernetes admission controller and a CLI tool to inject timezones into Pods and CronJobs
 type: application
 version: 0.2.3
 dependencies:

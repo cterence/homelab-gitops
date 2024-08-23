@@ -1,6 +1,6 @@
 apiVersion: v2
 name: httpbin
-description: A Helm chart for Kubernetes
+description: Echoes request data as JSON
 type: application
 version: 0.1.0
 dependencies:
