@@ -12,7 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - name: Filter paths
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -21,10 +22,10 @@ jobs:
             k8s-apps:
               - deleted: 'k8s-apps/**'
       - name: Update deployed apps table
-        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'false'
+        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true'
         run: ./scripts/update-deployed-apps.sh
       - name: Commit changes
-        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'false'
+        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true'
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
