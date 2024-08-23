@@ -9,7 +9,6 @@ spec:
     - list:
         elements:
           - name: argocd
-          - name: authelia
           - name: blackbox-exporter
             namespace: monitoring
           - name: calibre-web
