@@ -11,10 +11,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - uses: jaxxstorm/action-install-gh-release@v1.12.0
+        with:
+          repo: mikefarah/yq
       - name: Update deployed apps table
-        run: |
-          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
-          ./scripts/update-deployed-apps.sh
+        run: ./scripts/update-deployed-apps.sh
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
