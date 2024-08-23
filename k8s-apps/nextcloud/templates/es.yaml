@@ -13,3 +13,26 @@ spec:
     - secretKey: api-key
       remoteRef:
         key: immich_nextcloud_uploader_api_key
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: nextcloud
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: nextcloud
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        # These are bogus creds :)
+        nextcloud-username: admin
+        nextcloud-password: changeme
+        nextcloud-token: '{{ .token }}'
+  data:
+    - secretKey: token
+      remoteRef:
+        key: nextcloud_token

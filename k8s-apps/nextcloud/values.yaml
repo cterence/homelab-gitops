@@ -66,10 +66,10 @@ nextcloud:
     path: /
     pathType: Prefix
 
-
   # Allow configuration of lifecycle hooks
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
-  lifecycle: {}
+  lifecycle:
+    {}
     # postStartCommand: []
     # preStopCommand: []
 
@@ -83,14 +83,14 @@ nextcloud:
     # password: changeme
     ## Use an existing secret
     existingSecret:
-      enabled: false
-      # secretName: nameofsecret
-      usernameKey: nextcloud-username
-      passwordKey: nextcloud-password
-      tokenKey: nextcloud-token
-      smtpUsernameKey: smtp-username
-      smtpPasswordKey: smtp-password
-      smtpHostKey: smtp-host
+      enabled: true
+      secretName: nextcloud
+      # usernameKey: nextcloud-username
+      # passwordKey: nextcloud-password
+      # tokenKey: nextcloud-token
+      # smtpUsernameKey: smtp-username
+      # smtpPasswordKey: smtp-password
+      # smtpHostKey: smtp-host
     update: 0
     # If web server is not binding default port, you can define it
     containerPort: 80
@@ -192,10 +192,10 @@ nextcloud:
           - /bin/sh
           - -c
           - |
-              while true; do
-                node /usr/src/app/dist upload /import --recursive
-                sleep 86400
-              done
+            while true; do
+              node /usr/src/app/dist upload /import --recursive
+              sleep 86400
+            done
         env:
           - name: IMMICH_API_KEY
             valueFrom:
@@ -358,12 +358,11 @@ nextcloud:
     architecture: standalone
     auth:
       enabled: false
-      password: 'changeme'
+      password: "changeme"
       # name of an existing secret with Redis® credentials (instead of auth.password), must be created ahead of time
       existingSecret: ""
       # Password key to be retrieved from existing secret
       existingSecretPasswordKey: ""
-
 
   ## Cronjob to execute Nextcloud background tasks
   ## ref: https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/background_jobs_configuration.html#cron
@@ -378,7 +377,8 @@ nextcloud:
 
     # Allow configuration of lifecycle hooks
     # ref: https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
-    lifecycle: {}
+    lifecycle:
+      {}
       # postStartCommand: []
       # preStopCommand: []
     # Set securityContext parameters. For example, you may need to define runAsNonRoot directive
@@ -429,7 +429,8 @@ nextcloud:
       accessMode: ReadWriteOnce
       size: 8Gi
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -466,7 +467,6 @@ nextcloud:
     failureThreshold: 30
     successThreshold: 1
 
-
   ## Enable pod autoscaling using HorizontalPodAutoscaler
   ## ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
   ##
@@ -481,7 +481,6 @@ nextcloud:
   tolerations: []
 
   affinity: {}
-
 
   ## Prometheus Exporter / Metrics
   ##
@@ -565,14 +564,12 @@ nextcloud:
       ##
       labels: {}
 
-
   rbac:
     enabled: false
     serviceaccount:
       create: true
       name: nextcloud-serviceaccount
       annotations: {}
-
 
   ## @param securityContext for nextcloud pod @deprecated Use `nextcloud.podSecurityContext` instead
   securityContext: {}
@@ -582,7 +579,7 @@ cnpg-cluster:
   mode: standalone
   cluster:
     instances: 1
-    imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"  # Default value depends on type (postgresql/postgis/timescaledb)
+    imageName: "ghcr.io/cloudnative-pg/postgresql:16.3" # Default value depends on type (postgresql/postgis/timescaledb)
     storage:
       size: 10Gi
     resources: {}
