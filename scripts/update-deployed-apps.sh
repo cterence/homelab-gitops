@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 DIR=$(dirname "$0")
 CONFIGURED_APPS=$(ls ${DIR}/../k8s-apps | xargs)
