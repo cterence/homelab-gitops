@@ -1,4 +1,3 @@
-# CI
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -10,6 +9,7 @@ spec:
     - list:
         elements:
           - name: argocd
+          - name: authelia
           - name: blackbox-exporter
             namespace: monitoring
           - name: calibre-web
