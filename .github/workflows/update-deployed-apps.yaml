@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - argocd-apps/applicationset.yaml
+      - k8s-apps/*
 
 jobs:
   update-deployed-apps-table:
