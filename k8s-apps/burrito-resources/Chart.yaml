@@ -1,6 +1,0 @@
-# deployed-apps:exclude
-apiVersion: v2
-name: burrito-resources
-description: Terraform CRDs for burrito, a TACoS Kubernetes operator
-type: application
-version: v0.1.0
