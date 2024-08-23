@@ -44,7 +44,7 @@ spec:
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
-        argocd.argoproj.io/compare-options: "{{ printf \"%s=%s\" \"ServerSideDiff\" (dig \"serverSideDiff\" \"false\" . | toString) }}"
+        argocd.argoproj.io/compare-options: '{{ printf "%s=%s" "ServerSideDiff" (dig "serverSideDiff" "false" . | toString) }}'
     spec:
       project: default
       source:
@@ -53,7 +53,7 @@ spec:
         path: "k8s-apps/{{ .name }}"
       destination:
         name: in-cluster
-        namespace: "{{ default .name (dig \"namespace\" \"\" .) }}"
+        namespace: '{{ default .name (dig "namespace" "" .) }}'
       syncPolicy:
         automated:
           prune: true
@@ -61,4 +61,4 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - RespectIgnoreDifferences=true
-          - "{{ printf \"%s=%s\" \"ServerSideApply\" (dig \"serverSideApply\" \"false\" . | toString) }}"
+          - '{{ printf "%s=%s" "ServerSideApply" (dig "serverSideApply" "false" . | toString) }}'
