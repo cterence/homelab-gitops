@@ -31,7 +31,7 @@ spec:
         # These are bogus creds :)
         nextcloud-username: admin
         nextcloud-password: changeme
-        nextcloud-token: '{{ .token }}'
+        nextcloud-token: "{{ .token }}"
   data:
     - secretKey: token
       remoteRef:
