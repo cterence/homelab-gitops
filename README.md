@@ -37,7 +37,6 @@
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution | ✅ |
 | [ingress-nginx](./scripts/../k8s-apps/ingress-nginx) | Ingress-NGINX Controller for Kubernetes | ✅ |
-| [k8tz](./scripts/../k8s-apps/k8tz) | Kubernetes admission controller and a CLI tool to inject timezones into Pods and CronJobs | ❌ |
 | [komoplane](./scripts/../k8s-apps/komoplane) | Crossplane Troubleshooting Tool by Komodor | ❌ |
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |

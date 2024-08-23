@@ -6,7 +6,6 @@
 # This is flag is not required for new installations.
 # For example: 1.7, 1.8, 1.9
 # upgradeCompatibility: '1.8'
-
 cilium:
   debug:
     # -- Enable debug logging
