@@ -2,7 +2,7 @@ apiVersion: v2
 name: pihole
 description: Network-wide Ad Blocking
 type: application
-version: 2.5.2
+version: 0.1.0
 dependencies:
   - name: pihole
     repository: https://mojo2600.github.io/pihole-kubernetes

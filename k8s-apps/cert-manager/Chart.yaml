@@ -2,7 +2,7 @@ apiVersion: v2
 name: cert-manager
 description: Automatically provision and manage TLS certificates in Kubernetes
 type: application
-version: v1.7.0
+version: 0.1.0
 dependencies:
   - name: cert-manager
     repository: https://charts.jetstack.io

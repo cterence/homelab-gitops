@@ -2,7 +2,7 @@ apiVersion: v2
 name: authelia
 description: The Single Sign-On Multi-Factor portal for web apps
 type: application
-version: 0.8.57
+version: 0.1.0
 dependencies:
   - name: authelia
     repository: https://charts.authelia.com
