@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: user-password
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: user-password
+    creationPolicy: Owner
+  data:
+    - secretKey: SB_USER
+      remoteRef:
+        key: silverbullet_user_password
