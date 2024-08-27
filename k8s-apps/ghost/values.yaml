@@ -59,7 +59,7 @@ ghost:
   smtpExistingSecret: ""
   ## @param allowEmptyPassword Allow the container to be started with blank passwords
   ##
-  allowEmptyPassword: true
+  allowEmptyPassword: false
   ## @param ghostSkipInstall Skip performing the initial bootstrapping for Ghost
   ##
   ghostSkipInstall: false
@@ -371,6 +371,7 @@ ghost:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      nginx.ingress.kubernetes.io/proxy-body-size: 10m
     ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.hostname` parameter
     ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" .Values.ingress.hostname }}`
     ## You can:
