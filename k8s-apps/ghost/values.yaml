@@ -16,6 +16,7 @@ ghost:
   ## @param ghostPassword Ghost user password
   ## Defaults to a random 10-character alphanumeric string if not set
   ##
+  # TODO: utiliser secret
   ghostPassword: ""
   ## @param existingSecret Name of existing secret containing Ghost credentials
   ## NOTE: Must contain key `ghost-password`
@@ -558,6 +559,7 @@ ghost:
       database: bitnami_ghost
       username: bn_ghost
       password: ""
+      # TODO: utiliser secret
       existingSecret: ""
     ## MySQL Primary configuration
     ##

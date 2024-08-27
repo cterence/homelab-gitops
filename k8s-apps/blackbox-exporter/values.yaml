@@ -127,6 +127,9 @@ prometheus-blackbox-exporter:
       - name: paperless
         url: http://paperless-ngx.paperless-ngx:8000
         module: http_2xx
+      - name: silverbullet
+        url: https://sb.terence.cloud/.ping
+        module: http_2xx
       - name: tailout
         url: http://tailout.tailout:3000/health
         module: http_2xx
