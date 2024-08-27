@@ -1,0 +1,9 @@
+apiVersion: v2
+name: silverbullet
+description: Note-taking application optimized for people with a hacker mindset
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s.github.io/helm-charts
+    version: 3.3.2
