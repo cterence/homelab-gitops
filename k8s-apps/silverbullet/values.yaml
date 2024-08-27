@@ -50,7 +50,7 @@ app-template:
         # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
       className: "nginx"
       hosts:
-        - host: &host silverbullet.terence.cloud
+        - host: &host sb.terence.cloud
           paths:
             - path: /
               pathType: Prefix
