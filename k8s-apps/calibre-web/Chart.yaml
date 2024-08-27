@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cnpg
+name: calibre-web
 description: Web app for browsing, reading and downloading eBooks stored in a Calibre database
 type: application
 version: 0.1.0
