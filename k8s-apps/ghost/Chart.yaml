@@ -1,0 +1,9 @@
+apiVersion: v2
+name: ghost
+description: Independent platform for publishing online by web and email newsletter
+type: application
+version: 0.1.0
+dependencies:
+  - name: ghost
+    repository: https://charts.bitnami.com/bitnami
+    version: 19.11.7
