@@ -25,6 +25,9 @@ loki:
     service:
       labels:
         prometheus.io/service-monitor: "false"
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution: []
   monitoring:
     serviceMonitor:
       enabled: true
