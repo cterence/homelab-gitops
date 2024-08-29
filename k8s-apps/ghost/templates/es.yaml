@@ -1,0 +1,14 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: ghost-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: ghost-credentials
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: ghost_secret
