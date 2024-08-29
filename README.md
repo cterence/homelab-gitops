@@ -25,7 +25,8 @@ To access my apps, I expose them directly on the internet with port-forwarding o
 - Secrets management with [external-secrets](https://external-secrets.io/latest/) and [GitLab CI/CD variables](https://external-secrets.io/latest/provider/gitlab-variables/)
 - Simple and cheap offsite backup of my important data using [OpenEBS](https://openebs.io/), [Velero](https://velero.io/) and [Backblaze B2](https://www.backblaze.com/cloud-storage)
 - Observability with [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) and [Opentelemetry Collector](https://opentelemetry.io/docs/collector/)
-- Any app I want to host! Currently, [Nextcloud](https://nextcloud.com/fr/), [Immich](https://immich.app/), [Paperless-ngx](https://docs.paperless-ngx.com/) and more (see below)
+- Alerting with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) and a [Telegram Bot](https://prometheus.io/docs/alerting/latest/configuration/#telegram_config)
+- Any app you'd want to host! Currently, [Nextcloud](https://nextcloud.com/fr/), [Immich](https://immich.app/), [Paperless-ngx](https://docs.paperless-ngx.com/) and more (see below)
 
 ## 💻 What's currently deployed in my cluster ?
 
@@ -80,7 +81,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 
 ## 🏗️ k0s quick install
 
-The install assumes that all external secrets are [already created in GitLab](https://external-secrets.io/latest/provider/gitlab-variables/).
+The install assumes that all external secrets are [already created in a GitLab project as CI/CD variables](https://external-secrets.io/latest/provider/gitlab-variables/).
 
 Start the k0s cluster:
 
