@@ -678,6 +678,10 @@ vaultwarden:
     ##   - Add support for using cert-manager.
     ##   - Support for multiple TLS hostnames.
     ##
+    ## @param ingress.customHeadersConfigMap ConfigMap containing custom headers to be added to the ingress.
+    ## Defaults to "custom-headers-configmap", which sets a Request-ID header.
+    ##
+    customHeadersConfigMap: "vaultwarden/custom-headers-configmap"
 
 cnpg-cluster:
   type: postgresql
