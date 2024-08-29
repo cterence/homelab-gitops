@@ -11,4 +11,4 @@ spec:
     creationPolicy: Owner
   dataFrom:
     - extract:
-        key: ghost_secret
+        key: ghost_credentials
