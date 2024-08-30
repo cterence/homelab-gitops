@@ -22,6 +22,9 @@ app-template:
           image:
             repository: crocodilestick/calibre-web-automated
             tag: v2.0.0
+          env:
+            TZ: Europe/Paris
+            DOKCER_MODS: "linuxserver/mods:universal-calibre"
           ports:
             - name: http
               containerPort: 8083
@@ -74,10 +77,10 @@ app-template:
       size: 50Mi
       globalMounts:
         - path: /config
-    books:
+    calibre-library:
       enabled: true
       size: 10Gi
       accessMode: ReadWriteOnce
       type: persistentVolumeClaim
       globalMounts:
-        - path: /books
+        - path: /calibre-library
