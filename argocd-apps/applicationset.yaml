@@ -39,7 +39,6 @@ spec:
           - name: tailscale-operator
           - name: vaultwarden
           - name: velero
-          - name: velero-ui
 
   template:
     metadata:
