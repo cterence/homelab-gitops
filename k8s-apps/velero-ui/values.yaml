@@ -47,12 +47,12 @@ vui:
         external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
         nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-        # nginx.ingress.kubernetes.io/server-snippets: |
-        #   location /ws {
-        #     proxy_set_header Upgrade $http_upgrade;
-        #     proxy_http_version 1.1;
-        #     proxy_set_header Connection "upgrade";
-        #   }
+        nginx.ingress.kubernetes.io/server-snippets: |
+          location /ws/ {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+          }
     spec:
       tls:
         - hosts:
