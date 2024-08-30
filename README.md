@@ -76,6 +76,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [thanos](./scripts/../k8s-apps/thanos) | Highly available Prometheus setup with long term storage capabilities | ❌ |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
 | [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes | ✅ |
+| [velero-ui](./scripts/../k8s-apps/velero-ui) | A UI for Velero | ✅ |
 | [zitadel](./scripts/../k8s-apps/zitadel) | Identity infrastructure, simplified for you | ❌ |
 <!-- END deployed-apps -->
 
