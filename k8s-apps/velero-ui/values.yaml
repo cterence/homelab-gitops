@@ -6,7 +6,7 @@ vui:
     veleroNamespace: velero
     # kubernetesClusterDomain: my-cluster
     # agentMode: false
-    # clusterName: <your-cluster-name>
+    clusterName: velero
 
   #
   # API Config
