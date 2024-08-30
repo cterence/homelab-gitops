@@ -9,17 +9,16 @@ spec:
   target:
     name: backblaze-credentials
     creationPolicy: Owner
-    # template:
-    #   engineVersion: v2
-    #   data:
-    #     config: |
-    #       [default]
-    #       aws_access_key_id = "{{"{{ .access_key }}"}}"
-    #       aws_secret_access_key = "{{"{{ .secret_key }}"}}"
+    template:
+      engineVersion: v2
+      data:
+        AWS_ACCESS_KEY_ID: {{ printf "{{ .access_key }}" }}
+        AWS_SECRET_ACCESS_KEY: {{ printf "{{ .secret_key }}" }}
+        SECURITY_TOKEN_KEY: {{ randAlphaNum 32 | b64enc | quote }}
   data:
-    - secretKey: AWS_ACCESS_KEY_ID
+    - secretKey: access_key
       remoteRef:
         key: velero_backblaze_access_key_id
-    - secretKey: AWS_SECRET_ACCESS_KEY
+    - secretKey: secret_key
       remoteRef:
         key: velero_backblaze_secret_access_key
