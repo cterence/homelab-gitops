@@ -14,7 +14,7 @@ spec:
       data:
         AWS_ACCESS_KEY_ID: "{{ `{{ .access_key }}` }}"
         AWS_SECRET_ACCESS_KEY: "{{ `{{ .secret_key }}` }}"
-        SECURITY_TOKEN_KEY: {{ randAlphaNum 32 | b64enc | quote }}
+        SECURITY_TOKEN_KEY: {{ randAlphaNum 32 | quote }}
   data:
     - secretKey: access_key
       remoteRef:
