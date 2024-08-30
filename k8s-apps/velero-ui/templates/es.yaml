@@ -1,0 +1,25 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: backblaze-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: backblaze-credentials
+    creationPolicy: Owner
+    # template:
+    #   engineVersion: v2
+    #   data:
+    #     config: |
+    #       [default]
+    #       aws_access_key_id = "{{"{{ .access_key }}"}}"
+    #       aws_secret_access_key = "{{"{{ .secret_key }}"}}"
+  data:
+    - secretKey: AWS_ACCESS_KEY_ID
+      remoteRef:
+        key: velero_backblaze_access_key_id
+    - secretKey: AWS_SECRET_ACCESS_KEY
+      remoteRef:
+        key: velero_backblaze_secret_access_key

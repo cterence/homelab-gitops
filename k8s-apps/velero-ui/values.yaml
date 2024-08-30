@@ -1,0 +1,101 @@
+vui:
+  #
+  # Global
+  #
+  global:
+    veleroNamespace: velero
+    # kubernetesClusterDomain: my-cluster
+    # agentMode: false
+    # clusterName: <your-cluster-name>
+
+  #
+  # API Config
+  #
+  apiConfig:
+    # To generate a fixed secure random secret key use the command: openssl rand -hex 32
+    # securityTokenKey:
+    #
+    existingSecret: backblaze-credentials
+    # debugLevel: debug
+    veleroCliVersion: v1.12.2
+    # apiTokenExpirationMin: "30"
+    # apiTokenRefreshExpirationDays: "7"
+    storage:
+      enabled: false
+      storageClassName: <your-storage-class-name>
+
+  #
+  # You can use nodeport or ingress according to your needs
+  #
+  #
+  # Nodeport
+  #
+  uiNp:
+    enabled: false
+    ip: "10.10.0.100" # any ip address of your cluster
+    apiPort: "30001"
+    uiPort: "30002"
+  #
+  # Ingress
+  #
+  uiIngress:
+    enabled: true
+    ingressClassName: nginx
+    metadata:
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt"
+        external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
+    spec:
+      tls:
+        - hosts:
+            - velero.terence.cloud
+          secretName: velero-ui-tls
+
+  #
+  # Watchdog Cron
+  #
+  report:
+    schedule: 0 8 * * *
+
+  #
+  # Watchdog Daemon
+  #
+  watchdogConfig:
+    # config
+    k8SInclusterMode: "True"
+    # k8sVeleroNamespace: "velero"
+    processClusterName: homelab
+    # processCycleSec: 300
+    # expiresDaysWarning: 29
+    notificationSkipCompleted: "False"
+    # notificationSkipInProgress: "True"
+    # notificationSkipRemoved: "True"
+    # notificationSkipDeleting: "True"
+
+    # email
+    emailEnable: "False"
+    emailAccount: <your-email>
+    emailPassword: <your-password>
+    emailRecipients: <email-recipents-comma-saparted>
+    emailSmtpPort: <smtp-port>
+    emailSmtpServer: <smtp-server>
+
+    # slack
+    slackEnable: "False"
+    slackChannel: <channel-id>
+    slackToken: <token>
+
+    # TODO: telegram
+    telegramEnable: "False"
+    telegramChatId: "<telegram-chat-id>"
+    telegramToken: "<telegram-token>"
+
+  #
+  # uiConfig
+  # you can enable an experimental function to add a second cluster to the login screen
+  #
+  # uiConfig:
+  # experimental: true
+  # exNextPublicVeleroApiName2: "your-cluster-name-2"
+  # exNextPublicVeleroApiUrl2: "https://your-url-api-2/api"
+  # exNextPublicVeleroApiWs2: "wss://your-url-api-2"
