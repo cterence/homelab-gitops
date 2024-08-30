@@ -15,7 +15,7 @@ vui:
     # To generate a fixed secure random secret key use the command: openssl rand -hex 32
     # securityTokenKey:
     #
-    # existingSecret: backblaze-credentials
+    existingSecret: vui-credentials
     # debugLevel: debug
     veleroCliVersion: v1.12.2
     # apiTokenExpirationMin: "30"

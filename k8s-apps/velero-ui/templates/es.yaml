@@ -1,13 +1,13 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: backblaze-credentials
+  name: vui-credentials
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
     name: gitlab-secret-store
   target:
-    name: backblaze-credentials
+    name: vui-credentials
     creationPolicy: Owner
     template:
       engineVersion: v2
