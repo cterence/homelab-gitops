@@ -681,7 +681,8 @@ vaultwarden:
     ## @param ingress.customHeadersConfigMap ConfigMap containing custom headers to be added to the ingress.
     ## Defaults to "custom-headers-configmap", which sets a Request-ID header.
     ##
-    customHeadersConfigMap: "vaultwarden/custom-headers-configmap"
+    customHeadersConfigMap:
+      Request-Id: $req_id
 
 cnpg-cluster:
   type: postgresql
