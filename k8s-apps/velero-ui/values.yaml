@@ -15,7 +15,7 @@ vui:
     # To generate a fixed secure random secret key use the command: openssl rand -hex 32
     # securityTokenKey:
     #
-    existingSecret: backblaze-credentials
+    # existingSecret: backblaze-credentials
     # debugLevel: debug
     veleroCliVersion: v1.12.2
     # apiTokenExpirationMin: "30"
@@ -45,14 +45,14 @@ vui:
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt"
         external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
-        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-        nginx.ingress.kubernetes.io/server-snippets: |
-          location /ws {
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "upgrade";
-          }
+        # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+        # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+        # nginx.ingress.kubernetes.io/server-snippets: |
+        #   location /ws {
+        #     proxy_set_header Upgrade $http_upgrade;
+        #     proxy_http_version 1.1;
+        #     proxy_set_header Connection "upgrade";
+        #   }
     spec:
       tls:
         - hosts:
@@ -71,7 +71,7 @@ vui:
   watchdogConfig:
     # config
     k8SInclusterMode: "True"
-    # k8sVeleroNamespace: "velero"
+    k8sVeleroNamespace: "velero"
     processClusterName: homelab
     # processCycleSec: 300
     # expiresDaysWarning: 29
