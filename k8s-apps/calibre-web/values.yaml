@@ -20,11 +20,8 @@ app-template:
         # Configure the main application container
         main:
           image:
-            # -- image repository
-            repository: lscr.io/linuxserver/calibre-web
-            # -- image tag
-            # this example is not automatically updated, so be sure to use the latest image
-            tag: version-0.6.23
+            repository: crocodilestick/calibre-web-automated
+            tag: v2.0.0
           ports:
             - name: http
               containerPort: 8083
