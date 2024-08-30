@@ -17,7 +17,7 @@ vui:
     #
     existingSecret: vui-credentials
     # debugLevel: debug
-    veleroCliVersion: v1.12.2
+    veleroCliVersion: v1.14.1
     # apiTokenExpirationMin: "30"
     # apiTokenRefreshExpirationDays: "7"
     storage:
