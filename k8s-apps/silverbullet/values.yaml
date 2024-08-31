@@ -35,14 +35,14 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /.ping
+                  path: /_/health
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /.ping
+                  path: /_/health
   service:
     # Configure a service for the main application
     main:
