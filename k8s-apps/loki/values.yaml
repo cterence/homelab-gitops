@@ -5,22 +5,31 @@ loki:
     compactor:
       retention_enabled: true
       delete_request_store: filesystem
+    ingester:
+      chunk_encoding: snappy
     limits_config:
-      retention_period: 3d
+      retention_period: 7d
       allow_structured_metadata: true
     commonConfig:
       replication_factor: 1
+    tracing:
+      enabled: true
     storage:
-      type: 'filesystem'
+      type: "filesystem"
     schemaConfig:
       configs:
-      - from: "2024-01-01"
-        store: tsdb
-        index:
-          prefix: loki_index_
-          period: 24h
-        object_store: filesystem
-        schema: v13
+        - from: "2024-01-01"
+          store: tsdb
+          index:
+            prefix: loki_index_
+            period: 24h
+          object_store: filesystem
+          schema: v13
+    querier:
+      # Default is 4, if you have enough memory and CPU you can increase, reduce if OOMing
+      max_concurrent: 2
+  chunksCache:
+    writebackSizeLimit: 100MB
   gateway:
     service:
       labels:
@@ -35,9 +44,31 @@ loki:
       enabled: true
   singleBinary:
     replicas: 1
-  read:
-    replicas: 0
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution: []
   backend:
     replicas: 0
+  read:
+    replicas: 0
   write:
+    replicas: 0
+
+  ingester:
+    replicas: 0
+  querier:
+    replicas: 0
+  queryFrontend:
+    replicas: 0
+  queryScheduler:
+    replicas: 0
+  distributor:
+    replicas: 0
+  compactor:
+    replicas: 0
+  indexGateway:
+    replicas: 0
+  bloomCompactor:
+    replicas: 0
+  bloomGateway:
     replicas: 0
