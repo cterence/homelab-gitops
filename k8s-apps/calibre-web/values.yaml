@@ -24,7 +24,7 @@ app-template:
             tag: v2.0.0
           env:
             TZ: Europe/Paris
-            DOCKER_MODS: "linuxserver/mods:universal-calibre"
+            # DOCKER_MODS: "linuxserver/mods:universal-calibre"
             LOG_LEVEL: DEBUG
           ports:
             - name: http
