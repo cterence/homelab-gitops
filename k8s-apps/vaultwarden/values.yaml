@@ -523,7 +523,7 @@ vaultwarden:
     clientId: ""
     ## @param yubico.secretKey Yubico secret key
     ##
-    secretKey: ""
+    secretKey: {}
     ## @param yubico.server Specify a Yubico server, otherwise the default servers will be used
     ##
     server: ""
@@ -535,7 +535,7 @@ vaultwarden:
     ikey: ""
     ## @param duo.secretKey Duo Secret Key
     ##
-    secretKey: ""
+    secretKey: {}
     ## @param duo.hostname Duo API hostname
     ##
     hostname: ""
