@@ -54,7 +54,7 @@ dead-drop:
                 httpGet:
                   port: http
                   path: /health
-      strategy: RollingUpdate
+      strategy: Recreate
 
     purge:
       type: cronjob
