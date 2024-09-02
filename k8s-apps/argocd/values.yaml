@@ -14,7 +14,7 @@ argo-cd:
               severity: warning
             annotations:
               summary: ArgoCD application not synced (instance {{ $labels.instance }})
-              description: "Application {{ $labels.name }} run by argo is currently not in sync.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+              description: "Application {{ $labels.name }} run by argo is currently not in sync - Value = {{ $value }}"
           - alert: ArgocdApplicationUnhealthy
             expr: argocd_app_info{health_status!="Healthy"} != 0
             for: 15m
@@ -22,7 +22,7 @@ argo-cd:
               severity: warning
             annotations:
               summary: ArgoCD application unhealthy (instance {{ $labels.instance }})
-              description: "Application {{ $labels.name }} run by argo is currently not healthy.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+              description: "Application {{ $labels.name }} run by argo is currently not healthy - Value = {{ $value }}"
 
     env:
       - name: OC_AGENT_HOST
