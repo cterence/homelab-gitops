@@ -116,6 +116,8 @@ libsql-server:
           ports:
             - name: http
               containerPort: 8080
+          env:
+            SQLD_HEARTBEAT_URL: "http://localhost:8080"
           probes:
             liveness:
               enabled: true
