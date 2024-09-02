@@ -137,7 +137,8 @@ kube-prometheus-stack:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/nginx.json
         ingress-request-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
-      extra: {}
+      extra:
+        {}
         # pihole-overview:
         #   gnetId: 10176
         #   datasource: Prometheus
@@ -233,6 +234,28 @@ kube-prometheus-stack:
             - send_resolved: true
               bot_token_file: /etc/alertmanager/secrets/telegram-bot-token/token
               chat_id: -1002235030838
+              message: |
+                {{ define "__custom_text_alert_list" }}{{ range . }}
+                ---
+                🪪 <b>{{ .Labels.alertname }}</b>
+                {{- if .Annotations.summary }}
+                📝 {{ .Annotations.summary }}{{ end }}
+                {{- if .Annotations.description }}
+                📖 {{ .Annotations.description }}{{ end }}
+                🏷 Labels:
+                {{ range .Labels.SortedPairs }}  <i>{{ .Name }}</i>: <code>{{ .Value }}</code>
+                {{ end }}{{ end }}
+                🛠 <a href="https://grafana.terence.cloud">Grafana</a> 🛠
+                {{ end }}
+
+                {{ if gt (len .Alerts.Firing) 0 }}
+                🔥 Alerts Firing 🔥
+                {{ template "__custom_text_alert_list" .Alerts.Firing }}
+                {{ end }}
+                {{ if gt (len .Alerts.Resolved) 0 }}
+                ✅ Alerts Resolved ✅
+                {{ template "__custom_text_alert_list" .Alerts.Resolved }}
+                {{ end }}
       route:
         group_by: ["alertname"]
         receiver: telegram
