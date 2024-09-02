@@ -116,7 +116,7 @@ libsql-server:
         main:
           image:
             repository: ghcr.io/tursodatabase/libsql-server
-            tag: v0.24.22
+            tag: v0.24.23
           ports:
             - name: http
               containerPort: 8080
