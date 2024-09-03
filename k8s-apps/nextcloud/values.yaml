@@ -582,6 +582,8 @@ cnpg-cluster:
     imageName: "ghcr.io/cloudnative-pg/postgresql:16.3" # Default value depends on type (postgresql/postgis/timescaledb)
     storage:
       size: 10Gi
+    walStorage:
+      enabled: true
     resources: {}
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
