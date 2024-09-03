@@ -110,7 +110,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
-      tag: v1.113.0
+      tag: v1.113.1
     ingress:
       main:
         enabled: true
