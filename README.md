@@ -26,6 +26,7 @@ To access my apps, I expose them directly on the internet with port-forwarding o
 - Simple and cheap offsite backup of my important data using [OpenEBS](https://openebs.io/), [Velero](https://velero.io/) and [Backblaze B2](https://www.backblaze.com/cloud-storage)
 - Observability with [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) and [Opentelemetry Collector](https://opentelemetry.io/docs/collector/)
 - Alerting with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) and a [Telegram Bot](https://prometheus.io/docs/alerting/latest/configuration/#telegram_config)
+- Automated updates with [Renovate](https://docs.renovatebot.com/)
 - Any app you'd want to host! Currently, [Nextcloud](https://nextcloud.com/fr/), [Immich](https://immich.app/), [Paperless-ngx](https://docs.paperless-ngx.com/) and more (see below)
 
 ## 💻 What's currently deployed in my cluster ?
