@@ -20,6 +20,7 @@ spec:
           - name: external-dns
           - name: external-secrets
           - name: ghost
+          - name: hajimari
           - name: httpbin
           - name: immich
           - name: ingress-nginx
