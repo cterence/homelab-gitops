@@ -27,7 +27,7 @@ hajimari:
     instanceName: homelab
 
     # -- Set to true to show all discovered applications by default.
-    defaultEnable: true
+    defaultEnable: false
 
     # -- Namespace selector to use for discovering applications
     namespaceSelector:
@@ -47,8 +47,7 @@ hajimari:
     # -- Override the title of the Hajimari pages
     title: Hajimari
 
-    # -- Default name for welcome message
-    name: "You"
+    showGreeting: false
 
     # -- Add custom applications to the discovered application list
     customApps: []
