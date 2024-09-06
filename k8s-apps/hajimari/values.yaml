@@ -31,19 +31,9 @@ hajimari:
 
     # -- Namespace selector to use for discovering applications
     namespaceSelector:
-      matchNames:
-        # - argocd
-        # - calibre-web
-        # - dead-drop
-        # - ghost
-        # - httpbin
-        # - immich
-        # - nextcloud
-        # - paperless-ngx
-        # - silverbullet
-        # - tailout
-        # - vaultwarden
-        - "*"
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: Exists
 
     # -- Override the title of the Hajimari pages
     title: Hajimari
