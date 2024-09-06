@@ -30,12 +30,12 @@ hajimari:
     defaultEnable: true
 
     # -- Namespace selector to use for discovering applications
-    namespaceSelector:
-      matchNames:
-        - media
+    # namespaceSelector:
+    #   matchNames:
+    #     - media
 
     # -- Override the title of the Hajimari pages
-    title: null
+    title: Homelab
 
     # -- Default name for welcome message
     name: "You"
