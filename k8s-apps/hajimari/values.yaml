@@ -24,7 +24,7 @@ hajimari:
   hajimari:
     # -- The name of this instance, this allows running multiple
     # instances of Hajimari on the same cluster
-    instanceName: homelab
+    instanceName: null
 
     # -- Set to true to show all discovered applications by default.
     defaultEnable: false
