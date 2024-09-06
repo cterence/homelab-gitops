@@ -649,6 +649,11 @@ vaultwarden:
     additionalAnnotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
       external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Bitwarden"
+      gethomepage.dev/description: "A password manager."
+      gethomepage.dev/group: "Security"
+      gethomepage.dev/icon: "vaultwarden"
     ## @param ingress.labels Additional labels for the ingress resource.
     ##
     labels: {}

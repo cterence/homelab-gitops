@@ -58,6 +58,11 @@ nextcloud:
         location ~ ^/(?:autotest|occ|issue|indie|db_|console) {
           deny all;
         }
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Nextcloud"
+      gethomepage.dev/description: "A safe home for all your data."
+      gethomepage.dev/group: "Media"
+      gethomepage.dev/icon: "nextcloud"
     tls:
       - secretName: nextcloud-tls
         hosts:

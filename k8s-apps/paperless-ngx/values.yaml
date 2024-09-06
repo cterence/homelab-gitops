@@ -125,6 +125,11 @@ app-template:
         nginx.ingress.kubernetes.io/configuration-snippet: |
           auth_request_set $auth_header $upstream_http_x_auth_request_user;
           proxy_set_header 'remote-user' $auth_header;
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Paperless"
+        gethomepage.dev/description: "A document management system."
+        gethomepage.dev/group: "Media"
+        gethomepage.dev/icon: "paperless-ngx"
       hosts:
         - host: paperless.terence.cloud
           paths:
