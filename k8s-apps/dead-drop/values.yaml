@@ -86,6 +86,11 @@ dead-drop:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Dead Drop"
+        gethomepage.dev/description: "A secure, ephemeral file sharing service."
+        gethomepage.dev/group: "Apps"
+        gethomepage.dev/icon: "mdi-file-key"
 
       hosts:
         - host: dead-drop.terence.cloud

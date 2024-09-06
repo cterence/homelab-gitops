@@ -98,6 +98,11 @@ kube-prometheus-stack:
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Grafana"
+        gethomepage.dev/description: "The open platform for beautiful analytics and monitoring."
+        gethomepage.dev/group: "Tooling"
+        gethomepage.dev/icon: "grafana"
       hosts:
         - grafana.terence.cloud
       tls:
