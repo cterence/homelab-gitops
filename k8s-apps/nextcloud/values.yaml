@@ -33,11 +33,6 @@ nextcloud:
       nginx.ingress.kubernetes.io/proxy-body-size: 4G
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: letsencrypt
-      hajimari.io/enable: "true"
-      hajimari.io/appName: Nextcloud
-      hajimari.io/icon: cloud
-      hajimari.io/targetBlank: "true"
-      nginx.ingress.kubernetes.io/proxy-body-size: 100m
       # Keep this in sync with the README.md:
       nginx.ingress.kubernetes.io/server-snippet: |-
         server_tokens off;
