@@ -30,9 +30,9 @@ hajimari:
     defaultEnable: true
 
     # -- Namespace selector to use for discovering applications
-    # namespaceSelector:
-    #   matchNames:
-    #     - media
+    namespaceSelector:
+      matchNames:
+        - "*"
 
     # -- Override the title of the Hajimari pages
     title: Homelab
