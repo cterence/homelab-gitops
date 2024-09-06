@@ -31,9 +31,10 @@ hajimari:
 
     # -- Namespace selector to use for discovering applications
     namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: Exists
+      labelSelector:
+        matchExpressions:
+          - key: kubernetes.io/metadata.name
+            operator: Exists
 
     # -- Override the title of the Hajimari pages
     title: Hajimari
