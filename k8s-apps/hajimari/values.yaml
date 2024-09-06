@@ -32,10 +32,20 @@ hajimari:
     # -- Namespace selector to use for discovering applications
     namespaceSelector:
       matchNames:
-        - "*"
+        - argocd
+        - calibre-web
+        - dead-drop
+        - ghost
+        - httpbin
+        - immich
+        - nextcloud
+        - paperless-ngx
+        - silverbullet
+        - tailout
+        - vaultwarden
 
     # -- Override the title of the Hajimari pages
-    title: Homelab
+    title: Hajimari
 
     # -- Default name for welcome message
     name: "You"
