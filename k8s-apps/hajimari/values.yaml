@@ -90,7 +90,7 @@ hajimari:
               pathType: Prefix
               service:
                 identifier: main
-                port: http
+                port: 3000
       tls:
         - secretName: hajimari-tls
           hosts:
