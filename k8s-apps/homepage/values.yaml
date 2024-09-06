@@ -37,13 +37,12 @@ homepage:
   ingress:
     main:
       enabled: true
-      labels:
       annotations:
-        gethomepage.dev/enabled: "true"
+        gethomepage.dev/enabled: "false"
         gethomepage.dev/name: "Homepage"
         gethomepage.dev/description: "A modern, secure, highly customizable application dashboard."
         gethomepage.dev/group: "A New Group"
-        gethomepage.dev/icon: "homepage.png"
+        gethomepage.dev/icon: "homepage"
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
       ingressClassName: "nginx"
@@ -62,25 +61,27 @@ homepage:
     # To use an existing ConfigMap uncomment this line and specify the name
     # useExistingConfigMap: existing-homepage-configmap
     bookmarks:
-      - Developer:
-          - Github:
-              - abbr: GH
-                href: https://github.com/
+      []
+      # - Developer:
+      #     - Github:
+      #         - abbr: GH
+      #           href: https://github.com/
     services:
-      - My First Group:
-          - My First Service:
-              href: http://localhost/
-              description: Homepage is awesome
+      []
+      # - My First Group:
+      #     - My First Service:
+      #         href: http://localhost/
+      #         description: Homepage is awesome
 
-      - My Second Group:
-          - My Second Service:
-              href: http://localhost/
-              description: Homepage is the best
+      # - My Second Group:
+      #     - My Second Service:
+      #         href: http://localhost/
+      #         description: Homepage is the best
 
-      - My Third Group:
-          - My Third Service:
-              href: http://localhost/
-              description: Homepage is 😎
+      # - My Third Group:
+      #     - My Third Service:
+      #         href: http://localhost/
+      #         description: Homepage is 😎
     widgets:
       - resources:
           # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.

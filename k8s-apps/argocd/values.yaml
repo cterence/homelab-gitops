@@ -336,6 +336,11 @@ argo-cd:
         nginx.ingress.kubernetes.io/configuration-snippet: |
           auth_request_set $auth_header $upstream_http_x_auth_request_email;
           proxy_set_header 'x-remote-user' $auth_header;
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "ArgoCD"
+        gethomepage.dev/description: "CD for Kubernetes."
+        gethomepage.dev/group: "Tooling"
+        gethomepage.dev/icon: "argocd"
       pathType: ImplementationSpecific
       # paths:
       #   - /argocd(/|$)(.*)
