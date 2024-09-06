@@ -50,6 +50,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [ghost](./scripts/../k8s-apps/ghost) | Independent platform for publishing online by web and email newsletter | ✅ |
 | [gitlab-runner](./scripts/../k8s-apps/gitlab-runner) | Run your CI/CD jobs and send the results back to GitLab | ❌ |
 | [gotify](./scripts/../k8s-apps/gotify) | A simple server for sending and receiving messages in real-time per WebSocket | ❌ |
+| [hajimari](./scripts/../k8s-apps/hajimari) | A beautiful & customizable browser startpage/dashboard with Kubernetes application discovery | ✅ |
 | [headscale](./scripts/../k8s-apps/headscale) | An open source, self-hosted implementation of the Tailscale control server | ❌ |
 | [homer](./scripts/../k8s-apps/homer) | A very simple static homepage for your server | ❌ |
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
