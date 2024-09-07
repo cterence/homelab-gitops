@@ -27,9 +27,8 @@ spec:
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
+          - name: kubecraft
           - name: loki
-          - name: minecraft-web-client
-            namespace: minecraft
           - name: nextcloud
           - name: oauth2-proxy
           - name: openebs

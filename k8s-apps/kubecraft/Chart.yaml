@@ -1,6 +1,6 @@
 apiVersion: v2
-name: minecraft-web-client
-description: The most advanced Minecraft online/offline client + server in your browser
+name: kubecraft
+description: Manage your pods in Minecraft
 type: application
 version: 0.1.0
 dependencies:

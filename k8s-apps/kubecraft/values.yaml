@@ -4,7 +4,7 @@ app-template:
     main:
       type: deployment
       containers:
-        main:
+        client:
           image:
             repository: ghcr.io/cterence/minecraft-web-client
             tag: next
@@ -18,17 +18,37 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
+        server:
+          image:
+            repository: stevesloka/kubecraft
+            tag: latest
+          ports:
+            - name: minecraft
+              containerPort: 25565
+          probes:
+            liveness:
+              enabled: true
+              type: TCP
+            readiness:
+              enabled: true
+              type: TCP
 
   service:
-    main:
-      controller: main
+    client:
+      controller: client
       type: ClusterIP
       ports:
         http:
           port: 8080
+    server:
+      controller: server
+      type: ClusterIP
+      ports:
+        http:
+          port: 25565
 
   ingress:
-    main:
+    client:
       enabled: true
       className: "nginx"
       annotations:
@@ -43,7 +63,7 @@ app-template:
             - path: /
               pathType: ImplementationSpecific
               service:
-                identifier: main
+                identifier: client
                 port: http
       tls:
         - secretName: minecraft-tls
