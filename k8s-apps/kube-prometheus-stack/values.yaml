@@ -263,6 +263,7 @@ kube-prometheus-stack:
                 {{ end }}
       route:
         group_by: ["alertname"]
+        group_wait: 0s
         receiver: telegram
         routes:
           - matchers:
