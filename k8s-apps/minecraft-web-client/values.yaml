@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  controllers:
+    main:
+      type: deployment
+      containers:
+        main:
+          image:
+            repository: ghcr.io/cterence/minecraft-web-client
+            tag: next
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
+  ingress:
+    main:
+      enabled: true
+      className: "nginx"
+      annotations:
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        cert-manager.io/cluster-issuer: letsencrypt
+        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+      hosts:
+        - host: &host minecraft.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: minecraft-tls
+          hosts:
+            - *host

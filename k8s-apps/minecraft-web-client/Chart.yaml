@@ -1,0 +1,9 @@
+apiVersion: v2
+name: minecraft-web-client
+description: The most advanced Minecraft online/offline client + server in your browser
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s.github.io/helm-charts
+    version: 3.4.0

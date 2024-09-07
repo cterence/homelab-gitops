@@ -28,6 +28,8 @@ spec:
             namespace: monitoring
             serverSideApply: true
           - name: loki
+          - name: minecraft-web-client
+            namespace: minecraft
           - name: nextcloud
           - name: oauth2-proxy
           - name: openebs
