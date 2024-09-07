@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: vaultwarden
     repository: https://guerzon.github.io/vaultwarden
-    version: 0.27.0
+    version: 0.28.0
   - name: cluster
     alias: cnpg-cluster
     repository: file://../cnpg-cluster
