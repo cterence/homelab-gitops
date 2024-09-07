@@ -27,7 +27,6 @@ spec:
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
-          - name: kubecraft
           - name: loki
           - name: nextcloud
           - name: oauth2-proxy
