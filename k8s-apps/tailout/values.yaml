@@ -63,6 +63,11 @@ app-template:
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Tailout"
+        gethomepage.dev/description: "Create an exit node for your tailnet."
+        gethomepage.dev/group: "Apps"
+        gethomepage.dev/icon: "tailscale"
       hosts:
         - host: tailout.terence.cloud
           paths:
