@@ -29,3 +29,6 @@ ingress-nginx:
   ingress:
     options:
       allow-snippet-annotations: "true"
+
+  tcp:
+    25565: "kubecraft/kubecraft-server:25565"
