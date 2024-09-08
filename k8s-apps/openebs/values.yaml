@@ -13,7 +13,7 @@ openebs:
     repository: ""
 
   mayastor:
-    enabled: true
+    enabled: false
 
   localpv-provisioner:
     enabled: true
@@ -43,4 +43,4 @@ openebs:
         enabled: false
     replicated:
       mayastor:
-        enabled: true
+        enabled: false
