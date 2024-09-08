@@ -109,7 +109,7 @@ libsql-server:
   global:
     fullnameOverride: "libsql-server"
   controllers:
-    server:
+    database:
       type: statefulset
       annotations:
         reloader.stakater.com/auto: "true"
@@ -141,7 +141,7 @@ libsql-server:
 
   service:
     main:
-      controller: server
+      controller: database
       type: ClusterIP
       ports:
         http:
@@ -153,6 +153,6 @@ libsql-server:
       accessMode: ReadWriteOnce
       size: 10Gi
       advancedMounts:
-        server:
+        database:
           main:
             - path: /var/lib/sqld
