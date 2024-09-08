@@ -1,0 +1,9 @@
+apiVersion: v2
+name: minio-operator
+description: MinIO Operator for Kubernetes
+type: application
+version: 0.1.0
+dependencies:
+  - name: operator
+    repository: https://operator.min.io
+    version: 6.0.3

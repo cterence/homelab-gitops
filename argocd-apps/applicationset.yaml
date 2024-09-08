@@ -28,12 +28,14 @@ spec:
             namespace: monitoring
             serverSideApply: true
           - name: loki
+          - name: minio-operator
           - name: nextcloud
           - name: oauth2-proxy
           - name: openebs
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
+          # - name: reactive-resume
           - name: reloader
           - name: silverbullet
           - name: tailout
