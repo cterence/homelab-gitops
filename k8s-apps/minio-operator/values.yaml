@@ -100,7 +100,7 @@ operator:
     #
     # The cluster must have sufficient number of available worker nodes to fulfill the request.
     # Operator pods deploy with pod anti-affinity by default, preventing Kubernetes from scheduling multiple pods onto a single Worker node.
-    replicaCount: 2
+    replicaCount: 1
     ###
     # The Kubernetes `SecurityContext <https://kubernetes.io/docs/tasks/configure-pod-container/security-context/>`__ to use for deploying Operator resources.
     #
