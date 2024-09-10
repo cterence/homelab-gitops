@@ -24,6 +24,7 @@ spec:
           - name: homepage
           - name: httpbin
           - name: immich
+          - name: it-tools
           - name: ingress-nginx
           - name: kube-prometheus-stack
             namespace: monitoring

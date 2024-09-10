@@ -1,0 +1,10 @@
+# deployed-apps:exclude
+apiVersion: v2
+name: it-tools
+description: Collection of handy online tools for developers
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s.github.io/helm-charts
+    version: 3.4.0
