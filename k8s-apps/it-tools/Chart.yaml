@@ -1,4 +1,3 @@
-# deployed-apps:exclude
 apiVersion: v2
 name: it-tools
 description: Collection of handy online tools for developers

@@ -1,4 +1,3 @@
-# deployed-apps:exclude
 apiVersion: v2
 name: convertx
 description: Self-hosted online file converter
