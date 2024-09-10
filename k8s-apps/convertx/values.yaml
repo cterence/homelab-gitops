@@ -49,6 +49,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # nginx.ingress.kubernetes.io/proxy-body-size: 100m
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: convertx
         gethomepage.dev/description: Self-hosted online file converter
