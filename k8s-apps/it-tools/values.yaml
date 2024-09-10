@@ -24,10 +24,18 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: 80
+                  path: /
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: 80
+                  path: /
   service:
     # Configure a service for the main application
     main:
