@@ -16,6 +16,7 @@ spec:
           - name: cloudnative-pg
             namespace: cnpg-system
             serverSideApply: true
+          - name: convertx
           - name: dead-drop
           - name: external-dns
           - name: external-secrets
