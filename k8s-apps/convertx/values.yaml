@@ -54,7 +54,7 @@ app-template:
         gethomepage.dev/name: convertx
         gethomepage.dev/description: Self-hosted online file converter
         gethomepage.dev/group: Tooling
-        gethomepage.dev/icon: convertx
+        gethomepage.dev/icon: https://raw.githubusercontent.com/C4illin/ConvertX/main/src/public/favicon-32x32.png
       className: "nginx"
       hosts:
         - host: &host convert.terence.cloud
