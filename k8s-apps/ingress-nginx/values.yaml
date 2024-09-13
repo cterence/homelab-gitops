@@ -5,14 +5,6 @@ ingress-nginx:
       type: LoadBalancer
       loadBalancerIP: "192.168.1.240"
 
-      # ClusterIP for use with cloudflare tunnels
-      # type:
-
-      # type: NodePort
-      # nodePorts:
-      #   http: 30080
-      #   https: 30443
-
     config:
       allow-snippet-annotations: "true"
       proxy-body-size: "512k"
