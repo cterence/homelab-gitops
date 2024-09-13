@@ -31,8 +31,6 @@ spec:
             serverSideApply: true
           - name: loki
           - name: metallb
-            serverSideDiff: true
-            serverSideApply: true
           - name: minio-operator
           - name: nextcloud
           - name: oauth2-proxy
@@ -64,6 +62,11 @@ spec:
       destination:
         name: in-cluster
         namespace: '{{ default .name (dig "namespace" "" .) }}'
+      ignoreDifferences:
+        - group: apiextensions.k8s.io
+          kind: CustomResourceDefinition
+          jqPathExpressions:
+            - .spec.conversion.webhook.clientConfig.caBundle
       syncPolicy:
         automated:
           prune: true
