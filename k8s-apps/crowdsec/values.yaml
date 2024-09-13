@@ -480,6 +480,6 @@ crowdsec:
         # -- pullPolicy
         pullPolicy: IfNotPresent
         # -- docker image tag
-        tag: "1.28"
+        tag: "1.36"
 
   #service: {}
