@@ -6,6 +6,8 @@ metallb:
       enabled: true
     prometheusRule:
       enabled: true
+  frr:
+    enabled: false
 addressPools:
   - name: default
     autoassign: true
