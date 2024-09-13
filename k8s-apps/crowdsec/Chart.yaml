@@ -1,0 +1,9 @@
+apiVersion: v2
+name: crowdsec
+description: Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI
+type: application
+version: 0.1.0
+dependencies:
+  - name: crowdsec
+    repository: https://crowdsecurity.github.io/helm-charts
+    version: 0.12.0

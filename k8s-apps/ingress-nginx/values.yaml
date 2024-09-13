@@ -11,6 +11,8 @@ ingress-nginx:
       proxy-body-size: "512k"
       proxy-buffer-size: "512k"
       global-allowed-response-headers: "Request-Id"
+      plugins: "crowdsec"
+      lua-shared-dicts: "crowdsec_cache: 50m"
 
     metrics:
       enabled: true
@@ -29,6 +31,35 @@ ingress-nginx:
             app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
             app.kubernetes.io/instance: "{{ .Release.Name }}"
             app.kubernetes.io/component: controller
+    extraInitContainers:
+      - name: init-clone-crowdsec-bouncer
+        image: crowdsecurity/lua-bouncer-plugin
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: API_URL
+            value: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
+          - name: BOUNCER_CONFIG
+            value: "/crowdsec/crowdsec-bouncer.conf"
+        envFrom:
+          - secretRef:
+              name: crowdsec-credentials
+        command:
+          [
+            "sh",
+            "-c",
+            "sh /docker_start.sh; mkdir -p /lua_plugins/crowdsec/; cp -R /crowdsec/* /lua_plugins/crowdsec/",
+          ]
+        volumeMounts:
+          - name: crowdsec-bouncer-plugin
+            mountPath: /lua_plugins
+    extraVolumeMounts:
+      - name: crowdsec-bouncer-plugin
+        mountPath: /etc/nginx/lua/plugins/crowdsec
+        subPath: crowdsec
+    extraVolumes:
+      - name: crowdsec-bouncer-plugin
+        emptyDir: {}
+
   ingress:
     options:
       allow-snippet-annotations: "true"

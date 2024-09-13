@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: crowdsec-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: enroll-key
+    creationPolicy: Owner
+  data:
+    - secretKey: API_KEY
+      extract:
+        key: crowdsec_bouncer_nginx_api_key

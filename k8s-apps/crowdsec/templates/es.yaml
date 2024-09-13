@@ -1,0 +1,18 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: lapi-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: enroll-key
+    creationPolicy: Owner
+  data:
+    - secretKey: ENROLL_KEY
+      extract:
+        key: crowdsec_enroll_key
+    - secretKey: BOUNCER_KEY_nginx
+      extract:
+        key: crowdsec_bouncer_nginx_api_key
