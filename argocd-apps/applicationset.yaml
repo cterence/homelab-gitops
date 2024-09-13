@@ -31,6 +31,7 @@ spec:
             serverSideApply: true
           - name: loki
           - name: metallb
+            serverSideDiff: true
             serverSideApply: true
           - name: minio-operator
           - name: nextcloud
