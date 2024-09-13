@@ -9,7 +9,7 @@ spec:
     kind: ClusterSecretStore
     name: gitlab-secret-store
   target:
-    name: enroll-key
+    name: lapi-credentials
     creationPolicy: Owner
   data:
     - secretKey: ENROLL_KEY
