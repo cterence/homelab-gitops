@@ -4,6 +4,8 @@ metallb:
     namespace: monitoring
     podMonitor:
       enabled: true
+    prometheusRule:
+      enabled: true
 addressPools:
   - name: default
     autoassign: true

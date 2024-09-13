@@ -30,6 +30,7 @@ spec:
             namespace: monitoring
             serverSideApply: true
           - name: loki
+          - name: metallb
           - name: minio-operator
           - name: nextcloud
           - name: oauth2-proxy
