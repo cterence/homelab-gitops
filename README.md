@@ -43,6 +43,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes | ✅ |
 | [cilium](./scripts/../k8s-apps/cilium) | eBPF-based Networking, Security, and Observability | ❌ |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance | ✅ |
+| [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter | ✅ |
 | [crossplane](./scripts/../k8s-apps/crossplane) | The Cloud Native Control Plane | ❌ |
 | [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ✅ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
@@ -56,12 +57,13 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution | ✅ |
 | [ingress-nginx](./scripts/../k8s-apps/ingress-nginx) | Ingress-NGINX Controller for Kubernetes | ✅ |
+| [it-tools](./scripts/../k8s-apps/it-tools) | Collection of handy online tools for developers | ✅ |
 | [komoplane](./scripts/../k8s-apps/komoplane) | Crossplane Troubleshooting Tool by Komodor | ❌ |
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
 | [kubecraft](./scripts/../k8s-apps/kubecraft) | Manage your pods in Minecraft | ❌ |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
 | [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ❌ |
-| [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ❌ |
+| [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
