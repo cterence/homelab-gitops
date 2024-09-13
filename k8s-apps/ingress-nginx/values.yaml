@@ -14,6 +14,7 @@ ingress-nginx:
       plugins: "crowdsec"
       lua-shared-dicts: "crowdsec_cache: 50m"
       use-proxy-protocol: "true"
+      proxy-real-ip-cidr: "192.168.1.0/24"
 
     metrics:
       enabled: true
