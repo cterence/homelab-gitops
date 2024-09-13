@@ -3,8 +3,7 @@ kind: ExternalSecret
 metadata:
   name: lapi-credentials
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookFailed
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
