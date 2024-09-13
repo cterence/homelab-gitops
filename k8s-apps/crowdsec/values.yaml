@@ -114,7 +114,7 @@ crowdsec:
       # splunk.yaml: ""
 
   tls:
-    enabled: true
+    enabled: false
     caBundle: true
     insecureSkipVerify: true
     certManager:
