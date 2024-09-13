@@ -25,7 +25,7 @@ ingress-nginx:
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
             app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
