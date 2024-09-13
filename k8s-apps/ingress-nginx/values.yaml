@@ -13,8 +13,7 @@ ingress-nginx:
       global-allowed-response-headers: "Request-Id"
       plugins: "crowdsec"
       lua-shared-dicts: "crowdsec_cache: 50m"
-      use-proxy-protocol: "true"
-      proxy-real-ip-cidr: "192.168.1.0/24"
+      use-proxy-protocol: "false"
 
     metrics:
       enabled: true
