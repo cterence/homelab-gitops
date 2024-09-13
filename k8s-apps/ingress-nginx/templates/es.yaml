@@ -13,5 +13,5 @@ spec:
     creationPolicy: Owner
   data:
     - secretKey: API_KEY
-      extract:
+      remoteRef:
         key: crowdsec_bouncer_nginx_api_key

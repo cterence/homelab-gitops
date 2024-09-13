@@ -13,8 +13,8 @@ spec:
     creationPolicy: Owner
   data:
     - secretKey: ENROLL_KEY
-      extract:
+      remoteRef:
         key: crowdsec_enroll_key
     - secretKey: BOUNCER_KEY_nginx
-      extract:
+      remoteRef:
         key: crowdsec_bouncer_nginx_api_key
