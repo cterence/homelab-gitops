@@ -16,7 +16,7 @@ crowdsec:
       []
       # - name: ""
     # -- docker image tag
-    tag: ""
+    tag: "v1.6.3"
 
   # -- Annotations to be added to pods
   podAnnotations: {}
