@@ -80,14 +80,13 @@ crowdsec:
       # cidrs:
       # - 1.2.3.0/24
     # -- Profiles configuration (https://docs.crowdsec.net/docs/next/profiles/format/#profile-configuration-example)
-    profiles.yaml:
-      ""
-      #   |
-      #  name: default_ip_remediation
+    profiles.yaml: |
+      name: default_ip_remediation
       #  debug: true
-      #  filters:
-      #    - Alert.Remediation == true && Alert.GetScope() == "Ip"
-      #  ...
+      filters:
+        - Alert.Remediation == true && Alert.GetScope() == "Ip"
+      duration_expr: Sprintf('%dh', (GetDecisionsCount(Alert.GetValue()) + 1) * 4)
+      on_success: break
     # -- General configuration (https://docs.crowdsec.net/docs/configuration/crowdsec_configuration/#configuration-example)
     config.yaml.local:
       ""
