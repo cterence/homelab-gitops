@@ -219,7 +219,7 @@ crowdsec:
         # -- pullPolicy
         pullPolicy: IfNotPresent
         # -- docker image tag
-        tag: "v0.50.26.1"
+        tag: "v0.50.27.1"
       # -- Metabase SQLite static DB containing Dashboards
       assetURL: https://crowdsec-statics-assets.s3-eu-west-1.amazonaws.com/metabase_sqlite.zip
 
