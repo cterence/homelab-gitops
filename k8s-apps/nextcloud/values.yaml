@@ -219,6 +219,25 @@ nextcloud:
             mountPath: /import
             subPath: data/terence/files/Images
             readOnly: true
+      - name: generate-previews
+        image: nextcloud:30.0.0-apache
+        command:
+          - /bin/sh
+          - -c
+          - |
+            while true; do
+              php /data/occ preview:pre-generate
+              sleep 3600
+            done
+        securityContext:
+          runAsUser: 33
+          runAsGroup: 33
+          runAsNonRoot: true
+          readOnlyRootFilesystem: false
+        volumeMounts:
+          - name: nextcloud-main
+            mountPath: /data
+            readOnly: false
 
     # Extra mounts for the pods. Example shown is for connecting a legacy NFS volume
     # to NextCloud pods in Kubernetes. This can then be configured in External Storage
