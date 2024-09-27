@@ -251,6 +251,11 @@ nextcloud:
               secretKeyRef:
                 key: password
                 name: nextcloud-cnpg-cluster-app
+        securityContext:
+          runAsUser: 33
+          runAsGroup: 33
+          runAsNonRoot: true
+          readOnlyRootFilesystem: false
         volumeMounts:
           - mountPath: /var/www/
             name: nextcloud-main
