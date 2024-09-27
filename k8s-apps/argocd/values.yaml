@@ -56,6 +56,22 @@ argo-cd:
     env:
       - name: OC_AGENT_HOST
         value: collector.linkerd-jaeger:55678
+    extraContainers:
+      - name: lovely-plugin
+        image: ghcr.io/crumbhole/lovely:1.1.1
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /tmp
+            name: lovely-tmp
+    volumes:
+      - emptyDir: {}
+        name: lovely-tmp
 
   applicationSet:
     # FIXME: https://github.com/argoproj/argo-cd/issues/18905
