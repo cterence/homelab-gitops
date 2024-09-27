@@ -252,9 +252,27 @@ nextcloud:
                 key: password
                 name: nextcloud-cnpg-cluster-app
         volumeMounts:
-          - name: nextcloud-main
-            mountPath: /var/www/html
-            readOnly: false
+          - mountPath: /var/www/
+            name: nextcloud-main
+            subPath: root
+          - mountPath: /var/www/html
+            name: nextcloud-main
+            subPath: html
+          - mountPath: /var/www/html/data
+            name: nextcloud-main
+            subPath: data
+          - mountPath: /var/www/html/config
+            name: nextcloud-main
+            subPath: config
+          - mountPath: /var/www/html/custom_apps
+            name: nextcloud-main
+            subPath: custom_apps
+          - mountPath: /var/www/tmp
+            name: nextcloud-main
+            subPath: tmp
+          - mountPath: /var/www/html/themes
+            name: nextcloud-main
+            subPath: themes
 
     # Extra mounts for the pods. Example shown is for connecting a legacy NFS volume
     # to NextCloud pods in Kubernetes. This can then be configured in External Storage
