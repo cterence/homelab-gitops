@@ -225,8 +225,9 @@ nextcloud:
           - /bin/sh
           - -c
           - |
+            cd /data
             while true; do
-              php /data/occ preview:pre-generate
+              php occ preview:pre-generate
               sleep 3600
             done
         securityContext:
