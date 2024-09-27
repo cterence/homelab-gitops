@@ -230,6 +230,27 @@ nextcloud:
               php occ preview:pre-generate
               sleep 3600
             done
+        env:
+          - name: POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                key: host
+                name: nextcloud-cnpg-cluster-app
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                key: dbname
+                name: nextcloud-cnpg-cluster-app
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: nextcloud-cnpg-cluster-app
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: nextcloud-cnpg-cluster-app
         securityContext:
           runAsUser: 33
           runAsGroup: 33
