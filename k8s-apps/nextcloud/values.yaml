@@ -227,7 +227,7 @@ nextcloud:
           - |
             cd /var/www/html
             while true; do
-              php occ preview:pre-generate
+              php occ preview:pre-generate -vvv
               sleep 3600
             done
         env:
