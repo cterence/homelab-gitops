@@ -225,7 +225,7 @@ nextcloud:
           - /bin/sh
           - -c
           - |
-            cd /data
+            cd /var/www/html/data
             while true; do
               php occ preview:pre-generate
               sleep 3600
@@ -258,7 +258,7 @@ nextcloud:
           readOnlyRootFilesystem: false
         volumeMounts:
           - name: nextcloud-main
-            mountPath: /data
+            mountPath: /var/www/html/data
             readOnly: false
 
     # Extra mounts for the pods. Example shown is for connecting a legacy NFS volume
