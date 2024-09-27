@@ -225,7 +225,7 @@ nextcloud:
           - /bin/sh
           - -c
           - |
-            cd /var/www/html/data
+            cd /var/www/html
             while true; do
               php occ preview:pre-generate
               sleep 3600
@@ -253,7 +253,7 @@ nextcloud:
                 name: nextcloud-cnpg-cluster-app
         volumeMounts:
           - name: nextcloud-main
-            mountPath: /var/www/html/data
+            mountPath: /var/www/html
             readOnly: false
 
     # Extra mounts for the pods. Example shown is for connecting a legacy NFS volume
