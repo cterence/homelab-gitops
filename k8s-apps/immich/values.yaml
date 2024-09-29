@@ -28,7 +28,7 @@ immich:
           name: immich-cnpg-cluster-app
           key: password
     IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
-    IMMICH_LOG_LEVEL: debug
+    IMMICH_LOG_LEVEL: log
 
   immich:
     metrics:
