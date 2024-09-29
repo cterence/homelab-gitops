@@ -119,6 +119,7 @@ immich:
           # proxy-body-size is set to 0 to remove the body limit on file uploads
           nginx.ingress.kubernetes.io/proxy-body-size: "0"
           external-dns.alpha.kubernetes.io/target: home.terence.cloud
+          external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
           cert-manager.io/cluster-issuer: letsencrypt
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: "Immich"
