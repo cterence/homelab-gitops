@@ -30,7 +30,7 @@ nextcloud:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       # To circumvent cloudflare's 150MB upload limit
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-      nginx.ingress.kubernetes.io/proxy-body-size: 4G
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: letsencrypt
       # Keep this in sync with the README.md:
