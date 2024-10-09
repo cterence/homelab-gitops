@@ -63,7 +63,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
 | [kubecraft](./scripts/../k8s-apps/kubecraft) | Manage your pods in Minecraft | ❌ |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
-| [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ❌ |
+| [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ✅ |
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ✅ |
