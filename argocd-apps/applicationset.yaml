@@ -36,6 +36,7 @@ spec:
           - name: longhorn
             namespace: longhorn-system
             serverSideApply: true
+            serverSideDiff: true
           - name: metallb
           - name: minio-operator
           - name: nextcloud
