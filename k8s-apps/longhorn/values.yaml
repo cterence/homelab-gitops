@@ -7,15 +7,16 @@ longhorn:
   defaultSettings:
     backupTarget: s3://longhorn-backup-tch@eu-central-003/
     backupTargetCredentialSecret: backup-credentials
+    defaultReplicaCount: 2
 
   ingress:
     enabled: true
     ingressClassName: nginx
-    # host: longhorn.terence.cloud
+    host: longhorn.terence.cloud
     tls: true
     tlsSecret: longhorn-tls
-    # annotations:
-    #   cert-manager.io/cluster-issuer: letsencrypt
-    #   external-dns.alpha.kubernetes.io/target: home.terence.cloud
-    #   nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-    #   nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+      nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
