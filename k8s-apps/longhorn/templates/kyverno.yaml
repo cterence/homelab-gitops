@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-custom-path
+data:
+  PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-host-path-to-longhorn
+  annotations:
+    policies.kyverno.io/title: Add Environment Variables from ConfigMap
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/category: Other
+    policies.kyverno.io/description: >-
+      Longhorn invokes executables on the host system, and needs
+      to be aware of the host systems PATH. This modifies all
+      deployments such that the PATH is explicitly set to support
+      NixOS based systems.
+spec:
+  rules:
+    - name: add-env-vars
+      match:
+        resources:
+          kinds:
+            - Pod
+          namespaces:
+            - longhorn-system
+      mutate:
+        patchStrategicMerge:
+          spec:
+            initContainers:
+              - (name): "*"
+                envFrom:
+                  - configMapRef:
+                      name: longhorn-custom-path
+            containers:
+              - (name): "*"
+                envFrom:
+                  - configMapRef:
+                      name: longhorn-custom-path
