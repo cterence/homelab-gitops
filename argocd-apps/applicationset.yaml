@@ -32,6 +32,7 @@ spec:
             serverSideApply: true
           - name: loki
           - name: longhorn
+            namespace: longhorn-system
           - name: metallb
           - name: minio-operator
           - name: nextcloud
