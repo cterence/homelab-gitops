@@ -152,6 +152,7 @@ libsql-server:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
       size: 10Gi
+      storageClass: longhorn
       advancedMounts:
         database:
           main:
