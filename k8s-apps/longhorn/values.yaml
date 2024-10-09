@@ -7,8 +7,9 @@ longhorn:
     provisionerReplicaCount: 2
     resizerReplicaCount: 2
     snapshotterReplicaCount: 2
+
   persistence:
-    defaultClass: true
+    defaultClass: false
     defaultClassReplicaCount: 2
     defaultFsType: ext4
     reclaimPolicy: Delete
