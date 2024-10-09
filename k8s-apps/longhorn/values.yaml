@@ -1,8 +1,15 @@
 longhorn:
   preUpgradeChecker:
     jobEnabled: false
+
+  csi:
+    attacherReplicaCount: 2
+    provisionerReplicaCount: 2
+    resizerReplicaCount: 2
+    snapshotterReplicaCount: 2
   persistence:
     defaultClass: true
+    defaultClassReplicaCount: 2
     defaultFsType: ext4
     reclaimPolicy: Delete
 
