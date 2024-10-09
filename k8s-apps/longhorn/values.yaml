@@ -1,4 +1,6 @@
 longhorn:
+  preUpgradeChecker:
+    jobEnabled: false
   persistence:
     defaultClass: true
     defaultFsType: ext4
