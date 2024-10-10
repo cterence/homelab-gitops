@@ -15,8 +15,6 @@ longhorn:
     reclaimPolicy: Delete
 
   defaultSettings:
-    # backupTarget: s3://longhorn-backup-tch@eu-central-003/
-    # backupTargetCredentialSecret: backup-credentials
     defaultReplicaCount: 2
 
   ingress:
