@@ -2761,7 +2761,7 @@ cilium:
         image:
           override: ~
           repository: "quay.io/cilium/kvstoremesh"
-          tag: "v1.14.15"
+          tag: "v1.14.16"
           # kvstoremesh-digest
           digest: "sha256:d7137edd0efa2b1407b20088af3980a9993bb616d85bf9b55ea2891d1b99023a"
           useDigest: true
