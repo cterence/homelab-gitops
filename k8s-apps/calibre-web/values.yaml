@@ -1,4 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+# Removing Cloudflare caching was necessary, else any actions got me logged out : https://github.com/janeczku/calibre-web/issues/1466#issuecomment-1199885344
 # Configure options applied to all pods
 app-template:
   # defaultPodOptions:
