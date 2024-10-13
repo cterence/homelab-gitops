@@ -1,6 +1,6 @@
 ingress-nginx:
   controller:
-    replicaCount: 2
+    replicaCount: 1
     service:
       # Forces MetalLB to set this IP
       type: LoadBalancer
@@ -23,15 +23,10 @@ ingress-nginx:
       - name: OC_AGENT_HOST
         value: collector.linkerd-jaeger:55678
 
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
-            app.kubernetes.io/instance: "{{ .Release.Name }}"
-            app.kubernetes.io/component: controller
+    # Deploy on more powerful node homelab2
+    nodeSelector:
+      kubernetes.io/hostname: homelab2
+
     extraInitContainers:
       - name: init-clone-crowdsec-bouncer
         image: crowdsecurity/lua-bouncer-plugin
