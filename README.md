@@ -10,9 +10,10 @@
 
 ## ⚙️ Hardware
 
-| Device                    | Count | Specs                                                         | OS    | Purpose                  |
-| ------------------------- | ----- | ------------------------------------------------------------- | ----- | ------------------------ |
-| Lenovo ThinkCentre M75q-1 | 1     | Ryzen 5 Pro 3400GE + 16GB RAM + 512GB NVMe SSD + 1TB SATA SSD | NixOS | k8s master & worker node |
+| Device                    | Specs                                                         | OS    | Purpose                  |
+| ------------------------- | ------------------------------------------------------------- | ----- | ------------------------ |
+| Lenovo ThinkCentre M75q-1 | Ryzen 5 Pro 3400GE + 16GB RAM + 512GB NVMe SSD + 1TB SATA SSD | NixOS | k8s master & worker node |
+| Lenovo ThinkCentre M75q-2 | Ryzen 5 Pro 5650GE + 16GB RAM + 256GB NVMe SSD                | NixOS | k8s worker node          |
 
 To access my apps, I expose them directly on the internet with port-forwarding on my router.
 
