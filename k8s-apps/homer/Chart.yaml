@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: homer
     repository: https://djjudas21.github.io/charts/
-    version: 8.1.13
+    version: 8.1.15
