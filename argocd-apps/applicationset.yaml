@@ -30,8 +30,8 @@ spec:
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
-          - name: kyverno
-            serverSideApply: true
+          # - name: kyverno
+          #   serverSideApply: true
           - name: loki
           - name: longhorn
             namespace: longhorn-system
