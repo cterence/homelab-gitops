@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: immich
     repository: https://immich-app.github.io/immich-charts
-    version: 0.8.1
+    version: 0.8.2
   - name: cluster
     alias: cnpg-cluster
     repository: file://../cnpg-cluster
