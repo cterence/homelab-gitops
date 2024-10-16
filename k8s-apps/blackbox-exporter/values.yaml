@@ -113,7 +113,7 @@ prometheus-blackbox-exporter:
         url: http://httpbin.httpbin:8080/health
         module: http_2xx
       - name: immich
-        url: https://immich.terence.cloud/api/server-info/ping
+        url: https://immich.terence.cloud/api/server/ping
         module: http_2xx
       - name: ingress-nginx
         url: http://ingress-nginx-controller.ingress-nginx/healthz
