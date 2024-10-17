@@ -9,7 +9,7 @@ homer:
     # -- image repository
     repository: b4bz/homer
     # @default -- chart.appVersion
-    tag: v24.05.1
+    tag: v24.10.1
     # -- image pull policy
     pullPolicy: IfNotPresent
 
