@@ -9,7 +9,7 @@ longhorn:
     snapshotterReplicaCount: 2
 
   persistence:
-    defaultClass: false
+    defaultClass: true
     defaultClassReplicaCount: 2
     defaultFsType: ext4
     reclaimPolicy: Retain

@@ -24,7 +24,7 @@ openebs:
       name: openebs-hostpath
       basePath: "/mnt/mx500/k8s/openebs/local"
       reclaimPolicy: Retain
-      isDefaultClass: true
+      isDefaultClass: false
 
   zfs-localpv:
     enabled: false
