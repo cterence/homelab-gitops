@@ -47,13 +47,6 @@ loki:
     affinity:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution: []
-    extraVolumeMounts:
-      - name: old-vol
-        mountPath: /mnt/old
-    extraVolumes:
-      - name: old-vol
-        persistentVolumeClaim:
-          claimName: source-pvc
 
   backend:
     replicas: 0
