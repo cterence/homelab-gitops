@@ -16,6 +16,7 @@ longhorn:
 
   defaultSettings:
     defaultReplicaCount: 2
+    backupTarget: s3://longhorn-backup-tch@eu-central-003
     backupTargetCredentialSecret: backup-credentials
 
   ingress:
