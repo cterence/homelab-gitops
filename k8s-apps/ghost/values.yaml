@@ -100,7 +100,7 @@ ghost:
   ##    maxUnavailable: 25%
   ##
   updateStrategy:
-    type: RollingUpdate
+    type: Recreate
   ## @param priorityClassName Ghost pod priority class name
   ##
   priorityClassName: ""
