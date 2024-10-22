@@ -16,6 +16,7 @@ longhorn:
 
   defaultSettings:
     defaultReplicaCount: 2
+    backupTargetCredentialSecret: backup-credentials
 
   ingress:
     enabled: true
