@@ -706,6 +706,5 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
-    postgresql: {}
     initdb:
       database: vaultwarden

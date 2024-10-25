@@ -203,10 +203,5 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
-    postgresql:
-      parameters: {}
-      pg_hba: []
-      pg_ident: []
-      shared_preload_libraries: []
     initdb:
       database: paperless-ngx
