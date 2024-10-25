@@ -171,9 +171,9 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
-    sharedPreloadLibraries:
-      - "vectors.so"
     postgresql:
+      shared_preload_libraries:
+        - "vectors.so"
     initdb:
       database: immich
       postInitSQL:
