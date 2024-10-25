@@ -74,6 +74,12 @@ spec:
           kind: CustomResourceDefinition
           jqPathExpressions:
             - .spec.conversion.webhook.clientConfig.caBundle
+        # FIXME: https://github.com/cloudnative-pg/charts/issues/426
+        - group: postgresql.cnpg.io
+          kind: Cluster
+          jqPathExpressions:
+            - .spec.postgresql.pg_hba
+            - .spec.postgresql.pg_ident
       syncPolicy:
         automated:
           prune: true
