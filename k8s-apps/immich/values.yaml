@@ -141,7 +141,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
-      tag: v1.118.2
+      tag: v1.119.0
     env:
       TRANSFORMERS_CACHE: /cache
     persistence:
