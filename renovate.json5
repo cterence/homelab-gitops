@@ -9,12 +9,22 @@
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
   packageRules: [
+    // Auto-merge patches
     {
       matchUpdateTypes: [
         "pin",
         "digest",
         "patch",
-        "minor"
+      ],
+      ignoreTests: true,
+      automerge: true,
+      automergeType: "branch"
+    },
+    // Auto-merge non-0ver minor version updates
+    {
+      matchCurrentVersion: ">=1.0.0",
+      matchUpdateTypes: [
+        "minor",
       ],
       ignoreTests: true,
       automerge: true,
@@ -27,6 +37,6 @@
     {
       matchDatasources: ["docker"],
       commitMessageTopic: "image {{depName}}"
-    }
+    },
   ]
 }
