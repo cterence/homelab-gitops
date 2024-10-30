@@ -9,23 +9,18 @@
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
   packageRules: [
-    // Auto-merge patches
+    // Only update during week-ends
     {
-      matchUpdateTypes: [
-        "pin",
-        "digest",
-        "patch",
-      ],
-      ignoreTests: true,
-      automerge: true,
-      automergeType: "branch"
+      matchPackageNames: ["*"],
+      schedule: "before 8:00 am on saturday"
     },
-    // Auto-merge non-0ver minor version updates
+    // Auto-merge non-0ver minors, auto-merge all patches
     {
-      matchCurrentVersion: ">=1.0.0",
       matchUpdateTypes: [
-        "minor",
+        "patch",
+        "minor"
       ],
+      "matchCurrentVersion": "!/^0/",
       ignoreTests: true,
       automerge: true,
       automergeType: "branch"
