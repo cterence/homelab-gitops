@@ -376,7 +376,7 @@ velero:
         accessMode: ReadWrite
         config:
           path: /velero
-          server: nfs-server-provisioner.nfs-server-provisioner
+          server: 10.110.178.31
         # annotations allows adding arbitrary annotations to this BackupStorageLocation resource. Optional.
         annotations: {}
 

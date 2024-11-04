@@ -27,7 +27,7 @@ nfs-server-provisioner:
     # rquotadNodePort:
     # rpcbindNodePort:
     # statdNodePort:
-    # clusterIP:
+    clusterIP: 10.110.178.31
 
     externalIPs: []
 
