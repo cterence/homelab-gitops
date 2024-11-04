@@ -375,7 +375,7 @@ velero:
         # default to ReadWrite, ReadOnly is used during migrations and restores.
         accessMode: ReadWrite
         config:
-          path: /velero
+          path: /
           server: 10.110.178.31
         # annotations allows adding arbitrary annotations to this BackupStorageLocation resource. Optional.
         annotations: {}
