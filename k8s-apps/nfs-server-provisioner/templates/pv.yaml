@@ -11,7 +11,7 @@ spec:
     path: /mnt/elements/nfs-server-provisioner
   claimRef:
     namespace: nfs-server-provisioner
-    name: data
+    name: data-nfs-server-provisioner-0
   nodeAffinity:
     required:
       nodeSelectorTerms:
