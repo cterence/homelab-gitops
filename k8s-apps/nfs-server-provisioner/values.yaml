@@ -75,9 +75,11 @@ nfs-server-provisioner:
     parameters: {}
 
     mountOptions:
-      - vers=3
-      - retrans=2
-      - timeo=30
+      - tcp
+      - nfsvers=4.1
+      - soft
+      - retrans=2 # try retransmitting maximum 2 times
+      - timeo=10 # timeout after 10 seconds
 
     ## ReclaimPolicy field of the class, which can be either Delete or Retain
     reclaimPolicy: Retain
