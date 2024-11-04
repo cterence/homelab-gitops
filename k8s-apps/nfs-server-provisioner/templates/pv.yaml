@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: data
+spec:
+  capacity:
+    storage: 900Gi
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /mnt/elements/nfs-server-provisioner
+  claimRef:
+    namespace: nfs-server-provisioner
+    name: data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+          operator: In
+          values:
+            - homelab2

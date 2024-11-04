@@ -1,0 +1,9 @@
+apiVersion: v2
+name: nfs-server-provisioner
+description: Quickly & easily deploy shared storage that works almost anywhere
+type: application
+version: 0.1.0
+dependencies:
+  - name: nfs-server-provisioner
+    repository: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner
+    version: 1.8.0

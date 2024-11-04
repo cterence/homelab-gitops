@@ -40,6 +40,7 @@ spec:
           - name: metallb
           - name: minio-operator
           - name: nextcloud
+          - name: nfs-server-provisioner
           - name: oauth2-proxy
           - name: openebs
           - name: opentelemetry-collector
