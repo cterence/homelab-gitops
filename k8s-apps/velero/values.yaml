@@ -113,6 +113,12 @@ velero:
       volumeMounts:
         - mountPath: /target
           name: plugins
+    - name: local-volume-provider
+      image: replicated/local-volume-provider:v0.3.3
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
 
   # SecurityContext to use for the Velero deployment. Optional.
   # Set fsGroup for `AWS IAM Roles for Service Accounts`
