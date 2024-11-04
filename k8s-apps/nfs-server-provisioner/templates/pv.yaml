@@ -17,6 +17,6 @@ spec:
       nodeSelectorTerms:
         - matchExpressions:
           - key: kubernetes.io/hostname
-          operator: In
-          values:
-            - homelab2
+            operator: In
+            values:
+              - homelab2
