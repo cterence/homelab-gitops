@@ -15,7 +15,7 @@ app-template:
             tag: v2.2.3
           env:
             TZ: Europe/Paris
-            NFS_EXPORT_0: "/elements *(rw,async,no_subtree_check)"
+            NFS_EXPORT_0: "/elements *(rw,async,no_subtree_check,fsid=0)"
             NFS_DISABLE_VERSION_3: "true"
             NFS_LOG_LEVEL: DEBUG
           securityContext:
