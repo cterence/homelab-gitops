@@ -19,6 +19,7 @@ app-template:
             NFS_DISABLE_VERSION_3: "true"
             NFS_LOG_LEVEL: DEBUG
           securityContext:
+            privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
           ports:
