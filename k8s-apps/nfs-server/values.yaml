@@ -25,11 +25,17 @@ app-template:
               containerPort: 2049
           probes:
             liveness:
-              enabled: false
-              type: HTTP
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 2049
             readiness:
-              enabled: false
-              type: HTTP
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 2049
   service:
     # Configure a service for the main application
     main:
