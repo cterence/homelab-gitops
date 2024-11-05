@@ -15,7 +15,8 @@ app-template:
             tag: v2.2.3
           env:
             TZ: Europe/Paris
-            NFS_EXPORT_0: "/elements (rw,no_subtree_check)"
+            NFS_EXPORT_0: "/elements *(rw,no_subtree_check)"
+            NFS_DISABLE_VERSION_3: "true"
           securityContext:
             capabilities:
               add: ["SYS_ADMIN"]
