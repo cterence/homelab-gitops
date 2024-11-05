@@ -70,7 +70,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
-| [nfs-server-provisioner](./scripts/../k8s-apps/nfs-server-provisioner) | Quickly & easily deploy shared storage that works almost anywhere | ✅ |
+| [nfs-server-provisioner](./scripts/../k8s-apps/nfs-server-provisioner) | Quickly & easily deploy shared storage that works almost anywhere | ❌ |
 | [ntfy](./scripts/../k8s-apps/ntfy) | Send push notifications to your phone or desktop using PUT/POST | ❌ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
 | [openebs](./scripts/../k8s-apps/openebs) | Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes | ✅ |
