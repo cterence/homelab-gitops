@@ -16,6 +16,9 @@ app-template:
           env:
             TZ: Europe/Paris
             NFS_EXPORT_0: "/elements (rw,no_subtree_check)"
+          securityContext:
+            capabilities:
+              add: ["SYS_ADMIN"]
           ports:
             - name: nfs
               containerPort: 2049
