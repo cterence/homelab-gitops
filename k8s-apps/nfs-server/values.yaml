@@ -41,6 +41,7 @@ app-template:
     main:
       controller: main
       type: ClusterIP
+      clusterIP: 10.100.10.21
       ports:
         nfs:
           port: 2049
