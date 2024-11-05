@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  controllers:
+    # Configure the main controller
+    main:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        # Configure the main application container
+        main:
+          image:
+            repository: ghcr.io/obeone/nfs-server
+            tag: v2.2.3
+          env:
+            TZ: Europe/Paris
+            NFS_EXPORT_0: "/elements (rw,no_subtree_check)"
+          ports:
+            - name: nfs
+              containerPort: 2049
+          probes:
+            liveness:
+              enabled: false
+              type: HTTP
+            readiness:
+              enabled: false
+              type: HTTP
+  service:
+    # Configure a service for the main application
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        nfs:
+          port: 2049
+
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 900Gi
+      storageClass: "-"
+      globalMounts:
+        - path: /elements

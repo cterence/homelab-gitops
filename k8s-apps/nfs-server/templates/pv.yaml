@@ -1,17 +1,17 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: data
+  name: nfs-server-data
 spec:
   capacity:
     storage: 900Gi
   accessModes:
     - ReadWriteOnce
   local:
-    path: /mnt/elements/nfs-server-provisioner
+    path: /mnt/elements/nfs-server
   claimRef:
-    namespace: nfs-server-provisioner
-    name: data-nfs-server-provisioner-0
+    namespace: nfs-server
+    name: nfs-server-data
   nodeAffinity:
     required:
       nodeSelectorTerms:
