@@ -113,12 +113,12 @@ velero:
       volumeMounts:
         - mountPath: /target
           name: plugins
-    - name: local-volume-provider
-      image: replicated/local-volume-provider:v0.3.3
-      imagePullPolicy: IfNotPresent
-      volumeMounts:
-        - mountPath: /target
-          name: plugins
+    # - name: local-volume-provider
+    #   image: replicated/local-volume-provider:v0.3.3
+    #   imagePullPolicy: IfNotPresent
+    #   volumeMounts:
+    #     - mountPath: /target
+    #       name: plugins
 
   # SecurityContext to use for the Velero deployment. Optional.
   # Set fsGroup for `AWS IAM Roles for Service Accounts`
@@ -358,27 +358,27 @@ velero:
           s3ForcePathStyle: true
           s3Url: https://s3.eu-central-003.backblazeb2.com
           checksumAlgorithm: ""
-      - name: nfs
-        # provider is the name for the backup storage location provider.
-        provider: replicated.com/nfs
-        # bucket is the name of the bucket to store backups in. Required.
-        bucket: nfs-snapshots
-        # caCert defines a base64 encoded CA bundle to use when verifying TLS connections to the provider. Optional.
-        caCert:
-        # prefix is the directory under which all Velero data should be stored within the bucket. Optional.
-        prefix: ""
-        # default indicates this location is the default backup storage location. Optional.
-        default: false
-        # validationFrequency defines how frequently Velero should validate the object storage. Optional.
-        validationFrequency:
-        # accessMode determines if velero can write to this backup storage location. Optional.
-        # default to ReadWrite, ReadOnly is used during migrations and restores.
-        accessMode: ReadWrite
-        config:
-          path: /
-          server: 10.110.178.31
-        # annotations allows adding arbitrary annotations to this BackupStorageLocation resource. Optional.
-        annotations: {}
+      # - name: nfs
+      #   # provider is the name for the backup storage location provider.
+      #   provider: replicated.com/nfs
+      #   # bucket is the name of the bucket to store backups in. Required.
+      #   bucket: nfs-snapshots
+      #   # caCert defines a base64 encoded CA bundle to use when verifying TLS connections to the provider. Optional.
+      #   caCert:
+      #   # prefix is the directory under which all Velero data should be stored within the bucket. Optional.
+      #   prefix: ""
+      #   # default indicates this location is the default backup storage location. Optional.
+      #   default: false
+      #   # validationFrequency defines how frequently Velero should validate the object storage. Optional.
+      #   validationFrequency:
+      #   # accessMode determines if velero can write to this backup storage location. Optional.
+      #   # default to ReadWrite, ReadOnly is used during migrations and restores.
+      #   accessMode: ReadWrite
+      #   config:
+      #     path: /
+      #     server: 10.110.178.31
+      #   # annotations allows adding arbitrary annotations to this BackupStorageLocation resource. Optional.
+      #   annotations: {}
 
     # Parameters for the VolumeSnapshotLocation(s). Configure multiple by adding other element(s) to the volumeSnapshotLocation slice.
     # See https://velero.io/docs/v1.6/api-types/volumesnapshotlocation/
