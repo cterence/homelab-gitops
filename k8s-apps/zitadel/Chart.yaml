@@ -10,4 +10,4 @@ dependencies:
     condition: zitadel.enabled
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 16.1.0
+    version: 16.1.2
