@@ -9,11 +9,6 @@
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
   packageRules: [
-    // Only update during week-ends
-    {
-      matchPackageNames: ["*"],
-      schedule: "before 8:00 am on saturday"
-    },
     // Auto-merge non-0ver minors, auto-merge all patches
     {
       matchUpdateTypes: [
