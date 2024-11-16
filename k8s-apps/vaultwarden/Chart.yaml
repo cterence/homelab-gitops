@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: vaultwarden
     repository: https://guerzon.github.io/vaultwarden
-    version: 0.29.3
+    version: 0.29.4
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
