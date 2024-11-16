@@ -189,6 +189,7 @@ redis:
 cnpg-cluster:
   type: postgresql
   mode: standalone
+  enablePDB: false
   cluster:
     instances: 1
     imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
