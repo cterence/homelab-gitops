@@ -189,6 +189,7 @@ redis:
 cnpg-cluster:
   type: postgresql
   mode: standalone
+  enablePDB: false
   cluster:
     enablePDB: false
     instances: 1
