@@ -183,6 +183,8 @@ redis:
       enabled: true
   replica:
     replicaCount: 0
+    pdb:
+      create: false
 
 cnpg-cluster:
   type: postgresql
