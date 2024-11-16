@@ -18,6 +18,8 @@ longhorn:
     defaultReplicaCount: 2
     backupTarget: s3://longhorn-backup-tch@eu-central-003/v1/
     backupTargetCredentialSecret: backup-credentials
+    storageMinimalAvailablePercentage: "10"
+    storageReservedPercentageForDefaultDisk: "10"
 
   ingress:
     enabled: true
