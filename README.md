@@ -50,7 +50,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ✅ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
-| [ghost](./scripts/../k8s-apps/ghost) | Independent platform for publishing online by web and email newsletter | ✅ |
+| [ghost](./scripts/../k8s-apps/ghost) | Independent platform for publishing online by web and email newsletter | ❌ |
 | [gitlab-runner](./scripts/../k8s-apps/gitlab-runner) | Run your CI/CD jobs and send the results back to GitLab | ❌ |
 | [gotify](./scripts/../k8s-apps/gotify) | A simple server for sending and receiving messages in real-time per WebSocket | ❌ |
 | [headscale](./scripts/../k8s-apps/headscale) | An open source, self-hosted implementation of the Tailscale control server | ❌ |
