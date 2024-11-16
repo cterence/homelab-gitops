@@ -114,7 +114,7 @@ velero:
         - mountPath: /target
           name: plugins
     - name: local-volume-provider
-      image: replicated/local-volume-provider:v0.3.3
+      image: replicated/local-volume-provider:v0.6.7
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
