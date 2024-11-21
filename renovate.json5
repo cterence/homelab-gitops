@@ -9,13 +9,21 @@
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
   packageRules: [
-    // Auto-merge non-0ver minors, auto-merge all patches
+    // Auto-merge non-0ver minors
+    {
+      matchUpdateTypes: [
+        "minor"
+      ],
+      matchCurrentVersion: "!/^0/",
+      ignoreTests: true,
+      automerge: true,
+      automergeType: "branch"
+    },
+    // Auto-merge all patches
     {
       matchUpdateTypes: [
         "patch",
-        "minor"
       ],
-      "matchCurrentVersion": "!/^0/",
       ignoreTests: true,
       automerge: true,
       automergeType: "branch"
