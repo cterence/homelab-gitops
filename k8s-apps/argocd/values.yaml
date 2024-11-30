@@ -323,7 +323,7 @@ argo-cd:
         - description: Application syncing has succeeded
           send:
           - app-sync-succeeded
-          when: app.status.operationState.phase in ['Succeeded']
+          when: app.status.operationState.phase in ['Succeeded'] and app.metadata.name != 'crowdsec'
 
       defaultTriggers: |
         - on-sync-status-unknown
