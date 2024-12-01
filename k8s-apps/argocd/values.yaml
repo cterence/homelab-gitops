@@ -58,7 +58,7 @@ argo-cd:
         value: collector.linkerd-jaeger:55678
     extraContainers:
       - name: lovely-plugin
-        image: ghcr.io/crumbhole/lovely:1.1.1
+        image: ghcr.io/crumbhole/lovely:1.2.0
         securityContext:
           runAsNonRoot: true
           runAsUser: 999
