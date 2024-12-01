@@ -230,37 +230,27 @@ vaultwarden:
 
   ## @section Persistent data configuration
   ##
-  storage:
-    ## @param existingVolumeClaim If defined, the values here will be used for the data and
-    ## attachments PV's. The custom values for data and attachments will be ignored if
-    ## a value is set here
-    ##
-    existingVolumeClaim:
-      {}
-      # claimName: "vaultwarden-pvc"
-      # dataPath: "/data"
-      # attachmentsPath: /data/attachments
 
-    ## @param data Data directory configuration, refer to values.yaml for parameters.
-    ##
-    data:
-      name: "vaultwarden-data"
-      size: "5Gi"
-      class: ""
-      path: "/data"
-      accessMode: "ReadWriteOnce"
-      keepPvc: true
+  ## @param data Data directory configuration, refer to values.yaml for parameters.
+  ##
+  data:
+    name: "vaultwarden-data"
+    size: "5Gi"
+    class: ""
+    path: "/data"
+    accessMode: "ReadWriteOnce"
+    keepPvc: true
 
-    ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
-    ## By default, attachments/ is located inside the data directory.
-    ##
-    attachments:
-      name: "vaultwarden-files"
-      size: "10Gi"
-      class: ""
-      path: /files
-      accessMode: "ReadWriteOnce"
-      keepPvc: true
+  ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
+  ## By default, attachments/ is located inside the data directory.
+  ##
+  attachments:
+    name: "vaultwarden-files"
+    size: "10Gi"
+    class: ""
+    path: /files
+    accessMode: "ReadWriteOnce"
+    keepPvc: true
 
   ## @param webVaultEnabled Enable Web Vault
   ##
