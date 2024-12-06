@@ -92,3 +92,4 @@ zigbee2mqtt:
               ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: "auto"
               ZIGBEE2MQTT_CONFIG_MQTT_USER: ""
               ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD: ""
+  TZ: Europe/Paris

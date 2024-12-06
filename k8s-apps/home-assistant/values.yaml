@@ -178,3 +178,4 @@ home-assistant:
       integrations:
         traefik:
           enabled: false
+  TZ: Europe/Paris

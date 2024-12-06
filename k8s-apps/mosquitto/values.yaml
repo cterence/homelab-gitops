@@ -86,3 +86,4 @@ mosquitto:
   portal:
     open:
       enabled: false
+  TZ: Europe/Paris
