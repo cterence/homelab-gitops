@@ -94,3 +94,6 @@ zigbee2mqtt:
               ZIGBEE2MQTT_CONFIG_MQTT_USER: ""
               ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD: ""
   TZ: Europe/Paris
+  podOptions:
+    nodeSelector:
+      kubernetes.io/hostname: "homelab2"
