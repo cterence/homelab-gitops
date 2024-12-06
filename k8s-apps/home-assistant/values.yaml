@@ -179,3 +179,9 @@ home-assistant:
         traefik:
           enabled: false
   TZ: Europe/Paris
+  resources:
+    limits:
+      cpu: 200m
+    requests:
+      cpu: 100m
+      memory: 250Mi
