@@ -54,6 +54,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [gitlab-runner](./scripts/../k8s-apps/gitlab-runner) | Run your CI/CD jobs and send the results back to GitLab | ❌ |
 | [gotify](./scripts/../k8s-apps/gotify) | A simple server for sending and receiving messages in real-time per WebSocket | ❌ |
 | [headscale](./scripts/../k8s-apps/headscale) | An open source, self-hosted implementation of the Tailscale control server | ❌ |
+| [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
 | [homepage](./scripts/../k8s-apps/homepage) | A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations | ✅ |
 | [homer](./scripts/../k8s-apps/homer) | A very simple static homepage for your server | ❌ |
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
@@ -69,6 +70,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ✅ |
+| [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [nfs-server](./scripts/../k8s-apps/nfs-server) | Lightweight, robust, flexible, and containerized NFS server | ❌ |
 | [ntfy](./scripts/../k8s-apps/ntfy) | Send push notifications to your phone or desktop using PUT/POST | ❌ |
@@ -87,6 +89,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
 | [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes | ✅ |
 | [velero-ui](./scripts/../k8s-apps/velero-ui) | A UI for Velero | ❌ |
+| [zigbee2mqtt](./scripts/../k8s-apps/zigbee2mqtt) | Zigbee to MQTT bridge | ❌ |
 | [zitadel](./scripts/../k8s-apps/zitadel) | Identity infrastructure, simplified for you | ❌ |
 <!-- END deployed-apps -->
 
