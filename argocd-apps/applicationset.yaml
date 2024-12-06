@@ -84,6 +84,10 @@ spec:
           jqPathExpressions:
             - .spec.postgresql.pg_hba
             - .spec.postgresql.pg_ident
+        - group: apps
+          kind: Deployment
+          jqPathExpressions:
+            - .spec.template.spec.hostUsers
       syncPolicy:
         automated:
           prune: true
