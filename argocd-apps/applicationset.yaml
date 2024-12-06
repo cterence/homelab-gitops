@@ -22,6 +22,7 @@ spec:
           - name: external-dns
           - name: external-secrets
           # - name: ghost
+          - name: home-assistant
           - name: homepage
           - name: httpbin
           - name: immich
@@ -39,6 +40,7 @@ spec:
             serverSideDiff: true
           - name: metallb
           - name: minio-operator
+          - name: mosquitto
           - name: nextcloud
           # - name: nfs-server
           - name: oauth2-proxy
@@ -53,6 +55,7 @@ spec:
           - name: tailscale-operator
           - name: vaultwarden
           - name: velero
+          # - name: zigbee2mqtt
 
   template:
     metadata:
