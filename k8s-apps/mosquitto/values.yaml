@@ -1,3 +1,4 @@
+# https://github.com/truecharts/public/blob/master/charts/library/common/values.yaml
 mosquitto:
   image:
     repository: eclipse-mosquitto
