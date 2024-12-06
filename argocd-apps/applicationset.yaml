@@ -41,7 +41,6 @@ spec:
           - name: metallb
           - name: minio-operator
           - name: mosquitto
-            serverSideApply: true
           - name: nextcloud
           # - name: nfs-server
           - name: oauth2-proxy
