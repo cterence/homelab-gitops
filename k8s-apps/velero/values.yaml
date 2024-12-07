@@ -639,6 +639,7 @@ velero:
         storageLocation: default
         includedNamespaces:
           - calibre-web
+          - home-assistant
           - immich
           - nextcloud
           - paperless-ngx
