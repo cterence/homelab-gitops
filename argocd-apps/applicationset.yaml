@@ -55,7 +55,7 @@ spec:
           - name: tailscale-operator
           - name: vaultwarden
           - name: velero
-          # - name: zigbee2mqtt
+          - name: zigbee2mqtt
 
   template:
     metadata:
