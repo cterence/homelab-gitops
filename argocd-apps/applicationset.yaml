@@ -50,7 +50,7 @@ spec:
           - name: paperless-ngx
           # - name: reactive-resume
           - name: reloader
-          - name: silverbullet
+          # - name: silverbullet
           - name: tailout
           - name: tailscale-operator
           - name: vaultwarden
