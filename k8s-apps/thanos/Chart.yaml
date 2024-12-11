@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: thanos
     repository: https://charts.bitnami.com/bitnami
-    version: 15.8.5
+    version: 15.9.0
