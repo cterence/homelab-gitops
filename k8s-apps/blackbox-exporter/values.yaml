@@ -103,9 +103,6 @@ prometheus-blackbox-exporter:
       - name: calibre-web
         url: https://calibre.terence.cloud
         module: http_2xx
-      - name: dead-drop
-        url: https://dead-drop.terence.cloud/health
-        module: http_2xx
       - name: grafana
         url: http://kube-prometheus-stack-grafana.monitoring/api/health
         module: http_2xx
@@ -126,9 +123,6 @@ prometheus-blackbox-exporter:
         module: http_2xx
       - name: paperless
         url: http://paperless-ngx.paperless-ngx:8000
-        module: http_2xx
-      - name: tailout
-        url: http://tailout.tailout:3000/health
         module: http_2xx
       - name: vaultwarden
         url: https://bw.terence.cloud/alive
