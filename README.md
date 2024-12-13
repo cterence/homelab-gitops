@@ -47,7 +47,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter | ✅ |
 | [crossplane](./scripts/../k8s-apps/crossplane) | The Cloud Native Control Plane | ❌ |
 | [crowdsec](./scripts/../k8s-apps/crowdsec) | Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI | ✅ |
-| [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ✅ |
+| [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ❌ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
 | [ghost](./scripts/../k8s-apps/ghost) | Independent platform for publishing online by web and email newsletter | ❌ |
@@ -69,13 +69,13 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ✅ |
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
-| [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ✅ |
+| [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ❌ |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [nfs-server](./scripts/../k8s-apps/nfs-server) | Lightweight, robust, flexible, and containerized NFS server | ❌ |
 | [ntfy](./scripts/../k8s-apps/ntfy) | Send push notifications to your phone or desktop using PUT/POST | ❌ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
-| [openebs](./scripts/../k8s-apps/openebs) | Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes | ✅ |
+| [openebs](./scripts/../k8s-apps/openebs) | Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes | ❌ |
 | [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
@@ -83,7 +83,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [qbittorrent](./scripts/../k8s-apps/qbittorrent) | qBittorrent BitTorrent client | ❌ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [silverbullet](./scripts/../k8s-apps/silverbullet) | Note-taking application optimized for people with a hacker mindset | ❌ |
-| [tailout](./scripts/../k8s-apps/tailout) | Spawn an exit node for your tailnet anywhere | ✅ |
+| [tailout](./scripts/../k8s-apps/tailout) | Spawn an exit node for your tailnet anywhere | ❌ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
 | [thanos](./scripts/../k8s-apps/thanos) | Highly available Prometheus setup with long term storage capabilities | ❌ |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
