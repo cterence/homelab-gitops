@@ -18,7 +18,7 @@ spec:
             serverSideApply: true
           - name: convertx
           - name: crowdsec
-          - name: dead-drop
+          # - name: dead-drop
           - name: external-dns
           - name: external-secrets
           # - name: ghost
@@ -39,19 +39,19 @@ spec:
             serverSideApply: true
             serverSideDiff: true
           - name: metallb
-          - name: minio-operator
+          # - name: minio-operator
           - name: mosquitto
           - name: nextcloud
           # - name: nfs-server
           - name: oauth2-proxy
-          - name: openebs
+          # - name: openebs
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
           # - name: reactive-resume
           - name: reloader
           # - name: silverbullet
-          - name: tailout
+          # - name: tailout
           - name: tailscale-operator
           - name: vaultwarden
           - name: velero
