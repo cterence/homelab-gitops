@@ -13,10 +13,9 @@ app-template:
   controllers:
     # Configure the main controller
     main:
-      type: deployment
+      type: statefulset
       annotations:
         reloader.stakater.com/auto: "true"
-
       containers:
         # Configure the main application container
         main:
@@ -39,6 +38,14 @@ app-template:
           #   readiness:
           #     enabled: true
           #     type: HTTP
+      statefulset:
+        volumeClaimTemplates:
+          - name: config
+            accessMode: ReadWriteOnce
+            size: 100Gi
+            globalMounts:
+              - path: /config
+
   service:
     # Configure a service for the main application
     main:
@@ -79,12 +86,3 @@ app-template:
   #       - secretName: _subdomain_-tls
   #         hosts:
   #           - *host
-
-  persistence:
-    config:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 100Gi
-      globalMounts:
-        - path: /config
