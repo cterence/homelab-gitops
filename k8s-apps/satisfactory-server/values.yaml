@@ -31,13 +31,29 @@ app-template:
             - name: stsf-tcp
               containerPort: 7777
               protocol: TCP
-          # probes:
-          #   liveness:
-          #     enabled: true
-          #     type: HTTP
-          #   readiness:
-          #     enabled: true
-          #     type: HTTP
+          probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 7777
+                initialDelaySeconds: 120
+                timeoutSeconds: 1
+                periodSeconds: 5
+                failureThreshold: 30
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 7777
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 7777
       statefulset:
         volumeClaimTemplates:
           - name: config
