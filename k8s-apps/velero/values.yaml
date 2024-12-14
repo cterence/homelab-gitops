@@ -643,6 +643,7 @@ velero:
           - immich
           - nextcloud
           - paperless-ngx
+          - satisfactory-server
           - vaultwarden
         includedResources:
           - po
