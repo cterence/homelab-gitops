@@ -36,7 +36,7 @@ app-template:
               enabled: true
               custom: true
               spec:
-                initialDelaySeconds: 120
+                initialDelaySeconds: 60
                 timeoutSeconds: 1
                 periodSeconds: 5
                 failureThreshold: 30
@@ -88,13 +88,43 @@ app-template:
               spec:
                 httpGet:
                   port: 9772
+        sftp:
+          image:
+            repository: atmoz/sftp
+            tag: latest
+          env:
+            TZ: Europe/Paris
+          args:
+            - "satisfactory:$5$QXWaERQfCbhenZUo$gmFbTEx0oHuFTeYR1VM9cKNSfbs5o8MFFq9sioFOp14:e:1000:1000"
+          ports:
+            - name: sftp
+              containerPort: 22
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 22
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 22
       statefulset:
         volumeClaimTemplates:
           - name: config
             accessMode: ReadWriteOnce
             size: 100Gi
-            globalMounts:
-              - path: /config
+            advancedMounts:
+              main:
+                - path: /config
+              exporter:
+                - path: /config
+                  readOnly: true
+              sftp:
+                - path: /home/satisfactory/satisfactory
 
   service:
     # Configure a service for the main application
@@ -114,6 +144,13 @@ app-template:
       ports:
         metrics:
           port: 9772
+    sftp:
+      controller: main
+      type: LoadBalancer
+      ports:
+        sftp:
+          targetPort: sftp
+          port: 2222
 
   # ingress:
   #   # Configure an Ingress for the main application
