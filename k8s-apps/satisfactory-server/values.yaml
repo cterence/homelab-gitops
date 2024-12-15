@@ -74,17 +74,30 @@ app-template:
             - name: metrics
               containerPort: 9000
           probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                initialDelaySeconds: 60
+                timeoutSeconds: 1
+                periodSeconds: 5
+                failureThreshold: 30
+                httpGet:
+                  path: /metrics
+                  port: 9000
             liveness:
               enabled: true
               custom: true
               spec:
                 httpGet:
+                  path: /metrics
                   port: 9000
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
+                  path: /metrics
                   port: 9000
         sftp:
           image:
@@ -146,6 +159,16 @@ app-template:
         sftp:
           targetPort: sftp
           port: 2222
+  serviceMonitor:
+    main:
+      enabled: true
+      serviceName: satisfactory-server-metrics
+      endpoints:
+        - port: metrics
+          scheme: http
+          path: /metrics
+          interval: 1m
+          scrapeTimeout: 10s
 
   # ingress:
   #   # Configure an Ingress for the main application
