@@ -63,31 +63,29 @@ app-template:
                     - /bin/bash
                     - -c
                     - if [[ "$(/healthcheck.sh)" != true ]]; then exit 1; fi
-        exporter:
+        metrics:
           image:
-            repository: sleavely/satisfactory-savegame-prometheus-exporter
-            tag: v2.2
+            repository: featheredtoast/ficsit-remote-monitoring-companion
+            tag: latest
           env:
             TZ: Europe/Paris
-            HOST: 0.0.0.0
-            PORT: 9772
-            SAVEGAME_LOCATION: /config/backups
+            FRM_HOST: localhost
           ports:
             - name: metrics
-              containerPort: 9772
+              containerPort: 9000
           probes:
             liveness:
               enabled: true
               custom: true
               spec:
                 httpGet:
-                  port: 9772
+                  port: 9000
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
-                  port: 9772
+                  port: 9000
         sftp:
           image:
             repository: atmoz/sftp
@@ -120,9 +118,6 @@ app-template:
             advancedMounts:
               main:
                 - path: /config
-              exporter:
-                - path: /config
-                  readOnly: true
               sftp:
                 - path: /home/satisfactory/satisfactory
 
@@ -143,7 +138,7 @@ app-template:
       type: ClusterIP
       ports:
         metrics:
-          port: 9772
+          port: 9000
     sftp:
       controller: main
       type: LoadBalancer
