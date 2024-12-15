@@ -54,6 +54,31 @@ app-template:
               spec:
                 tcpSocket:
                   port: 7777
+        exporter:
+          image:
+            repository: sleavely/satisfactory-savegame-prometheus-exporter
+            tag: v2.2
+          env:
+            TZ: Europe/Paris
+            HOST: 0.0.0.0
+            PORT: 9772
+            SAVEGAME_LOCATION: /config/backups
+          ports:
+            - name: metrics
+              containerPort: 9772
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: 9772
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: 9772
       statefulset:
         volumeClaimTemplates:
           - name: config
@@ -74,6 +99,12 @@ app-template:
         stsf-tcp:
           port: 7777
           protocol: TCP
+    metrics:
+      controller: main
+      type: ClusterIP
+      ports:
+        metrics:
+          port: 9772
 
   # ingress:
   #   # Configure an Ingress for the main application
