@@ -31,6 +31,9 @@ app-template:
             - name: stsf-tcp
               containerPort: 7777
               protocol: TCP
+            - name: frm
+              containerPort: 8080
+              protocol: TCP
           probes:
             startup:
               enabled: true
@@ -63,42 +66,6 @@ app-template:
                     - /bin/bash
                     - -c
                     - if [[ "$(/healthcheck.sh)" != true ]]; then exit 1; fi
-        metrics:
-          image:
-            repository: featheredtoast/ficsit-remote-monitoring-companion
-            tag: latest
-          env:
-            TZ: Europe/Paris
-            FRM_HOST: localhost
-          ports:
-            - name: metrics
-              containerPort: 9000
-          probes:
-            startup:
-              enabled: true
-              custom: true
-              spec:
-                initialDelaySeconds: 60
-                timeoutSeconds: 1
-                periodSeconds: 5
-                failureThreshold: 30
-                httpGet:
-                  path: /metrics
-                  port: 9000
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  path: /metrics
-                  port: 9000
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  path: /metrics
-                  port: 9000
         sftp:
           image:
             repository: atmoz/sftp
@@ -133,6 +100,101 @@ app-template:
                 - path: /config
               sftp:
                 - path: /home/satisfactory/satisfactory
+    frm:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        # Configure the main application container
+        companion:
+          image:
+            repository: featheredtoast/ficsit-remote-monitoring-companion
+            tag: latest
+          env:
+            TZ: Europe/Paris
+            FRM_HOST: satisfactory-server-main
+          ports:
+            - name: metrics
+              containerPort: 9000
+          probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                initialDelaySeconds: 60
+                timeoutSeconds: 1
+                periodSeconds: 5
+                failureThreshold: 30
+                httpGet:
+                  path: /metrics
+                  port: 9000
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /metrics
+                  port: 9000
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /metrics
+                  port: 9000
+        cache:
+          image:
+            repository: featheredtoast/ficsit-remote-monitoring-cache
+            tag: latest
+          env:
+            TZ: Europe/Paris
+            FRM_HOST: satisfactory-server-main
+            PG_HOST:
+              valueFrom:
+                secretKeyRef:
+                  name: satisfactory-server-cnpg-cluster-app
+                  key: host
+            PG_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: satisfactory-server-cnpg-cluster-app
+                  key: password
+            PG_USER:
+              valueFrom:
+                secretKeyRef:
+                  name: satisfactory-server-cnpg-cluster-app
+                  key: user
+            PG_DB:
+              valueFrom:
+                secretKeyRef:
+                  name: satisfactory-server-cnpg-cluster-app
+                  key: dbname
+          probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                initialDelaySeconds: 60
+                timeoutSeconds: 1
+                periodSeconds: 5
+                failureThreshold: 30
+                httpGet:
+                  path: /metrics
+                  port: 9000
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /metrics
+                  port: 9000
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /metrics
+                  port: 9000
 
   service:
     # Configure a service for the main application
@@ -146,12 +208,12 @@ app-template:
         stsf-tcp:
           port: 7777
           protocol: TCP
-    metrics:
+    frm:
       controller: main
-      type: ClusterIP
+      type: LoadBalancer
       ports:
-        metrics:
-          port: 9000
+        frm:
+          port: 8080
     sftp:
       controller: main
       type: LoadBalancer
@@ -159,8 +221,15 @@ app-template:
         sftp:
           targetPort: sftp
           port: 2222
+    frmcompanion:
+      controller: frm
+      type: ClusterIP
+      ports:
+        metrics:
+          port: 9000
+
   serviceMonitor:
-    main:
+    frm:
       enabled: true
       serviceName: satisfactory-server-metrics
       endpoints:
@@ -170,30 +239,23 @@ app-template:
           interval: 1m
           scrapeTimeout: 10s
 
-  # ingress:
-  #   # Configure an Ingress for the main application
-  #   main:
-  #     annotations:
-  #       cert-manager.io/cluster-issuer: letsencrypt
-  #       external-dns.alpha.kubernetes.io/target: home.terence.cloud
-  #       gethomepage.dev/enabled: "true"
-  #       gethomepage.dev/name: _app_
-  #       gethomepage.dev/description: _description_
-  #       gethomepage.dev/group: _group_
-  #       gethomepage.dev/icon: _icon_
-  #       # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-  #       # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-  #       # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
-  #     className: "nginx"
-  #     hosts:
-  #       - host: &host _subdomain_.terence.cloud
-  #         paths:
-  #           - path: /
-  #             pathType: Prefix
-  #             service:
-  #               identifier: main
-  #               port: http
-  #     tls:
-  #       - secretName: _subdomain_-tls
-  #         hosts:
-  #           - *host
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  cluster:
+    instances: 1
+    imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles: []
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: frm
