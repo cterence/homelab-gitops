@@ -36,24 +36,33 @@ app-template:
               enabled: true
               custom: true
               spec:
-                tcpSocket:
-                  port: 7777
                 initialDelaySeconds: 120
                 timeoutSeconds: 1
                 periodSeconds: 5
                 failureThreshold: 30
+                exec:
+                  command:
+                    - /bin/bash
+                    - -c
+                    - chmod +x /healthcheck.sh && if [[ "$(/healthcheck.sh)" != true ]]; then exit 1; fi
             liveness:
               enabled: true
               custom: true
               spec:
-                tcpSocket:
-                  port: 7777
+                exec:
+                  command:
+                    - /bin/bash
+                    - -c
+                    - if [[ "$(/healthcheck.sh)" != true ]]; then exit 1; fi
             readiness:
               enabled: true
               custom: true
               spec:
-                tcpSocket:
-                  port: 7777
+                exec:
+                  command:
+                    - /bin/bash
+                    - -c
+                    - if [[ "$(/healthcheck.sh)" != true ]]; then exit 1; fi
         exporter:
           image:
             repository: sleavely/satisfactory-savegame-prometheus-exporter
