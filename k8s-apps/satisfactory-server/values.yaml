@@ -112,22 +112,12 @@ app-template:
             tag: latest
           env:
             TZ: Europe/Paris
-            FRM_HOST: satisfactory-server-main
+            FRM_HOST: satisfactory-server-frm
+            FRM_PORT: 8080
           ports:
             - name: metrics
               containerPort: 9000
           probes:
-            startup:
-              enabled: true
-              custom: true
-              spec:
-                initialDelaySeconds: 60
-                timeoutSeconds: 1
-                periodSeconds: 5
-                failureThreshold: 30
-                httpGet:
-                  path: /metrics
-                  port: 9000
             liveness:
               enabled: true
               custom: true
@@ -148,7 +138,8 @@ app-template:
             tag: latest
           env:
             TZ: Europe/Paris
-            FRM_HOST: satisfactory-server-main
+            FRM_HOST: satisfactory-server-frm
+            FRM_PORT: 8080
             PG_HOST:
               valueFrom:
                 secretKeyRef:
@@ -170,17 +161,6 @@ app-template:
                   name: satisfactory-server-cnpg-cluster-app
                   key: dbname
           probes:
-            startup:
-              enabled: true
-              custom: true
-              spec:
-                initialDelaySeconds: 60
-                timeoutSeconds: 1
-                periodSeconds: 5
-                failureThreshold: 30
-                httpGet:
-                  path: /metrics
-                  port: 9000
             liveness:
               enabled: true
               custom: true
@@ -210,7 +190,6 @@ app-template:
           protocol: TCP
     frm:
       controller: main
-      type: LoadBalancer
       ports:
         frm:
           port: 8080
@@ -223,7 +202,6 @@ app-template:
           port: 2222
     frmcompanion:
       controller: frm
-      type: ClusterIP
       ports:
         metrics:
           port: 9000
@@ -231,7 +209,7 @@ app-template:
   serviceMonitor:
     frm:
       enabled: true
-      serviceName: satisfactory-server-metrics
+      serviceName: satisfactory-server-frmcompanion
       endpoints:
         - port: metrics
           scheme: http
