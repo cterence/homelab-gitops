@@ -36,6 +36,7 @@ app-template:
           image:
             repository: ghcr.io/cterence/go-healthcheck
             tag: main
+            pullPolicy: Always
           env:
             TZ: Europe/Paris
           ports:
@@ -48,14 +49,14 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /status
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /status
+                  path: /health
   service:
     main:
       controller: main
