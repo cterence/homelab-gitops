@@ -181,6 +181,8 @@ redis:
   master:
     persistence:
       enabled: true
+      labels:
+        velero.io/exclude-from-backup: "true"
   replica:
     replicaCount: 0
     pdb:

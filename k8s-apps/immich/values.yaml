@@ -103,6 +103,9 @@ immich:
       enabled: false
     master:
       resourcesPreset: micro
+      persistence:
+        labels:
+          velero.io/exclude-from-backup: "true"
 
   # Immich components
 
@@ -152,6 +155,8 @@ immich:
         type: pvc
         accessMode: ReadWriteOnce
         # storageClass: your-class
+        labels:
+          velero.io/exclude-from-backup: "true"
 
 cnpg-cluster:
   type: postgresql
