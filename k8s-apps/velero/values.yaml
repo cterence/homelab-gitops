@@ -653,6 +653,10 @@ velero:
           - sa
           - secret
         ttl: 720h
+        resourcePolicy:
+          apiGroup: ""
+          kind: ConfigMap
+          name: volume-policy
 
   # Velero ConfigMaps.
   # Eg:

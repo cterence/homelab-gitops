@@ -1,3 +1,4 @@
+# velero restore create --from-backup velero-default-xxx --namespace-mappings xxx:xxx-bkp --resource-modifier-configmap remove-argocd-instance-label
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,5 +13,20 @@ data:
         patches:
           - operation: remove
             path: "/metadata/labels/argocd.argoproj.io~1instance"
-
-# velero restore create --from-backup velero-default-20240714214042 --namespace-mappings dead-drop:dead-drop-bkp1 --resource-modifier-configmap remove-argocd-instance-label
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: volume-policy
+data:
+  cm.yaml: |
+    version: v1
+    volumePolicies:
+      - conditions:
+          volumeTypes:
+            - emptyDir
+            - downwardAPI
+            - configmap
+            - cinder
+        action:
+          type: skip
