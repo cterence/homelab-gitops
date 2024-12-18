@@ -86,7 +86,7 @@ app-template:
   persistence:
     config:
       type: configMap
-      name: config
+      name: go-healthcheck-config
       advancedMounts:
         main:
           main:
