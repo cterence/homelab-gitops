@@ -86,7 +86,7 @@ app-template:
   persistence:
     config:
       type: configMap
-      name: config.yaml
+      name: config
       advancedMounts:
         main:
           main:
