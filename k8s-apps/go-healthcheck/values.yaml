@@ -90,4 +90,6 @@ app-template:
       advancedMounts:
         main:
           main:
-            - path: /
+            - path: /app/config.yaml
+              readOnly: true
+              subPath: config.yaml
