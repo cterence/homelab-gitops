@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: velero-repo-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: velero-repo-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: repository-password
+      remoteRef:
+        key: velero_repo_credentials
