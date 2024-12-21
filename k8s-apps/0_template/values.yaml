@@ -11,6 +11,7 @@ app-template:
   controllers:
     main:
       type: deployment
+      strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
