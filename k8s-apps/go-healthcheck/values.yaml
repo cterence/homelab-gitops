@@ -19,13 +19,13 @@ app-template:
             - https://bw.terence.cloud/alive
             - https://calibre.terence.cloud
             - https://convert.terence.cloud
-            - https://grafana.terence.cloud/api/health
             - https://ha.terence.cloud
-            - https://httpbin.terence.cloud/health
             - https://immich.terence.cloud/api/server/ping
             - https://next.terence.cloud/status.php
             - https://paperless.terence.cloud
             - https://tools.terence.cloud
+            - http://httpbin.httpbin:8080/health
+            - http://kube-prometheus-stack-grafana.monitoring/api/health
             - http://oauth2-proxy.oauth2-proxy/ping
             - http://calibre-web-book-downloader.calibre-web:8084/request/api/status
             - http://longhorn-frontend.longhorn-system
@@ -33,10 +33,10 @@ app-template:
 
   controllers:
     main:
+      strategy: RollingUpdate
       type: deployment
       annotations:
         reloader.stakater.com/auto: "true"
-
       containers:
         main:
           image:
