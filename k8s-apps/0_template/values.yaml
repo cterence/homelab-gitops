@@ -9,14 +9,11 @@ app-template:
       fsGroupChangePolicy: "OnRootMismatch"
 
   controllers:
-    # Configure the main controller
     main:
       type: deployment
       annotations:
         reloader.stakater.com/auto: "true"
-
       containers:
-        # Configure the main application container
         main:
           image:
             repository: _image_
@@ -33,8 +30,8 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
+
   service:
-    # Configure a service for the main application
     main:
       controller: main
       type: ClusterIP
@@ -43,7 +40,6 @@ app-template:
           port: _port_
 
   ingress:
-    # Configure an Ingress for the main application
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
