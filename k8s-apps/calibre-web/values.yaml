@@ -16,16 +16,14 @@ app-template:
       type: deployment
       annotations:
         reloader.stakater.com/auto: "true"
-
       containers:
-        # Configure the main application container
         main:
           image:
             repository: crocodilestick/calibre-web-automated
             tag: v2.0.1
           env:
             TZ: Europe/Paris
-            # DOCKER_MODS: "linuxserver/mods:universal-calibre"
+            DOCKER_MODS: "lscr.io/linuxserver/mods:universal-calibre-v7.16.0"
             LOG_LEVEL: DEBUG
           ports:
             - name: http
@@ -37,17 +35,78 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
+    book-downloader:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/calibrain/calibre-web-automated-book-downloader
+            tag: latest
+          env:
+            TZ: Europe/Paris
+            FLASK_PORT: 8084
+            FLASK_DEBUG: false
+            CLOUDFLARE_PROXY_URL: http://localhost:8000
+            INGEST_DIR: /cwa-book-ingest
+            BOOK_LANGUAGE: en,fr
+          ports:
+            - name: http
+              containerPort: 8084
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /request/api/status
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /request/api/status
+        cloudflare-bypass:
+          image:
+            repository: ghcr.io/sarperavci/cloudflarebypassforscraping
+            tag: latest
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8000
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: http
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: http
+
   service:
-    # Configure a service for the main application
     main:
       controller: main
       type: ClusterIP
       ports:
         http:
           port: 8083
+    book-downloader:
+      controller: book-downloader
+      type: ClusterIP
+      ports:
+        http:
+          port: 8084
 
   ingress:
-    # Configure an Ingress for the main application
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -75,6 +134,26 @@ app-template:
         - secretName: calibre-tls
           hosts:
             - *host
+    book-downloader:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
+      className: "nginx"
+      hosts:
+        - host: &host calibredl.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: book-downloader
+                port: http
+      tls:
+        - secretName: calibredl-tls
+          hosts:
+            - *host
 
   persistence:
     # Configure the main configuration storage location
@@ -92,3 +171,10 @@ app-template:
       type: persistentVolumeClaim
       globalMounts:
         - path: /calibre-library
+    cwa-book-ingest:
+      enabled: true
+      size: 10Gi
+      accessMode: ReadWriteOnce
+      type: persistentVolumeClaim
+      globalMounts:
+        - path: /cwa-book-ingest

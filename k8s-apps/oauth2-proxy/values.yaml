@@ -80,6 +80,7 @@ oauth2-proxy:
       - alertmanager.terence.cloud
       - argocd.terence.cloud
       - calibre.terence.cloud
+      - calibredl.terence.cloud
       - grafana.terence.cloud
       - headscale.terence.cloud
       - httpbin.terence.cloud
