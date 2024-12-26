@@ -90,6 +90,10 @@ spec:
           kind: Deployment
           jqPathExpressions:
             - .spec.template.spec.hostUsers
+        - group: apps
+          kind: StatefulSet
+          jqPathExpressions:
+            - .spec.template.spec.hostUsers
       syncPolicy:
         automated:
           prune: true
