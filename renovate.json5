@@ -31,7 +31,8 @@
     },
     {
       matchDatasources: ["helm"],
-      commitMessageTopic: "chart {{depName}}"
+      commitMessageTopic: "chart {{depName}}",
+      ignorePaths: ["**/ingress-nginx/**"],
     },
     {
       matchDatasources: ["docker"],
