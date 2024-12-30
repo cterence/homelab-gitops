@@ -17,7 +17,8 @@
       matchCurrentVersion: "!/^0/",
       ignoreTests: true,
       automerge: true,
-      automergeType: "branch"
+      automergeType: "branch",
+      ignorePaths: ["**/ingress-nginx/**"],
     },
     // Auto-merge all patches
     {
