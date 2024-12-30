@@ -8,6 +8,7 @@
   commitMessageTopic: "{{depName}}",
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
+  ignorePaths: ["**/ingress-nginx/**"],
   packageRules: [
     // Auto-merge non-0ver minors
     {
@@ -18,7 +19,6 @@
       ignoreTests: true,
       automerge: true,
       automergeType: "branch",
-      ignorePaths: ["**/ingress-nginx/**"],
     },
     // Auto-merge all patches
     {
@@ -32,7 +32,6 @@
     {
       matchDatasources: ["helm"],
       commitMessageTopic: "chart {{depName}}",
-      ignorePaths: ["**/ingress-nginx/**"],
     },
     {
       matchDatasources: ["docker"],
