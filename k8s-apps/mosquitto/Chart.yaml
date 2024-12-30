@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: mosquitto
     repository: oci://tccr.io/truecharts
-    version: 16.3.2
+    version: 16.4.0
