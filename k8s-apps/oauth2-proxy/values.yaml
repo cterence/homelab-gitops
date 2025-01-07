@@ -89,6 +89,7 @@ oauth2-proxy:
       - ntfy.terence.cloud
       - prometheus.terence.cloud
       - tailout.terence.cloud
+      - z2m.terence.cloud
 
   metrics:
     enabled: true

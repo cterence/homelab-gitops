@@ -100,7 +100,28 @@ zigbee2mqtt:
               ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: "deconz"
               ZIGBEE2MQTT_CONFIG_MQTT_USER: ""
               ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD: ""
-  TZ: Europe/Paris
+              TZ: Europe/Paris
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
+      className: "nginx"
+      hosts:
+        - host: &host z2m.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: z2m-tls
+          hosts:
+            - *host
   podOptions:
     nodeSelector:
       kubernetes.io/hostname: "homelab2"
