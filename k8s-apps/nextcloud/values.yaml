@@ -30,7 +30,9 @@ nextcloud:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       # To circumvent cloudflare's 150MB upload limit
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-      nginx.ingress.kubernetes.io/proxy-body-size: "10g"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: letsencrypt
       # Keep this in sync with the README.md:
@@ -180,7 +182,9 @@ nextcloud:
 
     ##
     ## Extra environment variables
-    extraEnv: []
+    extraEnv:
+      - name: APACHE_BODY_LIMIT
+        value: "0"
 
     # Extra init containers that runs before pods start.
     extraInitContainers: []
