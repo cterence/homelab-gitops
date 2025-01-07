@@ -87,11 +87,7 @@ spec:
             - .spec.postgresql.pg_hba
             - .spec.postgresql.pg_ident
         - group: apps
-          kind: Deployment
-          jqPathExpressions:
-            - .spec.template.spec.hostUsers
-        - group: apps
-          kind: StatefulSet
+          kind: "*"
           jqPathExpressions:
             - .spec.template.spec.hostUsers
       syncPolicy:
