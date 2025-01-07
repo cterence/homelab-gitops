@@ -123,6 +123,9 @@ zigbee2mqtt:
         - secretName: z2m-tls
           hosts:
             - *host
+      integrations:
+        traefik:
+          enabled: false
   podOptions:
     nodeSelector:
       kubernetes.io/hostname: "homelab2"
