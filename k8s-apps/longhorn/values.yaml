@@ -21,10 +21,10 @@ longhorn:
     storageMinimalAvailablePercentage: "10"
     storageReservedPercentageForDefaultDisk: "10"
     removeSnapshotsDuringFilesystemTrim: enabled
-    autoCleanupSystemGeneratedSnapshot: true
-    autoCleanupRecurringJobBackupSnapshot: true
-    autoCleanupSnapshotWhenDeleteBackup: true
-    orphanAutoDeletion: true
+    autoCleanupSystemGeneratedSnapshot: "true"
+    autoCleanupRecurringJobBackupSnapshot: "true"
+    autoCleanupSnapshotWhenDeleteBackup: "true"
+    orphanAutoDeletion: "true"
   ingress:
     enabled: true
     ingressClassName: nginx
