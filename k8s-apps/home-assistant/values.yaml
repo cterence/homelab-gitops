@@ -144,7 +144,7 @@ home-assistant:
         storage:
           size: "10Gi"
         walStorage:
-          size: "1Gi"
+          size: "5Gi"
   portal:
     open:
       enabled: true
