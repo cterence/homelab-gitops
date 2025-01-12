@@ -43,7 +43,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/calibrain/calibre-web-automated-book-downloader
-            tag: latest
+            tag: latest@sha256:f26c01c483d065e52cd0b3ff4b681d38a914e8b0393f545144a82f53df225341
           env:
             TZ: Europe/Paris
             FLASK_PORT: 8084
@@ -72,7 +72,7 @@ app-template:
         cloudflare-bypass:
           image:
             repository: ghcr.io/sarperavci/cloudflarebypassforscraping
-            tag: latest
+            tag: latest@sha256:b5b2406f38b01ede88d375f56f996dbcf280f5b6d6eecd14a107a99fcd3e8fc8
           env:
             TZ: Europe/Paris
           ports:
