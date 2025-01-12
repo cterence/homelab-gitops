@@ -20,7 +20,7 @@ longhorn:
     backupTargetCredentialSecret: backup-credentials
     storageMinimalAvailablePercentage: "10"
     storageReservedPercentageForDefaultDisk: "10"
-    removeSnapshotsDuringFilesystemTrim: true
+    removeSnapshotsDuringFilesystemTrim: enabled
     autoCleanupSystemGeneratedSnapshot: true
     autoCleanupRecurringJobBackupSnapshot: true
     autoCleanupSnapshotWhenDeleteBackup: true
