@@ -34,7 +34,7 @@ home-assistant:
       enabled: true
       mountPath: /config
       targetSelectAll: true
-      size: 100Mi
+      size: 1Gi
     init:
       enabled: true
       type: configmap
