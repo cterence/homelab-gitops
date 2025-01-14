@@ -24,7 +24,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.13.5
+            tag: 2.14.1
           ports:
             - name: http
               containerPort: 8000
@@ -70,7 +70,7 @@ app-template:
         backup:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.13.5
+            tag: 2.14.1
           envFrom:
             - configMapRef:
                 identifier: config
