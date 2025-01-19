@@ -48,6 +48,7 @@ crowdsec:
               - "109.0.228.97"
               - "195.135.98.90"
               - "46.193.107.14"
+              - "34.68.56.138"
     # -- to better understand how to write a scenario, you can take a look at https://docs.crowdsec.net/docs/next/scenarios/intro
     scenarios:
       {}
