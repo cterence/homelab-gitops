@@ -1,0 +1,46 @@
+name: ArgoCD Diff on PR
+
+on:
+  pull_request:
+    paths:
+      - "k8s-apps/**"
+
+jobs:
+  argocd-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          # Install ArgoCD CLI
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+
+      - name: Get updated charts
+        id: updated-charts
+        run: |
+          UPDATED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u)
+          echo "Updated charts: $UPDATED_APPS"
+          echo "::set-output name=apps::$UPDATED_APPS"
+
+      - name: Login to ArgoCD
+        if: steps.updated-charts.outputs.apps != ''
+        run: |
+          argocd login --grpc-web --username admin --password $ARGOCD_ADMIN_PASSWORD argocd.terence.cloud
+
+      - name: ArgoCD Diff for updated apps
+        if: steps.updated-charts.outputs.apps != ''
+        run: |
+          for APP in ${{ steps.updated-charts.outputs.apps }}; do
+            echo "Processing app: $APP"
+            cd "k8s-apps/$APP"
+            argocd app diff "$APP" \
+              --grpc-web \
+              --local-repo-root $(git rev-parse --show-toplevel) \
+              --local $PWD \
+              --loglevel warn
+          done
+        env:
+          ARGOCD_ADMIN_PASSWORD: ${{ secrets.ARGOCD_ADMIN_PASSWORD }}
