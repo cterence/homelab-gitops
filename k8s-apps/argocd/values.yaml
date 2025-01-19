@@ -414,7 +414,7 @@ argo-cd:
           - type: authproxy
             id: oauth2-proxy
             name: OAuth2 Proxy
-      admin.enabled: "false"
+      admin.enabled: "true"
 
     rbac:
       policy.default: role:readonly
