@@ -39,8 +39,8 @@ crowdsec:
         #   onsuccess: next_stage
         #   ....
       s02-enrich:
-        myWhitelist.yaml: |
-          name: my/whitelist
+        ip-whitelist.yaml: |
+          name: ip-whitelist
           description: "Whitelist events from my ip addresses"
           whitelist:
             reason: "My IP ranges"
