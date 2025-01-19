@@ -233,24 +233,25 @@ vaultwarden:
 
   ## @param data Data directory configuration, refer to values.yaml for parameters.
   ##
-  data:
-    name: "vaultwarden-data"
-    size: "5Gi"
-    class: ""
-    path: "/data"
-    accessMode: "ReadWriteOnce"
-    keepPvc: true
+  storage:
+    data:
+      name: "vaultwarden-data"
+      size: "5Gi"
+      class: ""
+      path: "/data"
+      accessMode: "ReadWriteOnce"
+      keepPvc: true
 
-  ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
-  ## By default, attachments/ is located inside the data directory.
-  ##
-  attachments:
-    name: "vaultwarden-files"
-    size: "10Gi"
-    class: ""
-    path: /files
-    accessMode: "ReadWriteOnce"
-    keepPvc: true
+    ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
+    ## By default, attachments/ is located inside the data directory.
+    ##
+    attachments:
+      name: "vaultwarden-files"
+      size: "10Gi"
+      class: ""
+      path: /files
+      accessMode: "ReadWriteOnce"
+      keepPvc: true
 
   ## @param webVaultEnabled Enable Web Vault
   ##
