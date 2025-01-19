@@ -76,6 +76,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host health.terence.cloud
