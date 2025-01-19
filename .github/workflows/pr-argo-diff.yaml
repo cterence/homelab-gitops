@@ -6,11 +6,15 @@ on:
       - "k8s-apps/**"
 
 jobs:
-  argocd-diff:
+  argocd_diff:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up environment
         run: |
@@ -18,29 +22,69 @@ jobs:
           curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
           chmod +x /usr/local/bin/argocd
 
-      - name: Get updated charts
-        id: updated-charts
+      - name: Get updated apps
+        id: updated_apps
         run: |
-          UPDATED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u)
-          echo "Updated charts: $UPDATED_APPS"
-          echo "::set-output name=apps::$UPDATED_APPS"
+          git fetch origin
+          # Extract unique app names from the modified paths under k8s-apps
+          MODIFIED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u | xargs)
+          if [ -z "$MODIFIED_APPS" ]; then
+            echo "No changes detected"
+            echo "apps=" >> $GITHUB_OUTPUT
+          else
+            echo "Modified apps: $MODIFIED_APPS"
+            echo "apps=$MODIFIED_APPS" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to ArgoCD
-        if: steps.updated-charts.outputs.apps != ''
+        if: steps.updated_apps.outputs.apps != ''
         run: |
-          argocd login --grpc-web --username admin --password $ARGOCD_ADMIN_PASSWORD argocd.terence.cloud
+          argocd login argocd.terence.cloud --grpc-web --username admin --password $ARGOCD_ADMIN_PASSWORD
+        env:
+          ARGOCD_ADMIN_PASSWORD: ${{ secrets.ARGOCD_ADMIN_PASSWORD }}
 
       - name: ArgoCD Diff for updated apps
-        if: steps.updated-charts.outputs.apps != ''
+        id: argocd_diff
+        if: steps.updated_apps.outputs.apps != ''
         run: |
-          for APP in ${{ steps.updated-charts.outputs.apps }}; do
+          DIFF_OUTPUT=""
+          for APP in ${{ steps.updated_apps.outputs.apps }}; do
             echo "Processing app: $APP"
             cd "k8s-apps/$APP"
-            argocd app diff "$APP" \
+            helm dependency update
+            DIFF=$(argocd app diff "$APP" \
               --grpc-web \
               --local-repo-root $(git rev-parse --show-toplevel) \
               --local $PWD \
-              --loglevel warn
+              --loglevel warn \
+              --exit-code=false)
+            if [ -n "$DIFF" ]; then
+              DIFF_OUTPUT="${DIFF_OUTPUT}\n\n### Diff for $APP:\n\`\`\`diff$DIFF\n\`\`\`"
+            else
+              DIFF_OUTPUT="${DIFF_OUTPUT}\n\n### Diff for $APP:\nNo changes detected"
+            fi
+            cd -
           done
+          {
+            echo 'diff_output<<EOF'
+            echo -e "$DIFF_OUTPUT"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish PR Comment
+        if: steps.updated_apps.outputs.apps != ''
+        uses: actions/github-script@v7
         env:
-          ARGOCD_ADMIN_PASSWORD: ${{ secrets.ARGOCD_ADMIN_PASSWORD }}
+          DIFF_OUTPUT: ${{ steps.argocd_diff.outputs.diff_output }}
+        with:
+          script: |
+            const diffOutput = process.env.DIFF_OUTPUT;
+            if (diffOutput) {
+              const commentBody = `### ArgoCD Diff Results\n${diffOutput}`;
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody,
+              });
+            }
