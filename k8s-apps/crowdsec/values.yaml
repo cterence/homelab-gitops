@@ -38,7 +38,16 @@ crowdsec:
         #   filter: "evt.Line.Labels.type == 'myProgram'"
         #   onsuccess: next_stage
         #   ....
-      s02-enrich: {}
+      s02-enrich:
+        myWhitelist.yaml: |
+          name: my/whitelist
+          description: "Whitelist events from my ip addresses"
+          whitelist:
+            reason: "My IP ranges"
+            ip:
+              - "109.0.228.97"
+              - "195.135.98.90"
+              - "46.193.107.14"
     # -- to better understand how to write a scenario, you can take a look at https://docs.crowdsec.net/docs/next/scenarios/intro
     scenarios:
       {}
@@ -212,7 +221,7 @@ crowdsec:
     dashboard:
       # -- Enable Metabase Dashboard (by default disabled)
       enabled: false
-      
+
     # -- Enable persistent volumes
     persistentVolume:
       # -- Persistent volume for data folder. Stores e.g. registered bouncer api keys
