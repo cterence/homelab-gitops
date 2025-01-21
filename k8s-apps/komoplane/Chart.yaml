@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: komoplane
     repository: https://helm-charts.komodor.io
-    version: 0.1.5
+    version: 0.1.6
