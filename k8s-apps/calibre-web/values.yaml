@@ -38,6 +38,8 @@ app-template:
             startup:
               enabled: true
               type: HTTP
+              spec:
+                failureThreshold: 15
     book-downloader:
       type: deployment
       annotations:
