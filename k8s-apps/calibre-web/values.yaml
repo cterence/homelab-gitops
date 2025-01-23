@@ -35,6 +35,9 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
+            startup:
+              enabled: true
+              type: HTTP
     book-downloader:
       type: deployment
       annotations:
