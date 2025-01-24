@@ -21,7 +21,7 @@ app-template:
         main:
           image:
             repository: wolveix/satisfactory-server
-            tag: v1.9.2
+            tag: v1.9.3
           env:
             TZ: Europe/Paris
           ports:
