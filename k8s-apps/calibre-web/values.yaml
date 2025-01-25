@@ -44,6 +44,17 @@ app-template:
       type: deployment
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - calibre-web
+                topologyKey: kubernetes.io/hostname
       containers:
         main:
           image:
