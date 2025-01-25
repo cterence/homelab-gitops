@@ -22,18 +22,28 @@ jobs:
           curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
           chmod +x /usr/local/bin/argocd
 
+      - name: Get list of deployed apps
+        id: deployed_apps
+        run: |
+          # Extract deployed app names from applicationset.yaml
+          DEPLOYED_APPS=$(yq eval '.spec.generators[0].list.elements[].name' argocd-apps/applicationset.yaml)
+          echo "Deployed apps: $DEPLOYED_APPS"
+          echo "deployed_apps=$DEPLOYED_APPS" >> $GITHUB_OUTPUT
+
       - name: Get updated apps
         id: updated_apps
         run: |
           git fetch origin
-          # Extract unique app names from the modified paths under k8s-apps
-          MODIFIED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u | xargs)
-          if [ -z "$MODIFIED_APPS" ]; then
-            echo "No changes detected"
+          # Extract unique app names from modified paths under k8s-apps
+          MODIFIED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u)
+          DEPLOYED_APPS=${{ steps.deployed_apps.outputs.deployed_apps }}
+          FILTERED_APPS=$(echo "$MODIFIED_APPS" | tr ' ' '\n' | grep -Fx -f <(echo "$DEPLOYED_APPS") || true)
+          if [ -z "$FILTERED_APPS" ]; then
+            echo "No deployed apps changed"
             echo "apps=" >> $GITHUB_OUTPUT
           else
-            echo "Modified apps: $MODIFIED_APPS"
-            echo "apps=$MODIFIED_APPS" >> $GITHUB_OUTPUT
+            echo "Modified and deployed apps: $FILTERED_APPS"
+            echo "apps=$FILTERED_APPS" >> $GITHUB_OUTPUT
           fi
 
       - name: Login to ArgoCD
