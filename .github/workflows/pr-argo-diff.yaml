@@ -26,7 +26,7 @@ jobs:
         id: deployed_apps
         run: |
           # Extract deployed app names from applicationset.yaml
-          DEPLOYED_APPS=$(yq eval '.spec.generators[0].list.elements[].name' argocd-apps/applicationset.yaml)
+          DEPLOYED_APPS=$(yq eval '.spec.generators[0].list.elements[].name' argocd-apps/applicationset.yaml | tr '\n' ' ')
           echo "Deployed apps: $DEPLOYED_APPS"
           echo "deployed_apps=$DEPLOYED_APPS" >> $GITHUB_OUTPUT
 
@@ -35,14 +35,20 @@ jobs:
         run: |
           git fetch origin
           # Extract unique app names from modified paths under k8s-apps
-          MODIFIED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u)
-          DEPLOYED_APPS=${{ steps.deployed_apps.outputs.deployed_apps }}
-          FILTERED_APPS=$(echo "$MODIFIED_APPS" | tr ' ' '\n' | grep -Fx -f <(echo "$DEPLOYED_APPS") || true)
+          MODIFIED_APPS=$(git diff --name-only origin/main...HEAD | grep '^k8s-apps/' | awk -F'/' '{print $2}' | sort -u | tr '\n' ' ')
+          echo "Modified apps: $MODIFIED_APPS"
+
+          # Get deployed apps from previous step
+          DEPLOYED_APPS="${{ steps.deployed_apps.outputs.deployed_apps }}"
+
+          # Filter modified apps to include only deployed apps
+          FILTERED_APPS=$(echo "$MODIFIED_APPS" | tr ' ' '\n' | grep -Fx -f <(echo "$DEPLOYED_APPS" | tr ' ' '\n') || true)
+          echo "Filtered deployed apps: $FILTERED_APPS"
+
           if [ -z "$FILTERED_APPS" ]; then
             echo "No deployed apps changed"
             echo "apps=" >> $GITHUB_OUTPUT
           else
-            echo "Modified and deployed apps: $FILTERED_APPS"
             echo "apps=$FILTERED_APPS" >> $GITHUB_OUTPUT
           fi
 
@@ -69,7 +75,7 @@ jobs:
               --loglevel warn \
               --exit-code=false)
             if [ -n "$DIFF" ]; then
-              DIFF_OUTPUT="${DIFF_OUTPUT}\n\n### Diff for $APP:\n\`\`\`diff$DIFF\n\`\`\`"
+              DIFF_OUTPUT="${DIFF_OUTPUT}\n\n### Diff for $APP:\n\`\`\`diff\n$DIFF\n\`\`\`"
             else
               DIFF_OUTPUT="${DIFF_OUTPUT}\n\n### Diff for $APP:\nNo changes detected"
             fi
