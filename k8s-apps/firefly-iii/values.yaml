@@ -49,6 +49,13 @@ firefly-iii-stack:
 
   importer:
     enabled: true
+    fireflyiii:
+      url: "https://ff.terence.cloud"
+      vanityUrl: "https://ff.terence.cloud"
+    config:
+      env:
+        IGNORE_DUPLICATE_ERRORS: "false"
+        TZ: "Europe/Paris"
 
 cnpg-cluster:
   type: postgresql
