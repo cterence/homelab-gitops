@@ -100,17 +100,15 @@ crowdsec:
       duration_expr: "Sprintf('%dh', (GetDecisionsCount(Alert.GetValue()) + 1) * 4)"
       on_success: break
     # -- General configuration (https://docs.crowdsec.net/docs/configuration/crowdsec_configuration/#configuration-example)
-    config.yaml.local:
-      ""
-      #   |
-      # db_config:
-      #   type:     postgresql
-      #   user:     crowdsec
-      #   password: ${DB_PASSWORD}
-      #   db_name:  crowdsec
-      #   host:     192.168.0.2
-      #   port:     5432
-      #   sslmode:  require
+    config.yaml.local: |
+      api:
+        server:
+          auto_registration: # Activate if not using TLS for authentication
+            enabled: true
+            token: "${REGISTRATION_TOKEN}" # /!\ Do not modify this variable (auto-generated and handled by the chart)
+            allowed_ranges: # /!\ Make sure to adapt to the pod IP ranges used by your cluster
+              - "127.0.0.1/32"
+              - "10.244.0.0/8"
     # -- notifications configuration (https://docs.crowdsec.net/docs/next/notification_plugins/intro)
     notifications:
       {}
