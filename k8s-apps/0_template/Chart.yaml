@@ -1,4 +1,3 @@
-# deployed-apps:exclude
 apiVersion: v2
 name: _name_
 description: _description_
