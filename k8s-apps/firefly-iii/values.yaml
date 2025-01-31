@@ -27,6 +27,7 @@ firefly-iii-stack:
             name: firefly-iii-cnpg-cluster-app
             key: password
       env:
+        DB_CONNECTION: pgsql
         DEFAULT_LANGUAGE: "fr_FR"
         DEFAULT_LOCALE: "equal"
         TZ: "Europe/Paris"
