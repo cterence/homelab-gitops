@@ -37,6 +37,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 <!-- BEGIN deployed-apps -->
 | App | Description | Is deployed |
 | --- | --- | --- |
+| [0_template](./scripts/../k8s-apps/0_template) | _description_ | ❌ |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
 | [authelia](./scripts/../k8s-apps/authelia) | The Single Sign-On Multi-Factor portal for web apps | ❌ |
 | [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ✅ |
@@ -50,6 +51,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ❌ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
+| [firefly-iii](./scripts/../k8s-apps/firefly-iii) | A free and open source personal finance manager | ✅ |
 | [ghost](./scripts/../k8s-apps/ghost) | Independent platform for publishing online by web and email newsletter | ❌ |
 | [gitlab-runner](./scripts/../k8s-apps/gitlab-runner) | Run your CI/CD jobs and send the results back to GitLab | ❌ |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
