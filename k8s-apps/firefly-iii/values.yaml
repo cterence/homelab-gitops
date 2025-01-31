@@ -32,6 +32,20 @@ firefly-iii-stack:
         DEFAULT_LOCALE: "equal"
         TZ: "Europe/Paris"
         TRUSTED_PROXIES: "**"
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+      hosts:
+        - ff.terence.cloud
+      tls:
+        - secretName: firefly-iii-tls
+          hosts:
+            - ff.terence.cloud
 
   importer:
     enabled: true
