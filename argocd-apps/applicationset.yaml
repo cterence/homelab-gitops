@@ -40,6 +40,7 @@ spec:
             namespace: longhorn-system
             serverSideApply: true
             serverSideDiff: true
+          - name: maybe
           - name: metallb
           # - name: minio-operator
           - name: mosquitto

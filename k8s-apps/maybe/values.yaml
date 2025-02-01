@@ -1,0 +1,135 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  configMaps:
+    config:
+      data:
+        APP_DOMAIN: maybe.terence.cloud
+        TZ: Europe/Paris
+        SELF_HOSTED: "true"
+        RAILS_FORCE_SSL: "false"
+        RAILS_ASSUME_SSL: "false"
+        GOOD_JOB_EXECUTION_MODE: async
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/maybe-finance/maybe
+            tag: 0.3.0
+          envFrom:
+            - configMapRef:
+                identifier: config
+          env:
+            SYNTH_API_KEY:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-synth-api-key"
+                  key: api-key
+            SECRET_KEY_BASE:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secret-key-base"
+                  key: password
+            DB_HOST:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: host
+            POSTGRES_DB:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: dbname
+            POSTGRES_USER:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: user
+            POSTGRES_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: password
+          ports:
+            - name: http
+              containerPort: 3000
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 3000
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "nginx"
+      hosts:
+        - host: &host maybe.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: maybe-tls
+          hosts:
+            - *host
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 250Mi
+      globalMounts:
+        - path: /rails/storage
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageName: "ghcr.io/cloudnative-pg/postgresql:17.2"
+    storage:
+      size: 10Gi
+    walStorage:
+      enabled: true
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles: []
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    initdb:
+      database: maybe
