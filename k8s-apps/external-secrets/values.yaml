@@ -90,3 +90,35 @@ external-secrets:
 
   # -- Pod priority class name.
   priorityClassName: ""
+
+  extraObjects:
+    - apiVersion: external-secrets.io/v1beta1
+      kind: ClusterSecretStore
+      metadata:
+        name: gitlab-secret-store
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+      spec:
+        provider:
+          gitlab:
+            auth:
+              SecretRef:
+                accessToken:
+                  name: gitlab-secret
+                  namespace: external-secrets
+                  key: token
+            projectID: "34242337"
+    - apiVersion: generators.external-secrets.io/v1alpha1
+      kind: ClusterGenerator
+      metadata:
+        name: password
+      spec:
+        kind: Password
+        generator:
+          passwordSpec:
+            length: 32
+            digits: 5
+            symbols: 5
+            symbolCharacters: "!@#$%^&*"
+            noUpper: false
+            allowRepeat: true
