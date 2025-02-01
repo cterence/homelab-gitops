@@ -212,8 +212,7 @@ vaultwarden:
   ## @param strategy Resource configurations
   ##
   strategy:
-    {}
-    # type: RollingUpdate
+    type: Recreate
     # rollingUpdate:
     #   maxSurge: 1
     #   maxUnavailable: 0
