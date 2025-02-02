@@ -10,7 +10,7 @@ dependencies:
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
-    version: 0.2.0
+    version: 0.2.1
   - name: redis
     repository: https://charts.bitnami.com/bitnami
     version: 20.6.3
