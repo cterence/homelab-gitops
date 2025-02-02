@@ -14,6 +14,7 @@ app-template:
         APP_DOMAIN: maybe.terence.cloud
         TZ: Europe/Paris
         SELF_HOSTED: "true"
+        REQUIRE_INVITE_CODE: "true"
         RAILS_FORCE_SSL: "false"
         RAILS_ASSUME_SSL: "false"
         GOOD_JOB_EXECUTION_MODE: async
