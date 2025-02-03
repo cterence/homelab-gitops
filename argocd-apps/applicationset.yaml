@@ -21,7 +21,7 @@ spec:
           # - name: dead-drop
           - name: external-dns
           - name: external-secrets
-          # - name: firefly-iii
+          - name: firefly-iii
           # - name: ghost
           - name: go-healthcheck
           - name: home-assistant
