@@ -2,7 +2,7 @@
 zigbee2mqtt:
   image:
     repository: docker.io/koenkk/zigbee2mqtt
-    tag: "2.1.0"
+    tag: "2.1.1"
     pullPolicy: IfNotPresent
   service:
     main:
