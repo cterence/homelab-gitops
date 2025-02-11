@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: home-assistant
     repository: oci://tccr.io/truecharts
-    version: 27.2.1
+    version: 27.2.2
