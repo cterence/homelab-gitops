@@ -3,7 +3,7 @@ ghost:
   image:
     registry: docker.io
     repository: bitnami/ghost
-    tag: 5.109.4
+    tag: 5.109.5
     digest: ""
 
   ## @section Ghost Configuration parameters
