@@ -196,7 +196,7 @@ nextcloud:
     extraSidecarContainers:
       # Daily upload of Nextcloud images to immich
       - name: immich-nextcloud-uploader
-        image: ghcr.io/immich-app/immich-cli:2.2.50
+        image: ghcr.io/immich-app/immich-cli:2.2.50@sha256:76dc5df7998b2579721fca204ec534744b4d3342775bcdeee4acbd297c208a3a
         command:
           - /bin/sh
           - -c
@@ -224,7 +224,7 @@ nextcloud:
             subPath: data/terence/files/Images
             readOnly: true
       - name: generate-previews
-        image: nextcloud:31.0.0
+        image: nextcloud:31.0.0@sha256:32c9403b1b770141850ed999a3a0f20c8ff416d487278e531ae5d594e23d55d2
         command:
           - /bin/sh
           - -c
@@ -578,7 +578,7 @@ nextcloud:
 
     image:
       repository: xperimental/nextcloud-exporter
-      tag: 0.8.0
+      tag: 0.8.0@sha256:a4163ed0041217dde749d398b98a8ec9961b493714f6042e03223dca1bdb68af
       pullPolicy: IfNotPresent
       # pullSecrets:
       #   - myRegistrKeySecretName

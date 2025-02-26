@@ -19,7 +19,7 @@ pihole:
     # -- the repostory to pull the image from
     repository: "pihole/pihole"
     # -- the docker tag
-    tag: "2023.01"
+    tag: "2023.01@sha256:747df0c141b94562e70450995ee0415f2388c47b150965658ad1f99b29f8822e"
     # -- the pull policy
     pullPolicy: IfNotPresent
 
@@ -392,7 +392,7 @@ pihole:
       port: 9617
       image:
         repository: ekofr/pihole-exporter
-        tag: v1.0.0
+        tag: v1.0.0@sha256:688f95ff562905721742f1c2be22a794c0d89869d8c8e7c9bf0e17ceb8eb8e1e
         pullPolicy: IfNotPresent
       resources:
         limits:

@@ -363,7 +363,7 @@ headscale:
         main:
           image:
             repository: headscale/headscale
-            tag: 0.23.0-beta1
+            tag: 0.23.0-beta1@sha256:56e7651d3b143a465d500b30c15c9401e12163b8fce1836c646189f4fb5bf3cb
           args:
             - serve
           ports:
@@ -401,7 +401,7 @@ headscale:
         main:
           image:
             repository: goodieshq/headscale-admin
-            tag: 0.25.2
+            tag: 0.25.2@sha256:327c2c4685efeb2503ec7b7ed5e3d948598692b82543e84f3072f29113a41662
           ports:
             - name: http
               containerPort: 80

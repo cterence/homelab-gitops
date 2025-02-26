@@ -15,7 +15,7 @@ dead-drop:
         init:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: main
+            tag: main@sha256:d2cc1994ff902536afdd33d7e9f8b0fad1a89a3575a61c8a442ebf308a7c080c
           args:
             - init
           envFrom:
@@ -30,7 +30,7 @@ dead-drop:
         main:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: main
+            tag: main@sha256:d2cc1994ff902536afdd33d7e9f8b0fad1a89a3575a61c8a442ebf308a7c080c
           args:
             - serve
           ports:
@@ -64,7 +64,7 @@ dead-drop:
         main:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: main
+            tag: main@sha256:d2cc1994ff902536afdd33d7e9f8b0fad1a89a3575a61c8a442ebf308a7c080c
           args:
             - purge
           envFrom:
@@ -117,7 +117,7 @@ libsql-server:
         main:
           image:
             repository: ghcr.io/tursodatabase/libsql-server
-            tag: v0.24.32
+            tag: v0.24.32@sha256:dedf5273da945d90f3b85fe367ed8f821349117ac2c488bf43c4a6bf9f2123e0
           ports:
             - name: http
               containerPort: 8080

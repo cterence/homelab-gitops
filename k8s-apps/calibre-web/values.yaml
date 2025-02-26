@@ -20,7 +20,7 @@ app-template:
         main:
           image:
             repository: crocodilestick/calibre-web-automated
-            tag: v2.0.1
+            tag: v2.0.1@sha256:252be12743b4dae4c731a1c01ae2004a848cb8315c88998a97be69de7fd0e416
           env:
             TZ: Europe/Paris
             DOCKER_MODS: "lscr.io/linuxserver/mods:universal-calibre-v7.16.0"

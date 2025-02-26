@@ -8,7 +8,7 @@ image:
   repository: ghcr.io/tursodatabase/libsql-server
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.24.32"
+  tag: "v0.24.32@sha256:dedf5273da945d90f3b85fe367ed8f821349117ac2c488bf43c4a6bf9f2123e0"
 
 imagePullSecrets: []
 nameOverride: ""

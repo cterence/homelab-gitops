@@ -3,7 +3,7 @@ ghost:
   image:
     registry: docker.io
     repository: bitnami/ghost
-    tag: 5.110.1
+    tag: 5.110.1@sha256:532b8487a2ef64e125867fe00ce758600791fd30dc0f9f696b6172445f6a4b27
     digest: ""
 
   ## @section Ghost Configuration parameters
@@ -502,7 +502,7 @@ ghost:
     image:
       registry: docker.io
       repository: bitnami/bitnami-shell
-      tag: 11-debian-11-r136
+      tag: 11-debian-11-r136@sha256:201f48da3d894ce5aaf22e042683319a0e7095fccc8ef069ef792eb06426b6b9
       digest: ""
       pullPolicy: IfNotPresent
       ## Optionally specify an array of imagePullSecrets.

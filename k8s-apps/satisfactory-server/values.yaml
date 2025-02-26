@@ -21,7 +21,7 @@ app-template:
         main:
           image:
             repository: wolveix/satisfactory-server
-            tag: v1.9.5
+            tag: v1.9.5@sha256:88507d728a683714a4fac54d881a8f80db418509bc7db7bad660deda64b72247
           env:
             TZ: Europe/Paris
           ports:
@@ -69,7 +69,7 @@ app-template:
         sftp:
           image:
             repository: atmoz/sftp
-            tag: latest
+            tag: latest@sha256:0960390462a4441dbb63698d7c185b76a41ffcee7b78ff4adf275f3e66f9c475
           env:
             TZ: Europe/Paris
           args:
@@ -109,7 +109,7 @@ app-template:
         companion:
           image:
             repository: featheredtoast/ficsit-remote-monitoring-companion
-            tag: latest
+            tag: latest@sha256:73464722ca5d0b45c7cdfb4383cc727b4b6281c1214f6868262b09fec001fad0
           env:
             TZ: Europe/Paris
             FRM_HOST: satisfactory-server-frm
@@ -135,7 +135,7 @@ app-template:
         cache:
           image:
             repository: featheredtoast/ficsit-remote-monitoring-cache
-            tag: latest
+            tag: latest@sha256:cecb332c3e11747f1f0160720f59c8032a9e689807eb5af2ba9459d1edfb4282
           env:
             TZ: Europe/Paris
             FRM_HOST: satisfactory-server-frm
