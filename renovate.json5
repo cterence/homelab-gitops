@@ -1,35 +1,20 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
-    "config:recommended",
+    "config:best-practices",
     ":timezone(Europe/Paris)",
+    ":label(renovate)",
+    ":semanticPrefixFix",
+    ":separateMultipleMajorReleases",
+    ":automergeBranch",
+    ":automergeStableNonMajor",
+    ":automergeDigest",
   ],
   dependencyDashboardTitle: "🤖 Renovate Dashboard",
   commitMessageTopic: "{{depName}}",
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
-  ignorePaths: ["**/ingress-nginx/**"],
   packageRules: [
-    // Auto-merge non-0ver minors
-    {
-      matchUpdateTypes: [
-        "minor"
-      ],
-      matchCurrentVersion: "!/^0/",
-      ignoreTests: true,
-      automerge: true,
-      automergeType: "branch",
-    },
-    // Auto-merge all patches
-    {
-      matchUpdateTypes: [
-        "patch",
-        "digest"
-      ],
-      ignoreTests: true,
-      automerge: true,
-      automergeType: "branch"
-    },
     {
       matchDatasources: ["helm"],
       commitMessageTopic: "chart {{depName}}",
