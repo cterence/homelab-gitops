@@ -19,7 +19,7 @@ app-template:
         main:
           image:
             repository: zefhemel/silverbullet
-            tag: 0.10.2
+            tag: 0.10.4
           env:
             SB_USER:
               valueFrom:
