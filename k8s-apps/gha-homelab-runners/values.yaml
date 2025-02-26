@@ -190,7 +190,7 @@ gha-runner-scale-set:
     spec:
       containers:
         - name: runner
-          image: ghcr.io/actions/actions-runner:latest
+          image: ghcr.io/actions/actions-runner:latest@sha256:c02e8e1b479ea39b196c3bb0a40a66a191302654a6ef5c042eafe11c13323137
           command: ["/home/runner/run.sh"]
 
   ## Optional controller service account that needs to have required Role and RoleBinding

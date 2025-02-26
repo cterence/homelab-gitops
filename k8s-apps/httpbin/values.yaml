@@ -7,7 +7,7 @@ app-template:
         main:
           image:
             repository: mendhak/http-https-echo
-            tag: 35
+            tag: 35@sha256:440ca6b810bc04606aac700e461caca5543eaa882c4e0af96a33424d05a23592
           ports:
             - name: http
               containerPort: 8080

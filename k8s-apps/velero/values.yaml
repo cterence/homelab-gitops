@@ -34,7 +34,7 @@ velero:
   # enabling node-agent). Required.
   image:
     repository: velero/velero
-    tag: v1.15.2
+    tag: v1.15.2@sha256:668467fdf39f3a610ed6f27431f38a6fbb6143a2ab302ad3e839b0074aaeba39
     # Digest value example: sha256:d238835e151cec91c6a811fe3a89a66d3231d9f64d09e5f3c49552672d271f38.
     # If used, it will take precedence over the image.tag.
     # digest:
@@ -108,13 +108,13 @@ velero:
   # If the value is a string then it is evaluated as a template.
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.11.1
+      image: velero/velero-plugin-for-aws:v1.11.1@sha256:3b0c402e0d55eb797a7ebe1f2525f18bdcdca8ee826680cd2d7cf657071e9d58
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
           name: plugins
     - name: local-volume-provider
-      image: replicated/local-volume-provider:0.6.9
+      image: replicated/local-volume-provider:0.6.9@sha256:6aec6ee886f86a15522870b44e11611c6f97760c73382ceabc5e4667fd8f5b38
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target

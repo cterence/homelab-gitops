@@ -20,7 +20,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/c4illin/convertx
-            tag: v0.11.1
+            tag: v0.11.1@sha256:4fd7d474f13586199aa9187118fa1b6fb251cdec36f0ebdc46439398213bd02b
           env:
             TZ: Europe/Paris
           ports:

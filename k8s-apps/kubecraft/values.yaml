@@ -7,7 +7,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/cterence/minecraft-web-client
-            tag: next
+            tag: next@sha256:3220cda72fe9566f74ae8f98834881740c191db1120d654a585f19a9d0d80ca2
           ports:
             - name: http
               containerPort: 8080
@@ -24,7 +24,7 @@ app-template:
         main:
           image:
             repository: stevesloka/kubecraft
-            tag: latest
+            tag: latest@sha256:b9b2069ec2da8f6610fd1f207df9fbc08e7a08241d44847fbd6230fe401d58fa
           ports:
             - name: minecraft
               containerPort: 25565

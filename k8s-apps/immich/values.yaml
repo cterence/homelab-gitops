@@ -67,7 +67,7 @@ immich:
     enabled: false
     image:
       repository: tensorchord/pgvecto-rs
-      tag: pg14-v0.2.0
+      tag: pg14-v0.2.0@sha256:739cdd626151ff1f796dc95a6591b55a714f341c737e27f045019ceabf8e8c52
     global:
       postgresql:
         auth:
@@ -114,7 +114,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
-      tag: v1.126.1
+      tag: v1.126.1@sha256:f8a3c78ec0a0ace20517acedaab9c2f3edcfc9b96e03080ba401acf55792470e
     ingress:
       main:
         enabled: true
@@ -144,7 +144,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
-      tag: v1.126.1
+      tag: v1.126.1@sha256:0989db1266d91e553375289571b989d49e10690d466802fcf23326f16b747d4c
     env:
       TRANSFORMERS_CACHE: /cache
     persistence:

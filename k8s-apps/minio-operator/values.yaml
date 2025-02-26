@@ -56,7 +56,7 @@ operator:
     #
     image:
       repository: quay.io/minio/operator
-      tag: v7.0.0
+      tag: v7.0.0@sha256:336b343514269659d2dc05b29ccc44ef3e59aaf2efcee59c7996440d8db614bb
       pullPolicy: IfNotPresent
     ###
     # Specify the sidecar container image to deploy on tenant pods for init container and sidecar.

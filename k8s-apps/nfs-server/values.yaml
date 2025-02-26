@@ -12,7 +12,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/obeone/nfs-server
-            tag: v2.2.3
+            tag: v2.2.3@sha256:932f4fa9d0f1f930a7670e58d920073cd136ec7ba62e82ef206d130544f065f6
           env:
             TZ: Europe/Paris
             NFS_EXPORT_0: "/elements *(rw,async,no_subtree_check)"
