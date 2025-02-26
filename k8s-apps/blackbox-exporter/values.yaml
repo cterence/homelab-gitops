@@ -97,8 +97,9 @@ prometheus-blackbox-exporter:
     selfMonitor:
       enabled: true
     targets:
-      - name: health
-        url: https://health.terence.cloud
-        module: http_2xx
+      []
+      # - name: health
+      #   url: https://health.terence.cloud
+      #   module: http_2xx
   configReloader:
     enabled: true
