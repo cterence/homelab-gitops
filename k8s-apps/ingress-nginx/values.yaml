@@ -17,6 +17,7 @@ ingress-nginx:
       use-proxy-protocol: "false"
       use-forwarded-headers: "true"
       enable-real-ip: "true"
+      annotations-risk-level: "Critical"
 
     metrics:
       enabled: true
