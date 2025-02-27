@@ -18,7 +18,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/cterence/tailout
-            tag: main@sha256:908a7d70aa8bca32e9be90ad523a7ea49cb05dcb79930970c59079f86449ebf9
+            tag: main@sha256:21eaefb7a95903db8771c93edb318c7b6a51f259e9d31c35951c661b06c9dfda
           args:
             - ui
           ports:
