@@ -62,7 +62,7 @@ vault:
     # image sets the repo and tag of the vault-k8s image to use for the injector.
     image:
       repository: "hashicorp/vault-k8s"
-      tag: "1.6.1@sha256:0786037b1348957a3cd375b8f3d223bdb7b43be13e1d0f017f1a7a1de39a9f9d"
+      tag: "1.6.2@sha256:103a2d817a7474a8b678d830b0d6ed2d570cc878e4bc8c146d8d35ec436a8d49"
       pullPolicy: IfNotPresent
 
     # agentImage sets the repo and tag of the Vault image to use for the Vault Agent
