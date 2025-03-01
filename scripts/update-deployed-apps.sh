@@ -10,6 +10,7 @@ EXCLUDED_APPS=$(for app in ${CONFIGURED_APPS}; do
     echo ${app}
   fi
 done)
+EXCLUDED_APPS="${EXCLUDED_APPS} 0_template"
 # Remove excluded apps from the list of configured apps
 CONFIGURED_APPS=$(echo ${CONFIGURED_APPS} ${EXCLUDED_APPS} | tr ' ' '\n' | sort | uniq -u)
 DEPLOYED_APPS=$(yq -r '.spec.generators[0].list.elements[].name' ${DIR}/../argocd-apps/applicationset.yaml | xargs)
