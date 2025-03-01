@@ -29,7 +29,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/maybe-finance/maybe
-            tag: 0.4.2@sha256:04d0fd5f6e9d0120855f7485e21b4473ec0d1b7b36d41b5d66413f150ee258de
+            tag: 0.4.3@sha256:5be15dc1fa751bf16b86b1df620ac5ecc88d970c617f58d983d38f76eaf956e5
           envFrom:
             - configMapRef:
                 identifier: config
