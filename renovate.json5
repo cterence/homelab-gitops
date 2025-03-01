@@ -9,6 +9,7 @@
     ":automergeBranch",
     ":automergeStableNonMajor",
     ":automergeDigest",
+    ":skipStatusChecks",
   ],
   dependencyDashboardTitle: "🤖 Renovate Dashboard",
   commitMessageTopic: "{{depName}}",
