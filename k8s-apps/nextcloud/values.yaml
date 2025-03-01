@@ -426,6 +426,7 @@ nextcloud:
     architecture: standalone
     auth:
       enabled: false
+      usePasswordFiles: false
       password: "changeme"
       # name of an existing secret with Redis® credentials (instead of auth.password), must be created ahead of time
       existingSecret: ""

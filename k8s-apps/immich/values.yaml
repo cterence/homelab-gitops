@@ -101,6 +101,7 @@ immich:
     architecture: standalone
     auth:
       enabled: false
+      usePasswordFiles: false
     master:
       resourcesPreset: micro
       persistence:

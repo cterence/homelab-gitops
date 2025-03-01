@@ -177,6 +177,7 @@ redis:
   enabled: true
   auth:
     enabled: false
+    usePasswordFiles: false
     username: ""
   master:
     persistence:
