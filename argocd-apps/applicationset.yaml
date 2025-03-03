@@ -18,11 +18,8 @@ spec:
             serverSideApply: true
           - name: convertx
           - name: crowdsec
-          # - name: dead-drop
           - name: external-dns
           - name: external-secrets
-          # - name: firefly-iii
-          # - name: ghost
           - name: go-healthcheck
           - name: home-assistant
           - name: homepage
@@ -33,8 +30,6 @@ spec:
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
-          # - name: kyverno
-          #   serverSideApply: true
           - name: loki
           - name: longhorn
             namespace: longhorn-system
@@ -42,20 +37,14 @@ spec:
             serverSideDiff: true
           - name: maybe
           - name: metallb
-          # - name: minio-operator
           - name: mosquitto
           - name: nextcloud
-          # - name: nfs-server
           - name: oauth2-proxy
-          # - name: openebs
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
-          # - name: reactive-resume
           - name: reloader
           - name: satisfactory-server
-          # - name: silverbullet
-          # - name: tailout
           - name: tailscale-operator
           - name: vaultwarden
           - name: velero

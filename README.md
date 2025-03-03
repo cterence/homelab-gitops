@@ -37,7 +37,6 @@ This is an automatically updated list of the apps I have configured and/or deplo
 <!-- BEGIN deployed-apps -->
 | App | Description | Is deployed |
 | --- | --- | --- |
-| [0_template](./scripts/../k8s-apps/0_template) | _description_ | ❌ |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
 | [authelia](./scripts/../k8s-apps/authelia) | The Single Sign-On Multi-Factor portal for web apps | ❌ |
 | [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ✅ |
