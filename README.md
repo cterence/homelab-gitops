@@ -75,7 +75,6 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ❌ |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
-| [nfs-server](./scripts/../k8s-apps/nfs-server) | Lightweight, robust, flexible, and containerized NFS server | ❌ |
 | [ntfy](./scripts/../k8s-apps/ntfy) | Send push notifications to your phone or desktop using PUT/POST | ❌ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
 | [openebs](./scripts/../k8s-apps/openebs) | Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes | ❌ |
