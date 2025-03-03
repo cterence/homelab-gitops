@@ -15,6 +15,7 @@
   commitMessageTopic: "{{depName}}",
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
+  ignorePaths: ["**/argocd/**","**/kube-prometheus-stack/**"],
   packageRules: [
     {
       matchDatasources: ["helm"],
