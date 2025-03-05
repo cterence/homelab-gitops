@@ -223,6 +223,12 @@ cnpg-cluster:
   cluster:
     instances: 1
     imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
+    roles:
+      - name: frm
+        ensure: present
+        login: true
+        superuser: false
+        replication: true
     storage:
       size: 10Gi
     resources: {}
