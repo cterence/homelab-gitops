@@ -15,7 +15,7 @@
   commitMessageTopic: "{{depName}}",
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
-  ignorePaths: ["**/argocd/**"], // https://github.com/argoproj/argo-cd/issues/22142
+  ignorePaths: [],
   packageRules: [
     {
       matchDatasources: ["helm"],
