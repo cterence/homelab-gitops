@@ -235,7 +235,6 @@ cnpg-cluster:
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
     logLevel: "info"
-    roles: []
     monitoring:
       enabled: true
       podMonitor:
