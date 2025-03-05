@@ -1,5 +1,6 @@
 apiVersion: v2
 name: snapshot-controller
+description: Implements the control loop for CSI snapshot functionality
 type: application
 version: 0.1.0
 sources:
