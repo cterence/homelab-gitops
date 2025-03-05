@@ -223,12 +223,33 @@ cnpg-cluster:
   cluster:
     instances: 1
     imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
     roles:
       - name: frm
         ensure: present
         login: true
         superuser: false
         replication: true
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: frm
+
+cnpg-cluster-pg17:
+  type: postgresql
+  postgresql: "17"
+  mode: recovery
+  cluster:
+    instances: 1
+    imageName: "ghcr.io/cloudnative-pg/postgresql:17.4"
     storage:
       size: 10Gi
     resources: {}
@@ -242,3 +263,24 @@ cnpg-cluster:
     postgresql: {}
     initdb:
       database: frm
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["frm"]
+      source:
+        host: satisfactory-server-cnpg-cluster-rw
+        username: frm
+        database: frm
+        passwordSecret:
+          name: satisfactory-server-cnpg-cluster-app
+          key: password
+        sslKeySecret:
+          name: satisfactory-server-cnpg-cluster-replication
+          key: tls.key
+        sslCertSecret:
+          name: satisfactory-server-cnpg-cluster-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: satisfactory-server-cnpg-cluster-ca
+          key: ca.crt

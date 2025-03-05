@@ -1,0 +1,26 @@
+# TODO: https://stackoverflow.com/questions/63405402/logical-replication-not-copying-data-from-publisher-to-subscriber => vérifier permissions
+apiVersion: postgresql.cnpg.io/v1
+kind: Publication
+metadata:
+  name: frm-publication
+spec:
+  cluster:
+    name: satisfactory-server-cnpg-cluster
+  dbname: frm
+  name: frmpublication
+  target:
+    allTables: true
+  publicationReclaimPolicy: delete
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Subscription
+metadata:
+  name: frm-subscription
+spec:
+  cluster:
+    name: satisfactory-server-cnpg-cluster-pg17
+  dbname: frm
+  name: frmsubscriber
+  externalClusterName: importSource
+  publicationName: frmpublication
+  subscriptionReclaimPolicy: delete
