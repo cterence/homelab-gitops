@@ -231,9 +231,10 @@ cnpg-cluster:
     logLevel: "info"
     roles:
       - name: frm
+        connectionLimit: -1
         ensure: present
+        inherit: true
         login: true
-        superuser: false
         replication: true
     monitoring:
       enabled: true
@@ -268,6 +269,7 @@ cnpg-cluster-pg17:
     import:
       type: microservice
       databases: ["frm"]
+      schemaOnly: true
       source:
         host: satisfactory-server-cnpg-cluster-rw
         username: frm
