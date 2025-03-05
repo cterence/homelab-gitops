@@ -231,9 +231,10 @@ cnpg-cluster:
     logLevel: "info"
     roles:
       - name: frm
+        connectionLimit: -1
         ensure: present
+        inherit: true
         login: true
-        superuser: false
         replication: true
     monitoring:
       enabled: true
