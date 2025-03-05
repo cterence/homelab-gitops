@@ -5,6 +5,7 @@ on:
     paths:
       - argocd-apps/applicationset.yaml
       - k8s-apps/**
+  workflow_dispatch:
 
 jobs:
   update-deployed-apps-table:
@@ -22,12 +23,12 @@ jobs:
             k8s-apps:
               - deleted: 'k8s-apps/**'
       - name: Update deployed apps table
-        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true'
+        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true' || github.event_name == 'workflow_dispatch'
         run: ./scripts/update-deployed-apps.sh
       - name: Commit changes
-        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true'
+        if: steps.filter.outputs.argocd-apps == 'true' || steps.filter.outputs.k8s-apps == 'true' || github.event_name == 'workflow_dispatch'
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9
         with:
           default_author: github_actions
-          message: 'docs: [ci] updated deployed apps table'
-          add: 'README.md'
+          message: "docs: [ci] updated deployed apps table"
+          add: "README.md"
