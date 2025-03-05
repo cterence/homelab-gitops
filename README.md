@@ -86,6 +86,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ✅ |
 | [silverbullet](./scripts/../k8s-apps/silverbullet) | Note-taking application optimized for people with a hacker mindset | ❌ |
+| [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | null | ✅ |
 | [tailout](./scripts/../k8s-apps/tailout) | Spawn an exit node for your tailnet anywhere | ❌ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
 | [thanos](./scripts/../k8s-apps/thanos) | Highly available Prometheus setup with long term storage capabilities | ❌ |
