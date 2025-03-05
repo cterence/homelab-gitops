@@ -288,5 +288,6 @@ cnpg-cluster-pg17:
           key: ca.crt
   backups:
     enabled: true
+    scheduledBackups: []
     volumeSnapshot:
       className: longhorn
