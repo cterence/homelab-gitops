@@ -392,7 +392,7 @@ pihole:
       port: 9617
       image:
         repository: ekofr/pihole-exporter
-        tag: v1.0.0@sha256:688f95ff562905721742f1c2be22a794c0d89869d8c8e7c9bf0e17ceb8eb8e1e
+        tag: v1.0.1@sha256:c33eec2a8308fa510608b93d4921bb62f75f6132f8792b24e63972835f624496
         pullPolicy: IfNotPresent
       resources:
         limits:
