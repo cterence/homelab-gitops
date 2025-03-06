@@ -162,9 +162,13 @@ immich:
 cnpg-cluster:
   type: postgresql
   mode: standalone
+  version:
+    postgresql: "16"
   cluster:
     instances: 1
-    imageName: "ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.2-v0.2.0"
+    imageCatalogRef:
+      kind: ImageCatalog
+      name: cloudnative-pgvectors
     storage:
       size: 8Gi
       storageClass: ""
