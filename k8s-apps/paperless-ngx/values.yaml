@@ -192,11 +192,13 @@ redis:
 cnpg-cluster:
   type: postgresql
   mode: standalone
-  enablePDB: false
+  version:
+    postgresql: "16"
   cluster:
-    enablePDB: false
     instances: 1
-    imageName: "ghcr.io/cloudnative-pg/postgresql:16.3"
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
     storage:
       size: 10Gi
     walStorage:

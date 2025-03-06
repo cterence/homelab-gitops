@@ -126,7 +126,9 @@ cnpg-cluster:
     postgresql: "17"
   cluster:
     instances: 1
-    imageName: "ghcr.io/cloudnative-pg/postgresql:17.2"
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
     storage:
       size: 10Gi
     walStorage:
