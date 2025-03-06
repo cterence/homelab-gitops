@@ -1,0 +1,12 @@
+{{ if .Capabilities.APIVersions.Has "postgresql.cnpg.io/v1/ClusterImageCatalog" -}}
+apiVersion: postgresql.cnpg.io/v1
+kind: ClusterImageCatalog
+metadata:
+  name: postgresql
+spec:
+  images:
+    - major: 16
+      image: ghcr.io/cloudnative-pg/postgresql:16.8
+    - major: 17
+      image: ghcr.io/cloudnative-pg/postgresql:17.4
+{{ end -}}
