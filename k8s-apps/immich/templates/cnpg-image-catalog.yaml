@@ -5,4 +5,4 @@ metadata:
 spec:
   images:
     - major: 16
-      image: ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.2-v0.2.0
+      image: ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.5-v0.3.0
