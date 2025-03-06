@@ -246,11 +246,14 @@ cnpg-cluster:
 
 cnpg-cluster-pg17:
   type: postgresql
-  postgresql: "17"
   mode: recovery
+  version:
+    postgresql: "17"
   cluster:
     instances: 1
-    imageName: "ghcr.io/cloudnative-pg/postgresql:17.4"
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
     storage:
       size: 10Gi
     resources: {}
