@@ -57,16 +57,16 @@ home-assistant:
       items:
         - key: uri
           path: uri
-      # targetSelector:
-      #   main:
-      #     init: {}
+      targetSelector:
+        main:
+          init: {}
   configmap:
     init:
       enabled: true
       data:
         init.sh: |-
           #!/bin/sh
-          {{- $haDBURL := (printf "%s?client_encoding=utf8" ($.Values.cnpg.main.creds.std | trimAll "\"")) }}
+          db_uri=$(cat /config/database-secret/uri)
           config="/config/configuration.yaml"
           default="/config/init"
           if [ ! -f "$config" ]; then
@@ -84,8 +84,10 @@ home-assistant:
             cat "$default/http.default" >> "$config"
           fi
 
+          yq_query=".recorder.db_url = \"$db_uri\""
+
           echo "Updating database URL"
-          yq -i '.recorder.db_url = "{{ $haDBURL }}"' "$config"
+          yq -i "$yq_query" "$config"
           echo "Done"
 
           echo "Creating include files..."
