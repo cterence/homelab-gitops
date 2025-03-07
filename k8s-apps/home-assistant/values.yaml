@@ -85,7 +85,7 @@ home-assistant:
             cat "$default/http.default" >> "$config"
           fi
 
-          yq_query=".recorder.db_url = \"{{ (printf "%s?client_encoding=utf8" (.Values.cnpg.main.creds.std | trimAll "\"")) | quote }}\""
+          yq_query=".recorder.db_url = \"$db_uri\""
 
           echo "Updating database URL"
           yq -i "$yq_query" "$config"
