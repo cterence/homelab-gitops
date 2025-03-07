@@ -35,22 +35,22 @@ app-template:
             PAPERLESS_DBHOST:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: host
             PAPERLESS_DBNAME:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: dbname
             PAPERLESS_DBUSER:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: user
             PAPERLESS_DBPASS:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: password
           probes:
             liveness:
@@ -87,22 +87,22 @@ app-template:
             PAPERLESS_DBHOST:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: host
             PAPERLESS_DBNAME:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: dbname
             PAPERLESS_DBUSER:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: user
             PAPERLESS_DBPASS:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
                   key: password
 
   service:
