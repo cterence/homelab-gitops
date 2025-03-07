@@ -187,3 +187,49 @@ home-assistant:
     requests:
       cpu: 100m
       memory: 250Mi
+
+cnpg-cluster-pg17:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: home-assistant
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["home-assistant"]
+      schemaOnly: true
+      source:
+        host: home-assistant-cnpg-main-rw
+        username: home-assistant
+        database: home-assistant
+        passwordSecret:
+          name: home-assistant-cnpg-main-app
+          key: password
+        sslKeySecret:
+          name: home-assistant-cnpg-main-replication
+          key: tls.key
+        sslCertSecret:
+          name: home-assistant-cnpg-main-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: home-assistant-cnpg-main-ca
+          key: ca.crt

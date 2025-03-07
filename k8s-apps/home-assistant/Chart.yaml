@@ -7,3 +7,6 @@ dependencies:
   - name: home-assistant
     repository: oci://tccr.io/truecharts
     version: 27.3.0
+  - name: cluster-local
+    repository: file://../../charts/cnpg-cluster
+    version: 0.2.1
