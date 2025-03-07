@@ -139,7 +139,7 @@ home-assistant:
           recorder:
             purge_keep_days: 30
             commit_interval: 3
-            db_url: {{ (printf "%s?client_encoding=utf8" (.Values.cnpg.main.creds.std | trimAll "\"")) | quote }}
+            db_url: edited_by_init_sh
         http.default: |-
           http:
             use_x_forwarded_for: true
@@ -153,7 +153,7 @@ home-assistant:
               {{- end }}
   cnpg:
     main:
-      enabled: true
+      enabled: false
       user: home-assistant
       database: home-assistant
       cluster:
