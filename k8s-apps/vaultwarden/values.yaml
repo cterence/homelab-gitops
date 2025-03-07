@@ -284,7 +284,7 @@ vaultwarden:
     uriOverride: ""
     ## @param database.existingSecret Name of an existing secret containing the database URI
     ##
-    existingSecret: "vaultwarden-cnpg-cluster-app"
+    existingSecret: "vaultwarden-cnpg-cluster-pg17-app"
     ## @param database.existingSecretKey Key in the existing secret
     ##
     existingSecretKey: "uri"
