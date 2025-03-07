@@ -14,3 +14,7 @@ dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami
     version: 20.11.2
+  - name: cluster-local
+    alias: cnpg-cluster-pg17
+    repository: "file://../../charts/cnpg-cluster"
+    version: 0.2.1

@@ -207,10 +207,62 @@ cnpg-cluster:
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
     logLevel: "info"
-    roles: []
+    roles:
+      - name: paperless-ngx
+        connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        replication: true
     monitoring:
       enabled: true
       podMonitor:
         enabled: true
     initdb:
       database: paperless-ngx
+
+cnpg-cluster-pg17:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: paperless-ngx
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["paperless-ngx"]
+      schemaOnly: true
+      source:
+        host: paperless-ngx-cnpg-cluster-rw
+        username: paperless-ngx
+        database: paperless-ngx
+        passwordSecret:
+          name: paperless-ngx-cnpg-cluster-app
+          key: password
+        sslKeySecret:
+          name: paperless-ngx-cnpg-cluster-replication
+          key: tls.key
+        sslCertSecret:
+          name: paperless-ngx-cnpg-cluster-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: paperless-ngx-cnpg-cluster-ca
+          key: ca.crt
