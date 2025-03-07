@@ -189,38 +189,6 @@ redis:
     pdb:
       create: false
 
-cnpg-cluster:
-  type: postgresql
-  mode: standalone
-  version:
-    postgresql: "16"
-  cluster:
-    instances: 1
-    imageCatalogRef:
-      kind: ClusterImageCatalog
-      name: postgresql
-    storage:
-      size: 10Gi
-    walStorage:
-      enabled: true
-    resources: {}
-    primaryUpdateMethod: switchover
-    primaryUpdateStrategy: unsupervised
-    logLevel: "info"
-    roles:
-      - name: paperless-ngx
-        connectionLimit: -1
-        ensure: present
-        inherit: true
-        login: true
-        replication: true
-    monitoring:
-      enabled: true
-      podMonitor:
-        enabled: true
-    initdb:
-      database: paperless-ngx
-
 cnpg-cluster-pg17:
   type: postgresql
   mode: recovery
