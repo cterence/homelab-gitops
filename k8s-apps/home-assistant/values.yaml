@@ -222,7 +222,7 @@ cnpg-cluster-pg17:
         username: home-assistant
         database: home-assistant
         passwordSecret:
-          name: home-assistant-cnpg-main-app
+          name: home-assistant-cnpg-main-user
           key: password
         sslKeySecret:
           name: home-assistant-cnpg-main-replication
