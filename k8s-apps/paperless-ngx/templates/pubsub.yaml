@@ -6,7 +6,7 @@ spec:
   cluster:
     name: {{ .Release.Name }}-cnpg-cluster
   dbname: {{ .Release.Name }}
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name | replace "-" "" }}
   target:
     allTables: true
   publicationReclaimPolicy: delete
@@ -19,7 +19,7 @@ spec:
   cluster:
     name: {{ .Release.Name }}-cnpg-cluster-pg17
   dbname: {{ .Release.Name }}
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name | replace "-" "" }}
   externalClusterName: importSource
-  publicationName: {{ .Release.Name }}
+  publicationName: {{ .Release.Name | replace "-" "" }}
   subscriptionReclaimPolicy: delete
