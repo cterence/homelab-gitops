@@ -46,6 +46,20 @@ home-assistant:
       targetSelector:
         main:
           init: {}
+    database-secret:
+      enabled: true
+      type: secret
+      objectName: cnpg-cluster-pg17-app
+      mountPath: "/config/database-secret"
+      defaultMode: "0400"
+      readOnly: true
+      optional: true
+      items:
+        - key: uri
+          path: uri
+      # targetSelector:
+      #   main:
+      #     init: {}
   configmap:
     init:
       enabled: true
@@ -174,7 +188,7 @@ home-assistant:
             - path: /
               pathType: Prefix
       tls:
-        - secretName: homepage-tls
+        - secretName: home-assistant-tls
           hosts:
             - *host
       integrations:
