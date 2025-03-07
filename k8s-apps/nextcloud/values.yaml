@@ -239,22 +239,22 @@ nextcloud:
             valueFrom:
               secretKeyRef:
                 key: host
-                name: nextcloud-cnpg-cluster-app
+                name: nextcloud-cnpg-cluster-pg17-app
           - name: POSTGRES_DB
             valueFrom:
               secretKeyRef:
                 key: dbname
-                name: nextcloud-cnpg-cluster-app
+                name: nextcloud-cnpg-cluster-pg17-app
           - name: POSTGRES_USER
             valueFrom:
               secretKeyRef:
                 key: username
-                name: nextcloud-cnpg-cluster-app
+                name: nextcloud-cnpg-cluster-pg17-app
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: password
-                name: nextcloud-cnpg-cluster-app
+                name: nextcloud-cnpg-cluster-pg17-app
         securityContext:
           runAsUser: 33
           runAsGroup: 33
@@ -348,7 +348,7 @@ nextcloud:
     ## Use a existing secret
     existingSecret:
       enabled: true
-      secretName: nextcloud-cnpg-cluster-app
+      secretName: nextcloud-cnpg-cluster-pg17-app
       usernameKey: username
       passwordKey: password
       hostKey: host
