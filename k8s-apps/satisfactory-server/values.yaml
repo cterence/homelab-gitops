@@ -143,22 +143,22 @@ app-template:
             PG_HOST:
               valueFrom:
                 secretKeyRef:
-                  name: satisfactory-server-cnpg-cluster-app
+                  name: satisfactory-server-cnpg-cluster-pg17-app
                   key: host
             PG_PASSWORD:
               valueFrom:
                 secretKeyRef:
-                  name: satisfactory-server-cnpg-cluster-app
+                  name: satisfactory-server-cnpg-cluster-pg17-app
                   key: password
             PG_USER:
               valueFrom:
                 secretKeyRef:
-                  name: satisfactory-server-cnpg-cluster-app
+                  name: satisfactory-server-cnpg-cluster-pg17-app
                   key: user
             PG_DB:
               valueFrom:
                 secretKeyRef:
-                  name: satisfactory-server-cnpg-cluster-app
+                  name: satisfactory-server-cnpg-cluster-pg17-app
                   key: dbname
           probes:
             liveness:
