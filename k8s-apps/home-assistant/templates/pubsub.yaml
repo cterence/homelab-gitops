@@ -17,7 +17,7 @@ metadata:
   name: home-assistant
 spec:
   cluster:
-    name: home-assistant-cnpg-main-pg17
+    name: home-assistant-cnpg-cluster-pg17
   dbname: home-assistant
   name: homeassistant
   externalClusterName: importSource
