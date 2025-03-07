@@ -217,37 +217,6 @@ app-template:
           interval: 15s
           scrapeTimeout: 10s
 
-cnpg-cluster:
-  type: postgresql
-  mode: standalone
-  version:
-    postgresql: "16"
-  cluster:
-    instances: 1
-    imageCatalogRef:
-      kind: ClusterImageCatalog
-      name: postgresql
-    storage:
-      size: 10Gi
-    resources: {}
-    primaryUpdateMethod: switchover
-    primaryUpdateStrategy: unsupervised
-    logLevel: "info"
-    roles:
-      - name: frm
-        connectionLimit: -1
-        ensure: present
-        inherit: true
-        login: true
-        replication: true
-    monitoring:
-      enabled: true
-      podMonitor:
-        enabled: true
-    postgresql: {}
-    initdb:
-      database: frm
-
 cnpg-cluster-pg17:
   type: postgresql
   mode: recovery
