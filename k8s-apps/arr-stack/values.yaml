@@ -14,11 +14,15 @@ app-template:
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
       containers:
         jellyfin:
           image:
             repository: lscr.io/linuxserver/jellyfin
-            tag: 10.10.6@sha256:49a8e636fd4514b23d37c84660101fecbb632174ba0569e0f09bbd2659a2a925
+            tag: 10.10.6@sha256:c7d4dec91cfd474c65d515e6ef926933b673c310c494f565c01022b16c533e31
           env:
             TZ: Europe/Paris
           ports:
