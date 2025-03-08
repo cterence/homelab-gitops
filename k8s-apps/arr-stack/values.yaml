@@ -7,6 +7,8 @@ app-template:
       runAsGroup: 1000
       fsGroup: 1000
       fsGroupChangePolicy: "OnRootMismatch"
+    nodeSelector:
+      kubernetes.io/hostname: homelab2
 
   controllers:
     jellyfin:
@@ -18,8 +20,6 @@ app-template:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-        nodeSelector:
-          kubernetes.io/hostname: homelab2
       containers:
         jellyfin:
           image:
@@ -166,9 +166,6 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
-      pod:
-        nodeSelector:
-          kubernetes.io/hostname: homelab2
       containers:
         qbittorrent:
           image:
