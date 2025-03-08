@@ -82,7 +82,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
 | [pihole](./scripts/../k8s-apps/pihole) | Network-wide Ad Blocking | ❌ |
-| [qbittorrent](./scripts/../k8s-apps/qbittorrent) | qBittorrent BitTorrent client | ❌ |
+| [qbittorrent](./scripts/../k8s-apps/qbittorrent) | _description_ | ✅ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ✅ |
 | [silverbullet](./scripts/../k8s-apps/silverbullet) | Note-taking application optimized for people with a hacker mindset | ❌ |
