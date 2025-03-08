@@ -38,6 +38,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | App | Description | Is deployed |
 | --- | --- | --- |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
+| [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack | ✅ |
 | [authelia](./scripts/../k8s-apps/authelia) | The Single Sign-On Multi-Factor portal for web apps | ❌ |
 | [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ✅ |
 | [calibre-web](./scripts/../k8s-apps/calibre-web) | Web app for browsing, reading and downloading eBooks stored in a Calibre database | ✅ |
@@ -51,7 +52,6 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
 | [firefly-iii](./scripts/../k8s-apps/firefly-iii) | A free and open source personal finance manager | ❌ |
-| [flaresolverr](./scripts/../k8s-apps/flaresolverr) | _description_ | ✅ |
 | [ghost](./scripts/../k8s-apps/ghost) | Independent platform for publishing online by web and email newsletter | ❌ |
 | [gitlab-runner](./scripts/../k8s-apps/gitlab-runner) | Run your CI/CD jobs and send the results back to GitLab | ❌ |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
@@ -83,13 +83,10 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
 | [pihole](./scripts/../k8s-apps/pihole) | Network-wide Ad Blocking | ❌ |
-| [prowlarr](./scripts/../k8s-apps/prowlarr) | The ultimate indexer manager | ✅ |
-| [qbittorrent](./scripts/../k8s-apps/qbittorrent) | Torrent client | ✅ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ✅ |
 | [silverbullet](./scripts/../k8s-apps/silverbullet) | Note-taking application optimized for people with a hacker mindset | ❌ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ✅ |
-| [sonarr](./scripts/../k8s-apps/sonarr) | Sonarr is an internet PVR for Usenet and BitTorrent users | ✅ |
 | [tailout](./scripts/../k8s-apps/tailout) | Spawn an exit node for your tailnet anywhere | ❌ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
 | [thanos](./scripts/../k8s-apps/thanos) | Highly available Prometheus setup with long term storage capabilities | ❌ |
