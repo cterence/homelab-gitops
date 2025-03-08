@@ -18,6 +18,8 @@ app-template:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+        nodeSelector:
+          kubernetes.io/hostname: homelab2
       containers:
         jellyfin:
           image:
@@ -138,6 +140,9 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        nodeSelector:
+          kubernetes.io/hostname: homelab2
       containers:
         qbittorrent:
           image:
@@ -312,7 +317,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 10Gi
       advancedMounts:
         jellyfin:
           jellyfin:
