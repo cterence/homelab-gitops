@@ -231,6 +231,15 @@ app-template:
         sonarr:
           sonarr:
             - path: /config
+    radarr-config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      advancedMounts:
+        radarr:
+          radarr:
+            - path: /config
     qbittorrent-config:
       enabled: true
       type: persistentVolumeClaim
