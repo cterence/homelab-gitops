@@ -1,6 +1,6 @@
 apiVersion: v2
-name: prowlarr
-description: The ultimate indexer manager
+name: arr-stack
+description: Arr Stack
 type: application
 version: 0.1.0
 dependencies:

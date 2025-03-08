@@ -9,6 +9,7 @@ spec:
     - list:
         elements:
           - name: argocd
+          - name: arr-stack
           - name: blackbox-exporter
             namespace: monitoring
           - name: calibre-web
@@ -20,7 +21,6 @@ spec:
           - name: crowdsec
           - name: external-dns
           - name: external-secrets
-          - name: flaresolverr
           - name: go-healthcheck
           - name: home-assistant
           - name: homepage
@@ -44,12 +44,9 @@ spec:
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
-          - name: prowlarr
-          - name: qbittorrent
           - name: reloader
           - name: satisfactory-server
           - name: snapshot-controller
-          - name: sonarr
           - name: tailscale-operator
           - name: vaultwarden
           - name: velero
