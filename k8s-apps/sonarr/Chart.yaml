@@ -1,6 +1,6 @@
 apiVersion: v2
-name: qbittorrent
-description: Torrent client
+name: sonarr
+description: Sonarr is an internet PVR for Usenet and BitTorrent users
 type: application
 version: 0.1.0
 dependencies:
