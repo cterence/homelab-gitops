@@ -70,3 +70,20 @@ app-template:
       size: 50Mi
       globalMounts:
         - path: /config
+    qbittorrent-downloads:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: sonarr-qbittorrent-downloads
+
+  rawResources:
+    qbittorrent-downloads:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      spec:
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 50Gi
+          volumeName: pvc-82976822-a953-42f9-9a1f-d1bab9a07813 # qbittorrent-downloads
