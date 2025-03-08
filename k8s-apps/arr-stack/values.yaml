@@ -163,32 +163,24 @@ app-template:
         http:
           port: 8080
 
-  # ingress:
-  #   main:
-  #     annotations:
-  #       cert-manager.io/cluster-issuer: letsencrypt
-  #       external-dns.alpha.kubernetes.io/target: home.terence.cloud
-  #       gethomepage.dev/enabled: "true"
-  #       gethomepage.dev/name: _app_
-  #       gethomepage.dev/description: _description_
-  #       gethomepage.dev/group: _group_
-  #       gethomepage.dev/icon: _icon_
-  #       # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-  #       # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-  #       # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
-  #     className: "nginx"
-  #     hosts:
-  #       - host: &host _subdomain_.terence.cloud
-  #         paths:
-  #           - path: /
-  #             pathType: Prefix
-  #             service:
-  #               identifier: main
-  #               port: http
-  #     tls:
-  #       - secretName: _subdomain_-tls
-  #         hosts:
-  #           - *host
+  ingress:
+    jellyfin:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "nginx"
+      hosts:
+        - host: &host jf.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: jellyfin-tls
+          hosts:
+            - *host
 
   persistence:
     jellyfin-config:
