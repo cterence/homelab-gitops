@@ -35,6 +35,7 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
+
     sonarr:
       type: deployment
       strategy: RollingUpdate
@@ -50,6 +51,29 @@ app-template:
           ports:
             - name: http
               containerPort: 8989
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+    radarr:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        radarr:
+          image:
+            repository: lscr.io/linuxserver/radarr
+            tag: 5.19.3
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 7878
           probes:
             liveness:
               enabled: true
@@ -144,6 +168,12 @@ app-template:
       ports:
         http:
           port: 8989
+    radarr:
+      controller: radarr
+      type: ClusterIP
+      ports:
+        http:
+          port: 7878
     prowlarr:
       controller: prowlarr
       type: ClusterIP
