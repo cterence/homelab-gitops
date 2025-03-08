@@ -186,13 +186,6 @@ app-template:
         prowlarr:
           prowlarr:
             - path: /config
-    downloads:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteMany
-      size: 50Gi
-      globalMounts:
-        - path: /downloads
     data:
       enabled: true
       type: persistentVolumeClaim
