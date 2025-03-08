@@ -94,7 +94,7 @@ app-template:
         volumeClaimTemplates:
           - name: config
             accessMode: ReadWriteOnce
-            size: 100Gi
+            size: 10Gi
             advancedMounts:
               main:
                 - path: /config
