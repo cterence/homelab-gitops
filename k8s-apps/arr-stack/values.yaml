@@ -35,7 +35,8 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
-
+          securityContext:
+            privileged: true
     sonarr:
       type: deployment
       strategy: RollingUpdate
@@ -320,7 +321,6 @@ app-template:
       enabled: true
       type: hostPath
       hostPath: /dev/dri/renderD128
-      mountPath: /dev/dri/renderD128
       hostPathType: "CharDevice"
       advancedMounts:
         jellyfin:
