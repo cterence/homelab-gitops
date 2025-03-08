@@ -193,3 +193,10 @@ app-template:
       size: 50Gi
       globalMounts:
         - path: /downloads
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteMany
+      size: 100Gi
+      globalMounts:
+        - path: /data
