@@ -1,126 +1,76 @@
-image:
-  repository: ghcr.io/k8s-at-home/qbittorrent
-  tag: v4.4.2@sha256:61deadd1ec7865b5f1446943021b588915c24f09073358790f5415061d0a43dc
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
 
-service:
-  type: ClusterIP
-  port: 8080
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: lscr.io/linuxserver/qbittorrent
+            tag: 5.0.4@sha256:81a71641d2ee65fbecfabf3388f0d6b7b053e7266658b1fb7efee8900d06f010
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
 
-serviceAccount:
-  create: true
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
 
-autoscaling:
-  enabled: false
-
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
-    external-dns.alpha.kubernetes.io/target: home.terence.cloud
-    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-    # The qBittorrent WebUI doesn't like to see gitlab.com as the referer, so we just strip this header out
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_clear_headers "Referer";
-  hosts:
-    - host: qbittorrent.terence.cloud
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-    - secretName: qbittorrent-tls
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "nginx"
       hosts:
-        - qbittorrent.terence.cloud
+        - host: &host qb.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: qbittorrent-tls
+          hosts:
+            - *host
 
-volumeMounts:
-  - name: qbittorrent-configmap
-    mountPath: /config/qBittorrent/qBittorrent.conf
-    subPath: qBittorrent.conf
-  - name: qbittorrent-config
-    mountPath: /config/qBittorrent/
-  - name: qbittorrent-downloads
-    mountPath: /downloads
-
-volumes:
-  - name: qbittorrent-configmap
-    configMap:
-      name: qbittorrent-configmap
-  - name: qbittorrent-config
-    persistentVolumeClaim:
-      claimName: qbittorrent-config
-  - name: qbittorrent-downloads
-    persistentVolumeClaim:
-      claimName: qbittorrent-downloads
-
-persistentVolumes:
-  - name: qbittorrent-downloads
-    accessMode: ReadWriteOnce
-    size: 50Gi
-  - name: qbittorrent-config
-    accessMode: ReadWriteOnce
-    size: 100Mi
-
-configmaps:
-  - name: qbittorrent-configmap
-    data:
-      # IMPORTANT : the settings below allow anybody to access the WebUI without authentication
-      # WebUI\AuthSubnetWhitelist=0.0.0.0/0
-      # WebUI\AuthSubnetWhitelistEnabled=true
-      qBittorrent.conf: |
-        [AutoRun]
-        enabled=false
-        program=
-
-        [Core]
-        AutoDeleteAddedTorrentFile=Never
-
-        [LegalNotice]
-        Accepted=true
-
-        [Preferences]
-        Advanced\RecheckOnCompletion=false
-        Advanced\trackerPort=9000
-        Advanced\AnonymousMode=true
-        Bittorrent\Encryption=1
-        Connection\PortRangeMin=6881
-        Connection\ResolvePeerCountries=true
-        Downloads\SavePath=/downloads/
-        Downloads\TempPath=/downloads/temp/
-        DynDNS\DomainName=changeme.dyndns.org
-        DynDNS\Enabled=false
-        DynDNS\Password=
-        DynDNS\Service=0
-        DynDNS\Username=
-        General\Locale=
-        MailNotification\email=
-        MailNotification\enabled=false
-        MailNotification\password=
-        MailNotification\req_auth=true
-        MailNotification\req_ssl=false
-        MailNotification\sender=qBittorrent_notification@example.com
-        MailNotification\smtp_server=smtp.changeme.com
-        MailNotification\username=
-        Queueing\QueueingEnabled=false
-        WebUI\Address=*
-        WebUI\AlternativeUIEnabled=false
-        WebUI\AuthSubnetWhitelist=0.0.0.0/0
-        WebUI\AuthSubnetWhitelistEnabled=true
-        WebUI\BanDuration=3600
-        WebUI\CSRFProtection=true
-        WebUI\ClickjackingProtection=true
-        WebUI\CustomHTTPHeaders=
-        WebUI\CustomHTTPHeadersEnabled=false
-        WebUI\HTTPS\CertificatePath=
-        WebUI\HTTPS\Enabled=false
-        WebUI\HTTPS\KeyPath=
-        WebUI\HostHeaderValidation=false
-        WebUI\LocalHostAuth=false
-        WebUI\MaxAuthenticationFailCount=5
-        WebUI\Port=8080
-        WebUI\RootFolder=
-        WebUI\SecureCookie=true
-        WebUI\ServerDomains=*
-        WebUI\SessionTimeout=3600
-        WebUI\UseUPnP=false
-        WebUI\Username=admin
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      globalMounts:
+        - path: /config
+    downloads:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Gi
+      globalMounts:
+        - path: /downloads
