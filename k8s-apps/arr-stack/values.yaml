@@ -39,6 +39,32 @@ app-template:
               type: HTTP
           securityContext:
             privileged: true
+
+    jellyseerr:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        jellyseerr:
+          image:
+            repository: fallenbagel/jellyseerr
+            tag: 2.3.0@sha256:df53a7b06006e9da117a7072a55cf5d8b2071a6272f6bb329d8ca62b6f5c08a6
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 5055
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+          securityContext:
+            privileged: true
+
     sonarr:
       type: deployment
       strategy: RollingUpdate
@@ -168,6 +194,12 @@ app-template:
       ports:
         http:
           port: 8096
+    jellyseerr:
+      controller: jellyseerr
+      type: ClusterIP
+      ports:
+        http:
+          port: 5055
     sonarr:
       controller: sonarr
       type: ClusterIP
@@ -217,6 +249,26 @@ app-template:
         - secretName: jellyfin-tls
           hosts:
             - *host
+
+    jellyseerr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+      className: "nginx"
+      hosts:
+        - host: &host js.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: jellyseerr
+                port: http
+      tls:
+        - secretName: jellyseerr-tls
+          hosts:
+            - *host
+
     sonarr:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -235,6 +287,7 @@ app-template:
         - secretName: sonarr-tls
           hosts:
             - *host
+
     radarr:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -333,6 +386,16 @@ app-template:
         jellyfin:
           jellyfin:
             - path: /dev/dri/renderD128
+
+    jellyseerr-config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      advancedMounts:
+        jellyseerr:
+          jellyseerr:
+            - path: /app/config
 
     sonarr-config:
       enabled: true
