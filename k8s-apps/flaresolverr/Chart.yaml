@@ -1,6 +1,6 @@
 apiVersion: v2
-name: _name_
-description: _description_
+name: flaresolverr
+description: Cloudflare Resolver
 type: application
 version: 0.1.0
 dependencies:
