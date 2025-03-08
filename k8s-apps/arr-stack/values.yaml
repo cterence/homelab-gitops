@@ -287,6 +287,27 @@ app-template:
             - *host
 
   persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteMany
+      size: 100Gi
+      advancedMounts:
+        jellyfin:
+          jellyfin:
+            - path: /data/media
+              subPath: media
+        sonarr:
+          sonarr:
+            - path: /data
+        radarr:
+          radarr:
+            - path: /data
+        qbittorrent:
+          qbittorrent:
+            - path: /data/download
+              subPath: download
+
     jellyfin-config:
       enabled: true
       type: persistentVolumeClaim
@@ -332,10 +353,3 @@ app-template:
         prowlarr:
           prowlarr:
             - path: /config
-    data:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteMany
-      size: 100Gi
-      globalMounts:
-        - path: /data
