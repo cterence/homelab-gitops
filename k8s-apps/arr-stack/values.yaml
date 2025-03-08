@@ -211,6 +211,80 @@ app-template:
         - secretName: jellyfin-tls
           hosts:
             - *host
+    sonarr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+      className: "nginx"
+      hosts:
+        - host: &host son.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: sonarr
+                port: http
+      tls:
+        - secretName: sonarr-tls
+          hosts:
+            - *host
+    radarr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+      className: "nginx"
+      hosts:
+        - host: &host rad.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: radarr
+                port: http
+      tls:
+        - secretName: radarr-tls
+          hosts:
+            - *host
+
+    prowlarr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+      className: "nginx"
+      hosts:
+        - host: &host prow.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: prowlarr
+                port: http
+      tls:
+        - secretName: prowlarr-tls
+          hosts:
+            - *host
+
+    qbittorrent:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+      className: "nginx"
+      hosts:
+        - host: &host qb.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: qbittorrent
+                port: http
+      tls:
+        - secretName: qbittorrent-tls
+          hosts:
+            - *host
 
   persistence:
     jellyfin-config:
