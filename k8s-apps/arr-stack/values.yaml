@@ -297,7 +297,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteMany
-      size: 100Gi
+      size: 200Gi
       advancedMounts:
         jellyfin:
           jellyfin:
@@ -313,6 +313,7 @@ app-template:
           qbittorrent:
             - path: /data/download
               subPath: download
+
     jellyfin-config:
       enabled: true
       type: persistentVolumeClaim
@@ -322,6 +323,7 @@ app-template:
         jellyfin:
           jellyfin:
             - path: /config
+
     jellyfin-hwa:
       enabled: true
       type: hostPath
@@ -331,6 +333,7 @@ app-template:
         jellyfin:
           jellyfin:
             - path: /dev/dri/renderD128
+
     sonarr-config:
       enabled: true
       type: persistentVolumeClaim
@@ -340,6 +343,7 @@ app-template:
         sonarr:
           sonarr:
             - path: /config
+
     radarr-config:
       enabled: true
       type: persistentVolumeClaim
@@ -349,6 +353,7 @@ app-template:
         radarr:
           radarr:
             - path: /config
+
     qbittorrent-config:
       enabled: true
       type: persistentVolumeClaim
@@ -358,6 +363,7 @@ app-template:
         qbittorrent:
           qbittorrent:
             - path: /config
+
     prowlarr-config:
       enabled: true
       type: persistentVolumeClaim
