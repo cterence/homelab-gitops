@@ -175,7 +175,7 @@ app-template:
             - path: /
               pathType: Prefix
               service:
-                identifier: main
+                identifier: jellyfin
                 port: http
       tls:
         - secretName: jellyfin-tls
