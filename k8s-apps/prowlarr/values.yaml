@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: lscr.io/linuxserver/prowlarr
+            tag: 1.31.2@sha256:761f73534a01aec4bf72a1396e9b9fda3f01632948b3fa31985982d26120a330
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 9696
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 9696
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "nginx"
+      hosts:
+        - host: &host prow.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: prowlarr-tls
+          hosts:
+            - *host
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      globalMounts:
+        - path: /config

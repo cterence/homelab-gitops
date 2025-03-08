@@ -43,6 +43,7 @@ spec:
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
+          - name: prowlarr
           - name: qbittorrent
           - name: reloader
           - name: satisfactory-server
