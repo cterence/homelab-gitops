@@ -20,6 +20,7 @@ spec:
           - name: crowdsec
           - name: external-dns
           - name: external-secrets
+          - name: flaresolverr
           - name: go-healthcheck
           - name: home-assistant
           - name: homepage

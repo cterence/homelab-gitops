@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/flaresolverr/flaresolverr
+            tag: v3.3.21@sha256:f104ee51e5124d83cf3be9b37480649355d223f7d8f9e453d0d5ef06c6e3b31b
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8191
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8191
+
+  # ingress:
+  #   main:
+  #     annotations:
+  #       cert-manager.io/cluster-issuer: letsencrypt
+  #       external-dns.alpha.kubernetes.io/target: home.terence.cloud
+  #       gethomepage.dev/enabled: "true"
+  #       gethomepage.dev/name: _app_
+  #       gethomepage.dev/description: _description_
+  #       gethomepage.dev/group: _group_
+  #       gethomepage.dev/icon: _icon_
+  #       # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+  #       # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+  #       # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
+  #     className: "nginx"
+  #     hosts:
+  #       - host: &host _subdomain_.terence.cloud
+  #         paths:
+  #           - path: /
+  #             pathType: Prefix
+  #             service:
+  #               identifier: main
+  #               port: http
+  #     tls:
+  #       - secretName: _subdomain_-tls
+  #         hosts:
+  #           - *host
+
+  # persistence:
+  #   config:
+  #     enabled: true
+  #     type: persistentVolumeClaim
+  #     accessMode: ReadWriteOnce
+  #     size: 50Mi
+  #     globalMounts:
+  #       - path: /config
