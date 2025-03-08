@@ -307,7 +307,6 @@ app-template:
           qbittorrent:
             - path: /data/download
               subPath: download
-
     jellyfin-config:
       enabled: true
       type: persistentVolumeClaim
@@ -317,6 +316,16 @@ app-template:
         jellyfin:
           jellyfin:
             - path: /config
+    jellyfin-hwa:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/dri/renderD128
+      mountPath: /dev/dri/renderD128
+      hostPathType: "CharDevice"
+      advancedMounts:
+        jellyfin:
+          jellyfin:
+            - path: /dev/dri/renderD128
     sonarr-config:
       enabled: true
       type: persistentVolumeClaim
