@@ -9,6 +9,28 @@ app-template:
       fsGroupChangePolicy: "OnRootMismatch"
 
   controllers:
+    jellyfin:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        jellyfin:
+          image:
+            repository: lscr.io/linuxserver/jellyfin
+            tag: 10.10.6@sha256:49a8e636fd4514b23d37c84660101fecbb632174ba0569e0f09bbd2659a2a925
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8096
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
     sonarr:
       type: deployment
       strategy: RollingUpdate
@@ -106,6 +128,12 @@ app-template:
               type: HTTP
 
   service:
+    jellyfin:
+      controller: jellyfin
+      type: ClusterIP
+      ports:
+        http:
+          port: 8096
     sonarr:
       controller: sonarr
       type: ClusterIP
@@ -159,6 +187,15 @@ app-template:
   #           - *host
 
   persistence:
+    jellyfin-config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      advancedMounts:
+        jellyfin:
+          jellyfin:
+            - path: /config
     sonarr-config:
       enabled: true
       type: persistentVolumeClaim
