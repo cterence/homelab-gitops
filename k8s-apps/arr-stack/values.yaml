@@ -170,7 +170,7 @@ app-template:
         qbittorrent:
           image:
             repository: lscr.io/linuxserver/qbittorrent
-            tag: 5.0.3-r0-ls373@sha256:8e541cfd4dc991ba43901314b465067fe287728d7d6fd8ae911958d0b9df184c
+            tag: 5.0.4-r0-ls384@sha256:50f490770308d0351e12618422e74e0613721b080f5db0bf840cf66a7281eea8
           env:
             TZ: Europe/Paris
           ports:
