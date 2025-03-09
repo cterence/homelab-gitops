@@ -16,6 +16,9 @@ app-template:
       type: statefulset
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        nodeSelector:
+          kubernetes.io/hostname: homelab2
       containers:
         # Configure the main application container
         main:

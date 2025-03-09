@@ -23,28 +23,20 @@ argo-cd:
             annotations:
               summary: ArgoCD application unhealthy (instance {{ $labels.instance }})
               description: "Application {{ $labels.name }} run by argo is currently not healthy - Value = {{ $value }}"
-
-    env:
-      - name: OC_AGENT_HOST
-        value: collector.linkerd-jaeger:55678
+    nodeSelector:
+      kubernetes.io/hostname: homelab2
 
   dex:
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
-    env:
-      - name: OC_AGENT_HOST
-        value: collector.linkerd-jaeger:55678
 
   redis:
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
-    env:
-      - name: OC_AGENT_HOST
-        value: collector.linkerd-jaeger:55678
 
   repoServer:
     useEphemeralHelmWorkingDir: false
@@ -53,9 +45,7 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
-    env:
-      - name: OC_AGENT_HOST
-        value: collector.linkerd-jaeger:55678
+
     extraContainers:
       - name: lovely-plugin
         image: ghcr.io/crumbhole/lovely:1.2.0@sha256:3a9ad726337abe6f5322e3a71e3b6ff4d7abc16069686379d5d4f5fbc1278807
@@ -81,10 +71,6 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
-
-    extraEnv:
-      - name: OC_AGENT_HOST
-        value: collector.linkerd-jaeger:55678
 
   notifications:
     enabled: true

@@ -25,6 +25,9 @@ kube-prometheus-stack:
       podMonitorNamespaceSelector:
         matchLabels: {}
 
+      nodeSelector:
+        kubernetes.io/hostname: homelab2
+
       resources:
         requests:
           cpu: 1000m

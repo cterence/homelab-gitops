@@ -548,7 +548,8 @@ nextcloud:
     minPods: 1
     maxPods: 10
 
-  nodeSelector: {}
+  nodeSelector:
+    kubernetes.io/hostname: homelab2
 
   tolerations: []
 
