@@ -1,33 +1,39 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:best-practices",
-    ":timezone(Europe/Paris)",
-    ":label(renovate)",
-    ":semanticPrefixFix",
-    ":separateMultipleMajorReleases",
-    ":automergeBranch",
-    ":automergeStableNonMajor",
-    ":automergeDigest",
-    ":skipStatusChecks",
+    'config:best-practices',
+    ':timezone(Europe/Paris)',
+    ':label(renovate)',
+    ':semanticPrefixFix',
+    ':separateMultipleMajorReleases',
+    ':automergeBranch',
+    ':automergeStableNonMajor',
+    ':automergeDigest',
+    ':skipStatusChecks',
   ],
-  dependencyDashboardTitle: "🤖 Renovate Dashboard",
-  commitMessageTopic: "{{depName}}",
-  commitMessageExtra: "to {{newVersion}}",
-  commitMessageSuffix: "",
+  dependencyDashboardTitle: '🤖 Renovate Dashboard',
+  commitMessageTopic: '{{depName}}',
+  commitMessageExtra: 'to {{newVersion}}',
+  commitMessageSuffix: '',
   ignorePaths: [],
   packageRules: [
     {
-      matchDatasources: ["helm"],
-      commitMessageTopic: "chart {{depName}}",
+      matchDatasources: [
+        'helm',
+      ],
+      commitMessageTopic: 'chart {{depName}}',
     },
     {
-      matchDatasources: ["docker"],
-      commitMessageTopic: "image {{depName}}"
+      matchDatasources: [
+        'docker',
+      ],
+      commitMessageTopic: 'image {{depName}}',
     },
     {
-      packagePatterns: ["^lscr.io\\/linuxserver\\/"],
-      versionScheme: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$',
+      matchPackageNames: [
+        '/^lscr.io\\/linuxserver\\//',
+      ],
     },
-  ]
+  ],
 }
