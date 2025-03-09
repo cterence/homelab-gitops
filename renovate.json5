@@ -26,8 +26,8 @@
       commitMessageTopic: "image {{depName}}"
     },
     {
-      packagePatterns: ["^lscr.io\\/linuxserver\\/"],
-      versionScheme: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+      matchPackageNames: ["^lscr.io\\/linuxserver\\/"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     },
   ]
 }
