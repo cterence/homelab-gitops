@@ -435,7 +435,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 1Gi
       advancedMounts:
         jellyseerr:
           jellyseerr:
@@ -445,7 +445,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 1Gi
       advancedMounts:
         sonarr:
           sonarr:
@@ -455,7 +455,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 1Gi
       advancedMounts:
         radarr:
           radarr:
@@ -465,7 +465,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 1Gi
       advancedMounts:
         qbittorrent:
           qbittorrent:
@@ -475,7 +475,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 1Gi
       advancedMounts:
         prowlarr:
           prowlarr:
