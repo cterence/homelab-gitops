@@ -24,10 +24,6 @@
     {
       matchDatasources: ["docker"],
       commitMessageTopic: "image {{depName}}"
-    },
-    {
-      matchPackageNames: ["^lscr.io\\/linuxserver\\/"],
-      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
-    },
+    }
   ]
 }

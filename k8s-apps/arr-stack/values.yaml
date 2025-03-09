@@ -24,7 +24,7 @@ app-template:
         jellyfin:
           image:
             repository: lscr.io/linuxserver/jellyfin
-            tag: 10.10.6@sha256:c7d4dec91cfd474c65d515e6ef926933b673c310c494f565c01022b16c533e31
+            tag: 10.10.6ubu2404-ls53@sha256:075bc77361e6466f5cd546c9d97646428cc1f26d4b355991e8f66d0ffbc7c15a
           env:
             TZ: Europe/Paris
           ports:
