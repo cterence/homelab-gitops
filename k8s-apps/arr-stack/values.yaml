@@ -33,10 +33,17 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
           securityContext:
             privileged: true
 
@@ -58,10 +65,18 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /api/v1/status
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /api/v1/status
           securityContext:
             privileged: true
 
@@ -83,10 +98,18 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
 
     radarr:
       type: deployment
@@ -106,10 +129,18 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
 
     prowlarr:
       type: deployment
@@ -129,10 +160,18 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
 
     flaresolverr:
       type: deployment
@@ -156,10 +195,18 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
 
     qbittorrent:
       type: deployment
@@ -251,7 +298,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host js.terence.cloud
@@ -270,7 +317,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host son.terence.cloud
@@ -289,7 +336,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host rad.terence.cloud
@@ -308,7 +355,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host prow.terence.cloud
@@ -327,7 +374,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host qb.terence.cloud
