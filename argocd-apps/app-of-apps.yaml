@@ -5,6 +5,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
+  project: default
   source:
     repoURL: git@github.com:cterence/homelab-gitops.git
     path: argocd-apps/
