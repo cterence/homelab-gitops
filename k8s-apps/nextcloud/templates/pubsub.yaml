@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   cluster:
-    name: {{ .Release.Name }}-cnpg-cluster
+    name: {{ .Release.Name }}-cnpg-cluster-pg17
   dbname: {{ .Release.Name }}
   name: {{ .Release.Name }}
   target:
@@ -17,7 +17,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   cluster:
-    name: {{ .Release.Name }}-cnpg-cluster-pg17
+    name: {{ .Release.Name }}-cnpg-cluster-pg17-new
   dbname: {{ .Release.Name }}
   name: {{ .Release.Name }}
   externalClusterName: importSource
