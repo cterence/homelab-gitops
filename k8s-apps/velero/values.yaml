@@ -647,6 +647,7 @@ velero:
           - paperless-ngx
           - satisfactory-server
           - vaultwarden
+          - zigbee2mqtt
         includedResources:
           - po
           - pv
