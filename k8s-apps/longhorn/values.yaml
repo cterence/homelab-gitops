@@ -24,7 +24,7 @@ longhorn:
     autoCleanupSystemGeneratedSnapshot: "true"
     autoCleanupRecurringJobBackupSnapshot: "true"
     autoCleanupSnapshotWhenDeleteBackup: "true"
-    orphanAutoDeletion: "true"
+    orphanAutoDeletion: "false"
   ingress:
     enabled: true
     ingressClassName: nginx
