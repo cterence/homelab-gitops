@@ -11,7 +11,3 @@ dependencies:
     alias: cnpg-cluster-pg17
     repository: "file://../../charts/cnpg-cluster"
     version: 0.2.1
-  - name: cluster-local
-    alias: cnpg-cluster-pg17-new
-    repository: "file://../../charts/cnpg-cluster"
-    version: 0.2.1
