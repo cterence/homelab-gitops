@@ -13,7 +13,6 @@ app-template:
   controllers:
     jellyfin:
       type: deployment
-      replicas: 0
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -50,7 +49,6 @@ app-template:
 
     jellyseerr:
       type: deployment
-      replicas: 0
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -84,7 +82,6 @@ app-template:
 
     sonarr:
       type: deployment
-      replicas: 0
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -116,7 +113,6 @@ app-template:
 
     radarr:
       type: deployment
-      replicas: 0
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -148,7 +144,6 @@ app-template:
 
     prowlarr:
       type: deployment
-      replicas: 0
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -180,7 +175,6 @@ app-template:
 
     flaresolverr:
       type: deployment
-      replicas: 0
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -216,7 +210,6 @@ app-template:
 
     qbittorrent:
       type: deployment
-      replicas: 0
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
