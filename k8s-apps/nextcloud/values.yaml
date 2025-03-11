@@ -663,6 +663,13 @@ cnpg-cluster-pg17:
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
     logLevel: "info"
+    roles:
+      - name: nextcloud
+        connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        replication: true
     monitoring:
       enabled: true
       podMonitor:
@@ -691,4 +698,50 @@ cnpg-cluster-pg17:
           key: tls.crt
         sslRootCertSecret:
           name: nextcloud-cnpg-cluster-ca
+          key: ca.crt
+
+cnpg-cluster-pg17-new:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: nextcloud
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["nextcloud"]
+      schemaOnly: true
+      source:
+        host: nextcloud-cnpg-cluster-pg17-rw
+        username: nextcloud
+        database: nextcloud
+        passwordSecret:
+          name: nextcloud-cnpg-cluster-pg17-app
+          key: password
+        sslKeySecret:
+          name: nextcloud-cnpg-cluster-pg17-replication
+          key: tls.key
+        sslCertSecret:
+          name: nextcloud-cnpg-cluster-pg17-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: nextcloud-cnpg-cluster-pg17-ca
           key: ca.crt
