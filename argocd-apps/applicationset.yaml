@@ -43,7 +43,7 @@ spec:
           - name: oauth2-proxy
           - name: opentelemetry-collector
           - name: opentelemetry-operator
-          - name: paperless-ngx
+          # - name: paperless-ngx
           - name: reloader
           - name: satisfactory-server
           - name: snapshot-controller
