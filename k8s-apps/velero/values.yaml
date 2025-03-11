@@ -638,6 +638,7 @@ velero:
       template:
         storageLocation: default
         includedNamespaces:
+          - arr-stack
           - calibre-web
           - home-assistant
           - immich
