@@ -92,6 +92,8 @@ app-template:
             tag: 4.0.13.2932-ls273@sha256:49a8e636fd4514b23d37c84660101fecbb632174ba0569e0f09bbd2659a2a925
           env:
             TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
           ports:
             - name: http
               containerPort: 8989
@@ -123,6 +125,8 @@ app-template:
             tag: 5.19.3.9730-ls262@sha256:620189d67078ddcfeb7a4efa424eb62f827ef734ef1e56980768bf8efd73782a
           env:
             TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
           ports:
             - name: http
               containerPort: 7878
@@ -154,6 +158,8 @@ app-template:
             tag: 1.31.2.4975-ls108@sha256:2100d2cee89da16e7ce4a1169406c7718e6508c86ddc497dfbfdb7d6be2ea0c2
           env:
             TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
           ports:
             - name: http
               containerPort: 9696
@@ -220,6 +226,8 @@ app-template:
             tag: 5.0.4-r0-ls384@sha256:50f490770308d0351e12618422e74e0613721b080f5db0bf840cf66a7281eea8
           env:
             TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
           ports:
             - name: http
               containerPort: 8080
