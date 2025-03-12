@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: nextcloud
     repository: https://nextcloud.github.io/helm/
-    version: 6.6.7
+    version: 6.6.8
   - name: cluster-local
     alias: cnpg-cluster-pg17
     repository: "file://../../charts/cnpg-cluster"
