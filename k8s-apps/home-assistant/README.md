@@ -10,6 +10,10 @@ Not doing will result in `Key (id)=(<number>) already exists.` errors when home-
 
 Steps:
 
+
+- Easy and better: use the `kubectl cnpg` plugin to run: `kubectl cnpg subscription sync-sequences <destination_cluster> --subscription=<subscription_name>`
+
+Hard:
 - Exec in the new cluster pod and run `psql home-assistant`
 - Paste the following script without executing it:
   ```sql
