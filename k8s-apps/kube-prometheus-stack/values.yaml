@@ -145,6 +145,9 @@ kube-prometheus-stack:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/nginx.json
         ingress-request-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
+        cloudnativepg:
+          gnetId: 20417
+          datasource: Prometheus
       extra:
         {}
         # pihole-overview:
