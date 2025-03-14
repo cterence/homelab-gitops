@@ -148,6 +148,9 @@ kube-prometheus-stack:
         cloudnativepg:
           gnetId: 20417
           datasource: Prometheus
+        longhorn:
+          gnetId: 16888
+          datasource: Prometheus
       extra:
         {}
         # pihole-overview:
