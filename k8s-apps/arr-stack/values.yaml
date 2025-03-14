@@ -234,9 +234,6 @@ app-template:
               containerPort: 8080
             - name: torrent-tcp
               containerPort: 6887
-            - name: torrent-udp
-              containerPort: 6887
-              protocol: UDP
           probes:
             liveness:
               enabled: true
@@ -294,9 +291,6 @@ app-template:
       ports:
         torrent-tcp:
           port: 6887
-        torrent-udp:
-          port: 6887
-          protocol: UDP
 
   ingress:
     jellyfin:
