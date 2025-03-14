@@ -146,6 +146,39 @@ app-template:
                   port: http
                   path: /ping
 
+    lidarr:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        lidarr:
+          image:
+            repository: lscr.io/linuxserver/lidarr
+            tag: 2.9.6.4552-ls33@sha256:f3faffdc7143153f46c37388767975a131f0c57d4c73bdffa7338a1e9c5e7524
+          env:
+            TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
+          ports:
+            - name: http
+              containerPort: 8686
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+
     prowlarr:
       type: deployment
       strategy: RollingUpdate
@@ -267,6 +300,12 @@ app-template:
       ports:
         http:
           port: 7878
+    lidarr:
+      controller: lidarr
+      type: ClusterIP
+      ports:
+        http:
+          port: 8686
     prowlarr:
       controller: prowlarr
       type: ClusterIP
@@ -368,6 +407,25 @@ app-template:
           hosts:
             - *host
 
+    lidarr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
+      className: "nginx"
+      hosts:
+        - host: &host lid.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: lidarr
+                port: http
+      tls:
+        - secretName: lidarr-tls
+          hosts:
+            - *host
+
     prowlarr:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -423,6 +481,9 @@ app-template:
         radarr:
           radarr:
             - path: /data
+        lidarr:
+          lidarr:
+            - path: /data
         qbittorrent:
           qbittorrent:
             - path: /data/download
@@ -476,6 +537,16 @@ app-template:
       advancedMounts:
         radarr:
           radarr:
+            - path: /config
+
+    lidarr-config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        lidarr:
+          lidarr:
             - path: /config
 
     qbittorrent-config:
