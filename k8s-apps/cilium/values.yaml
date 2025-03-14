@@ -2271,7 +2271,7 @@ cilium:
     image:
       override: ~
       repository: "quay.io/cilium/operator"
-      tag: "v1.17.1@sha256:5c5f4408112365ae10ebcbab2621c273cebc671fe63b0f19cc1376326f140f89"
+      tag: "v1.17.2@sha256:697a7e6c4765ef053d33dd2d9d7f14642c01dfa7333ad7902de7ca5afbf3b419"
       # operator-generic-digest
       genericDigest: "sha256:303f9076bdc73b3fc32aaedee64a14f6f44c8bb08ee9e3956d443021103ebe7a"
       # operator-azure-digest
