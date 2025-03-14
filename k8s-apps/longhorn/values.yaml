@@ -25,6 +25,7 @@ longhorn:
     autoCleanupRecurringJobBackupSnapshot: "true"
     autoCleanupSnapshotWhenDeleteBackup: "true"
     orphanAutoDeletion: "true"
+    concurrentAutomaticEngineUpgradePerNodeLimit: "5"
   ingress:
     enabled: true
     ingressClassName: nginx
