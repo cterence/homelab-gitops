@@ -64,4 +64,8 @@ ingress-nginx:
     options:
       allow-snippet-annotations: "true"
 
-  tcp: {}
+  tcp:
+    "6887": "arr-stack/arr-stack-qbittorrent-torrenting:6887"
+
+  udp:
+    "6887": "arr-stack/arr-stack-qbittorrent-torrenting:6887"
