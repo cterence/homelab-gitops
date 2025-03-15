@@ -477,7 +477,7 @@ kyverno:
       repository: bitnami/kubectl
       # -- Image tag
       # Defaults to `latest` if omitted
-      tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+      tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
       # -- (string) Image pull policy
       # Defaults to image.pullPolicy if omitted
       pullPolicy: ~
@@ -534,7 +534,7 @@ kyverno:
       repository: bitnami/kubectl
       # -- Image tag
       # Defaults to `latest` if omitted
-      tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+      tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
       # -- (string) Image pull policy
       # Defaults to image.pullPolicy if omitted
       pullPolicy: ~
@@ -710,7 +710,7 @@ kyverno:
         repository: bitnami/kubectl
         # -- Image tag
         # Defaults to `latest` if omitted
-        tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+        tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
         # -- (string) Image pull policy
         # Defaults to image.pullPolicy if omitted
         pullPolicy: ~
@@ -787,7 +787,7 @@ kyverno:
         repository: bitnami/kubectl
         # -- Image tag
         # Defaults to `latest` if omitted
-        tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+        tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
         # -- (string) Image pull policy
         # Defaults to image.pullPolicy if omitted
         pullPolicy: ~
@@ -867,7 +867,7 @@ kyverno:
         repository: bitnami/kubectl
         # -- Image tag
         # Defaults to `latest` if omitted
-        tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+        tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
         # -- (string) Image pull policy
         # Defaults to image.pullPolicy if omitted
         pullPolicy: ~
@@ -947,7 +947,7 @@ kyverno:
         repository: bitnami/kubectl
         # -- Image tag
         # Defaults to `latest` if omitted
-        tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+        tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
         # -- (string) Image pull policy
         # Defaults to image.pullPolicy if omitted
         pullPolicy: ~
@@ -1027,7 +1027,7 @@ kyverno:
         repository: bitnami/kubectl
         # -- Image tag
         # Defaults to `latest` if omitted
-        tag: "1.32.3@sha256:c49b008f8ac9973e2d23deff64db6b992b8bd8c76538d0e697d9318bbbf683e2"
+        tag: "1.32.3@sha256:3f21647d4c3f0fa0a906d6aacf7919beac2356bf6a2fb595414bea045ba75270"
         # -- (string) Image pull policy
         # Defaults to image.pullPolicy if omitted
         pullPolicy: ~
