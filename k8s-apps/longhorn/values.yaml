@@ -18,14 +18,15 @@ longhorn:
     defaultReplicaCount: 2
     backupTarget: s3://longhorn-backup-tch@eu-central-003/v1/
     backupTargetCredentialSecret: backup-credentials
-    storageMinimalAvailablePercentage: "10"
-    storageReservedPercentageForDefaultDisk: "10"
+    storageMinimalAvailablePercentage: 10
+    storageReservedPercentageForDefaultDisk: 10
     removeSnapshotsDuringFilesystemTrim: enabled
     autoCleanupSystemGeneratedSnapshot: "true"
     autoCleanupRecurringJobBackupSnapshot: "true"
     autoCleanupSnapshotWhenDeleteBackup: "true"
+    storageOverProvisioningPercentage: 150
     orphanAutoDeletion: "true"
-    concurrentAutomaticEngineUpgradePerNodeLimit: "5"
+    concurrentAutomaticEngineUpgradePerNodeLimit: 5
   ingress:
     enabled: true
     ingressClassName: nginx
