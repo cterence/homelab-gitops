@@ -212,6 +212,39 @@ app-template:
                   port: http
                   path: /ping
 
+    bazarr:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        bazarr:
+          image:
+            repository: lscr.io/linuxserver/bazarr
+            tag: v1.5.1-ls295@sha256:0b3e1b888615cbd32cf879963d041abcf863d15160a9ace2928039a7b00590ef
+          env:
+            TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
+          ports:
+            - name: http
+              containerPort: 6767
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+
     flaresolverr:
       type: deployment
       strategy: RollingUpdate
@@ -327,6 +360,12 @@ app-template:
       ports:
         http:
           port: 9696
+    bazarr:
+      controller: bazarr
+      type: ClusterIP
+      ports:
+        http:
+          port: 6767
     flaresolverr:
       controller: flaresolverr
       type: ClusterIP
@@ -457,6 +496,25 @@ app-template:
                 port: http
       tls:
         - secretName: prowlarr-tls
+          hosts:
+            - *host
+
+    bazarr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
+      className: "nginx"
+      hosts:
+        - host: &host baz.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: bazarr
+                port: http
+      tls:
+        - secretName: bazarr-tls
           hosts:
             - *host
 
@@ -606,4 +664,14 @@ app-template:
       advancedMounts:
         prowlarr:
           prowlarr:
+            - path: /config
+
+    bazarr-config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        bazarr:
+          bazarr:
             - path: /config

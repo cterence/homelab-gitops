@@ -33,6 +33,13 @@
       ]
     },
     {
+      // example: v1.5.1-ls295
+      versioning: "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<build>\\d+)$",
+      matchPackageNames: [
+        "/^lscr.io\\/linuxserver\\/bazarr/"
+      ]
+    },
+    {
       // example: 10.10.6ubu2404-ls53
       versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?<compatibility>ubu\\d+)-ls(?<build>\\d+)$",
       matchPackageNames: [
