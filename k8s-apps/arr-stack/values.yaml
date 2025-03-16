@@ -557,6 +557,9 @@ app-template:
         lidarr:
           lidarr:
             - path: /data
+        bazarr:
+          bazarr:
+            - path: /data
         qbittorrent:
           qbittorrent:
             - path: /data/download
