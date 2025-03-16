@@ -23,10 +23,10 @@ spec:
 
           apis:
             movie:
-              api_host: "http://arr-stack-radarr.arr-stack.svc.cluster.local:7878"
+              api_host: "http://arr-stack-radarr:7878"
               api_key: "{{ "{{ .radarr_api_key }}" }}"
             series:
-              api_host: "http://arr-stack-sonarr.arr-stack.svc.cluster.local:8989"
+              api_host: "http://arr-stack-sonarr:8989"
               api_key: "{{ "{{ .sonarr_api_key }}" }}"
 
           services:
