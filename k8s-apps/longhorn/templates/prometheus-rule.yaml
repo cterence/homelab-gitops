@@ -19,3 +19,13 @@ spec:
       labels:
         issue: Longhorn volume {{ "{{$labels.volume}}" }} usage on {{ "{{$labels.node}}" }} is critical.
         severity: critical
+    - alert: LonghornDiskUsageCritical
+      annotations:
+        description: Longhorn disk {{ "{{$labels.disk}}" }} on {{ "{{$labels.node}}" }} is at {{ "{{$value}}%" }} used for
+          more than 5 minutes.
+        summary: Longhorn disk capacity is over 90% used.
+      expr: 100 * (longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes) > 90
+      for: 5m
+      labels:
+        issue: Longhorn disk {{ "{{$labels.disk}}" }} usage on {{ "{{$labels.node}}" }} is critical.
+        severity: critical
