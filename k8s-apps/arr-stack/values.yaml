@@ -542,7 +542,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 600Gi
+      size: 650Gi
       advancedMounts:
         jellyfin:
           jellyfin:
