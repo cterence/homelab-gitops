@@ -70,7 +70,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [kyverno](./scripts/../k8s-apps/kyverno) | Kubernetes native policy management | ❌ |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
 | [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ✅ |
-| [maybe](./scripts/../k8s-apps/maybe) | The OS for your personal finances | ✅ |
+| [maybe](./scripts/../k8s-apps/maybe) | The OS for your personal finances | ❌ |
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [minio-operator](./scripts/../k8s-apps/minio-operator) | MinIO Operator for Kubernetes | ❌ |
