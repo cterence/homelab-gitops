@@ -247,6 +247,21 @@ app-template:
                   port: http
                   path: /health
 
+    butlarr:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        butlarr:
+          image:
+            repository: trimforce/butlarr
+            tag: 1.2.2@sha256:79742266eabf6972ae5f82cadf083ddfff4c0313ace80a0593766e8d52352b38
+          env:
+            TZ: Europe/Paris
+            BUTLARR_INTERACTIVE_SETUP: "false"
+            BUTLARR_CONFIG_FILE: "/app/config.yaml"
+
     qbittorrent:
       type: deployment
       strategy: Recreate
@@ -548,6 +563,30 @@ app-template:
         lidarr:
           lidarr:
             - path: /config
+
+    butlarr-data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        butlarr:
+          butlarr:
+            - path: /app/data
+
+    butlarr-config-secret:
+      enabled: true
+      type: secret
+      name: butlarr-config
+      defaultMode: 0400
+      items:
+        - key: config.yaml
+          path: config.yaml
+      advancedMounts:
+        butlarr:
+          butlarr:
+            - path: /app/config.yaml
+              subPath: config.yaml
 
     qbittorrent-config:
       enabled: true

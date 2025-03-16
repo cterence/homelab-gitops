@@ -1,0 +1,78 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: butlarr-config
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: butlarr-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        config.yaml: |
+          telegram:
+            token: "{{ "{{ .token }}" }}"
+
+          auth_passwords:
+            admin: "{{ "{{ .admin_password }}" }}"
+            mod: "{{ "{{ .mod_password }}" }}"
+            user: "{{ "{{ .user_password }}" }}"
+
+          apis:
+            movie:
+              api_host: "http://arr-stack-radarr.arr-stack.svc.cluster.local:7878"
+              api_key: "{{ "{{ .radarr_api_key }}" }}"
+            series:
+              api_host: "http://arr-stack-sonarr.arr-stack.svc.cluster.local:8989"
+              api_key: "{{ "{{ .sonarr_api_key }}" }}"
+
+          services:
+            - type: "Radarr"
+              commands: ["movie"]
+              api: "movie"
+            - type: "Sonarr"
+              commands: ["series"]
+              api: "series"
+
+  data:
+    - secretKey: token
+      remoteRef:
+        key: butlarr_telegram_token
+    - secretKey: sonarr_api_key
+      remoteRef:
+        key: sonarr_api_key
+    - secretKey: radarr_api_key
+      remoteRef:
+        key: radarr_api_key
+
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ClusterGenerator
+        name: password
+    rewrite:
+    - regexp:
+        source: "(.*)"
+        target: "admin_password"
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ClusterGenerator
+        name: password
+    rewrite:
+    - regexp:
+        source: "(.*)"
+        target: "mod_password"
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ClusterGenerator
+        name: password
+    rewrite:
+    - regexp:
+        source: "(.*)"
+        target: "user_password"
