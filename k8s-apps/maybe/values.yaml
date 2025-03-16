@@ -131,8 +131,6 @@ cnpg-cluster:
       name: postgresql
     storage:
       size: 10Gi
-    walStorage:
-      enabled: true
     resources: {}
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
