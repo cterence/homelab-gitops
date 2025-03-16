@@ -11,7 +11,7 @@ spec:
     rules:
     - alert: LonghornVolumeUsageCritical
       annotations:
-        description: Longhorn volume {{ "{{$labels.volume}}" }} on {{ "{{$labels.node}}" }} is at {{ "{{$value}}%" }} used for
+        description: Longhorn volume {{ "{{$labels.volume}}" }} ({{ "{{$labels.pvc}}" }}) on {{ "{{$labels.node}}" }} is at {{ "{{$value}}%" }} used for
           more than 5 minutes.
         summary: Longhorn volume capacity is over 95% used.
       expr: 100 * (longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) > 95
