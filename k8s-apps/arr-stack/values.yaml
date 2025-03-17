@@ -373,6 +373,9 @@ app-template:
               value: "6887"
             - name: PORT_FORWARDED
               value: "/tmp/gluetun/forwarded_port"
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
 
   service:
     jellyfin:
