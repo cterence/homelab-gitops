@@ -370,7 +370,7 @@ app-template:
           env:
             TZ: Europe/Paris
             QBITTORRENT_SERVER: localhost
-            QBITTORRENT_PORT: "6887"
+            QBITTORRENT_PORT: "8080"
             PORT_FORWARDED: "/tmp/gluetun/forwarded_port"
           securityContext:
             runAsUser: 0
