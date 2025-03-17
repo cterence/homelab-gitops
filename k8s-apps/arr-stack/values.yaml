@@ -245,6 +245,23 @@ app-template:
                   port: http
                   path: /ping
 
+    configarr:
+      type: cronjob
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      cronjob:
+        schedule: "0 * * * *"
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+      containers:
+        configarr:
+          image:
+            repository: configarr/configarr
+            tag: 1.13.1@sha256:2a384789192bc8fb255d233c14516c8a365c91982c97373ee493033f73dbfe2b
+          env:
+            TZ: Europe/Paris
+
     flaresolverr:
       type: deployment
       strategy: RollingUpdate
@@ -678,3 +695,72 @@ app-template:
         bazarr:
           bazarr:
             - path: /config
+
+    configarr-cache:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        configarr:
+          configarr:
+            - path: /app/repos
+              subPath: configarr-repos
+
+    configarr-config:
+      type: configMap
+      name: arr-stack-configarr-config
+      advancedMounts:
+        configarr:
+          configarr:
+            - path: /app/config/config.yml
+              subPath: config.yml
+
+    configarr-secrets:
+      enabled: true
+      type: secret
+      name: configarr-secrets
+      items:
+        - key: secrets.yml
+          path: secrets.yml
+      advancedMounts:
+        configarr:
+          configarr:
+            - path: /app/config/secrets.yml
+              subPath: secrets.yml
+
+  configMaps:
+    configarr-config:
+      data:
+        config.yml: |
+          trashGuideUrl: https://github.com/TRaSH-Guides/Guides
+          recyclarrConfigUrl: https://github.com/recyclarr/config-templates
+
+          sonarr:
+            series:
+              base_url: http://arr-stack-sonarr:8989
+              api_key: !secret SONARR_API_KEY
+
+              quality_definition:
+                type: series
+
+              include:
+                - template: sonarr-quality-definition-series
+                - template: sonarr-v4-quality-profile-web-1080p
+                - template: sonarr-v4-custom-formats-web-1080p
+
+              custom_formats: []
+
+          radarr:
+            movies:
+              base_url: http://arr-stack-radarr:7878
+              api_key: !secret RADARR_API_KEY
+
+              include:
+                - template: radarr-quality-definition-movie
+                - template: radarr-quality-profile-hd-bluray-web
+                - template: radarr-custom-formats-hd-bluray-web
+                - template: radarr-quality-profile-remux-web-1080p
+                - template: radarr-custom-formats-remux-web-1080p
+
+              custom_formats: []

@@ -1,0 +1,24 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: configarr-secrets
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: configarr-secrets
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        secrets.yml: |
+          SONARR_API_KEY: "{{ "{{ .sonarr_api_key }}" }}"
+          RADARR_API_KEY: "{{ "{{ .radarr_api_key }}" }}"
+  data:
+    - secretKey: sonarr_api_key
+      remoteRef:
+        key: sonarr_api_key
+    - secretKey: radarr_api_key
+      remoteRef:
+        key: radarr_api_key
