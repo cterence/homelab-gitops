@@ -358,6 +358,8 @@ app-template:
             capabilities:
               add:
                 - NET_ADMIN
+            runAsUser: 0
+            runAsGroup: 0
 
         port-forward:
           dependsOn: gluetun
