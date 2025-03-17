@@ -723,6 +723,16 @@ app-template:
             - path: /tmp/gluetun
               readOnly: true
 
+    gluetun-device:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/net/tun
+      hostPathType: "CharDevice"
+      advancedMounts:
+        qbittorrent:
+          gluetun:
+            - path: /dev/net/tun
+
     prowlarr-config:
       enabled: true
       type: persistentVolumeClaim
