@@ -351,6 +351,9 @@ app-template:
             SERVER_COUNTRIES: Netherlands
             WIREGUARD_ADDRESSES: 10.145.193.219/32
             FIREWALL_VPN_INPUT_PORTS: "12133"
+          ports:
+            - name: vpn-input
+              containerPort: 12133
           envFrom:
             - secretRef:
                 name: gluetun-wg-keys
