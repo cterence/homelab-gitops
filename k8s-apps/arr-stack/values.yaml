@@ -340,6 +340,38 @@ app-template:
               enabled: true
               type: HTTP
 
+        gluetun:
+          dependsOn: qbittorrent
+          image:
+            repository: ghcr.io/qdm12/gluetun
+            tag: v3.40.0
+          env:
+            VPN_SERVICE_PROVIDER: airvpn
+            VPN_TYPE: wireguard
+            VPN_INTERFACE: wg0
+            SERVER_COUNTRIES: Netherlands
+            WIREGUARD_ADDRESSES: 10.145.193.219/32
+          envFrom:
+            - secretRef:
+                name: gluetun-wg-keys
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+
+        port-forward:
+          dependsOn: gluetun
+          image:
+            repository: snoringdragon/gluetun-qbittorrent-port-manager
+            tag: 1.3@sha256:679b7a92c494f93b78ad37ef24f3a261e73d0a1a52505ad4f1e39580eedfa14f
+          env:
+            - name: QBITTORRENT_SERVER
+              value: localhost
+            - name: QBITTORRENT_PORT
+              value: "6887"
+            - name: PORT_FORWARDED
+              value: "/tmp/gluetun/forwarded_port"
+
   service:
     jellyfin:
       controller: jellyfin
@@ -676,6 +708,16 @@ app-template:
           qbittorrent:
             - path: /config
 
+    gluetun-data:
+      type: emptyDir
+      advancedMounts:
+        qbittorrent:
+          gluetun:
+            - path: /tmp/gluetun
+          port-forward:
+            - path: /tmp/gluetun
+              readOnly: true
+
     prowlarr-config:
       enabled: true
       type: persistentVolumeClaim
@@ -698,9 +740,7 @@ app-template:
 
     configarr-cache:
       enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 100Mi
+      type: emptyDir
       advancedMounts:
         configarr:
           configarr:
