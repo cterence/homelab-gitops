@@ -330,8 +330,6 @@ app-template:
           ports:
             - name: http
               containerPort: 8080
-            - name: torrent-tcp
-              containerPort: 6887
           probes:
             liveness:
               enabled: true
@@ -433,12 +431,6 @@ app-template:
       ports:
         http:
           port: 8080
-    qbittorrent-torrenting:
-      controller: qbittorrent
-      type: ClusterIP
-      ports:
-        torrent-tcp:
-          port: 6887
 
   ingress:
     jellyfin:
