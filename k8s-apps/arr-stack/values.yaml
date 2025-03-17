@@ -346,6 +346,7 @@ app-template:
             repository: ghcr.io/qdm12/gluetun
             tag: v3.40.0
           env:
+            TZ: Europe/Paris
             VPN_SERVICE_PROVIDER: airvpn
             VPN_TYPE: wireguard
             VPN_INTERFACE: wg0
@@ -367,12 +368,10 @@ app-template:
             repository: snoringdragon/gluetun-qbittorrent-port-manager
             tag: 1.3@sha256:679b7a92c494f93b78ad37ef24f3a261e73d0a1a52505ad4f1e39580eedfa14f
           env:
-            - name: QBITTORRENT_SERVER
-              value: localhost
-            - name: QBITTORRENT_PORT
-              value: "6887"
-            - name: PORT_FORWARDED
-              value: "/tmp/gluetun/forwarded_port"
+            TZ: Europe/Paris
+            QBITTORRENT_SERVER: localhost
+            QBITTORRENT_PORT: "6887"
+            PORT_FORWARDED: "/tmp/gluetun/forwarded_port"
           securityContext:
             runAsUser: 0
             runAsGroup: 0
