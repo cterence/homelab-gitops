@@ -348,7 +348,7 @@ app-template:
             VPN_SERVICE_PROVIDER: airvpn
             VPN_TYPE: wireguard
             VPN_INTERFACE: wg0
-            SERVER_REGION: Europe
+            SERVER_REGIONS: Europe
             WIREGUARD_ADDRESSES: 10.145.193.219/32,fd7d:76ee:e68f:a993:7c10:4d59:a5d7:9537/128
             FIREWALL_VPN_INPUT_PORTS: "6887"
           envFrom:
