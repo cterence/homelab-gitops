@@ -78,6 +78,7 @@ This is an automatically updated list of the apps I have configured and/or deplo
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [ntfy](./scripts/../k8s-apps/ntfy) | Send push notifications to your phone or desktop using PUT/POST | ❌ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
+| [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing | ✅ |
 | [openebs](./scripts/../k8s-apps/openebs) | Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes | ❌ |
 | [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
