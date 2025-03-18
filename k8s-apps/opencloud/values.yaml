@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/common-3.4.0/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  configMaps:
+    config:
+      data:
+        TZ: Europe/Paris
+        OC_INSECURE: "false" # SSL termination at ingress controller
+        PROXY_TLS: "false"
+        PROXY_HTTP_ADDR: 0.0.0.0:9200
+        OC_URL: https://oc.terence.cloud
+        STORAGE_USERS_DRIVER: posix
+        STORAGE_SYSTEM_DRIVER: decomposed
+        STORAGE_USERS_ID_CACHE_STORE: "nats-js-kv"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      initContainers:
+        init:
+          image:
+            repository: opencloudeu/opencloud-rolling
+            tag: 1.1.0@sha256:a84a3310dca9a623efbe2b49df52ef85adc2c0d8f0ac0c38a31fdc4850b47b0d
+          command: "/bin/bash"
+          args:
+            - -c
+            - "opencloud init || true"
+          envFrom:
+            - configMapRef:
+                identifier: config
+      containers:
+        main:
+          image:
+            repository: opencloudeu/opencloud-rolling
+            tag: 1.1.0@sha256:a84a3310dca9a623efbe2b49df52ef85adc2c0d8f0ac0c38a31fdc4850b47b0d
+          envFrom:
+            - configMapRef:
+                identifier: config
+          ports:
+            - name: http
+              containerPort: 9200
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /status
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /status
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 9200
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      className: "nginx"
+      hosts:
+        - host: &host oc.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: opencloud-tls
+          hosts:
+            - *host
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      globalMounts:
+        - path: /etc/opencloud
+
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      globalMounts:
+        - path: /var/lib/opencloud

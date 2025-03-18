@@ -40,6 +40,7 @@ spec:
           - name: mosquitto
           - name: nextcloud
           - name: oauth2-proxy
+          - name: opencloud
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
