@@ -35,7 +35,7 @@ authelia:
     # registry: docker.io
     registry: ghcr.io
     repository: authelia/authelia
-    tag: "@sha256:45cb4ea9a5fc2f04bdcd760d17da50d95015c6c6e4079d5ff97c00c3d23a8752"
+    tag: "@sha256:e325963609cc928861ffe8130c09111862df88dd8fcafbcd2c47e5ff0a4ae268"
     pullPolicy: IfNotPresent
     pullSecrets: []
     # pullSecrets:
