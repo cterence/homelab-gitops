@@ -455,6 +455,6 @@ crowdsec:
         # -- pullPolicy
         pullPolicy: IfNotPresent
         # -- docker image tag
-        tag: "1.37@sha256:29c2339e8727db1f58366f70f63063154c8230beb9ce1833380b71fa92bd0b89"
+        tag: "1.37@sha256:37f7b378a29ceb4c551b1b5582e27747b855bbfaa73fa11914fe0df028dc581f"
 
   #service: {}
