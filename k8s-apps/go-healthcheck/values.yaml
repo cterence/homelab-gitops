@@ -15,28 +15,33 @@ app-template:
           version: 1.0
           timeout: 5
           urls:
+            - http://arr-stack-flaresolverr.arr-stack:8191/health
+            - http://calibre-web-book-downloader.calibre-web:8084/request/api/status
+            - http://httpbin.httpbin:8080/health
+            - http://kube-prometheus-stack-alertmanager.monitoring:9093/-/healthy
+            - http://kube-prometheus-stack-grafana.monitoring/api/health
+            - http://kube-prometheus-stack-prometheus.monitoring:9090/-/healthy
+            - http://longhorn-frontend.longhorn-system
+            - http://oauth2-proxy.oauth2-proxy/ping
+            - http://zigbee2mqtt.zigbee2mqtt:10103
             - https://argocd.terence.cloud/healthz?full=true
             - https://bw.terence.cloud/alive
             - https://calibre.terence.cloud
+            - https://calibredl.terence.cloud
             - https://convert.terence.cloud
             - https://ha.terence.cloud
             - https://immich.terence.cloud/api/server/ping
-            - https://next.terence.cloud/status.php
-            - https://paperless.terence.cloud
-            - https://tools.terence.cloud
-            - http://httpbin.httpbin:8080/health
-            - http://kube-prometheus-stack-grafana.monitoring/api/health
-            - http://oauth2-proxy.oauth2-proxy/ping
-            - http://calibre-web-book-downloader.calibre-web:8084/request/api/status
-            - http://longhorn-frontend.longhorn-system
-            - http://kube-prometheus-stack-alertmanager.monitoring:9093/-/healthy
-            - https://rad.terence.cloud/ping
-            - https://son.terence.cloud/ping
-            - https://prow.terence.cloud/ping
             - https://jf.terence.cloud/health
             - https://js.terence.cloud/api/v1/status
+            - https://lid.terence.cloud/ping
+            - https://next.terence.cloud/status.php
+            - https://oc.terence.cloud/status
+            - https://paperless.terence.cloud
+            - https://prow.terence.cloud/ping
             - https://qb.terence.cloud
-            - http://arr-stack-flaresolverr.arr-stack:8191/health
+            - https://rad.terence.cloud/ping
+            - https://son.terence.cloud/ping
+            - https://tools.terence.cloud
 
   controllers:
     main:
