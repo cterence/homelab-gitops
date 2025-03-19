@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: authelia
     repository: https://charts.authelia.com
-    version: 0.10.3
+    version: 0.10.4
