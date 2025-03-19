@@ -1,5 +1,0 @@
-apiVersion: v2
-name: ntfy
-description: Send push notifications to your phone or desktop using PUT/POST
-type: application
-version: 0.1.0

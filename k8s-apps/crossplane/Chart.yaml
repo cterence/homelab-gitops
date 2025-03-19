@@ -1,9 +1,0 @@
-apiVersion: v2
-name: crossplane
-description: The Cloud Native Control Plane
-type: application
-version: 0.1.0
-dependencies:
-  - name: crossplane
-    repository: https://charts.crossplane.io/stable
-    version: 1.19.0

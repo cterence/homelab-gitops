@@ -1,9 +1,0 @@
-apiVersion: v2
-name: komoplane
-description: Crossplane Troubleshooting Tool by Komodor
-type: application
-version: 0.1.0
-dependencies:
-  - name: komoplane
-    repository: https://helm-charts.komodor.io
-    version: 0.1.6

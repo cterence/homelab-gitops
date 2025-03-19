@@ -1,9 +1,0 @@
-apiVersion: v2
-name: velero-ui
-description: A UI for Velero
-type: application
-version: 0.1.0
-dependencies:
-  - name: vui
-    repository: https://seriohub.github.io/velero-helm/
-    version: 0.1.25

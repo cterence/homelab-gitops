@@ -1,4 +1,0 @@
-  gha-runner-scale-set-controller:
-    flags:
-      excludeLabelPropagationPrefixes:
-      - "argocd.argoproj.io/instance"

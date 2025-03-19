@@ -1,9 +1,0 @@
-apiVersion: v2
-name: gitlab-runner
-description: Run your CI/CD jobs and send the results back to GitLab
-type: application
-version: 0.37.2
-dependencies:
-  - name: gitlab-runner
-    repository: https://charts.gitlab.io
-    version: 0.74.1
