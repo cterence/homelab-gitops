@@ -21,7 +21,6 @@ app-template:
             - https://convert.terence.cloud
             - https://ha.terence.cloud
             - https://immich.terence.cloud/api/server/ping
-            - https://maybe.terence.cloud/up
             - https://next.terence.cloud/status.php
             - https://paperless.terence.cloud
             - https://tools.terence.cloud
