@@ -80,5 +80,15 @@ app-template:
               subPath: config.yaml
 
 cnpgClusters:
-  - name: immich
+  - name: home-assistant-cnpg-cluster-pg17
+    namespace: home-assistant
+  - name: immich-cnpg-cluster
     namespace: immich
+  - name: nextcloud-cnpg-cluster-pg17
+    namespace: nextcloud
+  - name: paperless-ngx-cnpg-cluster-pg17
+    namespace: paperless-ngx
+  - name: satisfactory-server-cnpg-cluster-pg17
+    namespace: satisfactory-server
+  - name: vaultwarden-cnpg-cluster-pg17
+    namespace: vaultwarden

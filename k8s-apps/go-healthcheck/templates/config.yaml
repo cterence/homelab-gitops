@@ -46,12 +46,12 @@ spec:
 
           postgresqlURIs:
             {{- range .Values.cnpgClusters }}
-            - {{ `{{` }} .{{ .name }}_uri {{ `}}` }}
+            - {{ `{{` }} .{{ .name | replace "-" "_" }}_uri {{ `}}` }}
             {{- end }}
   data:
     {{- range .Values.cnpgClusters }}
-    - secretKey: {{ .name }}_uri
+    - secretKey: {{ .name | replace "-" "_" }}_uri
       remoteRef:
-        key: {{ .name }}-cnpg
+        key: {{ .name }}-uri
         property: uri
     {{- end }}

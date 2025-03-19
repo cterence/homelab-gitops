@@ -25,16 +25,16 @@ spec:
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: {{ .name }}-cnpg
+  name: {{ .name }}-uri
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
     name: k8s-{{ .namespace }}
   target:
-    name: {{ .name }}-cnpg
+    name: {{ .name }}-uri
   data:
     - secretKey: uri
       remoteRef:
-        key: {{ .name }}-cnpg-cluster-app
+        key: {{ .name }}-app
         property: uri
 {{- end }}
