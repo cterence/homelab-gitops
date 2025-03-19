@@ -1,9 +1,0 @@
-apiVersion: v2
-name: openebs
-description: Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes
-type: application
-version: 0.1.0
-dependencies:
-  - name: openebs
-    repository: https://openebs.github.io/openebs
-    version: 4.2.0
