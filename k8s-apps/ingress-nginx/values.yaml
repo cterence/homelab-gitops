@@ -27,7 +27,6 @@ ingress-nginx:
       - name: OC_AGENT_HOST
         value: collector.linkerd-jaeger:55678
 
-    # Deploy on more powerful node homelab2
     nodeSelector:
       kubernetes.io/hostname: homelab2
 

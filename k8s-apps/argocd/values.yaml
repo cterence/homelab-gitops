@@ -23,8 +23,6 @@ argo-cd:
             annotations:
               summary: ArgoCD application unhealthy (instance {{ $labels.instance }})
               description: "Application {{ $labels.name }} run by argo is currently not healthy - Value = {{ $value }}"
-    nodeSelector:
-      kubernetes.io/hostname: homelab2
 
   dex:
     metrics:
