@@ -112,6 +112,8 @@ immich:
 
   server:
     enabled: true
+    controller:
+      strategy: Recreate
     image:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
@@ -142,6 +144,8 @@ immich:
 
   machine-learning:
     enabled: true
+    controller:
+      strategy: Recreate
     image:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
