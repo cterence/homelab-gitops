@@ -36,6 +36,7 @@ spec:
             namespace: longhorn-system
             serverSideApply: true
             serverSideDiff: true
+          - name: mealie
           - name: metallb
           - name: mosquitto
           - name: nextcloud

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: mealie
+description: Recipe manager and meal planner
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s.github.io/helm-charts
+    version: 3.7.3
+  - name: cluster-local
+    alias: cnpg-cluster
+    repository: "file://../../charts/cnpg-cluster"
+    version: 0.2.1
