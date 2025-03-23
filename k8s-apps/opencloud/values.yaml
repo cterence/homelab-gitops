@@ -19,6 +19,8 @@ app-template:
         STORAGE_USERS_DRIVER: posix
         STORAGE_SYSTEM_DRIVER: decomposed
         STORAGE_USERS_ID_CACHE_STORE: "nats-js-kv"
+        START_ADDITIONAL_SERVICES: "auth-app"
+        PROXY_ENABLE_APP_AUTH: "true"
 
   controllers:
     main:
