@@ -7,6 +7,16 @@ app-template:
       runAsGroup: 1000
       fsGroup: 1000
       fsGroupChangePolicy: "OnRootMismatch"
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - "{{ .Release.Name }}"
+            topologyKey: kubernetes.io/hostname
 
   controllers:
     jellyfin:
