@@ -7,16 +7,6 @@ app-template:
       runAsGroup: 1000
       fsGroup: 1000
       fsGroupChangePolicy: "OnRootMismatch"
-    affinity:
-      podAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - "{{ .Release.Name }}"
-            topologyKey: kubernetes.io/hostname
 
   controllers:
     jellyfin:
@@ -28,6 +18,16 @@ app-template:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         jellyfin:
           image:
@@ -93,6 +93,17 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         sonarr:
           image:
@@ -126,6 +137,17 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         radarr:
           image:
@@ -159,6 +181,17 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         lidarr:
           image:
@@ -189,7 +222,7 @@ app-template:
 
     prowlarr:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -225,6 +258,17 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         bazarr:
           image:
@@ -324,6 +368,17 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         qbittorrent:
           image:
