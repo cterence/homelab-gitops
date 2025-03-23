@@ -73,7 +73,7 @@ ingress-nginx:
                   operator: In
                   values:
                     - controller
-        topologyKey: kubernetes.io/hostname
+            topologyKey: kubernetes.io/hostname
 
   ingress:
     options:
