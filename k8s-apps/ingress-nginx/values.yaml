@@ -1,6 +1,6 @@
 ingress-nginx:
   controller:
-    replicaCount: 1
+    replicaCount: 2
     service:
       # Forces MetalLB to set this IP
       type: LoadBalancer
@@ -26,9 +26,6 @@ ingress-nginx:
     extraEnvs:
       - name: OC_AGENT_HOST
         value: collector.linkerd-jaeger:55678
-
-    nodeSelector:
-      kubernetes.io/hostname: homelab2
 
     extraInitContainers:
       - name: init-clone-crowdsec-bouncer
@@ -59,9 +56,25 @@ ingress-nginx:
       - name: crowdsec-bouncer-plugin
         emptyDir: {}
 
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - '{{ include "ingress-nginx.name" . }}'
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                    - "{{ .Release.Name }}"
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - controller
+        topologyKey: kubernetes.io/hostname
+
   ingress:
     options:
       allow-snippet-annotations: "true"
-
-  tcp:
-    "6887": "arr-stack/arr-stack-qbittorrent-torrenting:6887"
