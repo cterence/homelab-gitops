@@ -11,7 +11,7 @@ app-template:
   controllers:
     main:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -21,6 +21,7 @@ app-template:
             tag: v2.8.0@sha256:63aef46d90975d9cf9c0fdb9399fc2fe36acd222e1db6be99c504b9ccdbee967
           env:
             TZ: Europe/Paris
+            BASE_URL: https://mealie.terence.cloud
             DB_ENGINE: postgres
             ALLOW_SIGNUP: "false"
             POSTGRES_SERVER:
