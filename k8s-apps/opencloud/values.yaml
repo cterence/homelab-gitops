@@ -107,6 +107,6 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 10Gi
+      size: 200Gi
       globalMounts:
         - path: /var/lib/opencloud
