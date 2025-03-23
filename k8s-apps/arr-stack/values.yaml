@@ -7,8 +7,6 @@ app-template:
       runAsGroup: 1000
       fsGroup: 1000
       fsGroupChangePolicy: "OnRootMismatch"
-    nodeSelector:
-      kubernetes.io/hostname: homelab2
 
   controllers:
     jellyfin:
