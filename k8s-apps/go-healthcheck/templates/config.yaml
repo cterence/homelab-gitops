@@ -15,15 +15,16 @@ spec:
           name: homelab
           version: 1.0
           timeout: 5
-          urls:
-            {{- range .Values.urls }}
-            - {{ . }}
-            {{- end }}
+          targets:
+            http:
+              {{- range .Values.urls }}
+              - {{ . }}
+              {{- end }}
 
-          postgresqlURIs:
-            {{- range .Values.cnpgClusters }}
-            - {{ `{{` }} .{{ .name | replace "-" "_" }}_uri {{ `}}` }}
-            {{- end }}
+            postgresql:
+              {{- range .Values.cnpgClusters }}
+              - {{ `{{` }} .{{ .name | replace "-" "_" }}_uri {{ `}}` }}
+              {{- end }}
   data:
     {{- range .Values.cnpgClusters }}
     - secretKey: {{ .name | replace "-" "_" }}_uri
