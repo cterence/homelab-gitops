@@ -11,7 +11,7 @@ app-template:
   controllers:
     jellyfin:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -47,7 +47,7 @@ app-template:
 
     jellyseerr:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -80,7 +80,7 @@ app-template:
 
     sonarr:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -113,7 +113,7 @@ app-template:
 
     radarr:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -146,7 +146,7 @@ app-template:
 
     lidarr:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -212,7 +212,7 @@ app-template:
 
     bazarr:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -245,7 +245,6 @@ app-template:
 
     configarr:
       type: cronjob
-      strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
       cronjob:
