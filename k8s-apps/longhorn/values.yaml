@@ -24,7 +24,7 @@ longhorn:
     autoCleanupSystemGeneratedSnapshot: "true"
     autoCleanupRecurringJobBackupSnapshot: "true"
     autoCleanupSnapshotWhenDeleteBackup: "true"
-    storageOverProvisioningPercentage: 150
+    storageOverProvisioningPercentage: 200
     orphanAutoDeletion: "true"
     concurrentAutomaticEngineUpgradePerNodeLimit: 5
   ingress:
