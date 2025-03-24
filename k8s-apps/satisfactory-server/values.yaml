@@ -103,6 +103,7 @@ app-template:
       type: deployment
       annotations:
         reloader.stakater.com/auto: "true"
+      replicas: 0
       containers:
         # Configure the main application container
         companion:
@@ -228,6 +229,8 @@ cnpg-cluster-pg17:
       name: postgresql
     storage:
       size: 10Gi
+    annotations:
+      cnpg.io/hibernation: "on"
     resources: {}
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
