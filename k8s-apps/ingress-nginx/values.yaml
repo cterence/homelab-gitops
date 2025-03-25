@@ -56,25 +56,17 @@ ingress-nginx:
       - name: crowdsec-bouncer-plugin
         emptyDir: {}
 
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - '{{ include "ingress-nginx.name" . }}'
-                - key: app.kubernetes.io/instance
-                  operator: In
-                  values:
-                    - "{{ .Release.Name }}"
-                - key: app.kubernetes.io/component
-                  operator: In
-                  values:
-                    - controller
-            topologyKey: kubernetes.io/hostname
-
+    topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+            app.kubernetes.io/component: controller
+        matchLabelKeys:
+          - pod-template-hash
+        topologyKey: kubernetes.io/hostname
+        maxSkew: 1
+        whenUnsatisfiable: ScheduleAnyway
   ingress:
     options:
       allow-snippet-annotations: "true"
