@@ -93,11 +93,18 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
       containers:
         jellystat:
           image:
             repository: cyfershepard/jellystat
             tag: 1.1.3@sha256:cc634936b69260548715953c0a4fcfb2dde6f6daa8eed3a6d08d0dcf0a72b9ed
+          ports:
+            - name: http
+              containerPort: 3000
           env:
             TZ: Europe/Paris
             MINIMUM_SECONDS_TO_INCLUDE_PLAYBACK: "120"
@@ -131,7 +138,21 @@ app-template:
                 secretKeyRef:
                   name: "jellystat-jwt-secret"
                   key: password
-
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /auth/isconfigured
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /auth/isconfigured
     sonarr:
       type: deployment
       strategy: Recreate
@@ -942,6 +963,13 @@ cnpg-cluster-jellystat:
       name: postgresql
     storage:
       size: 5Gi
+    roles:
+      - name: jellystat
+        connectionLimit: -1
+        ensure: present
+        createdb: true
+        inherit: true
+        login: true
     resources: {}
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
