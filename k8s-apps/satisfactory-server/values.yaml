@@ -235,10 +235,10 @@ cnpg-cluster-pg17:
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
     logLevel: "info"
-    monitoring:
-      enabled: true
-      podMonitor:
-        enabled: true
+    # monitoring:
+    #   enabled: true
+    #   podMonitor:
+    #     enabled: true
     postgresql: {}
     initdb:
       database: frm
