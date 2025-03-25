@@ -16,6 +16,7 @@ urls:
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
   - https://js.terence.cloud/api/v1/status
+  - https://jstat.terence.cloud/auth/isconfigured
   - https://lid.terence.cloud/ping
   - https://mealie.terence.cloud/api/app/about
   - https://next.terence.cloud/status.php
@@ -28,6 +29,8 @@ urls:
   - https://tools.terence.cloud
 
 cnpgClusters:
+  - name: arr-stack-cnpg-cluster-jellystat
+    namespace: arr-stack
   - name: home-assistant-cnpg-cluster-pg17
     namespace: home-assistant
   - name: immich-cnpg-cluster
