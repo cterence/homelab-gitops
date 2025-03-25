@@ -7,3 +7,7 @@ dependencies:
   - name: app-template
     repository: https://bjw-s.github.io/helm-charts
     version: 3.7.3
+  - name: cluster-local
+    alias: cnpg-cluster-jellystat
+    repository: file://../../charts/cnpg-cluster
+    version: 0.2.1
