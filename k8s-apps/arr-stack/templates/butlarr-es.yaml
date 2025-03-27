@@ -42,12 +42,21 @@ spec:
   data:
     - secretKey: token
       remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
         key: butlarr_telegram_token
     - secretKey: sonarr_api_key
       remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
         key: sonarr_api_key
     - secretKey: radarr_api_key
       remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
         key: radarr_api_key
 
   dataFrom:
