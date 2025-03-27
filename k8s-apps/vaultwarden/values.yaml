@@ -654,6 +654,7 @@ vaultwarden:
       gethomepage.dev/description: "A password manager."
       gethomepage.dev/group: "Security"
       gethomepage.dev/icon: "vaultwarden"
+      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
     ## @param ingress.labels Additional labels for the ingress resource.
     ##
     labels: {}

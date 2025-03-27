@@ -574,7 +574,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host js.terence.cloud
@@ -593,7 +592,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host jstat.terence.cloud
@@ -612,7 +610,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host son.terence.cloud
@@ -631,7 +628,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host rad.terence.cloud
@@ -650,7 +646,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host lid.terence.cloud
@@ -669,7 +664,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host prow.terence.cloud
@@ -688,7 +682,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host baz.terence.cloud
@@ -707,7 +700,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/whitelist-source-range: "109.0.228.97/32,34.68.56.138/32"
       className: "nginx"
       hosts:
         - host: &host qb.terence.cloud

@@ -130,6 +130,7 @@ app-template:
         gethomepage.dev/description: "A document management system."
         gethomepage.dev/group: "Media"
         gethomepage.dev/icon: "paperless-ngx"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       hosts:
         - host: paperless.terence.cloud
           paths:

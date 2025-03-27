@@ -45,6 +45,7 @@ homepage:
         gethomepage.dev/icon: "homepage"
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       ingressClassName: "nginx"
       hosts:
         - host: &host "apps.terence.cloud"

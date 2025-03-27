@@ -18,6 +18,8 @@ ingress-nginx:
       use-forwarded-headers: "true"
       enable-real-ip: "true"
       annotations-risk-level: "Critical"
+      allow-snippet-annotations: "true"
+      whitelist-source-range: "10.244.0.0/16,109.0.228.97/32,34.68.56.138/32"
 
     metrics:
       enabled: true

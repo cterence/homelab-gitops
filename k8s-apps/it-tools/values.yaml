@@ -57,6 +57,7 @@ app-template:
         gethomepage.dev/description: Collection of handy online tools for developers
         gethomepage.dev/group: Tooling
         gethomepage.dev/icon: it-tools
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       className: "nginx"
       hosts:
         - host: &host tools.terence.cloud

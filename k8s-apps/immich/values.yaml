@@ -132,6 +132,7 @@ immich:
           gethomepage.dev/description: "Photo library management."
           gethomepage.dev/group: "Media"
           gethomepage.dev/icon: "immich"
+          nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         ingressClassName: nginx
         hosts:
           - host: immich.terence.cloud
