@@ -650,6 +650,7 @@ velero:
           - calibre-web
           - home-assistant
           - immich
+          - mealie
           - nextcloud
           - paperless-ngx
           - satisfactory-server
