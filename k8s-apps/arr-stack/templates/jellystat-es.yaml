@@ -2,6 +2,8 @@ apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: jellystat-jwt-secret
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
