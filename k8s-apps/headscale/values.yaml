@@ -401,7 +401,7 @@ headscale:
         main:
           image:
             repository: goodieshq/headscale-admin
-            tag: 0.25.5@sha256:0aae38295b8ab13b4aa2a3cb1b94c562f8c423b274cbc369c45109456342c055
+            tag: 0.25.6@sha256:d57c1d0e160f5a8aa3082e819050a43c0cd81b572e71da9b1e0cd499d18b48c1
           ports:
             - name: http
               containerPort: 80
