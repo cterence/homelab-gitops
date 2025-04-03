@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: external-dns
     repository: https://charts.bitnami.com/bitnami
-    version: 8.7.9
+    version: 8.7.10
