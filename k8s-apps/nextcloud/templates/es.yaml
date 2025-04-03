@@ -12,6 +12,9 @@ spec:
   data:
     - secretKey: api-key
       remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
         key: immich_nextcloud_uploader_api_key
 ---
 apiVersion: external-secrets.io/v1beta1
@@ -35,4 +38,7 @@ spec:
   data:
     - secretKey: token
       remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
         key: nextcloud_token
