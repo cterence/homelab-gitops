@@ -38,7 +38,7 @@ cnpgClusters:
     namespace: immich
   - name: mealie-cnpg-cluster
     namespace: mealie
-  - name: n8n-cnpg-cluster-pg17
+  - name: n8n-cnpg-cluster
     namespace: n8n
   - name: nextcloud-cnpg-cluster-pg17
     namespace: nextcloud
