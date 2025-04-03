@@ -69,6 +69,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
+| [n8n](./scripts/../k8s-apps/n8n) | Workflow automation tool | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
 | [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing | ✅ |
