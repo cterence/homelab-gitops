@@ -32,6 +32,8 @@ n8n:
         value: "true"
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS:
         value: "true"
+      N8N_EDITOR_BASE_URL:
+        value: https://n8n.terence.cloud
 
     extraVolumeMounts:
       - name: n8n-cnpg-cluster-ca-cert
