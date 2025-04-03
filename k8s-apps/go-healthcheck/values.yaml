@@ -19,6 +19,7 @@ urls:
   - https://jstat.terence.cloud/auth/isconfigured
   - https://lid.terence.cloud/ping
   - https://mealie.terence.cloud/api/app/about
+  - https://n8n.terence.cloud/healthz
   - https://next.terence.cloud/status.php
   - https://oc.terence.cloud/status
   - https://paperless.terence.cloud
@@ -37,6 +38,8 @@ cnpgClusters:
     namespace: immich
   - name: mealie-cnpg-cluster
     namespace: mealie
+  - name: n8n-cnpg-cluster-pg17
+    namespace: n8n
   - name: nextcloud-cnpg-cluster-pg17
     namespace: nextcloud
   - name: paperless-ngx-cnpg-cluster-pg17
