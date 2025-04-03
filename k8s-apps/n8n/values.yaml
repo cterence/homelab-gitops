@@ -1,7 +1,7 @@
 n8n:
   image:
     repository: n8nio/n8n
-    tag: 1.86.0@sha256:00e3f78c1ca1665dae1ae331cbc6fadb835bb772823d1c1ff97dd369b6b4f027
+    tag: 1.86.0@sha256:8b39ed5a2de95e11e5f617f11abcff0321f9381d3649e7046b987324d43a20f7
 
   main:
     config:
