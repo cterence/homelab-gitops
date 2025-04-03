@@ -1,0 +1,114 @@
+n8n:
+  image:
+    repository: n8nio/n8n
+    tag: 1.86.0@sha256:00e3f78c1ca1665dae1ae331cbc6fadb835bb772823d1c1ff97dd369b6b4f027
+
+  main:
+    config:
+      db:
+        type: postgresdb
+        postgresdb:
+          host: n8n-cnpg-cluster-rw
+          user: n8n
+          pool:
+            size: 10
+          ssl:
+            enabled: true
+            reject_Unauthorized: true
+            ca_file: "/home/ssl/certs/postgresql/ca.crt"
+
+    extraEnv:
+      DB_POSTGRESDB_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: n8n-cnpg-cluster-app
+            key: password
+      N8N_ENCRYPTION_KEY:
+        valueFrom:
+          secretKeyRef:
+            name: n8n-encryption-key
+            key: password
+      N8N_RUNNERS_ENABLED:
+        value: "true"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS:
+        value: "true"
+
+    extraVolumeMounts:
+      - name: n8n-cnpg-cluster-ca-cert
+        mountPath: /home/ssl/certs/postgresql
+        readOnly: true
+
+    extraVolumes:
+      - name: n8n-cnpg-cluster-ca-cert
+        secret:
+          secretName: n8n-cnpg-cluster-ca
+          items:
+            - key: ca.crt
+              path: ca.crt
+
+    resources:
+      limits:
+        memory: 2048Mi
+      requests:
+        memory: 512Mi
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-buffering: "off"
+      nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: n8n.terence.cloud
+        paths:
+          - /
+    tls:
+      - secretName: n8n-ingress-tls
+        hosts:
+          - n8n.terence.cloud
+
+  extraManifests:
+    - apiVersion: external-secrets.io/v1beta1
+      kind: ExternalSecret
+      metadata:
+        name: n8n-encryption-key
+        annotations:
+          argocd.argoproj.io/sync-options: ServerSideApply=true
+      spec:
+        target:
+          name: n8n-encryption-key
+          creationPolicy: Owner
+        dataFrom:
+          - sourceRef:
+              generatorRef:
+                apiVersion: generators.external-secrets.io/v1alpha1
+                kind: ClusterGenerator
+                name: password
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 2Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: n8n

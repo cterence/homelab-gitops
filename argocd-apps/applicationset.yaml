@@ -39,6 +39,7 @@ spec:
           - name: mealie
           - name: metallb
           - name: mosquitto
+          - name: n8n
           - name: nextcloud
             serverSideApply: true
           - name: oauth2-proxy

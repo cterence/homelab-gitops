@@ -651,6 +651,7 @@ velero:
           - home-assistant
           - immich
           - mealie
+          - n8n
           - nextcloud
           - paperless-ngx
           - satisfactory-server

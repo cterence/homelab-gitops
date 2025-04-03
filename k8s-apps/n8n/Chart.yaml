@@ -1,0 +1,13 @@
+apiVersion: v2
+name: n8n
+description: Workflow automation tool
+type: application
+version: 0.1.0
+dependencies:
+  - name: n8n
+    repository: oci://8gears.container-registry.com/library
+    version: 1.0.6
+  - name: cluster-local
+    alias: cnpg-cluster
+    repository: "file://../../charts/cnpg-cluster"
+    version: 0.2.1
