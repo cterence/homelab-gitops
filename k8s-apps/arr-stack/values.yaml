@@ -927,6 +927,8 @@ app-template:
                 - template: sonarr-quality-definition-series
                 - template: sonarr-v4-quality-profile-web-1080p
                 - template: sonarr-v4-custom-formats-web-1080p
+                - template: sonarr-v4-quality-profile-bluray-web-1080p-french-vostfr
+                - template: sonarr-v4-custom-formats-bluray-web-1080p-french-vostfr
 
               custom_formats: []
 
@@ -941,6 +943,10 @@ app-template:
                 - template: radarr-custom-formats-hd-bluray-web
                 - template: radarr-quality-profile-remux-web-1080p
                 - template: radarr-custom-formats-remux-web-1080p
+                - template: radarr-quality-profile-hd-bluray-web-french-vostfr
+                - template: radarr-custom-formats-hd-bluray-web-french-vostfr
+                - template: radarr-quality-profile-hd-remux-web-french-vostfr
+                - template: radarr-custom-formats-hd-remux-web-french-vostfr
 
               custom_formats: []
 
