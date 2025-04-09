@@ -9,7 +9,7 @@ dependencies:
     version: 3.7.3
   - name: redis
     repository: https://charts.bitnami.com/bitnami
-    version: 20.11.4
+    version: 20.11.5
   - name: cluster-local
     alias: cnpg-cluster-pg17
     repository: "file://../../charts/cnpg-cluster"
