@@ -50,6 +50,7 @@ n8n:
 
     persistence:
       enabled: true
+      type: dynamic
       size: 1Gi
 
     resources:
