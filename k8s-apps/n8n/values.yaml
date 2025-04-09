@@ -48,6 +48,10 @@ n8n:
             - key: ca.crt
               path: ca.crt
 
+    persistence:
+      enabled: true
+      size: 1Gi
+
     resources:
       limits:
         memory: 2048Mi
