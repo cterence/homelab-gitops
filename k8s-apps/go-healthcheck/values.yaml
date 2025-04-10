@@ -12,6 +12,7 @@ urls:
   - https://bw.terence.cloud/alive
   - https://calibre.terence.cloud
   - https://convert.terence.cloud
+  - https://fb.terence.cloud/health
   - https://ha.terence.cloud
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
