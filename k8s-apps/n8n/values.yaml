@@ -88,7 +88,7 @@ n8n:
         annotations:
           argocd.argoproj.io/sync-options: ServerSideApply=true
       spec:
-        refreshInterval: 0
+        refreshInterval: "0"
         target:
           name: n8n-encryption-key
           creationPolicy: Owner
