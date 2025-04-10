@@ -5,9 +5,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
-  secretStoreRef:
-    kind: ClusterSecretStore
-    name: gitlab-secret-store
+  refreshInterval: "0"
   target:
     name: jellystat-jwt-secret
     creationPolicy: Owner
