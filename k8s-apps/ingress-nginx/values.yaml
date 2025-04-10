@@ -1,6 +1,6 @@
 ingress-nginx:
   controller:
-    replicaCount: 2
+    replicaCount: 1
     service:
       # Forces MetalLB to set this IP
       type: LoadBalancer
