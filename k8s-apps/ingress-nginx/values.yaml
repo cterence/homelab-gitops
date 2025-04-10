@@ -19,7 +19,7 @@ ingress-nginx:
       enable-real-ip: "true"
       annotations-risk-level: "Critical"
       allow-snippet-annotations: "true"
-      whitelist-source-range: "10.244.0.0/16,109.0.228.97/32,34.68.56.138/32"
+      whitelist-source-range: "192.168.1.0/24,10.244.0.0/16,109.0.228.97/32,34.68.56.138/32"
 
     metrics:
       enabled: true
