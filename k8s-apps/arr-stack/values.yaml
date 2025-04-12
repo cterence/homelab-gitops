@@ -173,7 +173,7 @@ app-template:
         sonarr:
           image:
             repository: lscr.io/linuxserver/sonarr
-            tag: 4.0.14.2939-ls277@sha256:7342ef32dd9cd6d13638765cfb8034edd4c80b0584f427159fd7f5ddeef5399d
+            tag: 4.0.14.2939-ls278@sha256:5c6e66c36fd0afe1323b3478b2289b5bff6e9ff17ee2c315feee29316ddb9140
           env:
             TZ: Europe/Paris
             PUID: 1000
