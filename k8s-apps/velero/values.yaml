@@ -291,7 +291,7 @@ velero:
           annotations:
             message: Velero successful backup for schedule {{ $labels.schedule }} is older than 24 hours.
           expr: |
-            (time() - velero_backup_last_successful_timestamp{schedule!=""}) > 86400
+            (time() - velero_backup_last_successful_timestamp{schedule!=""}) > 86400 and velero_backup_last_status{schedule!=""} != 1
           for: 15m
           labels:
             severity: warning
