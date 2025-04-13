@@ -59,7 +59,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/calibrain/calibre-web-automated-book-downloader
-            tag: latest@sha256:4a59b7740e3660a76b9d8df53fdd7de3e9e5aaad80fa29ecc7cdad43ab1da6e5
+            tag: latest@sha256:ec82bd5add1c161b195d54f47b5cf0cbd3fc39b7056e9bee925431c1b8bc84c6
           env:
             TZ: Europe/Paris
             FLASK_PORT: 8084
@@ -69,6 +69,7 @@ app-template:
             BOOK_LANGUAGE: fr
             UID: "0"
             GID: "0"
+            APP_ENV: prod
           ports:
             - name: http
               containerPort: 8084
@@ -79,14 +80,14 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /request/api/status
+                  path: /api/status
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /request/api/status
+                  path: /api/status
         cloudflare-bypass:
           image:
             repository: ghcr.io/sarperavci/cloudflarebypassforscraping
