@@ -10,6 +10,10 @@ external-secrets:
   # -- If set, install and upgrade CRDs through helm chart.
   installCRDs: true
 
+  crds:
+    conversion:
+      enabled: false
+
   imagePullSecrets: []
   nameOverride: ""
   fullnameOverride: ""
@@ -92,7 +96,7 @@ external-secrets:
   priorityClassName: ""
 
   extraObjects:
-    - apiVersion: external-secrets.io/v1beta1
+    - apiVersion: external-secrets.io/v1
       kind: ClusterSecretStore
       metadata:
         name: gitlab-secret-store
