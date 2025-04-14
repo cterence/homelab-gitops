@@ -213,7 +213,7 @@ nextcloud:
                 name: immich-nextcloud-uploader-api-key
                 key: api-key
           - name: IMMICH_INSTANCE_URL
-            value: http://immich-server.immich:3001/api
+            value: http://immich-server.immich:2283/api
         securityContext:
           runAsUser: 33
           runAsGroup: 33
