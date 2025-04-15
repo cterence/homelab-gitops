@@ -43,7 +43,6 @@ immich:
         # enabled: true
         # type: persistentVolumeClaim
         # accessMode: ReadWriteOnce
-        size: 200Gi
     # configuration is immich-config.json converted to yaml
     # ref: https://immich.app/docs/install/config-file/
     #
