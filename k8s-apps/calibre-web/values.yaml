@@ -59,7 +59,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/calibrain/calibre-web-automated-book-downloader
-            tag: latest@sha256:67746e53fc77dc40c434f6cff4c522aeac1da7afbe69354a548e1a1a18edb51f
+            tag: latest@sha256:7c2681419dd16c3f573c3223cfddc374d904d3a574b0e1e5a1dfe01c39244bf6
           env:
             TZ: Europe/Paris
             FLASK_PORT: 8084
