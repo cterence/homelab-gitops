@@ -105,6 +105,9 @@ app-template:
           ports:
             - name: http
               containerPort: 3000
+          resources:
+            limits:
+              memory: 1Gi
           env:
             TZ: Europe/Paris
             MINIMUM_SECONDS_TO_INCLUDE_PLAYBACK: "120"
