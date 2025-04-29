@@ -32,7 +32,7 @@ app-template:
         init:
           image:
             repository: opencloudeu/opencloud-rolling
-            tag: 2.1.0@sha256:f9634bb049058061a137aebddcd6e6dc4ffb853bbf3c271f8ce815cea30e8114
+            tag: 2.2.0@sha256:17917e5baa84c60080454be7bd9d359d1a062f2aba8fb8febff784dfc788ebe6
           command: "/bin/bash"
           args:
             - -c
@@ -44,7 +44,7 @@ app-template:
         main:
           image:
             repository: opencloudeu/opencloud-rolling
-            tag: 2.1.0@sha256:f9634bb049058061a137aebddcd6e6dc4ffb853bbf3c271f8ce815cea30e8114
+            tag: 2.2.0@sha256:17917e5baa84c60080454be7bd9d359d1a062f2aba8fb8febff784dfc788ebe6
           envFrom:
             - configMapRef:
                 identifier: config
