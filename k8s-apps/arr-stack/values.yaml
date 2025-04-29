@@ -32,7 +32,7 @@ app-template:
         jellyfin:
           image:
             repository: lscr.io/linuxserver/jellyfin
-            tag: 10.10.7ubu2404-ls61@sha256:fffa82da33d0ff3aeed70e255cead2a12bee87da7c9722db0ee1c8c3a5f94896
+            tag: 10.10.7ubu2404-ls62@sha256:3c967e55bed1b36332629e1896e9f2ef82e176bd19f495838deef4e4bbdaed05
           env:
             TZ: Europe/Paris
           ports:
