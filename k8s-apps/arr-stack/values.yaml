@@ -873,7 +873,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 200Mi
+      size: 2Gi
       advancedMounts:
         lidarr:
           lidarr:
