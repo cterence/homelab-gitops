@@ -38,6 +38,7 @@ spec:
             serverSideDiff: true
           - name: mealie
           - name: metallb
+          - name: microbin
           - name: mosquitto
           - name: n8n
           - name: nextcloud
