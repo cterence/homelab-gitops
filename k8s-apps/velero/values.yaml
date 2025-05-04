@@ -667,7 +667,7 @@ velero:
   #       - foo
   schedules:
     default:
-      disabled: false
+      disabled: true
       schedule: "0 0 * * *"
       useOwnerReferencesInBackup: false
       paused: false
