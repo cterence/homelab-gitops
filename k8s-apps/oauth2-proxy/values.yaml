@@ -87,6 +87,7 @@ oauth2-proxy:
       - httpbin.terence.cloud
       - komoplane.terence.cloud
       - longhorn.terence.cloud
+      - np.terence.cloud
       - ntfy.terence.cloud
       - prometheus.terence.cloud
       - tailout.terence.cloud
