@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: soulseek-password
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: soulseek-password
+    creationPolicy: Owner
+  data:
+    - secretKey: PASSW
+      remoteRef:
+        key: soulseek_password

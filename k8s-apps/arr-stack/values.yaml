@@ -521,6 +521,85 @@ app-template:
                   port: http
                   path: /health
 
+    nicotine-plus:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
+      containers:
+        nicotine-plus:
+          image:
+            repository: sirjmann92/nicotineplus-proper
+            tag: 250503@sha256:81cba0e394a47789b80f8e468fae999e6aa2d54589bdb8e75e4fa5bfbdde4ad1
+          env:
+            TZ: Europe/Paris
+            PUID: "1000"
+            PGID: "1000"
+            LANG: C.UTF-8
+            UMASK: "022"
+            DARKMODE: "True"
+            UPNP: "False"
+            AUTO_CONNECT: "True"
+            TRAY_ICON: "False"
+            NOTIFY_FILE: "False"
+            NOTIFY_FOLDER: "False"
+            NOTIFY_TITLE: "False"
+            NOTIFY_PM: "False"
+            NOTIFY_CHATROOM: "False"
+            NOTIFY_MENTION: "False"
+            LOGIN: ildiluvio
+          envFrom:
+            - secretRef:
+                name: soulseek-password
+          ports:
+            - name: http
+              containerPort: 6565
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+
+        gluetun:
+          dependsOn: nicotine-plus
+          image:
+            repository: ghcr.io/qdm12/gluetun
+            tag: v3.40.0@sha256:2b42bfa046757145a5155acece417b65b4443c8033fb88661a8e9dcf7fda5a00
+          env:
+            TZ: Europe/Paris
+            VPN_SERVICE_PROVIDER: airvpn
+            VPN_TYPE: wireguard
+            VPN_INTERFACE: wg1
+            SERVER_REGIONS: Europe
+            WIREGUARD_ADDRESSES: 10.187.212.195/32,fd7d:76ee:e68f:a993:d4ca:1898:e577:8221/128
+            FIREWALL_VPN_INPUT_PORTS: "2234"
+          envFrom:
+            - secretRef:
+                name: gluetun-nicotine-plus-wg-keys
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            runAsUser: 0
+            runAsGroup: 0
+            privileged: true
+
   service:
     jellyfin:
       controller: jellyfin
@@ -588,6 +667,12 @@ app-template:
       ports:
         http:
           port: 8080
+    nicotine-plus:
+      controller: nicotine-plus
+      type: ClusterIP
+      ports:
+        http:
+          port: 6565
 
   ingress:
     jellyfin:
@@ -775,6 +860,24 @@ app-template:
           hosts:
             - *host
 
+    nicotine-plus:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "nginx"
+      hosts:
+        - host: &host np.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: nicotine-plus
+                port: http
+      tls:
+        - secretName: nicotine-plus-tls
+          hosts:
+            - *host
+
   persistence:
     data:
       enabled: true
@@ -805,6 +908,10 @@ app-template:
         filebrowser:
           filebrowser:
             - path: /srv
+        nicotine-plus:
+          nicotine-plus:
+            - path: /media
+              subPath: media/music
 
     jellyfin-config:
       enabled: true
@@ -989,6 +1096,28 @@ app-template:
           filebrowser:
             - path: /.filebrowser.json
               subPath: .filebrowser.json
+
+    nicotine-plus-config:
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 500Mi
+      advancedMounts:
+        nicotine-plus:
+          nicotine-plus:
+            - path: /data
+              subPath: data
+            - path: /config
+              subPath: config
+
+    gluetun-nicotine-plus-device:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/net/tun
+      hostPathType: "CharDevice"
+      advancedMounts:
+        nicotine-plus:
+          gluetun:
+            - path: /dev/net/tun
 
   configMaps:
     configarr-config:
