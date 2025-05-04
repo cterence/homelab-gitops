@@ -697,6 +697,37 @@ velero:
           apiGroup: ""
           kind: ConfigMap
           name: volume-policy
+    v2:
+      disabled: false
+      schedule: "0 0 * * *"
+      useOwnerReferencesInBackup: false
+      paused: false
+      template:
+        storageLocation: v2
+        includedNamespaces:
+          - arr-stack
+          - calibre-web
+          - home-assistant
+          - immich
+          - mealie
+          - n8n
+          - nextcloud
+          - paperless-ngx
+          - satisfactory-server
+          - vaultwarden
+          - zigbee2mqtt
+        includedResources:
+          - po
+          - pv
+          - pvc
+          - cm
+          - sa
+          - secret
+        ttl: 720h
+        resourcePolicy:
+          apiGroup: ""
+          kind: ConfigMap
+          name: volume-policy
 
   # Velero ConfigMaps.
   # Eg:
