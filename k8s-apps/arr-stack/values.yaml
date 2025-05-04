@@ -541,7 +541,7 @@ app-template:
         nicotine-plus:
           image:
             repository: sirjmann92/nicotineplus-proper
-            tag: 250503@sha256:81cba0e394a47789b80f8e468fae999e6aa2d54589bdb8e75e4fa5bfbdde4ad1
+            tag: 250504@sha256:23127af1910ae5935062b4253ffe4666ec7306c49c441da92fb39b5479606195
           env:
             TZ: Europe/Paris
             PUID: "1000"
@@ -912,6 +912,8 @@ app-template:
           nicotine-plus:
             - path: /media
               subPath: media/music
+            - path: /download
+              subPath: download/soulseek
 
     jellyfin-config:
       enabled: true
