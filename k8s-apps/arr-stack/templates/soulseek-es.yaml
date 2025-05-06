@@ -10,9 +10,6 @@ spec:
     name: soulseek-password
     creationPolicy: Owner
   data:
-    - secretKey: PASSW
-      remoteRef:
-        key: soulseek_password
     - secretKey: SLSKD_SLSK_PASSWORD
       remoteRef:
         key: soulseek_password
