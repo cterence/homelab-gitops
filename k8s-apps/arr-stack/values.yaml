@@ -600,6 +600,79 @@ app-template:
             runAsGroup: 0
             privileged: true
 
+    slskd:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
+      containers:
+        slskd:
+          image:
+            repository: slskd/slskd
+            tag: 0.22.5@sha256:f5150c39758353c31788e8e3d6aa9f9c2910f2a46591d810fc2f4d0bac81a96a
+          env:
+            TZ: Europe/Paris
+            PUID: "1000"
+            PGID: "1000"
+            SLSKD_SLSK_USERNAME: ildiluvio
+            SLSKD_DOWNLOADS_DIR: /download/complete
+            SLSKD_INCOMPLETE_DIR: /download/incomplete
+            SLSKD_SHARED_DIR: /music
+            SLSKD_REMOTE_FILE_MANAGEMENT: true
+            SLSKD_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: slskd-password
+                  key: password
+          envFrom:
+            - secretRef:
+                name: soulseek-password
+          ports:
+            - name: http
+              containerPort: 5030
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+        gluetun:
+          dependsOn: slskd
+          image:
+            repository: ghcr.io/qdm12/gluetun
+            tag: v3.40.0@sha256:2b42bfa046757145a5155acece417b65b4443c8033fb88661a8e9dcf7fda5a00
+          env:
+            TZ: Europe/Paris
+            VPN_SERVICE_PROVIDER: airvpn
+            VPN_TYPE: wireguard
+            VPN_INTERFACE: wg2
+            SERVER_REGIONS: Europe
+            WIREGUARD_ADDRESSES: 10.165.132.142/32,fd7d:76ee:e68f:a993:98e4:695c:3789:4b9d/128
+            FIREWALL_VPN_INPUT_PORTS: "50300"
+          envFrom:
+            - secretRef:
+                name: gluetun-slskd-wg-keys
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            runAsUser: 0
+            runAsGroup: 0
+            privileged: true
+
   service:
     jellyfin:
       controller: jellyfin
@@ -673,6 +746,12 @@ app-template:
       ports:
         http:
           port: 6565
+    slskd:
+      controller: slskd
+      type: ClusterIP
+      ports:
+        http:
+          port: 5030
 
   ingress:
     jellyfin:
@@ -879,6 +958,25 @@ app-template:
           hosts:
             - *host
 
+    slskd:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      className: "nginx"
+      hosts:
+        - host: &host slskd.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: slskd
+                port: http
+      tls:
+        - secretName: slskd-tls
+          hosts:
+            - *host
+
   persistence:
     data:
       enabled: true
@@ -915,6 +1013,12 @@ app-template:
               subPath: media/music
             - path: /download
               subPath: download/soulseek
+        slskd:
+          slskd:
+            - path: /music
+              subPath: media/music
+            - path: /download
+              subPath: download/slskd
 
     jellyfin-config:
       enabled: true
@@ -1119,6 +1223,25 @@ app-template:
       hostPathType: "CharDevice"
       advancedMounts:
         nicotine-plus:
+          gluetun:
+            - path: /dev/net/tun
+
+    slskd-config:
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 500Mi
+      advancedMounts:
+        slskd:
+          slskd:
+            - path: /app
+
+    gluetun-slskd-device:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/net/tun
+      hostPathType: "CharDevice"
+      advancedMounts:
+        slskd:
           gluetun:
             - path: /dev/net/tun
 

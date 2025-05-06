@@ -1,18 +1,18 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: soulseek-password
+  name: gluetun-slskd-wg-keys
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
     name: gitlab-secret-store
   target:
-    name: soulseek-password
+    name: gluetun-slskd-wg-keys
     creationPolicy: Owner
   data:
-    - secretKey: PASSW
+    - secretKey: WIREGUARD_PRIVATE_KEY
       remoteRef:
-        key: soulseek_password
-    - secretKey: SLSKD_SLSK_PASSWORD
+        key: airvpn_slskd_wg_privkey
+    - secretKey: WIREGUARD_PRESHARED_KEY
       remoteRef:
-        key: soulseek_password
+        key: airvpn_slskd_wg_psk
