@@ -546,19 +546,7 @@ app-template:
             TZ: Europe/Paris
             PUID: "1000"
             PGID: "1000"
-            SLSKD_SLSK_USERNAME: ildiluvio
-            SLSKD_DOWNLOADS_DIR: /download/complete
-            SLSKD_INCOMPLETE_DIR: /download/incomplete
-            SLSKD_SHARED_DIR: /music
-            SLSKD_REMOTE_FILE_MANAGEMENT: true
-            SLSKD_PASSWORD:
-              valueFrom:
-                secretKeyRef:
-                  name: slskd-password
-                  key: password
-          envFrom:
-            - secretRef:
-                name: soulseek-password
+            SLSKD_CONFIG: /config/slskd.yml
           ports:
             - name: http
               containerPort: 5030
@@ -582,7 +570,7 @@ app-template:
             VPN_INTERFACE: wg2
             SERVER_REGIONS: Europe
             WIREGUARD_ADDRESSES: 10.165.132.142/32,fd7d:76ee:e68f:a993:98e4:695c:3789:4b9d/128
-            FIREWALL_VPN_INPUT_PORTS: "50300"
+            FIREWALL_VPN_INPUT_PORTS: "39332"
           envFrom:
             - secretRef:
                 name: gluetun-slskd-wg-keys
@@ -593,6 +581,18 @@ app-template:
             runAsUser: 0
             runAsGroup: 0
             privileged: true
+
+    soularr:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        soularr:
+          image:
+            repository: mrusse08/soularr
+            tag: latest@sha256:16885ad0d5ec25d248a640773822927d89163cc65bc9c49732140777c11558aa
+          env:
+            TZ: Europe/Paris
 
   service:
     jellyfin:
@@ -909,6 +909,12 @@ app-template:
               subPath: media/music
             - path: /download
               subPath: download/slskd
+        soularr:
+          soularr:
+            - path: /data
+              subPath: media/music
+            - path: /downloads
+              subPath: download/slskd/complete
 
     jellyfin-config:
       enabled: true
@@ -1095,6 +1101,15 @@ app-template:
               subPath: .filebrowser.json
 
     slskd-config:
+      type: secret
+      name: slskd-config
+      advancedMounts:
+        slskd:
+          slskd:
+            - path: /config
+              readOnly: true
+
+    slskd-data:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
       size: 500Mi
@@ -1112,6 +1127,15 @@ app-template:
         slskd:
           gluetun:
             - path: /dev/net/tun
+
+    soularr-config:
+      type: secret
+      name: soularr-config
+      advancedMounts:
+        soularr:
+          soularr:
+            - path: /data/config.ini
+              subPath: config.ini
 
   configMaps:
     configarr-config:

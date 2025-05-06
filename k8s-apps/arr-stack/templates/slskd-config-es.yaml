@@ -1,0 +1,58 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: slskd-config
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  refreshInterval: "0"
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: slskd-config
+    template:
+      engineVersion: v2
+      data:
+        slskd.yml: |
+          remote_file_management: true
+          directories:
+            incomplete: /download/incomplete
+            downloads: /download/complete
+          shares:
+            directories:
+              - /music
+          soulseek:
+            username: ildiluvio
+            password: {{ "{{ .soulseek_password }}" }}
+            listen_port: 39332
+          web:
+            authentication:
+              disabled: false
+              username: slskd
+              password: {{ "{{ .password }}" }}
+              api_keys:
+                my_api_key:
+                  key: {{ "{{ .slskd_api_key }}" }}
+                  cidr: 0.0.0.0/0,::/0
+
+  data:
+    - secretKey: slskd_api_key
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: slskd_api_key
+    - secretKey: soulseek_password
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: soulseek_password
+
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ClusterGenerator
+        name: password
