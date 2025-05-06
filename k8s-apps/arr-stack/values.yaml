@@ -550,6 +550,8 @@ app-template:
           ports:
             - name: http
               containerPort: 5030
+            - name: slskd
+              containerPort: 39332
           probes:
             liveness:
               enabled: true
