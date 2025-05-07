@@ -16,6 +16,7 @@ spec:
       data:
         slskd.yml: |
           remote_file_management: true
+          debug: true
           directories:
             incomplete: /download/incomplete
             downloads: /download/complete
@@ -26,11 +27,12 @@ spec:
             username: ildiluvio
             password: {{ "{{ .soulseek_password }}" }}
             listen_port: 39332
+            diagnosticLevel: Debug
           web:
             authentication:
               disabled: false
               username: slskd
-              password: {{ "{{ .password }}" }}
+              password: {{ "{{ .slskd_password }}" }}
               api_keys:
                 my_api_key:
                   key: {{ "{{ .slskd_api_key }}" }}
@@ -49,10 +51,9 @@ spec:
         decodingStrategy: None
         metadataPolicy: None
         key: soulseek_password
-
-  dataFrom:
-  - sourceRef:
-      generatorRef:
-        apiVersion: generators.external-secrets.io/v1alpha1
-        kind: ClusterGenerator
-        name: password
+    - secretKey: slskd_password
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: slskd_password
