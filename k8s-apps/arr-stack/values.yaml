@@ -585,7 +585,12 @@ app-template:
             privileged: true
 
     soularr:
-      type: deployment
+      type: cronjob
+      cronjob:
+        schedule: "*/5 * * * *"
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+        concurrencyPolicy: Forbid
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -595,6 +600,8 @@ app-template:
             tag: latest@sha256:16885ad0d5ec25d248a640773822927d89163cc65bc9c49732140777c11558aa
           env:
             TZ: Europe/Paris
+          command: python
+          args: ["-u", "/app/soularr.py"]
 
   service:
     jellyfin:
