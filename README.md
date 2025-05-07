@@ -70,7 +70,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app | ✅ |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
-| [n8n](./scripts/../k8s-apps/n8n) | Workflow automation tool | ✅ |
+| [n8n](./scripts/../k8s-apps/n8n) | Workflow automation tool | ❌ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
 | [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing | ✅ |
