@@ -555,10 +555,17 @@ app-template:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
-              type: HTTP
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
 
         gluetun:
           dependsOn: slskd
