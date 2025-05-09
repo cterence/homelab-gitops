@@ -239,6 +239,7 @@ cnpg-cluster-pg17:
     #   enabled: true
     #   podMonitor:
     #     enabled: true
+    enablePDB: false
     postgresql: {}
     initdb:
       database: frm
