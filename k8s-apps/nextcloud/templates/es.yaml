@@ -1,4 +1,4 @@
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: immich-nextcloud-uploader-api-key
@@ -17,7 +17,7 @@ spec:
         metadataPolicy: None
         key: immich_nextcloud_uploader_api_key
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: nextcloud

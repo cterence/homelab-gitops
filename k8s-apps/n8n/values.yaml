@@ -81,7 +81,7 @@ n8n:
           - n8n.terence.cloud
 
   extraManifests:
-    - apiVersion: external-secrets.io/v1beta1
+    - apiVersion: external-secrets.io/v1
       kind: ExternalSecret
       metadata:
         name: n8n-encryption-key

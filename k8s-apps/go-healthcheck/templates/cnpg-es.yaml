@@ -1,6 +1,6 @@
 {{- range .Values.cnpgClusters }}
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: k8s-{{ .namespace }}
@@ -22,7 +22,7 @@ spec:
           name: "k8s-secret-store"
           namespace: external-secrets
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: {{ .name }}-uri
