@@ -15,7 +15,7 @@ dead-drop:
         init:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: main@sha256:ffb58e808110ef50c9e5fcd627dcbc2937b045ba214783368e0aa33835f46927
+            tag: main@sha256:2a2bf3201c665e2a5fdf6e82dc2333bf58a471c1233d27060093e32339757ed7
           args:
             - init
           envFrom:
@@ -30,7 +30,7 @@ dead-drop:
         main:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: main@sha256:ffb58e808110ef50c9e5fcd627dcbc2937b045ba214783368e0aa33835f46927
+            tag: main@sha256:2a2bf3201c665e2a5fdf6e82dc2333bf58a471c1233d27060093e32339757ed7
           args:
             - serve
           ports:
@@ -64,7 +64,7 @@ dead-drop:
         main:
           image:
             repository: ghcr.io/cterence/dead-drop
-            tag: main@sha256:ffb58e808110ef50c9e5fcd627dcbc2937b045ba214783368e0aa33835f46927
+            tag: main@sha256:2a2bf3201c665e2a5fdf6e82dc2333bf58a471c1233d27060093e32339757ed7
           args:
             - purge
           envFrom:
