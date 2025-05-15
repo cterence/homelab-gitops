@@ -353,14 +353,14 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /ping
+                  path: /system/ping
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /ping
+                  path: /system/ping
 
     configarr:
       type: cronjob
