@@ -43,13 +43,15 @@ jobs:
 
           # Filter modified apps to include only deployed apps
           FILTERED_APPS=$(echo "$MODIFIED_APPS" | tr ' ' '\n' | grep -Fx -f <(echo "$DEPLOYED_APPS" | tr ' ' '\n') || true)
-          echo "Filtered deployed apps: $FILTERED_APPS"
 
-          if [ -z "$FILTERED_APPS" ]; then
+          OUTPUT_APPS=$(echo "$FILTERED_APPS" | tr '\n' ' ')
+          echo "Filtered deployed apps: $OUTPUT_APPS"
+
+          if [ -z "$OUTPUT_APPS" ]; then
             echo "No deployed apps changed"
             echo "apps=" >> $GITHUB_OUTPUT
           else
-            echo "apps=$FILTERED_APPS" >> $GITHUB_OUTPUT
+            echo "apps=$OUTPUT_APPS" >> $GITHUB_OUTPUT
           fi
 
       - name: Login to ArgoCD
