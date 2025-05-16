@@ -610,6 +610,36 @@ app-template:
           command: python
           args: ["-u", "/app/soularr.py"]
 
+    huntarr:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        huntarr:
+          image:
+            repository: huntarr/huntarr
+            tag: 6.5.17@sha256:ac4949849988274a9f1c585fbe4810ef2b8c7f566b788a88a54197f73b093f74
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 9705
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+            readiness:
+              enabled: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+
   service:
     jellyfin:
       controller: jellyfin
@@ -683,6 +713,12 @@ app-template:
       ports:
         http:
           port: 5030
+    huntarr:
+      controller: huntarr
+      type: ClusterIP
+      ports:
+        http:
+          port: 9705
 
   ingress:
     jellyfin:
@@ -885,6 +921,24 @@ app-template:
                 port: http
       tls:
         - secretName: slskd-tls
+          hosts:
+            - *host
+
+    huntarr:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "nginx"
+      hosts:
+        - host: &host hunt.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: huntarr
+                port: http
+      tls:
+        - secretName: huntarr-tls
           hosts:
             - *host
 
@@ -1151,6 +1205,16 @@ app-template:
           soularr:
             - path: /data/config.ini
               subPath: config.ini
+
+    huntarr-config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 500Mi
+      advancedMounts:
+        huntarr:
+          huntarr:
+            - path: /config
 
   configMaps:
     configarr-config:
