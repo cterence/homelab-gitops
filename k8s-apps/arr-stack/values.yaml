@@ -619,7 +619,7 @@ app-template:
         huntarr:
           image:
             repository: huntarr/huntarr
-            tag: 6.6.3@sha256:cf16a33fc9f2a07fdb5353c5b594afed8b0600a5b324a32b0a4d861f082e60a2
+            tag: 6.7.0@sha256:66c9554ab74133ea99a9e1619630bc751bad2ff0596865681eb24b835e320c48
           env:
             TZ: Europe/Paris
           ports:
