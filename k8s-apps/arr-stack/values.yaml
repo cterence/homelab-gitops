@@ -48,6 +48,7 @@ app-template:
                   path: /health
             readiness:
               enabled: true
+              custom: true
               spec:
                 exec:
                   command:
