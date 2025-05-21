@@ -49,9 +49,11 @@ app-template:
             readiness:
               enabled: true
               spec:
-                httpGet:
-                  port: http
-                  path: /health
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - grep -q '<IsStartupWizardCompleted>true</IsStartupWizardCompleted>' /config/system.xml && exit 0 || exit 1
           securityContext:
             privileged: true
 
