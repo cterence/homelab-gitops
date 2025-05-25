@@ -297,7 +297,7 @@ app-template:
         prowlarr:
           image:
             repository: lscr.io/linuxserver/prowlarr
-            tag: 1.35.1.5034-ls119@sha256:c63b71155541de52a9e60ba13fd10824a59f649812ca18701509b7b804a5253a
+            tag: 1.36.3.5071-ls119@sha256:1a6cdd0cc2350f8527dab39bc8467c9a2553bbbcf75a2c66f882fc53d73d5deb
           env:
             TZ: Europe/Paris
             PUID: 1000
