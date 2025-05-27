@@ -50,7 +50,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance | ✅ |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter | ✅ |
 | [crowdsec](./scripts/../k8s-apps/crowdsec) | Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI | ✅ |
-| [dead-drop](./scripts/../k8s-apps/dead-drop) | My recreation of a dead drop application to securely share information | ❌ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
 | [garage](./scripts/../k8s-apps/garage) | S3-compatible object store for small self-hosted geo-distributed deployments | ✅ |
@@ -65,13 +64,10 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
 | [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ✅ |
-| [maybe](./scripts/../k8s-apps/maybe) | The OS for your personal finances | ❌ |
 | [mealie](./scripts/../k8s-apps/mealie) | Recipe manager and meal planner | ✅ |
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
-| [metrics-server](./scripts/../k8s-apps/metrics-server) | Scalable and efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines | ❌ |
 | [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app | ✅ |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
-| [n8n](./scripts/../k8s-apps/n8n) | Workflow automation tool | ❌ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [oauth2-proxy](./scripts/../k8s-apps/oauth2-proxy) | A reverse proxy that provides authentication with Google, Azure, OpenID Connect and many more identity providers | ✅ |
 | [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing | ✅ |
