@@ -139,6 +139,8 @@ ingress:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false" # 2 level subdomain unsupported by Cloudflare
       labels: {}
       hosts:
         # -- garage S3 API endpoint, to be used with awscli for example
@@ -147,17 +149,16 @@ ingress:
             - path: /
               pathType: Prefix
         # -- garage S3 API endpoint, DNS style bucket access
-        - host: "*.s3.garage.terence.cloud"
-          paths:
-            - path: /
-              pathType: Prefix
+        # - host: "*.s3.garage.terence.cloud"
+        #   paths:
+        #     - path: /
+        #       pathType: Prefix
       tls:
         - secretName: garage-api-tls
           hosts:
-            - "*.s3.garage.terence.cloud"
             - "s3.garage.terence.cloud"
     web:
-      enabled: true
+      enabled: false
       className: "nginx"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
