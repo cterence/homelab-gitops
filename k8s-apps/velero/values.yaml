@@ -676,6 +676,7 @@ velero:
         includedNamespaces:
           - arr-stack
           - calibre-web
+          - garage
           - home-assistant
           - immich
           - mealie
