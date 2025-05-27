@@ -84,7 +84,7 @@ image:
 
 initImage:
   repository: busybox
-  tag: stable
+  tag: stable@sha256:c3ef74e9b647910e409925f2af51a2fc11fe6cbd9df29f9a9f41d953d03bd189
   pullPolicy: IfNotPresent
 
 # -- set if you need credentials to pull your custom image
