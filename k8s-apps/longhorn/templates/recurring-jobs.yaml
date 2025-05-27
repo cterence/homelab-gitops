@@ -1,4 +1,4 @@
-apiVersion: longhorn.io/v1beta1
+apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
   name: 0-snapshot
@@ -10,7 +10,7 @@ spec:
   retain: 0
   concurrency: 10
 ---
-apiVersion: longhorn.io/v1beta1
+apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
   name: 1-filesystem-trim
