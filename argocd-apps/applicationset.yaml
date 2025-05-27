@@ -21,6 +21,7 @@ spec:
           - name: crowdsec
           - name: external-dns
           - name: external-secrets
+          - name: garage
           - name: go-healthcheck
           - name: home-assistant
           - name: homepage
