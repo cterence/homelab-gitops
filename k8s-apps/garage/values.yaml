@@ -134,16 +134,11 @@ service:
 ingress:
   s3:
     api:
-      enabled: false
-      # -- Rely _either_ on the className or the annotation below but not both!
-      # If you want to use the className, set
-      # className: "nginx"
-      # and replace "nginx" by an Ingress controller name,
-      # examples [here](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers).
+      enabled: true
+      className: "nginx"
       annotations:
-        {}
-        # kubernetes.io/ingress.class: "nginx"
-        # kubernetes.io/tls-acme: "true"
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
       labels: {}
       hosts:
         # -- garage S3 API endpoint, to be used with awscli for example
@@ -156,21 +151,17 @@ ingress:
           paths:
             - path: /
               pathType: Prefix
-      tls: []
-      #  - secretName: my-garage-cluster-tls
-      #    hosts:
-      #      - kubernetes.docker.internal
+      tls:
+        - secretName: garage-api-tls
+          hosts:
+            - "*.s3.garage.terence.cloud"
+            - "s3.garage.terence.cloud"
     web:
-      enabled: false
-      # -- Rely _either_ on the className or the annotation below but not both!
-      # If you want to use the className, set
-      # className: "nginx"
-      # and replace "nginx" by an Ingress controller name,
-      # examples [here](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers).
+      enabled: true
+      className: "nginx"
       annotations:
-        {}
-        # kubernetes.io/ingress.class: nginx
-        # kubernetes.io/tls-acme: "true"
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
       labels: {}
       hosts:
         # --  wildcard website access with bucket name prefix
@@ -183,10 +174,10 @@ ingress:
         #   paths:
         #     - path: /
         #       pathType: Prefix
-      tls: []
-      #  - secretName: my-garage-cluster-tls
-      #    hosts:
-      #      - kubernetes.docker.internal
+      tls:
+        - secretName: garage-web-tls
+          hosts:
+            - "*.web.garage.terence.cloud"
 
 resources:
   {}
@@ -200,20 +191,18 @@ resources:
 
 # -- Specifies a livenessProbe
 livenessProbe:
-  {}
-  #httpGet:
-  #  path: /health
-  #  port: 3903
-  #initialDelaySeconds: 5
-  #periodSeconds: 30
+  httpGet:
+    path: /health
+    port: 3903
+  initialDelaySeconds: 5
+  periodSeconds: 30
 # -- Specifies a readinessProbe
 readinessProbe:
-  {}
-  #httpGet:
-  #  path: /health
-  #  port: 3903
-  #initialDelaySeconds: 5
-  #periodSeconds: 30
+  httpGet:
+    path: /health
+    port: 3903
+  initialDelaySeconds: 5
+  periodSeconds: 30
 
 nodeSelector: {}
 
