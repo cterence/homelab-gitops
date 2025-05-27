@@ -52,6 +52,19 @@
       matchPackageNames: [
         "/^lscr.io\\/linuxserver\\/qbittorrent/"
       ]
+    },
+    {
+      // custom datasource for looking up new helm chart versions in a git repo
+      matchPackageNames: ["garage"],
+      matchDatasources: ["helm"],
+      overrideDatasource: "custom.garage",
+      registryUrls: ["https://git.deuxfleurs.fr/Deuxfleurs/garage/raw/branch/main/script/helm/garage/Chart.yaml"],
     }
-  ]
+  ],
+  customDatasources: {
+    garage: {
+      format: "yaml",
+      transformTemplates: ["{\"releases\":[{\"version\": $.version}]}"]
+    }
+  }
 }
