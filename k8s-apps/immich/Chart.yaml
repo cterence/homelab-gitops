@@ -12,10 +12,6 @@ dependencies:
     repository: https://cloudnative-pg.github.io/charts
     version: 0.3.1
   - name: cluster
-    alias: cnpg-cluster-tmp
-    repository: https://cloudnative-pg.github.io/charts
-    version: 0.3.1
-  - name: cluster
     alias: cnpg-cluster-vectorchord
     repository: https://cloudnative-pg.github.io/charts
     version: 0.3.1
