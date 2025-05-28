@@ -1,0 +1,8 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ImageCatalog
+metadata:
+  name: cloudnative-vectorchord
+spec:
+  images:
+    - major: 16
+      image: ghcr.io/tensorchord/cloudnative-vectorchord:16.9-0.3.0
