@@ -666,38 +666,6 @@ velero:
   #       includedNamespaces:
   #       - foo
   schedules:
-    default:
-      disabled: true
-      schedule: "0 0 * * *"
-      useOwnerReferencesInBackup: false
-      paused: false
-      template:
-        storageLocation: default
-        includedNamespaces:
-          - arr-stack
-          - calibre-web
-          - garage
-          - home-assistant
-          - immich
-          - mealie
-          - n8n
-          - nextcloud
-          - paperless-ngx
-          - satisfactory-server
-          - vaultwarden
-          - zigbee2mqtt
-        includedResources:
-          - po
-          - pv
-          - pvc
-          - cm
-          - sa
-          - secret
-        ttl: 720h
-        resourcePolicy:
-          apiGroup: ""
-          kind: ConfigMap
-          name: volume-policy
     v2:
       disabled: false
       schedule: "0 0 * * *"
@@ -708,10 +676,10 @@ velero:
         includedNamespaces:
           - arr-stack
           - calibre-web
+          - garage
           - home-assistant
           - immich
           - mealie
-          - n8n
           - nextcloud
           - paperless-ngx
           - satisfactory-server
