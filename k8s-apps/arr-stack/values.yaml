@@ -370,7 +370,7 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       cronjob:
-        schedule: "0 * * * *"
+        schedule: "0 0 * * *"
         successfulJobsHistory: 1
         failedJobsHistory: 1
       containers:
