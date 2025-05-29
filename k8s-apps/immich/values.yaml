@@ -169,6 +169,8 @@ cnpg-cluster:
   version:
     postgresql: "16"
   cluster:
+    annotations:
+      cnpg.io/hibernation: "on"
     instances: 1
     imageCatalogRef:
       kind: ImageCatalog
