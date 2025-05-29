@@ -1,0 +1,9 @@
+apiVersion: v2
+name: radicale
+description: Free and Open-Source CalDAV and CardDAV Server
+type: application
+version: 0.1.0
+dependencies:
+  - name: radicale
+    repository: oci://tccr.io/truecharts
+    version: 7.8.2
