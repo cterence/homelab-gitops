@@ -183,6 +183,7 @@ cnpg-cluster:
     primaryUpdateStrategy: unsupervised
     logLevel: "info"
     roles: []
+    enablePDB: false
     monitoring:
       enabled: false
       podMonitor:
