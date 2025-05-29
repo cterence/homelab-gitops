@@ -184,9 +184,9 @@ cnpg-cluster:
     logLevel: "info"
     roles: []
     monitoring:
-      enabled: true
+      enabled: false
       podMonitor:
-        enabled: true
+        enabled: false
     postgresql:
       shared_preload_libraries:
         - "vectors.so"
