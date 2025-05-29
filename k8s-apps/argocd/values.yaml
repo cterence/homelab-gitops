@@ -60,23 +60,6 @@ argo-cd:
           - mountPath: /home/argocd/cmp-server/plugins
             name: plugins
 
-    extraContainers:
-      - name: lovely-plugin
-        image: ghcr.io/crumbhole/lovely:1.2.2@sha256:419bc26773506efa627367d0b9a0d8cbd5431f9aebd31f85d585d258842b30cc
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 999
-        volumeMounts:
-          - mountPath: /var/run/argocd
-            name: var-files
-          - mountPath: /home/argocd/cmp-server/plugins
-            name: plugins
-          - mountPath: /tmp
-            name: lovely-tmp
-    volumes:
-      - emptyDir: {}
-        name: lovely-tmp
-
   applicationSet:
     metrics:
       enabled: true
