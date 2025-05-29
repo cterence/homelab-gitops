@@ -74,6 +74,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
+| [radicale](./scripts/../k8s-apps/radicale) | Free and Open-Source CalDAV and CardDAV Server | ✅ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ✅ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ✅ |
