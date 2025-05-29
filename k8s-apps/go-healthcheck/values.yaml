@@ -38,7 +38,7 @@ cnpgClusters:
     namespace: arr-stack
   - name: home-assistant-cnpg-cluster-pg17
     namespace: home-assistant
-  - name: immich-cnpg-cluster
+  - name: immich-cnpg-cluster-vectorchord
     namespace: immich
   - name: mealie-cnpg-cluster
     namespace: mealie
