@@ -22,7 +22,6 @@ urls:
   - https://jstat.terence.cloud/auth/isconfigured
   - https://hunt.terence.cloud/ping
   - https://lid.terence.cloud/ping
-  - https://mealie.terence.cloud/api/app/about
   - https://next.terence.cloud/status.php
   - https://oc.terence.cloud/status
   - https://paperless.terence.cloud
@@ -40,8 +39,6 @@ cnpgClusters:
     namespace: home-assistant
   - name: immich-cnpg-cluster-vectorchord
     namespace: immich
-  - name: mealie-cnpg-cluster
-    namespace: mealie
   - name: nextcloud-cnpg-cluster-pg17
     namespace: nextcloud
   - name: paperless-ngx-cnpg-cluster-pg17

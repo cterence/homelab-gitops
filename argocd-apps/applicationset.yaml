@@ -37,7 +37,6 @@ spec:
             namespace: longhorn-system
             serverSideApply: true
             serverSideDiff: true
-          - name: mealie
           - name: metallb
           - name: microbin
           - name: mosquitto
