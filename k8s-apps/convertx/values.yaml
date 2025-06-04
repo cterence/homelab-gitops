@@ -20,7 +20,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/c4illin/convertx
-            tag: v0.14.0@sha256:00b3fc00d7fef9bb1f3be1003c7dfe01ae8e09ab8d63dff7553b9f96cd88dd28
+            tag: v0.14.1@sha256:346589f154332997329fdc888417d4b24c49cc9140eab80e637a68cfbdd8041b
           env:
             TZ: Europe/Paris
             AUTO_DELETE_EVERY_N_HOURS: 1
