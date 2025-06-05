@@ -8,7 +8,7 @@ spec:
   groups:
     - default
   retain: 0
-  concurrency: 1
+  concurrency: 10
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
@@ -19,4 +19,4 @@ spec:
   task: "filesystem-trim"
   groups:
     - default
-  concurrency: 1
+  concurrency: 10
