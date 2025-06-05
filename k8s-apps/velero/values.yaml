@@ -676,14 +676,13 @@ velero:
         includedNamespaces:
           - arr-stack
           - calibre-web
-          - garage
           - home-assistant
           - immich
-          - mealie
           - nextcloud
           - paperless-ngx
           - satisfactory-server
           - vaultwarden
+          - versity-gw
           - zigbee2mqtt
         includedResources:
           - po

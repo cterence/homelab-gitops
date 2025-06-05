@@ -1,0 +1,168 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-3.7.3/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 100
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  configMaps:
+    versity:
+      data:
+        VGW_HEALTH: /health
+        VGW_REGION: eu-west-3
+        VGW_METRICS_STATSD_SERVERS: 127.0.0.1:8125
+
+    telegraf:
+      data:
+        telegraf.conf: |
+          [[inputs.statsd]]
+          protocol = "udp"
+          service_address = ":8125"
+
+          [[outputs.prometheus_client]]
+          listen = ":9273"
+          expiration_interval = "60s"
+          collectors_exclude = ["gocollector", "process"]
+
+          [[outputs.health]]
+          service_address = "http://:8080"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/versity/versitygw
+            tag: v1.0.14@sha256:5192635d035301e7b7c46857a3bad8453d7b4253a8aac36e0be0f1cf30129984
+          args:
+            - posix
+            - /buckets
+            - --chuid
+            - --chgid
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - configMapRef:
+                identifier: versity
+            - secretRef:
+                name: versity-gw-credentials
+          ports:
+            - name: http
+              containerPort: 7070
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+        telegraf:
+          image:
+            repository: telegraf
+            tag: 1.34.4@sha256:e00b8834c4369134755a2c0a707d10e2e578a8dfcb0ddee9e6adffb16f0aa20d
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: health
+              containerPort: 8080
+            - name: input
+              containerPort: 8125
+            - name: metrics
+              containerPort: 9273
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: health
+                  path: /
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: health
+                  path: /
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 7070
+    metrics:
+      controller: main
+      type: ClusterIP
+      ports:
+        metrics:
+          port: 9273
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      className: "nginx"
+      hosts:
+        - host: &host versity.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: versity-tls
+          hosts:
+            - *host
+
+  persistence:
+    buckets:
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 2Gi
+      advancedMounts:
+        main:
+          main:
+            - path: /buckets
+
+    telegraf-config:
+      type: configMap
+      identifier: telegraf
+      advancedMounts:
+        main:
+          telegraf:
+            - path: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+
+  serviceMonitor:
+    main:
+      enabled: true
+      serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
+      endpoints:
+        - port: metrics
+          scheme: http
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s

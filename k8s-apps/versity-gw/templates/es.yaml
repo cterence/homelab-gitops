@@ -1,0 +1,18 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: versity-gw-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: versity-gw-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: ROOT_ACCESS_KEY
+      remoteRef:
+        key: versity_root_access_key
+    - secretKey: ROOT_SECRET_KEY
+      remoteRef:
+        key: versity_root_secret_key

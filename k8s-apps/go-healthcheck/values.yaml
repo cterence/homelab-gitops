@@ -1,7 +1,6 @@
 urls:
   - http://arr-stack-flaresolverr.arr-stack:8191/health
   - http://calibre-web-book-downloader.calibre-web:8084/request/api/status
-  - http://garage-metrics.garage:3903/health
   - http://httpbin.httpbin:8080/health
   - http://kube-prometheus-stack-alertmanager.monitoring:9093/-/healthy
   - http://kube-prometheus-stack-grafana.monitoring/api/health
@@ -32,6 +31,7 @@ urls:
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
   - https://tools.terence.cloud
+  - https://versity.terence.cloud/health
 
 cnpgClusters:
   - name: attic-cnpg-cluster
