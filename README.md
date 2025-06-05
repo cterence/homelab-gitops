@@ -53,7 +53,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [crowdsec](./scripts/../k8s-apps/crowdsec) | Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI | ✅ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
-| [garage](./scripts/../k8s-apps/garage) | S3-compatible object store for small self-hosted geo-distributed deployments | ✅ |
+| [garage](./scripts/../k8s-apps/garage) | S3-compatible object store for small self-hosted geo-distributed deployments | ❌ |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
 | [headscale](./scripts/../k8s-apps/headscale) | An open source, self-hosted implementation of the Tailscale control server | ❌ |
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
@@ -82,6 +82,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
 | [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes | ✅ |
+| [versity-gw](./scripts/../k8s-apps/versity-gw) | High-performance S3 translation service | ✅ |
 | [zigbee2mqtt](./scripts/../k8s-apps/zigbee2mqtt) | Zigbee to MQTT bridge | ✅ |
 <!-- END deployed-apps -->
 
