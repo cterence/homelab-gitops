@@ -48,7 +48,6 @@ spec:
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
-          - name: radicale
           - name: reloader
           - name: satisfactory-server
           - name: snapshot-controller
