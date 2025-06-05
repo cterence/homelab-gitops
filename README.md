@@ -44,6 +44,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | --- | --- | --- |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
 | [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack | ✅ |
+| [attic](./scripts/../k8s-apps/attic) | Multi-tenant Nix Binary Cache | ✅ |
 | [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ✅ |
 | [calibre-web](./scripts/../k8s-apps/calibre-web) | Web app for browsing, reading and downloading eBooks stored in a Calibre database | ✅ |
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes | ✅ |
@@ -74,7 +75,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
-| [radicale](./scripts/../k8s-apps/radicale) | Free and Open-Source CalDAV and CardDAV Server | ✅ |
+| [radicale](./scripts/../k8s-apps/radicale) | Free and Open-Source CalDAV and CardDAV Server | ❌ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ✅ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ✅ |
