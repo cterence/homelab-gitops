@@ -265,8 +265,3 @@ cnpg-cluster-pg17:
         sslRootCertSecret:
           name: satisfactory-server-cnpg-cluster-ca
           key: ca.crt
-  backups:
-    enabled: true
-    scheduledBackups: []
-    volumeSnapshot:
-      className: longhorn
