@@ -10,6 +10,7 @@ urls:
   - http://oauth2-proxy.oauth2-proxy/ping
   - http://zigbee2mqtt.zigbee2mqtt:10103
   - https://argocd.terence.cloud/healthz?full=true
+  - https://attic.terence.cloud
   - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
   - https://calibre.terence.cloud
@@ -33,6 +34,8 @@ urls:
   - https://tools.terence.cloud
 
 cnpgClusters:
+  - name: attic-cnpg-cluster
+    namespace: attic
   - name: arr-stack-cnpg-cluster-jellystat
     namespace: arr-stack
   - name: home-assistant-cnpg-cluster-pg17
