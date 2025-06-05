@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: attic-token-secret
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: attic-token-secret
+    creationPolicy: Owner
+  data:
+    - secretKey: token-secret
+      remoteRef:
+        key: attic_token_secret

@@ -10,6 +10,7 @@ spec:
         elements:
           - name: argocd
           - name: arr-stack
+          - name: attic
           - name: blackbox-exporter
             namespace: monitoring
           - name: calibre-web
