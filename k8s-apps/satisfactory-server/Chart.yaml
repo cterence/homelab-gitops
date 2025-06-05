@@ -7,7 +7,7 @@ dependencies:
   - name: app-template
     repository: https://bjw-s-labs.github.io/helm-charts
     version: 4.0.1
-  - name: cluster-local
+  - name: cluster
     alias: cnpg-cluster-pg17
-    repository: "file://../../charts/cnpg-cluster"
-    version: 0.2.1
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.3.1

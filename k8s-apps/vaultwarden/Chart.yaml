@@ -7,7 +7,7 @@ dependencies:
   - name: vaultwarden
     repository: https://guerzon.github.io/vaultwarden
     version: 0.32.1
-  - name: cluster-local
+  - name: cluster
     alias: cnpg-cluster-pg17
-    repository: "file://../../charts/cnpg-cluster"
-    version: 0.2.1
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.3.1
