@@ -22,7 +22,7 @@ qtap:
     privileged: true
 
   # One of debug, info, warn, error, dpanic, panic, fatal
-  logLevel: "dpanic"
+  logLevel: "panic"
 
   # One of console, json
   logEncoding: "console"
