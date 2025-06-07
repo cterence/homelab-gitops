@@ -35,6 +35,8 @@ app-template:
             tag: 10.10.7ubu2404-ls65@sha256:63b40554e9a20dc1c655d07d7c57ea912350ef9582edbd3f6068e3ce8bf10256
           env:
             TZ: Europe/Paris
+            PUID: 0
+            PGID: 0
           ports:
             - name: http
               containerPort: 8096
