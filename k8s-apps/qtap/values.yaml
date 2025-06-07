@@ -84,8 +84,11 @@ qtap:
                 - name: Log errors
                   expr: response.status >= 400
                   mode: full
-                - name: Ignore loki requests
+                - name: Ignore loki
                   expr: request.host =~ /loki.*/
+                  mode: none
+                - name: Ignore healthchecks
+                  expr: request.path =~ /ready|health|status|ping|metrics/
                   mode: none
 
     tap:
