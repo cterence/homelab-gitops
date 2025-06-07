@@ -88,7 +88,10 @@ qtap:
                   expr: request.host =~ /loki.*/
                   mode: none
                 - name: Ignore healthchecks
-                  expr: request.path =~ /ready|health|status|ping|metrics/
+                  expr: request.path =~ /ready.*|health.*|live.*|status|ping|metrics/
+                  mode: none
+                - name: Ignore internal requests
+                  expr: request.host =~ /10|192/
                   mode: none
 
     tap:
