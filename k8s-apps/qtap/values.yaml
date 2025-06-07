@@ -89,7 +89,7 @@ qtap:
                   mode: none
 
     tap:
-      direction: egress
+      direction: all
       ignore_loopback: true
       audit_include_dns: true
       filters:
