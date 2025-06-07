@@ -611,7 +611,7 @@ app-template:
         huntarr:
           image:
             repository: huntarr/huntarr
-            tag: 7.5.11@sha256:c5dd24455564806e1a447af2c6a42d9267b1c3a0ae6877177967f10e6c98a6fd
+            tag: 7.5.12@sha256:12debf555061e05ede2bb5c589ccd02af7c7b353e3865f5f2ed94dff4abc70c1
           env:
             TZ: Europe/Paris
           ports:
