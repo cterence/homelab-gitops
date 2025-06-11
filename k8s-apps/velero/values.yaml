@@ -98,7 +98,7 @@ velero:
     # Extra volumeMounts for the Upgrade CRDs Job. Optional.
     extraVolumeMounts: []
     # Extra key/value pairs to be used as environment variables. Optional.
-    extraEnvVars: {}
+    extraEnvVars: []
 
   # Configure the dnsPolicy of the Velero deployment
   # See: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
@@ -504,7 +504,7 @@ velero:
     extraArgs: []
 
     # additional key/value pairs to be used as environment variables such as "AWS_CLUSTER_NAME: 'yourcluster.domain.tld'"
-    extraEnvVars: {}
+    extraEnvVars: []
 
     # Set true for backup all pod volumes without having to apply annotation on the pod when used file system backup Default: false.
     defaultVolumesToFsBackup: true
@@ -615,7 +615,7 @@ velero:
     extraVolumeMounts: []
 
     # Key/value pairs to be used as environment variables for the node-agent daemonset. Optional.
-    extraEnvVars: {}
+    extraEnvVars: []
 
     # Additional command-line arguments that will be passed to the node-agent. Optional.
     # e.g.: extraArgs: ["--foo=bar"]
