@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: home-assistant
     repository: oci://tccr.io/truecharts
-    version: 27.5.2
+    version: 27.6.0
   - name: cluster
     alias: cnpg-cluster-pg17
     repository: https://cloudnative-pg.github.io/charts
