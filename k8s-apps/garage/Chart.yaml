@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: garage
     repository: git+https://git.deuxfleurs.fr/Deuxfleurs/garage@script/helm?ref=main
-    version: 0.7.0
+    version: 0.7.1
