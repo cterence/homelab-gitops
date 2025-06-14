@@ -1337,9 +1337,7 @@ app-template:
             methods:
               noauth: false
               password:
-                enabled: true
-                minLength: 7  # set min password length requirement -- defaults to 5 if unset
-                signup: false
+                enabled: false
               proxy:
                 enabled: true
                 header: "x-auth-request-user"  # header which should container username
