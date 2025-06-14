@@ -479,38 +479,6 @@ app-template:
             runAsGroup: 0
             privileged: true
 
-    filebrowser:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      containers:
-        filebrowser:
-          image:
-            repository: filebrowser/filebrowser
-            tag: v2.32.0@sha256:593478e3c24c5ea9f5d7478dc549965b7bc7030707291006ce8d0b6162d3454b
-          env:
-            TZ: Europe/Paris
-            PUID: 1000
-            PGID: 1000
-          ports:
-            - name: http
-              containerPort: 8080
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-            readiness:
-              enabled: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-
     filebrowser-quantum:
       type: deployment
       strategy: Recreate
@@ -727,12 +695,6 @@ app-template:
       ports:
         http:
           port: 8080
-    filebrowser:
-      controller: filebrowser
-      type: ClusterIP
-      ports:
-        http:
-          port: 8080
     filebrowser-quantum:
       controller: filebrowser-quantum
       type: ClusterIP
@@ -916,28 +878,6 @@ app-template:
           hosts:
             - *host
 
-    filebrowser:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        nginx.ingress.kubernetes.io/proxy-body-size: "0"
-        nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-        nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-      className: "nginx"
-      hosts:
-        - host: &host fb.terence.cloud
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: filebrowser
-                port: http
-      tls:
-        - secretName: filebrowser-tls
-          hosts:
-            - *host
-
     filebrowser-quantum:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -1026,9 +966,6 @@ app-template:
           qbittorrent:
             - path: /data/download
               subPath: download
-        filebrowser:
-          filebrowser:
-            - path: /srv
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /data
@@ -1186,25 +1123,6 @@ app-template:
             - path: /app/config/secrets.yml
               subPath: secrets.yml
 
-    filebrowser-db:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 100Mi
-      advancedMounts:
-        filebrowser:
-          filebrowser:
-            - path: /database
-
-    filebrowser-settings:
-      type: configMap
-      identifier: filebrowser-settings
-      advancedMounts:
-        filebrowser:
-          filebrowser:
-            - path: /.filebrowser.json
-              subPath: .filebrowser.json
-
     filebrowser-quantum-db:
       enabled: true
       type: persistentVolumeClaim
@@ -1312,18 +1230,6 @@ app-template:
                 - template: radarr-custom-formats-hd-remux-web-french-vostfr
 
               custom_formats: []
-
-    filebrowser-settings:
-      data:
-        .filebrowser.json: |
-          {
-            "port": 8080,
-            "baseURL": "",
-            "address": "0.0.0.0",
-            "log": "stdout",
-            "database": "/database/filebrowser.db",
-            "root": "/srv"
-          }
 
     filebrowser-quantum-config:
       data:
