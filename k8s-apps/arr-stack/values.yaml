@@ -1340,8 +1340,15 @@ app-template:
                 enabled: false
               proxy:
                 enabled: true
-                header: "x-auth-request-user"  # header which should container username
-                createUser: true      # automatically creates user with default user properties
+                header: "x-auth-request-user"
+                createUser: true
+          userDefaults:
+            permissions:
+              api: true
+              admin: true
+              modify: true
+              share: true
+              realtime: true
 
 cnpg-cluster-jellystat:
   type: postgresql
