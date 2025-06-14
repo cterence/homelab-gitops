@@ -945,7 +945,7 @@ app-template:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
         nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
-        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
         nginx.ingress.kubernetes.io/proxy-body-size: "0"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
         nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
