@@ -511,6 +511,38 @@ app-template:
                   port: http
                   path: /health
 
+    filebrowser-quantum:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        filebrowser-quantum:
+          image:
+            repository: ghcr.io/gtsteffaniak/filebrowser
+            tag: 0.7.8-beta@sha256:1a095d6861ad3c138fd77f67505bd8ab02b42e14fe9ff31a5b52aeaca3d215d5
+          env:
+            TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
     slskd:
       type: deployment
       strategy: Recreate
@@ -697,6 +729,12 @@ app-template:
           port: 8080
     filebrowser:
       controller: filebrowser
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+    filebrowser-quantum:
+      controller: filebrowser-quantum
       type: ClusterIP
       ports:
         http:
@@ -900,6 +938,31 @@ app-template:
           hosts:
             - *host
 
+    filebrowser-quantum:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+      className: "nginx"
+      hosts:
+        - host: &host fbq.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: filebrowser-quantum
+                port: http
+      tls:
+        - secretName: filebrowser-quantum-tls
+          hosts:
+            - *host
+
     slskd:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -966,6 +1029,9 @@ app-template:
         filebrowser:
           filebrowser:
             - path: /srv
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /data
         slskd:
           slskd:
             - path: /music
@@ -1100,7 +1166,7 @@ app-template:
 
     configarr-config:
       type: configMap
-      name: arr-stack-configarr-config
+      identifier: configarr-config
       advancedMounts:
         configarr:
           configarr:
@@ -1132,12 +1198,31 @@ app-template:
 
     filebrowser-settings:
       type: configMap
-      name: arr-stack-filebrowser-settings
+      identifier: filebrowser-settings
       advancedMounts:
         filebrowser:
           filebrowser:
             - path: /.filebrowser.json
               subPath: .filebrowser.json
+
+    filebrowser-quantum-db:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /home/filebrowser/database
+
+    filebrowser-quantum-config:
+      type: configMap
+      identifier: filebrowser-quantum-config
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /home/filebrowser/config.yaml
+              subPath: config.yaml
 
     slskd-config:
       type: secret
@@ -1239,6 +1324,26 @@ app-template:
             "database": "/database/filebrowser.db",
             "root": "/srv"
           }
+
+    filebrowser-quantum-config:
+      data:
+        config.yaml: |
+          server:
+            port: 8080
+            database: "database/database.db"
+            sources:
+              - path: /data
+          auth:
+            methods:
+              noauth: false
+              password:
+                enabled: true
+                minLength: 7  # set min password length requirement -- defaults to 5 if unset
+                signup: false
+              proxy:
+                enabled: true
+                header: "x-auth-request-user"  # header which should container username
+                createUser: true      # automatically creates user with default user properties
 
 cnpg-cluster-jellystat:
   type: postgresql
