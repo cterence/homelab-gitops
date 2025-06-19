@@ -135,7 +135,7 @@ app-template:
         cache:
           image:
             repository: featheredtoast/ficsit-remote-monitoring-cache
-            tag: latest@sha256:d33d8de3d3b837f299aec73d67d848918c360b31e9a54f9e3fb8b405c16a314b
+            tag: latest@sha256:454552af7436d0417f736e1a352411ab40edf4cf0f304972b8116e546585bf7f
           env:
             TZ: Europe/Paris
             FRM_HOST: satisfactory-server-frm
