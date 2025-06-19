@@ -47,8 +47,6 @@ spec:
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
-          - name: qtap
-            namespace: qpoint
           - name: reloader
           - name: satisfactory-server
           - name: snapshot-controller
