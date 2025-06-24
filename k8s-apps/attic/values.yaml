@@ -65,7 +65,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 10Gi
+      size: 20Gi
       globalMounts:
         - path: /attic
     config:
@@ -88,7 +88,7 @@ cnpg-cluster:
       kind: ClusterImageCatalog
       name: postgresql
     storage:
-      size: 2Gi
+      size: 5Gi
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
     logLevel: "info"
