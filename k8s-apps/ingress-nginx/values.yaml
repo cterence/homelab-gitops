@@ -31,7 +31,7 @@ ingress-nginx:
 
     extraInitContainers:
       - name: init-clone-crowdsec-bouncer
-        image: crowdsecurity/lua-bouncer-plugin@sha256:90f5c611bebbbe89b8aef3218dad1df3bd9fbe51554024384b56026c69c55925
+        image: crowdsecurity/lua-bouncer-plugin@sha256:9cad551653cfb772d271ad8da3aeebed67332b0be84054bd1190a205d3647c11
         imagePullPolicy: IfNotPresent
         env:
           - name: API_URL
