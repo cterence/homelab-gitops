@@ -488,7 +488,7 @@ app-template:
         filebrowser-quantum:
           image:
             repository: ghcr.io/gtsteffaniak/filebrowser
-            tag: 0.7.11-beta@sha256:9192af07e69e0d3239c87ac27384e5607d72c4c101da08ba4b1a4a5624668099
+            tag: 0.7.11-beta@sha256:7c984d66d80b2905befe8cd302ea3f49cf56eef5b64bcbdbc98fa592d2a01b98
           env:
             TZ: Europe/Paris
             PUID: 1000
