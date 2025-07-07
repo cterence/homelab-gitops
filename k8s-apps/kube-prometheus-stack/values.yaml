@@ -40,7 +40,7 @@ kube-prometheus-stack:
             accessModes: ["ReadWriteOnce"]
             resources:
               requests:
-                storage: 35Gi
+                storage: 50Gi
 
       thanos:
         {}
