@@ -11,6 +11,7 @@ ingress-nginx:
     config:
       proxy-body-size: "512k"
       proxy-buffer-size: "512k"
+      proxy-busy-buffers-size: "16k"
       global-allowed-response-headers: "Request-Id"
       plugins: "crowdsec"
       lua-shared-dicts: "crowdsec_cache: 50m"
