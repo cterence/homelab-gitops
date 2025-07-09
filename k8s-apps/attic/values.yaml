@@ -13,7 +13,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/zhaofengli/attic
-            tag: latest@sha256:b87ddc695a4330c4da4ce313317dec645618a9a5e0e83167e40c9832b1d56b5c
+            tag: latest@sha256:bd12d8e31e33b8b1615a3e753166678785e6d3817cbdb11dcb40f49194a3ba32
           args:
             - -f
             - /config.toml
