@@ -165,7 +165,7 @@ app-template:
       globalMounts:
         - path: /usr/src/paperless/export
       accessMode: ReadWriteOnce
-      size: 5Gi
+      size: 10Gi
     consume:
       enabled: true
       retain: true
