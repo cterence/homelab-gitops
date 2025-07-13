@@ -601,6 +601,7 @@ app-template:
           args: ["-u", "/app/soularr.py"]
 
     huntarr:
+      enabled: false
       type: deployment
       strategy: Recreate
       annotations:
@@ -708,6 +709,7 @@ app-template:
         http:
           port: 5030
     huntarr:
+      enabled: false
       controller: huntarr
       type: ClusterIP
       ports:
@@ -922,6 +924,7 @@ app-template:
             - *host
 
     huntarr:
+      enabled: false
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
@@ -1179,15 +1182,14 @@ app-template:
             - path: /data/config.ini
               subPath: config.ini
 
-    huntarr-config:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 1Gi
-      advancedMounts:
-        huntarr:
-          huntarr:
-            - path: /config
+    # huntarr-config:
+    #   type: persistentVolumeClaim
+    #   accessMode: ReadWriteOnce
+    #   size: 1Gi
+    #   advancedMounts:
+    #     huntarr:
+    #       huntarr:
+    #         - path: /config
 
   configMaps:
     configarr-config:
