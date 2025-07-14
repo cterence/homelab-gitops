@@ -10,6 +10,7 @@ urls:
   - http://oauth2-proxy.oauth2-proxy/ping
   - http://zigbee2mqtt.zigbee2mqtt:10103
   - https://argocd.terence.cloud/healthz?full=true
+  - https://auth.terence.cloud/healthz
   - https://attic.terence.cloud
   - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
@@ -46,6 +47,8 @@ cnpgClusters:
     namespace: nextcloud
   - name: paperless-ngx-cnpg-cluster-pg17
     namespace: paperless-ngx
+  - name: pocket-id-cnpg-cluster
+    namespace: pocket-id
   - name: vaultwarden-cnpg-cluster-pg17
     namespace: vaultwarden
 
