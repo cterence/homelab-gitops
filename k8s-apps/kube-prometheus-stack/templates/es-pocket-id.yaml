@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: grafana-pocket-id-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: grafana-pocket-id-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: client-secret
+      remoteRef:
+        key: grafana_pocket_id_client_secret
