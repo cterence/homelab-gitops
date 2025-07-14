@@ -35,3 +35,24 @@ spec:
       remoteRef:
         key: {{ .Release.Name }}-cnpg-cluster-app
         property: uri
+    - secretKey: MAXMIND_LICENSE_KEY
+      remoteRef:
+        key: {{ .Release.Name }}-maxmind-key
+        property: maxmind-key
+
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}-maxmind-key
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: {{ .Release.Name }}-maxmind-key
+    creationPolicy: Owner
+  data:
+    - secretKey: maxmind-key
+      remoteRef:
+        key: pocket_id_maxmind_key
