@@ -397,6 +397,18 @@ argo-cd:
           - type: authproxy
             id: oauth2-proxy
             name: OAuth2 Proxy
+          - type: oidc
+            id: pocket-id
+            name: Pocket ID
+            config:
+              issuer: https://auth.terence.cloud
+              clientID: 87fe7308-b48d-4886-aa1c-1146a5d08622
+              clientSecret: $argo-pocket-id-credentials:client-secret
+              insecureEnableGroups: true
+              scopes:
+              - profile
+              - email
+              - groups
       admin.enabled: "true"
 
     rbac:
