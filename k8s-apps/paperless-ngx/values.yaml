@@ -32,6 +32,12 @@ app-template:
             - configMapRef:
                 identifier: config
           env:
+            PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+            PAPERLESS_SOCIALACCOUNT_PROVIDERS:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-socialaccount-providers"
+                  key: socialaccount-providers
             PAPERLESS_DBHOST:
               valueFrom:
                 secretKeyRef:
