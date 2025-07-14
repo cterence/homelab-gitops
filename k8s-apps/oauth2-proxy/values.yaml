@@ -41,24 +41,32 @@ oauth2-proxy:
         #   provider: google
         #   code_challenge_method: S256
         #   scope: "openid email"
-        #   # gitlabConfig:
-        #   #   group:
-        #   #     - terencec_homelab
         #   oidcConfig:
         #     issuerURL: https://accounts.google.com
-        - id: gitlab
-          name: Gitlab
-          clientId: 83a36c7adbff7e7ad71b81ee9a605042ecd254b57abc679a6747e53243c8a7f9
-          clientSecretFile: /mnt/gitlab/clientSecret
-          provider: gitlab
-          code_challenge_method: S256
-          scope: "openid email"
-          gitlabConfig:
-            group:
-              - terencec_homelab
+        - id: pocket-id
+          name: Pocket ID
+          clientId: 7ed26165-7184-4330-b958-2e2b265de021
+          clientSecretFile: /mnt/pocket-id/clientSecret
+          provider: oidc
+          scope: "openid email profile groups"
           oidcConfig:
-            issuerURL: https://gitlab.com
+            issuerURL: https://auth.terence.cloud
             audienceClaims: ["aud"]
+            emailClaim: email
+            insecureAllowUnverifiedEmail: true
+        # - id: gitlab
+        #   name: Gitlab
+        #   clientId: 83a36c7adbff7e7ad71b81ee9a605042ecd254b57abc679a6747e53243c8a7f9
+        #   clientSecretFile: /mnt/gitlab/clientSecret
+        #   provider: gitlab
+        #   code_challenge_method: S256
+        #   scope: "openid email"
+        #   gitlabConfig:
+        #     group:
+        #       - terencec_homelab
+        #   oidcConfig:
+        #     issuerURL: https://gitlab.com
+        #     audienceClaims: ["aud"]
       injectResponseHeaders:
         - name: X-Auth-Request-Email
           values:
@@ -106,14 +114,16 @@ oauth2-proxy:
         items:
           - key: client-secret
             path: clientSecret
-    - name: google-client-secret
+    - name: pocket-id-auth2-credentials
       secret:
-        secretName: google-oauth2-credentials
+        secretName: pocket-id-oauth2-credentials
         items:
           - key: client-secret
             path: clientSecret
+          - key: cookie-secret
+            path: cookieSecret
   extraVolumeMounts:
     - name: gitlab-client-secret
       mountPath: /mnt/gitlab
-    - name: google-client-secret
-      mountPath: /mnt/google
+    - name: pocket-id-auth2-credentials
+      mountPath: /mnt/pocket-id

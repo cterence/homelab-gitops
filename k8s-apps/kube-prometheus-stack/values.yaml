@@ -95,9 +95,9 @@ kube-prometheus-stack:
         cert-manager.io/cluster-issuer: letsencrypt
         cert-manager.io/issue-temporary-certificate: "true"
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        # nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-        # nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
-        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
+        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-Email
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Grafana"
         gethomepage.dev/description: "The open platform for beautiful analytics and monitoring."
@@ -118,28 +118,14 @@ kube-prometheus-stack:
       auth.basic:
         enabled: false
       auth.proxy:
-        enabled: false
+        enabled: true
         header_name: X-Auth-Request-Email
         header_property: email
         auto_sign_up: true
-      auth.generic_oauth:
-        enabled: true
-        name: Pocket ID
-        client_id: 0d40e168-d8e0-4241-8bd1-2ed6f26e1cb2
-        client_secret: $__file{/etc/secrets/auth_generic_oauth/client-secret}
-        auth_url: "https://auth.terence.cloud/authorize"
-        api_url: "https://auth.terence.cloud/api/oidc/userinfo"
       users:
         allow_sign_up: false
         auto_assign_org: true
         auto_assign_org_role: Admin
-
-    extraSecretMounts:
-      - name: grafana-pocket-id-credentials
-        secretName: grafana-pocket-id-credentials
-        defaultMode: 0440
-        mountPath: /etc/secrets/auth_generic_oauth
-        readOnly: true
 
     resources:
       requests:
