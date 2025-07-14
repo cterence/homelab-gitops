@@ -29,7 +29,7 @@ immich:
           key: password
     IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
     IMMICH_LOG_LEVEL: log
-
+    IMMICH_CONFIG_FILE: /templated-config/immich-config.yaml
   immich:
     metrics:
       # Enabling this will create the service monitors needed to monitor immich with the prometheus operator
@@ -59,6 +59,22 @@ immich:
       # storageTemplate:
       #   enabled: true
       #   template: "{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}"
+
+      oauth:
+        autoLaunch: false
+        autoRegister: true
+        buttonText: Login with Pocket ID
+        clientId: aee1fd9a-e4a5-434c-936a-7ebdfb362e51
+        clientSecret: $POCKET_ID_CLIENT_SECRET
+        defaultStorageQuota: null
+        enabled: true
+        issuerUrl: https://auth.terence.cloud
+        mobileOverrideEnabled: false
+        scope: openid email profile
+        signingAlgorithm: RS256
+        profileSigningAlgorithm: none
+        storageLabelClaim: preferred_username
+        storageQuotaClaim: immich_quota
 
   # Dependencies
 
@@ -117,6 +133,24 @@ immich:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
       tag: v1.135.3@sha256:df5bbf4e29eff4688063a005708f8b96f13073200b4a7378f7661568459b31e9
+    initContainers:
+      envsubst:
+        image: bhgedigital/envsubst:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            envsubst < /config/immich-config.yaml > /templated-config/immich-config.yaml
+        env:
+          POCKET_ID_CLIENT_SECRET:
+            valueFrom:
+              secretKeyRef:
+                name: immich-pocket-id-client-secret
+                key: client-secret
+        volumeMounts:
+          - name: config
+            mountPath: /config
+          - name: templated-config
+            mountPath: /templated-config
     ingress:
       main:
         enabled: true
@@ -141,7 +175,11 @@ immich:
           - secretName: immich-tls
             hosts:
               - immich.terence.cloud
-
+    persistence:
+      templated-config:
+        enabled: true
+        type: emptyDir
+        name: "{{ .Release.Name }}-immich-templated-config"
   machine-learning:
     enabled: true
     controller:
@@ -162,42 +200,6 @@ immich:
         # storageClass: your-class
         labels:
           velero.io/exclude-from-backup: "true"
-
-cnpg-cluster:
-  type: postgresql
-  mode: standalone
-  version:
-    postgresql: "16"
-  cluster:
-    annotations:
-      cnpg.io/hibernation: "on"
-    instances: 1
-    imageCatalogRef:
-      kind: ImageCatalog
-      name: cloudnative-pgvectors
-    storage:
-      size: 8Gi
-      storageClass: ""
-    resources: {}
-    primaryUpdateMethod: switchover
-    primaryUpdateStrategy: unsupervised
-    logLevel: "info"
-    roles: []
-    enablePDB: false
-    monitoring:
-      enabled: false
-      podMonitor:
-        enabled: false
-    postgresql:
-      shared_preload_libraries:
-        - "vectors.so"
-    initdb:
-      database: immich
-      postInitSQL:
-        - ALTER SYSTEM SET search_path TO "$user", public, vectors;
-        - CREATE EXTENSION IF NOT EXISTS "vectors";
-        - CREATE EXTENSION IF NOT EXISTS "cube";
-        - CREATE EXTENSION IF NOT EXISTS "earthdistance";
 
 cnpg-cluster-vectorchord:
   type: postgresql
