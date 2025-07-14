@@ -680,6 +680,7 @@ velero:
           - immich
           - nextcloud
           - paperless-ngx
+          - pocket-id
           - satisfactory-server
           - vaultwarden
           - versity-gw
