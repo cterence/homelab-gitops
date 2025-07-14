@@ -1,0 +1,394 @@
+pocket-id:
+  # -- Number of replicas for the stateful set.
+  replicaCount: 1
+
+  # -- URL template to download the MaxMind GeoLite2-City database. `%s` will be replaced with the license key.
+  geoliteDatabaseURL: "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=%s&suffix=tar.gz"
+
+  # -- Specifies the time zone to be used by the application.
+  # Use a valid IANA time zone string (e.g., "Etc/UTC", "America/New_York").
+  timeZone: "Europe/Paris"
+
+  # -- Specifies if the server should send heartbeat to Pocket-ID for analytic purposes.
+  analyticsDisabled: true
+
+  # -- MaxMind license key used to download the GeoLite2 database. Leave blank to disable download.
+  maxmindLicenseKey: ""
+
+  # -- Host where you will access the app.
+  host: "auth.terence.cloud"
+
+  database:
+    # -- Database provider to use. Options: "sqlite" or "postgres".
+    provider: "postgres"
+
+    # -- Connection string for the database.
+    #    - For sqlite: file:data/pocket-id.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate
+    #    - For postgres: postgres:// or postgresql://user:password@host:port/dbname
+    connectionString: "file:data/pocket-id.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate"
+
+  updateStrategy:
+    # -- The deployment strategy to use to replace existing pods with new ones. Options: "RollingUpdate" or "OnDelete".
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      partition: 0
+
+  pocketID:
+    image:
+      # -- Registry and repository for the pocket-id image.
+      repository: ghcr.io/pocket-id/pocket-id
+      # -- Tag for the image.
+      tag: "v1.6.1"
+      # -- Image pull policy.
+      pullPolicy: IfNotPresent
+
+    resources:
+      {}
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 100m
+      #   memory: 128Mi
+
+    securityContext:
+      {}
+      # capabilities:
+      #   drop:
+      #   - ALL
+      # readOnlyRootFilesystem: true
+      # runAsNonRoot: true
+      # runAsUser: 1000
+
+  backup:
+    image:
+      # -- Registry and repository for the litestream image.
+      repository: docker.io/litestream/litestream
+      # -- Tag for the image.
+      tag: "0.3.13"
+      # -- Image pull policy.
+      pullPolicy: IfNotPresent
+
+    resources:
+      {}
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 100m
+      #   memory: 128Mi
+
+    securityContext:
+      {}
+      # capabilities:
+      #   drop:
+      #   - ALL
+      # readOnlyRootFilesystem: true
+      # runAsNonRoot: true
+      # runAsUser: 1000
+
+    logging:
+      # -- Logging level. Options: DEBUG, INFO, WARNING, ERROR
+      level: "INFO"
+      # -- Logging format. Options: text or json
+      type: "text"
+      # -- Whether to log to stderr (default is stdout)
+      stderr: false
+
+    # -- Interval for monitoring in Go duration format (e.g. "30s"). If empty, default is used.
+    monitorInterval: 1s
+    # -- Interval between checkpoints in Go duration format. If empty, default is used.
+    checkpointInterval: 1m
+    # -- Busy timeout, if empty, default is used.
+    busyTimeout: 1s
+    # -- Minimum number of pages to trigger a checkpoint.
+    minCheckpointPageCount: 1000
+    # -- Maximum number of pages processed during a checkpoint.
+    maxCheckpointPageCount: 10000
+
+    secret:
+      # -- Specifies whether a secret should be created.
+      create: true
+      # -- Specifies name of a secret used to configure the pocket-id.
+      # If not filled, uses full name.
+      name: ""
+
+      # -- Primary S3 access key.
+      accessKey: ""
+      # -- Primary S3 secret key.
+      secretKey: ""
+
+      replicas:
+        []
+        # - accessKey: ""
+        #   secretKey: ""
+        #   region: ""
+        #   bucket: ""
+        #   path: ""
+        #   endpoint: ""
+        #   forcePathStyle: false
+        #   skipVerify: false
+
+  config:
+    # -- Specifies whether a config map should be created.
+    create: true
+    # -- Specifies name of a config map used to configure the pocket-id.
+    # If not filled, uses full name.
+    name: ""
+
+    telemetry:
+      # -- Enables OpenTelemetry tracing.
+      tracingEnabled: true
+      # -- Enables OpenTelemetry metrics.
+      metricsEnabled: true
+
+      # -- OpenTelemetry SDK environment variables.
+      # https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/
+      otel:
+        OTEL_EXPORTER_OTLP_ENDPOINT: http://opentelemetry-collector.opentelemetry-collector:4318
+
+    audit:
+      # -- User configured local IPv6 ranges for the audit log.
+      localIPv6Ranges: ""
+
+    ui:
+      # -- Whether to enable default settings for the UI or allow customizations
+      useDefaults: true
+
+      settings:
+        app:
+          # -- The name of the application to be displayed in the UI
+          appName: "Pocket ID"
+
+          # -- Duration in minutes of a session before the user must sign in again
+          sessionDuration: 60
+
+          # -- Whether the user's email is pre-marked as verified for OIDC clients (typically used for testing)
+          emailsVerified: false
+
+          # -- Whether users can edit their own account details
+          allowOwnAccountEdit: true
+
+          # -- Whether to disable animations in the Admin UI
+          disableAnimations: false
+
+        smtp:
+          # -- SMTP server hostname used to send outgoing emails
+          host: ""
+
+          # -- SMTP server port
+          port: ""
+
+          # -- Sender email address for outgoing emails
+          from: ""
+
+          # -- SMTP username for authentication
+          user: ""
+
+          # -- SMTP password for authentication
+          password: ""
+
+          # -- TLS option to use for SMTP. Options are 'none', 'starttls', or 'tls'
+          tls: "none"
+
+          # -- Whether to skip SMTP certificate verification (useful for self-signed certificates)
+          skipCertVerify: false
+
+        email:
+          # -- Whether to send an email notification when a user logs in from a new device
+          loginNotificationEnabled: false
+
+          # -- Whether to allow admins to send one-time access sign-in links to the user's email
+          oneTimeAccessAsAdminEnabled: false
+
+          # -- Whether to allow unauthenticated users to request one-time access sign-in links sent to the user's email
+          #    (note: this reduces security significantly, as anyone with email access can sign in)
+          oneTimeAccessAsUnauthenticatedEnabled: false
+
+        ldap:
+          # -- Whether to enable LDAP authentication
+          enabled: false
+
+          # -- URL of the LDAP server
+          url: ""
+
+          # -- LDAP bind distinguished name (DN)
+          bindDN: ""
+
+          # -- LDAP bind password for authentication
+          bindPassword: ""
+
+          # -- LDAP search base DN for queries
+          base: ""
+
+          # -- LDAP user search filter (default is typically fine for most setups)
+          userSearchFilter: "(objectClass=person)"
+
+          # -- LDAP group search filter (default is typically fine for most setups)
+          userGroupSearchFilter: "(objectClass=groupOfNames)"
+
+          # -- Whether to skip LDAP certificate verification (useful for self-signed certificates)
+          skipCertVerify: false
+
+          attributes:
+            user:
+              # -- LDAP attribute for the unique identifier of the user
+              uniqueIdentifier: ""
+
+              # -- LDAP attribute for the username of the user
+              username: ""
+
+              # -- LDAP attribute for the email address of the user
+              email: ""
+
+              # -- LDAP attribute for the user's first name
+              firstName: ""
+
+              # -- LDAP attribute for the user's last name
+              lastName: ""
+
+              # -- LDAP attribute for the user's profile picture
+              profilePicture: ""
+
+            group:
+              # -- LDAP attribute for querying group members
+              member: "member"
+
+              # -- LDAP attribute for the unique identifier of the group
+              uniqueIdentifier: ""
+
+              # -- LDAP attribute for the group's name
+              name: ""
+
+              # -- LDAP attribute for the admin group (used to assign Admin privileges)
+              adminGroup: ""
+
+  secret:
+    # -- Specifies whether a secret should be created.
+    create: false
+    # -- Specifies name of a secret used to configure the pocket-id.
+    # If not filled, uses full name.
+    name: ""
+
+  # -- Secrets for pulling images.
+  imagePullSecrets: []
+  # -- Override for the name.
+  nameOverride: ""
+  # -- Override for the full name.
+  fullnameOverride: ""
+
+  service:
+    # -- Service type.
+    type: ClusterIP
+    # -- Service port.
+    port: 80
+    # -- Annotations to add to the service.
+    annotations: {}
+
+  serviceAccount:
+    # -- Specifies whether a service account should be created.
+    create: true
+    # -- Automatically mount a ServiceAccount's API credentials.
+    automount: true
+    # -- Annotations to add to the service account.
+    annotations: {}
+    # -- The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template.
+    name: ""
+
+  persistence:
+    data:
+      # -- Enable/disable PVC creation for data.
+      enabled: true
+      # -- Use an existing PVC if defined, otherwise create one.
+      existingClaim: ""
+      # -- Specify the StorageClass (if required).
+      storageClass: ""
+      # -- Access mode for the PVC.
+      accessMode: ReadWriteOnce
+      # -- Storage size for the PVC.
+      size: 10Gi
+      # -- Annotations applied to PVC.
+      annotations: {}
+
+  ingress:
+    # -- Specifies whether ingress should be enabled.
+    enabled: true
+    # -- Ingress class name.
+    className: "nginx"
+    # -- Annotations to add to the ingress.
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    # -- Ingress host configuration.
+    host: auth.terence.cloud
+    paths:
+      - path: /
+        pathType: ImplementationSpecific
+    # -- List of TLS configurations for the ingress.
+    tls:
+      - secretName: pocket-id-tls
+        hosts:
+          - auth.terence.cloud
+
+  # -- Annotations to be added to the pods.
+  podAnnotations: {}
+  # -- Labels to be added to the pods.
+  podLabels: {}
+
+  podSecurityContext:
+    {}
+    # fsGroup: 2000
+
+  # -- Node selector for the pods.
+  nodeSelector: {}
+
+  # -- Tolerations for the pods.
+  tolerations: []
+
+  # -- Affinity settings for the pods.
+  affinity:
+    {}
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: kubernetes.io/arch
+    #           operator: In
+    #           values:
+    #             - amd64
+    #             - arm64
+    #         - key: kubernetes.io/os
+    #           operator: In
+    #           values:
+    #             - linux
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 5Gi
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    initdb:
+      database: pocket_id

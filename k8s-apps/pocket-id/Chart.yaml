@@ -1,0 +1,13 @@
+apiVersion: v2
+name: pocket-id
+description: Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services
+type: application
+version: 0.1.0
+dependencies:
+  - name: pocket-id
+    repository: https://anza-labs.github.io/charts
+    version: 1.4.1
+  - name: cluster
+    alias: cnpg-cluster
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.3.1

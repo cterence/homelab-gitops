@@ -1,0 +1,37 @@
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: k8s-{{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: {{ .Release.Namespace }}
+      server:
+        url: "https://kubernetes.default"
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          namespace: external-secrets
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: "k8s-secret-store"
+          namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: k8s-{{ .Release.Namespace }}
+  target:
+    name: {{ .Release.Name }}
+  data:
+    - secretKey: DB_CONNECTION_STRING
+      remoteRef:
+        key: {{ .Release.Name }}-cnpg-cluster-app
+        property: uri
