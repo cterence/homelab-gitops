@@ -31,8 +31,6 @@ pocket-id:
     # -- The deployment strategy to use to replace existing pods with new ones. Options: "RollingUpdate" or "OnDelete".
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 100%
-      partition: 0
 
   pocketID:
     image:
