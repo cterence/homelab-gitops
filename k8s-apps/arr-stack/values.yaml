@@ -252,6 +252,9 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
