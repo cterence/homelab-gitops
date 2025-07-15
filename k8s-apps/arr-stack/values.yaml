@@ -266,7 +266,7 @@ app-template:
         lidarr:
           image:
             repository: blampe/lidarr
-            tag: version-2.12.4.4658
+            tag: latest
           env:
             TZ: Europe/Paris
             PUID: 1000
