@@ -394,9 +394,6 @@ argo-cd:
 
       dex.config: |
         connectors:
-          - type: authproxy
-            id: oauth2-proxy
-            name: OAuth2 Proxy
           - type: oidc
             id: pocket-id
             name: Pocket ID
