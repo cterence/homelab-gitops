@@ -265,8 +265,8 @@ app-template:
       containers:
         lidarr:
           image:
-            repository: lscr.io/linuxserver/lidarr
-            tag: 2.12.4.4658-ls46@sha256:b1daebbda8ee180e509bb726378b0dd7816ac29eef43a8e85f6071be4d4e6904
+            repository: blampe/lidarr
+            tag: version-2.12.4.4658
           env:
             TZ: Europe/Paris
             PUID: 1000
