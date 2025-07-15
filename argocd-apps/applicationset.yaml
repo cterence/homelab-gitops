@@ -48,6 +48,7 @@ spec:
           - name: opentelemetry-operator
           - name: paperless-ngx
           - name: pocket-id
+            serverSideDiff: true
           - name: reloader
           - name: satisfactory-server
           - name: snapshot-controller
