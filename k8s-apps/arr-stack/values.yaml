@@ -269,7 +269,7 @@ app-template:
         lidarr:
           image:
             repository: blampe/lidarr
-            tag: latest@sha256:b39b4fd53a71570f8cc7f6bfdda23fddbbb42b5a7824f0480812685cd3df9eb5
+            tag: latest@sha256:e0183648fe90dca3ad2ebbad16e6d7b8e1a20ed73c4682f34ed23e85ee6df792
           env:
             TZ: Europe/Paris
             PUID: 1000
