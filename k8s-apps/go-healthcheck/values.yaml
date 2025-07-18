@@ -21,7 +21,6 @@ urls:
   - https://jf.terence.cloud/health
   - https://js.terence.cloud/api/v1/status
   - https://jstat.terence.cloud/auth/isconfigured
-  - https://hunt.terence.cloud/ping
   - https://lid.terence.cloud/ping
   - https://next.terence.cloud/status.php
   - https://oc.terence.cloud/status
