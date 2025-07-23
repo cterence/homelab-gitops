@@ -985,14 +985,10 @@ app-template:
             - path: /data
         slskd:
           slskd:
-            - path: /music
-              subPath: media/music
             - path: /download
               subPath: download/slskd
         soularr:
           soularr:
-            - path: /data
-              subPath: media/music
             - path: /downloads
               subPath: download/slskd/complete
 
@@ -1002,9 +998,21 @@ app-template:
       accessMode: ReadWriteOnce
       size: 100Gi
       advancedMounts:
+        lidarr:
+          lidarr:
+            - path: /data/media/music
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /music
+        slskd:
+          slskd:
+            - path: /music
+        jellyfin:
+          jellyfin:
+            - path: /data/media/music
+        soularr:
+          soularr:
+            - path: /data
 
     jellyfin-config:
       enabled: true
