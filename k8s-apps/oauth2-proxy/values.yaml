@@ -95,10 +95,14 @@ oauth2-proxy:
       - headscale.terence.cloud
       - httpbin.terence.cloud
       - komoplane.terence.cloud
+      - lid.terence.cloud
       - longhorn.terence.cloud
       - np.terence.cloud
       - ntfy.terence.cloud
       - prometheus.terence.cloud
+      - prow.terence.cloud
+      - rad.terence.cloud
+      - son.terence.cloud
       - tailout.terence.cloud
       - z2m.terence.cloud
 
