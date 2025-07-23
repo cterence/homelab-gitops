@@ -959,6 +959,8 @@ app-template:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
       size: 1200Gi
+      annotations:
+        velero.io/exclude-from-backup: "true"
       advancedMounts:
         jellyfin:
           jellyfin:
