@@ -73,7 +73,7 @@ oauth2-proxy:
             - claim: email
         - name: X-Auth-Request-User
           values:
-            - claim: user
+            - claim: preferred_username
 
   ingress:
     enabled: true
