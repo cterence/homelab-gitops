@@ -996,6 +996,16 @@ app-template:
             - path: /downloads
               subPath: download/slskd/complete
 
+    music:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 100Gi
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /music
+
     jellyfin-config:
       enabled: true
       type: persistentVolumeClaim
@@ -1252,6 +1262,7 @@ app-template:
             database: "database/database.db"
             sources:
               - path: /data
+              - path: /music
           auth:
             methods:
               noauth: false
