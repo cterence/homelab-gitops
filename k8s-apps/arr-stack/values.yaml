@@ -15,6 +15,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -164,6 +166,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -208,6 +212,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -252,6 +258,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -332,6 +340,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -427,6 +437,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -487,6 +499,19 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
       containers:
         filebrowser-quantum:
           image:
@@ -520,6 +545,8 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -586,6 +613,9 @@ app-template:
 
     soularr:
       type: cronjob
+      pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
       cronjob:
         schedule: "*/5 * * * *"
         successfulJobsHistory: 1
