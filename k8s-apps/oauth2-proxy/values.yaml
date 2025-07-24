@@ -90,6 +90,7 @@ oauth2-proxy:
       - argocd.terence.cloud
       - calibre.terence.cloud
       - calibredl.terence.cloud
+      - cd.terence.cloud
       - fbq.terence.cloud
       - grafana.terence.cloud
       - headscale.terence.cloud
