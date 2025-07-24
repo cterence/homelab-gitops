@@ -28,13 +28,16 @@ changedetection-io:
     # @default -- See values.yaml
     main:
       enabled: true
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
       hosts:
         - host: cd.terence.cloud
           paths:
             - path: /
               pathType: Prefix
               service:
-                port: http
+                port: 5000
       tls:
         - secretName: changedetection-tls
           hosts:
