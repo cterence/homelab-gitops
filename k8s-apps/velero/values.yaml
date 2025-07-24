@@ -480,7 +480,7 @@ velero:
     defaultVolumesToFsBackup: true
 
     # How often repository maintain is run for repositories by default.
-    defaultRepoMaintainFrequency:
+    defaultRepoMaintainFrequency: 24h
 
   ##
   ## End of backup/snapshot location settings.
