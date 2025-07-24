@@ -336,36 +336,6 @@ velero:
     # Parameters for the BackupStorageLocation(s). Configure multiple by adding other element(s) to the backupStorageLocation slice.
     # See https://velero.io/docs/v1.6/api-types/backupstoragelocation/
     backupStorageLocation:
-      # name is the name of the backup storage location where backups should be stored. If a name is not provided,
-      # a backup storage location will be created with the name "default". Optional.
-      - name: default
-        # provider is the name for the backup storage location provider.
-        provider: aws
-        # bucket is the name of the bucket to store backups in. Required.
-        bucket: velero-backup-tch
-        # caCert defines a base64 encoded CA bundle to use when verifying TLS connections to the provider. Optional.
-        caCert:
-        # prefix is the directory under which all Velero data should be stored within the bucket. Optional.
-        prefix: v1
-        # default indicates this location is the default backup storage location. Optional.
-        default: false
-        # validationFrequency defines how frequently Velero should validate the object storage. Optional.
-        validationFrequency:
-        # accessMode determines if velero can write to this backup storage location. Optional.
-        # default to ReadWrite, ReadOnly is used during migrations and restores.
-        accessMode: ReadWrite
-        credential:
-          # name of the secret used by this backupStorageLocation.
-          name: backblaze-credentials
-          # name of key that contains the secret data to be used.
-          key: config
-        # Additional provider-specific configuration. See link above
-        # for details of required/optional fields for your provider.
-        config:
-          region: eu-central-003
-          s3ForcePathStyle: true
-          s3Url: https://s3.eu-central-003.backblazeb2.com
-          checksumAlgorithm: ""
       - name: v2
         # provider is the name for the backup storage location provider.
         provider: aws
@@ -378,7 +348,7 @@ velero:
         # default indicates this location is the default backup storage location. Optional.
         default: true
         # validationFrequency defines how frequently Velero should validate the object storage. Optional.
-        validationFrequency:
+        validationFrequency: 24h
         # accessMode determines if velero can write to this backup storage location. Optional.
         # default to ReadWrite, ReadOnly is used during migrations and restores.
         accessMode: ReadWrite
