@@ -15,6 +15,7 @@ spec:
             namespace: monitoring
           - name: calibre-web
           - name: cert-manager
+          - name: changedetection
           - name: cloudnative-pg
             namespace: cnpg-system
             serverSideApply: true
