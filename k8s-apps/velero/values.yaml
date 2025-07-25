@@ -421,7 +421,7 @@ velero:
     # `velero server` default: kopia
     uploaderType:
     # `velero server` default: 1m
-    backupSyncPeriod:
+    backupSyncPeriod: 24h
     # `velero server` default: 4h
     fsBackupTimeout:
     # `velero server` default: 30
