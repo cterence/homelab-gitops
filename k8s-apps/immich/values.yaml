@@ -132,7 +132,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
-      tag: v1.135.3@sha256:df5bbf4e29eff4688063a005708f8b96f13073200b4a7378f7661568459b31e9
+      tag: v1.136.0@sha256:4bfc6985eca8290bc56c4ef89a138b0ead985be31aa11f8c49ed07868b23a46c
     initContainers:
       envsubst:
         image: bhgedigital/envsubst:latest@sha256:36a92e9344ef965e9318c8d2f70dd35cad654a4615b889c6a4dd483ca1ddec7c
