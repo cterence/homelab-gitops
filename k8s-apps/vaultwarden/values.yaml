@@ -692,7 +692,7 @@ vaultwarden:
 
 cnpg-cluster-pg17:
   type: postgresql
-  mode: recovery
+  mode: standalone
   version:
     postgresql: "17"
   cluster:
@@ -713,25 +713,3 @@ cnpg-cluster-pg17:
     postgresql: {}
     initdb:
       database: vaultwarden
-  recovery:
-    method: import
-    import:
-      type: microservice
-      databases: ["vaultwarden"]
-      schemaOnly: true
-      source:
-        host: vaultwarden-cnpg-cluster-rw
-        username: vaultwarden
-        database: vaultwarden
-        passwordSecret:
-          name: vaultwarden-cnpg-cluster-app
-          key: password
-        sslKeySecret:
-          name: vaultwarden-cnpg-cluster-replication
-          key: tls.key
-        sslCertSecret:
-          name: vaultwarden-cnpg-cluster-replication
-          key: tls.crt
-        sslRootCertSecret:
-          name: vaultwarden-cnpg-cluster-ca
-          key: ca.crt
