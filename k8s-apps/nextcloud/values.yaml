@@ -197,7 +197,7 @@ nextcloud:
     extraSidecarContainers:
       # Daily upload of Nextcloud images to immich
       - name: immich-nextcloud-uploader
-        image: ghcr.io/immich-app/immich-cli:2.2.73@sha256:3bdd0b5624a3bdbcad7d793252d6373aeff11f10f7ea7251acb10eaef638e821
+        image: ghcr.io/immich-app/immich-cli:2.2.77@sha256:eec2b8e88d5436a047b97739749b5ab7f3e1a2bcd6cb576aff30043830945aa2
         command:
           - /bin/sh
           - -c
