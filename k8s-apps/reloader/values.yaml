@@ -22,7 +22,7 @@ reloader:
     reloadOnDelete: false
     syncAfterRestart: false
     reloadStrategy: default # Set to default, env-vars or annotations
-    ignoreNamespaces: "" # Comma separated list of namespaces to ignore
+    ignoreNamespaces: "tailscale-operator" # Comma separated list of namespaces to ignore
     namespaceSelector: "" # Comma separated list of k8s label selectors for namespaces selection
     resourceLabelSelector: "" # Comma separated list of k8s label selectors for configmap/secret selection
     logFormat: "" #json
@@ -62,7 +62,8 @@ reloader:
         seccompProfile:
           type: RuntimeDefault
 
-      containerSecurityContext: {}
+      containerSecurityContext:
+        {}
         # capabilities:
         #   drop:
         #     - ALL
@@ -148,7 +149,8 @@ reloader:
       # imagePullSecrets:
       #   - name: myregistrykey
 
-    service: {}
+    service:
+      {}
       # labels: {}
       # annotations: {}
       # port: 9090
