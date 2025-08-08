@@ -51,6 +51,8 @@ immich:
         duplicateDetection:
           enabled: true
           maxDistance: 0.03
+      ffmpeg:
+        accel: "vaapi"
       server:
         externalDomain: https://immich.terence.cloud
       # trash:
@@ -133,6 +135,8 @@ immich:
       repository: ghcr.io/immich-app/immich-server
       pullPolicy: IfNotPresent
       tag: v1.137.3@sha256:e517f806457057d44695152a0af2dfa094225a7d85eb37f518925e68864c658d
+    securityContext:
+      privileged: true
     initContainers:
       envsubst:
         image: bhgedigital/envsubst:latest@sha256:36a92e9344ef965e9318c8d2f70dd35cad654a4615b889c6a4dd483ca1ddec7c
@@ -192,7 +196,7 @@ immich:
     image:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
-      tag: v1.137.3@sha256:ef517c041fa4a6a84a6c3c4f88a1124058e686c9c92bf09a973e7e60c3c3ea1e
+      tag: v1.137.3
     env:
       TRANSFORMERS_CACHE: /cache
     persistence:
@@ -205,11 +209,6 @@ immich:
         # storageClass: your-class
         labels:
           velero.io/exclude-from-backup: "true"
-      igpu:
-        enabled: true
-        type: hostPath
-        hostPath: /dev/dri/renderD128
-        hostPathType: "CharDevice"
 
 cnpg-cluster-vectorchord:
   type: postgresql
