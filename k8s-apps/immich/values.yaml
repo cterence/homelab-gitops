@@ -180,6 +180,11 @@ immich:
         enabled: true
         type: emptyDir
         name: "{{ .Release.Name }}-immich-templated-config"
+      igpu:
+        enabled: true
+        type: hostPath
+        hostPath: /dev/dri/renderD128
+        hostPathType: "CharDevice"
   machine-learning:
     enabled: true
     controller:
@@ -200,6 +205,11 @@ immich:
         # storageClass: your-class
         labels:
           velero.io/exclude-from-backup: "true"
+      igpu:
+        enabled: true
+        type: hostPath
+        hostPath: /dev/dri/renderD128
+        hostPathType: "CharDevice"
 
 cnpg-cluster-vectorchord:
   type: postgresql
