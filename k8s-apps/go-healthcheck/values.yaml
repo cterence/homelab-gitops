@@ -1,5 +1,8 @@
 urls:
   - http://arr-stack-flaresolverr.arr-stack:8191/health
+  - http://arr-stack-lidarr.arr-stack:8686/ping
+  - http://arr-stack-radarr.arr-stack:7878/ping
+  - http://arr-stack-sonarr.arr-stack:8989/ping
   - http://arr-stack-filebrowser-quantum.arr-stack:8080/health
   - http://calibre-web-book-downloader.calibre-web:8084/request/api/status
   - http://httpbin.httpbin:8080/health
@@ -27,9 +30,7 @@ urls:
   - https://paperless.terence.cloud
   - https://prow.terence.cloud/ping
   - https://qb.terence.cloud
-  - https://rad.terence.cloud/ping
   - https://slskd.terence.cloud/health
-  - https://son.terence.cloud/ping
   - https://tools.terence.cloud
   - https://versity.terence.cloud/health
 
