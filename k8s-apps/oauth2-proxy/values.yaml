@@ -101,6 +101,7 @@ oauth2-proxy:
       - longhorn.terence.cloud
       - np.terence.cloud
       - ntfy.terence.cloud
+      - pihole.terence.cloud
       - prometheus.terence.cloud
       - prow.terence.cloud
       - rad.terence.cloud

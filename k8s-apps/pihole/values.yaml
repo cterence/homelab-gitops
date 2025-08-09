@@ -149,23 +149,27 @@ pihole:
   # -- Configuration for the Ingress
   ingress:
     # -- Generate a Ingress resource
-    enabled: false
+    enabled: true
 
     # -- Specify an ingressClassName
-    # ingressClassName: nginx
+    ingressClassName: nginx
 
     # -- Annotations for the ingress
     annotations:
-      {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+      nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
     path: /
     pathType: ImplementationSpecific
     hosts:
+      - pihole.terence.cloud
       # virtualHost (default value is pi.hole) will be appended to the hosts
-      - chart-example.local
-    tls: []
-    #  - secretName: chart-example-tls
+      # - chart-example.local
+    tls:
+      - secretName: pihole-tls
+        hosts:
+          - pihole.terence.cloud
     #    hosts:
     #     #- virtualHost (default value is pi.hole) will be appended to the hosts
     #      - chart-example.local
@@ -275,7 +279,7 @@ pihole:
   # -- Use an existing secret for the admin password.
   admin:
     # -- If set to false admin password will be disabled, adminPassword specified above and the pre-existing secret (if specified) will be ignored.
-    enabled: true
+    enabled: false
     # -- Specify an existing secret to use as admin password
     existingSecret: ""
     # -- Specify the key inside the secret to use
@@ -465,16 +469,16 @@ pihole:
   hostname: ""
 
   # -- should the container use host network
-  hostNetwork: "false"
+  hostNetwork: "true"
 
   # -- should container run in privileged mode
   privileged: "false"
 
   # linux capabilities container should run with
   capabilities:
-    {}
-    # add:
-    # - NET_ADMIN
+    add:
+      - NET_ADMIN
+      - SYS_TIME
 
   customVolumes:
     # -- set this to true to enable custom volumes
