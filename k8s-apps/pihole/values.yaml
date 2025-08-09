@@ -591,7 +591,7 @@ pihole:
       image:
         # -- the repository to use
         repository: ekofr/pihole-exporter
-        tag: v1.0.0
+        tag: v1.2.0@sha256:242c53ef3c24b88fcbe8184390b456d05604bd50de5732ca3fd3eb24395585b3
         pullPolicy: IfNotPresent
       resources:
         limits:
