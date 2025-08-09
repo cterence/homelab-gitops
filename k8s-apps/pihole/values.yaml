@@ -465,7 +465,7 @@ pihole:
   hostname: ""
 
   # -- should the container use host network
-  hostNetwork: "true"
+  hostNetwork: "false"
 
   # -- should container run in privileged mode
   privileged: "false"
