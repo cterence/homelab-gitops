@@ -92,6 +92,11 @@ opentelemetry-collector:
               static_configs:
                 - targets:
                     - ${env:MY_POD_IP}:8888
+            - job_name: openwrt
+              scrape_interval: 30s
+              static_configs:
+                - targets:
+                    - 192.168.1.1:9100
     service:
       telemetry:
         metrics:
