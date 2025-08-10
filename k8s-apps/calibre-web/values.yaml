@@ -120,7 +120,7 @@ app-template:
         webdav:
           image:
             repository: ghcr.io/cterence/apachewebdav
-            tag: 2.4.65-alpine@sha256:3c3477d963421b0f1f24aa6c0809ad7daa3d3abac8d88811c31dba4bb1cd39ea
+            tag: 2.4.65-alpine@sha256:83d7074dcf33c1880e76a4a7743261f7670a7cbcf0d6689b9bc739b15966925a
           env:
             TZ: Europe/Paris
             UID: "1000"
