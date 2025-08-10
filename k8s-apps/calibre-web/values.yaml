@@ -120,13 +120,13 @@ app-template:
         webdav:
           image:
             repository: ghcr.io/cterence/apachewebdav
-            tag: 2.4.65-alpine@sha256:83d7074dcf33c1880e76a4a7743261f7670a7cbcf0d6689b9bc739b15966925a
+            tag: 2.4.65-bookworm@sha256:ce0186ca48680893d556488bd9d8bcf1731cf645ff849b329851095fadf27d4b
           env:
             TZ: Europe/Paris
             UID: "1000"
             GID: "100"
             USERNAME: kindle
-            NO_CHOWN: "true"
+            NO_CHOWN_DATA: "true"
             PASSWORD:
               valueFrom:
                 secretKeyRef:
