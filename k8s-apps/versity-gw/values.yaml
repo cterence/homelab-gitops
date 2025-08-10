@@ -113,7 +113,7 @@ app-template:
         webdav:
           image:
             repository: ghcr.io/cterence/apachewebdav
-            tag: 2.4.65-bookworm@sha256:ce0186ca48680893d556488bd9d8bcf1731cf645ff849b329851095fadf27d4b
+            tag: 2.4.65-bookworm@sha256:0aa4a0b399a5711005fcb38e8a6776f5518b18aa514f44f0da8e6fdb46333e77
           env:
             TZ: Europe/Paris
             UID: "1000"
