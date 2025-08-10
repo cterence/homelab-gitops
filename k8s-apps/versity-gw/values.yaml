@@ -100,6 +100,48 @@ app-template:
                 httpGet:
                   port: health
                   path: /
+    webdav:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+      containers:
+        webdav:
+          image:
+            repository: ugeek/webdav
+            tag: amd64@sha256:5e2b55f5eb0e2335f82b8dfbb02d0b0a8939779a9358f8cc2010c8c1c34e3e56
+          env:
+            TZ: Europe/Paris
+            UID: "1000"
+            GID: "100"
+            USERNAME: kindle
+            PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: versity-webdav-password
+                  key: password
+          ports:
+            - name: http
+              containerPort: 80
+          probes:
+            liveness:
+              enabled: false
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+            readiness:
+              enabled: false
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
 
   service:
     main:
@@ -114,6 +156,12 @@ app-template:
       ports:
         metrics:
           port: 9273
+    webdav:
+      controller: webdav
+      type: ClusterIP
+      ports:
+        http:
+          port: 80
 
   ingress:
     main:
@@ -136,6 +184,27 @@ app-template:
         - secretName: versity-tls
           hosts:
             - *host
+    webdav:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+      className: "nginx"
+      hosts:
+        - host: &host versity.terence.cloud
+          paths:
+            - path: /webdav(/|$)(.*)
+              pathType: ImplementationSpecific
+              service:
+                identifier: webdav
+                port: http
+      tls:
+        - secretName: versity-tls
+          hosts:
+            - *host
 
   persistence:
     buckets:
@@ -146,6 +215,10 @@ app-template:
         main:
           main:
             - path: /buckets
+        webdav:
+          webdav:
+            - path: /media
+              subPath: obsidian/Kindle
 
     telegraf-config:
       type: configMap

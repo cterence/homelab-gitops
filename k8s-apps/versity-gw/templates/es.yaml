@@ -16,3 +16,21 @@ spec:
     - secretKey: ROOT_SECRET_KEY
       remoteRef:
         key: versity_root_secret_key
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: versity-webdav-password
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  refreshInterval: "0"
+  target:
+    name: versity-webdav-password
+    creationPolicy: Owner
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ClusterGenerator
+        name: password
