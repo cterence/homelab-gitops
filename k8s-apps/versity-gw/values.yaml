@@ -112,36 +112,37 @@ app-template:
       containers:
         webdav:
           image:
-            repository: apachewebdav/apachewebdav
-            tag: latest@sha256:0d4aea1eefbc374cf21fd677e09a90df7dca0f5b5d72e5ba534f201f7c03bcea
+            repository: ghcr.io/cterence/apachewebdav
+            tag: 2.4.65-alpine@sha256:83d7074dcf33c1880e76a4a7743261f7670a7cbcf0d6689b9bc739b15966925a
           env:
             TZ: Europe/Paris
             UID: "1000"
             GID: "100"
             USERNAME: kindle
+            NO_CHOWN: "true"
             PASSWORD:
               valueFrom:
                 secretKeyRef:
-                  name: versity-webdav-password
+                  name: "{{ .Release.Name }}-webdav-password"
                   key: password
           ports:
             - name: http
               containerPort: 80
           probes:
             liveness:
-              enabled: false
+              enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /
+                  path: /health
             readiness:
-              enabled: false
+              enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /
+                  path: /health
 
   service:
     main:

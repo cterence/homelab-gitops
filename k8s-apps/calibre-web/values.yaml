@@ -116,20 +116,17 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
-      pod:
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
       containers:
         webdav:
           image:
-            repository: apachewebdav/apachewebdav
-            tag: latest@sha256:0d4aea1eefbc374cf21fd677e09a90df7dca0f5b5d72e5ba534f201f7c03bcea
+            repository: ghcr.io/cterence/apachewebdav
+            tag: 2.4.65-alpine@sha256:3c3477d963421b0f1f24aa6c0809ad7daa3d3abac8d88811c31dba4bb1cd39ea
           env:
             TZ: Europe/Paris
             UID: "1000"
             GID: "100"
             USERNAME: kindle
+            NO_CHOWN: "true"
             PASSWORD:
               valueFrom:
                 secretKeyRef:
@@ -140,19 +137,19 @@ app-template:
               containerPort: 80
           probes:
             liveness:
-              enabled: false
+              enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /
+                  path: /health
             readiness:
-              enabled: false
+              enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /
+                  path: /health
 
   service:
     main:
