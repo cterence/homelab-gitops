@@ -1,0 +1,17 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}-webdav-password
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  refreshInterval: "0"
+  target:
+    name: {{ .Release.Name }}-webdav-password
+    creationPolicy: Owner
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ClusterGenerator
+        name: short-password

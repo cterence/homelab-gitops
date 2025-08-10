@@ -111,6 +111,49 @@ app-template:
                 tcpSocket:
                   port: http
 
+    webdav:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+      containers:
+        webdav:
+          image:
+            repository: apachewebdav/apachewebdav
+            tag: latest@sha256:0d4aea1eefbc374cf21fd677e09a90df7dca0f5b5d72e5ba534f201f7c03bcea
+          env:
+            TZ: Europe/Paris
+            UID: "1000"
+            GID: "100"
+            USERNAME: kindle
+            PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-webdav-password"
+                  key: password
+          ports:
+            - name: http
+              containerPort: 80
+          probes:
+            liveness:
+              enabled: false
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+            readiness:
+              enabled: false
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+
   service:
     main:
       controller: main
@@ -124,6 +167,12 @@ app-template:
       ports:
         http:
           port: 8084
+    webdav:
+      controller: webdav
+      type: ClusterIP
+      ports:
+        http:
+          port: 80
 
   ingress:
     main:
@@ -142,7 +191,7 @@ app-template:
         # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
       className: "nginx"
       hosts:
-        - host: &host calibre.terence.cloud
+        - host: &host1 calibre.terence.cloud
           paths:
             - path: /
               pathType: Prefix
@@ -152,7 +201,7 @@ app-template:
       tls:
         - secretName: calibre-tls
           hosts:
-            - *host
+            - *host1
     book-downloader:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -162,7 +211,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
       className: "nginx"
       hosts:
-        - host: &host calibredl.terence.cloud
+        - host: &host2 calibredl.terence.cloud
           paths:
             - path: /
               pathType: Prefix
@@ -172,7 +221,28 @@ app-template:
       tls:
         - secretName: calibredl-tls
           hosts:
-            - *host
+            - *host2
+    webdav:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+      className: "nginx"
+      hosts:
+        - host: &host3 calibre.terence.cloud
+          paths:
+            - path: /webdav(/|$)(.*)
+              pathType: ImplementationSpecific
+              service:
+                identifier: webdav
+                port: http
+      tls:
+        - secretName: calibre-tls
+          hosts:
+            - *host3
 
   persistence:
     # Configure the main configuration storage location
@@ -188,8 +258,14 @@ app-template:
       size: 10Gi
       accessMode: ReadWriteOnce
       type: persistentVolumeClaim
-      globalMounts:
-        - path: /calibre-library
+      advancedMounts:
+        main:
+          main:
+            - path: /calibre-library
+        webdav:
+          webdav:
+            - path: /var/lib/dav/data
+              readOnly: true
     cwa-book-ingest:
       enabled: true
       size: 10Gi
