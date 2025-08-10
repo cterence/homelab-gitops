@@ -126,6 +126,18 @@ external-secrets:
             symbolCharacters: "!@#$%^&*"
             noUpper: false
             allowRepeat: true
+    - apiVersion: generators.external-secrets.io/v1alpha1
+      kind: ClusterGenerator
+      metadata:
+        name: short-password
+      spec:
+        kind: Password
+        generator:
+          passwordSpec:
+            length: 12
+            symbolCharacters: "!"
+            symbols: 0
+            noUpper: false
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
