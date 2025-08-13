@@ -225,7 +225,7 @@ nextcloud:
       #       subPath: data/terence/files/Images
       #       readOnly: true
       - name: generate-previews
-        image: nextcloud:31.0.7@sha256:b255a97449e615b1839fd050aa41f7727bc0e11d121e472a380bcdfa9f3133d8
+        image: nextcloud:31.0.7@sha256:4193490144a6f2cdcab446735c356ea37b8bc7635d47a2a29de200f0a6b6e435
         command:
           - /bin/sh
           - -c
