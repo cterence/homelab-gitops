@@ -85,7 +85,7 @@ garage:
 
   initImage:
     repository: busybox
-    tag: stable@sha256:31f3955f475e40c62c6d4209f09fd9738cf6cadfc0f4aa76ba2d4d86f061c5b5
+    tag: stable@sha256:2e0c461b52369a17f3f6c6cae2ea4c58462d6ce600f183800fc12893d99eafe1
     pullPolicy: IfNotPresent
 
   # -- set if you need credentials to pull your custom image
