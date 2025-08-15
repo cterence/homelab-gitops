@@ -1,0 +1,18 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: lastfm-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: lastfm-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: LASTFM_USERNAME
+      remoteRef:
+        key: lastfm_username
+    - secretKey: LASTFM_PASSWORD
+      remoteRef:
+        key: lastfm_password

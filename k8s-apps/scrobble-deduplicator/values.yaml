@@ -1,0 +1,137 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-3.7.3/charts/library/common/values.schema.json
+app-template:
+  configMaps:
+    config:
+      data:
+        TZ: Europe/Paris
+        CACHE_TYPE: redis
+        START_PAGE: "3"
+        BROWSER_HEADFUL: "false"
+        REDIS_URL: redis://scrobble-deduplicator-redis:6379/0
+        BROWSER_URL: ws://scrobble-deduplicator-chromium:3000?token=local
+        LOG_LEVEL: info
+        DELETE: "false"
+
+  controllers:
+    app:
+      type: cronjob
+      cronjob:
+        suspend: true
+        schedule: "0 0 * * *"
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+        concurrencyPolicy: Forbid
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        app:
+          image:
+            repository: ghcr.io/cterence/scrobble-deduplicator
+            tag: latest
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - configMapRef:
+                identifier: config
+            - secretRef:
+                name: lastfm-credentials
+          # TODO: cmd probe ?
+          # probes:
+          #   liveness:
+          #     enabled: true
+          #     type: HTTP
+          #   readiness:
+          #     enabled: true
+          #     type: HTTP
+    redis:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        redis:
+          image:
+            repository: redis
+            tag: latest
+          env:
+            TZ: Europe/Paris
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command:
+                    - /bin/bash
+                    - -c
+                    - redis-cli ping
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command:
+                    - /bin/bash
+                    - -c
+                    - redis-cli ping
+
+    chromium:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        chromium:
+          image:
+            repository: ghcr.io/browserless/chromium
+            tag: latest
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            TZ: Europe/Paris
+            TOKEN: local
+            # HOST: scrobble-deduplicator-chromium
+            DEBUG: -*
+            TIMEOUT: 600000
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /active?token=local
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /active?token=local
+
+  service:
+    redis:
+      controller: redis
+      type: ClusterIP
+      ports:
+        http:
+          port: 6379
+    chromium:
+      controller: chromium
+      type: ClusterIP
+      ports:
+        http:
+          port: 3000
+
+  persistence:
+    redis:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 200Mi
+      advancedMounts:
+        redis:
+          redis:
+            - path: /data
