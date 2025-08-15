@@ -627,7 +627,7 @@ app-template:
         soularr:
           image:
             repository: mrusse08/soularr
-            tag: latest@sha256:da225f2b1042865c7223b3ee3e6d53e496eecc24566f60e48ef239396f54898a
+            tag: latest@sha256:894210817cd89dd410fa603be2744ca81c593b9eaa542639a7894f2df008a788
           env:
             TZ: Europe/Paris
           command: python
