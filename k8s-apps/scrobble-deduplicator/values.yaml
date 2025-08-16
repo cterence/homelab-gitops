@@ -28,7 +28,7 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/scrobble-deduplicator
-            tag: latest@sha256:d647e57afb8d65cdc5b0f3d9a389304a2d3951f6f0295eb2c47705d16850ddf1
+            tag: latest@sha256:d34964dc1c96b9184dcd71ed6a6fb5f4f50ef97c7aefa8e79a0d6265821e8537
           env:
             TZ: Europe/Paris
           envFrom:
