@@ -55,6 +55,7 @@ spec:
             serverSideDiff: true
           - name: reloader
           - name: satisfactory-server
+          - name: scrobble-deduplicator
           - name: snapshot-controller
           - name: tailscale-operator
           - name: vaultwarden

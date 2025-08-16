@@ -7,8 +7,8 @@ app-template:
         CACHE_TYPE: redis
         START_PAGE: "3"
         BROWSER_HEADFUL: "false"
-        REDIS_URL: redis://scrobble-deduplicator-redis:6379/0
-        BROWSER_URL: ws://scrobble-deduplicator-chromium:3000?token=local
+        REDIS_URL: redis://localhost:6379/0
+        BROWSER_URL: ws://localhost:3000?token=local
         LOG_LEVEL: info
         DELETE: "false"
 
@@ -16,11 +16,11 @@ app-template:
     app:
       type: cronjob
       cronjob:
-        suspend: true
         schedule: "0 0 * * *"
         successfulJobsHistory: 1
         failedJobsHistory: 1
         concurrencyPolicy: Forbid
+        timeZone: Europe/Paris
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -28,7 +28,7 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/scrobble-deduplicator
-            tag: latest
+            tag: latest@sha256:d647e57afb8d65cdc5b0f3d9a389304a2d3951f6f0295eb2c47705d16850ddf1
           env:
             TZ: Europe/Paris
           envFrom:
@@ -36,26 +36,16 @@ app-template:
                 identifier: config
             - secretRef:
                 name: lastfm-credentials
-          # TODO: cmd probe ?
-          # probes:
-          #   liveness:
-          #     enabled: true
-          #     type: HTTP
-          #   readiness:
-          #     enabled: true
-          #     type: HTTP
-    redis:
-      type: deployment
-      strategy: RollingUpdate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      containers:
         redis:
           image:
             repository: redis
             tag: latest
           env:
             TZ: Europe/Paris
+          args:
+            - --save
+            - --appendonly
+            - "no"
           probes:
             liveness:
               enabled: true
@@ -76,12 +66,6 @@ app-template:
                     - -c
                     - redis-cli ping
 
-    chromium:
-      type: deployment
-      strategy: RollingUpdate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      containers:
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
@@ -92,7 +76,6 @@ app-template:
           env:
             TZ: Europe/Paris
             TOKEN: local
-            # HOST: scrobble-deduplicator-chromium
             DEBUG: -*
             TIMEOUT: 600000
           probes:
@@ -111,20 +94,6 @@ app-template:
                   port: http
                   path: /active?token=local
 
-  service:
-    redis:
-      controller: redis
-      type: ClusterIP
-      ports:
-        http:
-          port: 6379
-    chromium:
-      controller: chromium
-      type: ClusterIP
-      ports:
-        http:
-          port: 3000
-
   persistence:
     redis:
       enabled: true
@@ -132,6 +101,6 @@ app-template:
       accessMode: ReadWriteOnce
       size: 200Mi
       advancedMounts:
-        redis:
+        app:
           redis:
             - path: /data
