@@ -5,11 +5,10 @@ app-template:
       data:
         TZ: Europe/Paris
         CACHE_TYPE: redis
-        BROWSER_HEADFUL: "false"
         REDIS_URL: redis://localhost:6379/0
         BROWSER_URL: ws://localhost:3000?token=local
         LOG_LEVEL: info
-        DELETE: "false"
+        DELETE: "true"
 
   controllers:
     app:
@@ -27,9 +26,7 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/scrobble-deduplicator
-            tag: latest@sha256:f30f872cc4b422eac378df35c407ef4413cf28431ef53c7a47dd73a7e840cbdd
-          env:
-            TZ: Europe/Paris
+            tag: latest@sha256:23930261f1ffd119cfa8659c7af04b37ecd7e80307ce3ea18745265fba85b5bc
           command:
             - /bin/bash
             - -c
