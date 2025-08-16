@@ -30,9 +30,10 @@ app-template:
             tag: latest@sha256:f30f872cc4b422eac378df35c407ef4413cf28431ef53c7a47dd73a7e840cbdd
           env:
             TZ: Europe/Paris
-          args:
-            - |
-              --start-day $(date +"%d-%m-%Y") --end-day $(date -d "yesterday" +"%d-%m-%Y")
+          command:
+            - /bin/bash
+            - -c
+            - /app/main --start-day $(date -d "yesterday" +"%d-%m-%Y") --end-day $(date +"%d-%m-%Y")
           envFrom:
             - configMapRef:
                 identifier: config
