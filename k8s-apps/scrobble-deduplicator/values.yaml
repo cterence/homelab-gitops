@@ -5,7 +5,6 @@ app-template:
       data:
         TZ: Europe/Paris
         CACHE_TYPE: redis
-        START_PAGE: "3"
         BROWSER_HEADFUL: "false"
         REDIS_URL: redis://localhost:6379/0
         BROWSER_URL: ws://localhost:3000?token=local
@@ -31,6 +30,9 @@ app-template:
             tag: latest@sha256:b7e55fd66801948cf26d4dfcc0d0f9bdca01a4836813f9949b47087bf1c5152b
           env:
             TZ: Europe/Paris
+          args:
+            - |
+              --start-day $(date +"%d-%m-%Y") --end-day $(date -d "yesterday" +"%d-%m-%Y")
           envFrom:
             - configMapRef:
                 identifier: config
