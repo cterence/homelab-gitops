@@ -24,7 +24,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.17.1@sha256:ab72a0ab42a792228cdbe83342b99a48acd49f7890ae54b1ae8e04401fba24ee
+            tag: 2.18.0@sha256:13ef2894816c68672367acb75e896d8eb2ab8057e5059d39ae93f80d49ab8725
           ports:
             - name: http
               containerPort: 8000
@@ -76,7 +76,7 @@ app-template:
         backup:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.17.1@sha256:ab72a0ab42a792228cdbe83342b99a48acd49f7890ae54b1ae8e04401fba24ee
+            tag: 2.18.0@sha256:13ef2894816c68672367acb75e896d8eb2ab8057e5059d39ae93f80d49ab8725
           envFrom:
             - configMapRef:
                 identifier: config
