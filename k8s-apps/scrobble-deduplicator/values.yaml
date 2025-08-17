@@ -30,7 +30,7 @@ app-template:
           command:
             - /bin/bash
             - -c
-            - /app/main --start-day $(date -d "yesterday" +"%d-%m-%Y") --end-day $(date +"%d-%m-%Y")
+            - /app/main --from $(date -d "yesterday" +"%d-%m-%Y") --to $(date +"%d-%m-%Y")
           envFrom:
             - configMapRef:
                 identifier: config
