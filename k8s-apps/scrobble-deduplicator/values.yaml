@@ -26,11 +26,11 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/scrobble-deduplicator
-            tag: latest@sha256:993e8bb1bcf89104feaddd06ee4330c5491a393734eb45992bea08efc4e29869
+            tag: latest@sha256:126acff27720d332d58cef62e8eb95ff25b7bc7ed056dd790979ba901766073f
           command:
             - /bin/bash
             - -c
-            - /app/main --from $(date -d "yesterday" +"%d-%m-%Y") --to $(date +"%d-%m-%Y")
+            - /app/main --from $(date -d "yesterday" +"%d-%m-%Y")
           envFrom:
             - configMapRef:
                 identifier: config
