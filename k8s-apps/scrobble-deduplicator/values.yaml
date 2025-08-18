@@ -26,7 +26,7 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/scrobble-deduplicator
-            tag: latest@sha256:c64eb3fc83118752861622a47e2746c6f4754d6f340d3ff4d81627a0a1242ea7
+            tag: latest@sha256:13a3fde52650350cdf0a5d6bbb23fee4a8c7d791ddfd32d22b36ca0c02a9e06c
           command:
             - /bin/bash
             - -c
