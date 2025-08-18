@@ -7,7 +7,7 @@ argo-cd:
       rules:
         enabled: true
         spec:
-          - alert: ArgocdApplicationNotSynced
+          - alert: ArgoCDApplicationNotSynced
             expr: argocd_app_info{sync_status!="Synced"} != 0
             for: 15m
             labels:
@@ -15,8 +15,8 @@ argo-cd:
             annotations:
               summary: ArgoCD application not synced (instance {{ $labels.instance }})
               description: "Application {{ $labels.name }} run by argo is currently not in sync - Value = {{ $value }}"
-          - alert: ArgocdApplicationUnhealthy
-            expr: argocd_app_info{health_status!="Healthy"} != 0
+          - alert: ArgoCDApplicationUnhealthy
+            expr: argocd_app_info{health_status!~"Healthy|Suspended"} != 0
             for: 15m
             labels:
               severity: warning
