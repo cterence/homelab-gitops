@@ -41,7 +41,7 @@ app-template:
         redis:
           image:
             repository: redis
-            tag: latest
+            tag: latest@sha256:e7d6b261beaa22b1dc001f438b677f1c691ac7805607d8979bae65fe0615c2e6
           env:
             TZ: Europe/Paris
           args:
@@ -72,7 +72,7 @@ app-template:
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
-            tag: latest
+            tag: latest@sha256:0e4077087feaca4a9be4b29028721b6330cbc2c64d9dcb5cd28482fc1b425606
           ports:
             - name: http
               containerPort: 3000
