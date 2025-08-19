@@ -41,7 +41,7 @@ app-template:
         redis:
           image:
             repository: redis
-            tag: latest@sha256:dbbb9b54d6483481e667cee625c6e26ee3ceef872e06019a5825f70e47aea917
+            tag: latest@sha256:cc2dfb8f5151da2684b4a09bd04b567f92d07591d91980eb3eca21df07e12760
           env:
             TZ: Europe/Paris
           args:
