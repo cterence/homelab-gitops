@@ -20,6 +20,9 @@ app-template:
         concurrencyPolicy: Forbid
         timeZone: Europe/Paris
       strategy: RollingUpdate
+      pod:
+        securityContext:
+          fsGroup: 1000
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
