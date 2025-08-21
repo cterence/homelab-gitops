@@ -16,3 +16,9 @@ spec:
     - secretKey: LASTFM_PASSWORD
       remoteRef:
         key: lastfm_password
+    - secretKey: TELEGRAM_BOT_TOKEN
+      remoteRef:
+        key: scrobble_deduplicator_telegram_bot_token
+    - secretKey: TELEGRAM_CHAT_ID
+      remoteRef:
+        key: scrobble_deduplicator_telegram_chat_id
