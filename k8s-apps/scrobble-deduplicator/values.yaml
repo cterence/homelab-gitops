@@ -108,3 +108,12 @@ app-template:
         app:
           redis:
             - path: /data
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 200Mi
+      advancedMounts:
+        app:
+          app:
+            - path: /app/data
