@@ -60,11 +60,11 @@
       overrideDatasource: "custom.garage",
       registryUrls: ["https://git.deuxfleurs.fr/Deuxfleurs/garage/raw/branch/main/script/helm/garage/Chart.yaml"],
     },
-    // {
-      // FIXME: lock to 1.17.2 due to https://github.com/cert-manager/cert-manager/issues/7791
-      // "matchPackageNames": ["/cert-manager/"],
-      // "enabled": false
-    // },
+    {
+      // FIXME: lock to 1.7.0 https://github.com/pocket-id/pocket-id/issues/866
+      "matchPackageNames": ["/pocket-id/"],
+      "enabled": false
+    },
   ],
   customDatasources: {
     garage: {
