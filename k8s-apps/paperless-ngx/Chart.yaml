@@ -9,7 +9,7 @@ dependencies:
     version: 4.2.0
   - name: redis
     repository: https://charts.bitnami.com/bitnami
-    version: 22.0.4
+    version: 22.0.5
   - name: cluster
     alias: cnpg-cluster-pg17
     repository: https://cloudnative-pg.github.io/charts
