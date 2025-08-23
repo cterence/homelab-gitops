@@ -66,7 +66,6 @@ app-template:
             FLASK_DEBUG: false
             CLOUDFLARE_PROXY_URL: http://localhost:8000
             INGEST_DIR: /cwa-book-ingest
-            BOOK_LANGUAGE: fr
             UID: "0"
             GID: "0"
             APP_ENV: prod
