@@ -449,6 +449,31 @@ app-template:
                       values:
                         - "{{ .Release.Name }}"
                 topologyKey: kubernetes.io/hostname
+      initContainers:
+        gluetun:
+          image:
+            repository: ghcr.io/qdm12/gluetun
+            tag: v3.40.0@sha256:2b42bfa046757145a5155acece417b65b4443c8033fb88661a8e9dcf7fda5a00
+          env:
+            TZ: Europe/Paris
+            VPN_SERVICE_PROVIDER: airvpn
+            VPN_TYPE: wireguard
+            VPN_INTERFACE: wg0
+            SERVER_REGIONS: Europe
+            WIREGUARD_ADDRESSES: 10.145.193.219/32,fd7d:76ee:e68f:a993:7c10:4d59:a5d7:9537/128
+            FIREWALL_VPN_INPUT_PORTS: "6887"
+            DNS_PLAINTEXT_ADDRESS: 1.1.1.1,1.0.0.1
+          restartPolicy: Always
+          envFrom:
+            - secretRef:
+                name: gluetun-wg-keys
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            runAsUser: 0
+            runAsGroup: 0
+            privileged: true
       containers:
         qbittorrent:
           image:
@@ -469,30 +494,6 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
-
-        gluetun:
-          dependsOn: qbittorrent
-          image:
-            repository: ghcr.io/qdm12/gluetun
-            tag: v3.40.0@sha256:2b42bfa046757145a5155acece417b65b4443c8033fb88661a8e9dcf7fda5a00
-          env:
-            TZ: Europe/Paris
-            VPN_SERVICE_PROVIDER: airvpn
-            VPN_TYPE: wireguard
-            VPN_INTERFACE: wg0
-            SERVER_REGIONS: Europe
-            WIREGUARD_ADDRESSES: 10.145.193.219/32,fd7d:76ee:e68f:a993:7c10:4d59:a5d7:9537/128
-            FIREWALL_VPN_INPUT_PORTS: "6887"
-          envFrom:
-            - secretRef:
-                name: gluetun-wg-keys
-          securityContext:
-            capabilities:
-              add:
-                - NET_ADMIN
-            runAsUser: 0
-            runAsGroup: 0
-            privileged: true
 
     filebrowser-quantum:
       type: deployment
