@@ -462,7 +462,7 @@ app-template:
             SERVER_REGIONS: Europe
             WIREGUARD_ADDRESSES: 10.145.193.219/32,fd7d:76ee:e68f:a993:7c10:4d59:a5d7:9537/128
             FIREWALL_VPN_INPUT_PORTS: "6887"
-            DNS_PLAINTEXT_ADDRESS: 1.1.1.1,1.0.0.1
+            DNS_ADDRESS: 1.1.1.1
           restartPolicy: Always
           envFrom:
             - secretRef:
