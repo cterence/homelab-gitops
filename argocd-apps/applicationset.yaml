@@ -8,6 +8,7 @@ spec:
   generators:
     - list:
         elements:
+          - name: anki-sync-server
           - name: argocd
           - name: arr-stack
           - name: attic
