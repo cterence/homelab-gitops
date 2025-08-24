@@ -4,11 +4,11 @@ cert-manager:
     enabled: true
     servicemonitor:
       enabled: true
-  podDnsPolicy: None
-  podDnsConfig:
-    nameservers:
-      - 1.1.1.1
-      - 8.8.8.8
+  # podDnsPolicy: None
+  # podDnsConfig:
+  #   nameservers:
+  #     - 1.1.1.1
+  #     - 8.8.8.8
   config:
     featureGates:
       # Disable the use of Exact PathType in Ingress resources, to work around a bug in ingress-nginx
