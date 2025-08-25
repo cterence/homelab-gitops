@@ -4,8 +4,7 @@ app-template:
     config:
       data:
         TZ: Europe/Paris
-        CACHE_TYPE: redis
-        REDIS_URL: redis://localhost:6379/0
+        CACHE_TYPE: file
         BROWSER_URL: ws://localhost:3000?token=local
         LOG_LEVEL: info
         DELETE: "true"
@@ -41,37 +40,6 @@ app-template:
                 name: lastfm-credentials
       # Long lived sidecars with restartPolicy: Always
       initContainers:
-        redis:
-          image:
-            repository: redis
-            tag: latest@sha256:cc2dfb8f5151da2684b4a09bd04b567f92d07591d91980eb3eca21df07e12760
-          env:
-            TZ: Europe/Paris
-          args:
-            - --save
-            - --appendonly
-            - "no"
-          restartPolicy: Always
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                exec:
-                  command:
-                    - /bin/bash
-                    - -c
-                    - redis-cli ping
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                exec:
-                  command:
-                    - /bin/bash
-                    - -c
-                    - redis-cli ping
-
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
@@ -102,15 +70,6 @@ app-template:
                   path: /active?token=local
 
   persistence:
-    redis:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 200Mi
-      advancedMounts:
-        app:
-          redis:
-            - path: /data
     data:
       enabled: true
       type: persistentVolumeClaim
