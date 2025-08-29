@@ -47,6 +47,8 @@ loki:
     affinity:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution: []
+    persistence:
+      size: 20Gi
 
   backend:
     replicas: 0
