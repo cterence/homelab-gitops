@@ -14,7 +14,7 @@ spec:
         description: Longhorn volume {{ "{{$labels.volume}}" }} ({{ "{{$labels.pvc}}" }}) on {{ "{{$labels.node}}" }} is at {{ "{{$value}}%" }} used for
           more than 5 minutes.
         summary: Longhorn volume capacity is over 95% used.
-      expr: 100 * (longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) > 95
+      expr: 100 * (longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) > 95 AND longhorn_volume_capacity_bytes{pvc!='prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0'}
       for: 5m
       labels:
         issue: Longhorn volume {{ "{{$labels.volume}}" }} usage on {{ "{{$labels.node}}" }} is critical.
