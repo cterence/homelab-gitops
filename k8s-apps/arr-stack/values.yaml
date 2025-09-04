@@ -392,7 +392,7 @@ app-template:
         configarr:
           image:
             repository: configarr/configarr
-            tag: 1.15.0@sha256:c85f1c06ca74f1703622627cf5fd8045b23fa117cf9a12bf04676639bf4939d6
+            tag: 1.15.1@sha256:256393d6797db45060d0683dc711e3656656191f5f31824c3bf998c1a46fb653
           env:
             TZ: Europe/Paris
 
