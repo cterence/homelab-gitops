@@ -330,10 +330,14 @@ crowdsec:
     extraInitContainers: []
 
     # -- Extra volumes to be added to agent pods
-    extraVolumes: []
+    extraVolumes:
+      - name: data
+        emptyDir: {}
 
     # -- Extra volumeMounts to be added to agent pods
-    extraVolumeMounts: []
+    extraVolumeMounts:
+      - name: data
+        mountPath: /var/lib/crowdsec/data
 
     resources:
       limits:
