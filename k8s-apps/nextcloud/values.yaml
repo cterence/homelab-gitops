@@ -224,65 +224,65 @@ nextcloud:
       #       mountPath: /import
       #       subPath: data/terence/files/Images
       #       readOnly: true
-      - name: generate-previews
-        image: nextcloud:31.0.8@sha256:92bc503ea0c19789f402b0469ecfb8df1ffea81e2bf90a45bba39063a626aa00
-        command:
-          - /bin/sh
-          - -c
-          - |
-            cd /var/www/html
-            while true; do
-              php occ preview:pre-generate -vvv
-              sleep 3600
-            done
-        env:
-          - name: POSTGRES_HOST
-            valueFrom:
-              secretKeyRef:
-                key: host
-                name: nextcloud-cnpg-cluster-pg17-app
-          - name: POSTGRES_DB
-            valueFrom:
-              secretKeyRef:
-                key: dbname
-                name: nextcloud-cnpg-cluster-pg17-app
-          - name: POSTGRES_USER
-            valueFrom:
-              secretKeyRef:
-                key: username
-                name: nextcloud-cnpg-cluster-pg17-app
-          - name: POSTGRES_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                key: password
-                name: nextcloud-cnpg-cluster-pg17-app
-        securityContext:
-          runAsUser: 33
-          runAsGroup: 33
-          runAsNonRoot: true
-          readOnlyRootFilesystem: false
-        volumeMounts:
-          - mountPath: /var/www/
-            name: nextcloud-main
-            subPath: root
-          - mountPath: /var/www/html
-            name: nextcloud-main
-            subPath: html
-          - mountPath: /var/www/html/data
-            name: nextcloud-main
-            subPath: data
-          - mountPath: /var/www/html/config
-            name: nextcloud-main
-            subPath: config
-          - mountPath: /var/www/html/custom_apps
-            name: nextcloud-main
-            subPath: custom_apps
-          - mountPath: /var/www/tmp
-            name: nextcloud-main
-            subPath: tmp
-          - mountPath: /var/www/html/themes
-            name: nextcloud-main
-            subPath: themes
+      # - name: generate-previews
+      #   image: nextcloud:31.0.8@sha256:92bc503ea0c19789f402b0469ecfb8df1ffea81e2bf90a45bba39063a626aa00
+      #   command:
+      #     - /bin/sh
+      #     - -c
+      #     - |
+      #       cd /var/www/html
+      #       while true; do
+      #         php occ preview:pre-generate -vvv
+      #         sleep 3600
+      #       done
+      #   env:
+      #     - name: POSTGRES_HOST
+      #       valueFrom:
+      #         secretKeyRef:
+      #           key: host
+      #           name: nextcloud-cnpg-cluster-pg17-app
+      #     - name: POSTGRES_DB
+      #       valueFrom:
+      #         secretKeyRef:
+      #           key: dbname
+      #           name: nextcloud-cnpg-cluster-pg17-app
+      #     - name: POSTGRES_USER
+      #       valueFrom:
+      #         secretKeyRef:
+      #           key: username
+      #           name: nextcloud-cnpg-cluster-pg17-app
+      #     - name: POSTGRES_PASSWORD
+      #       valueFrom:
+      #         secretKeyRef:
+      #           key: password
+      #           name: nextcloud-cnpg-cluster-pg17-app
+      #   securityContext:
+      #     runAsUser: 33
+      #     runAsGroup: 33
+      #     runAsNonRoot: true
+      #     readOnlyRootFilesystem: false
+      #   volumeMounts:
+      #     - mountPath: /var/www/
+      #       name: nextcloud-main
+      #       subPath: root
+      #     - mountPath: /var/www/html
+      #       name: nextcloud-main
+      #       subPath: html
+      #     - mountPath: /var/www/html/data
+      #       name: nextcloud-main
+      #       subPath: data
+      #     - mountPath: /var/www/html/config
+      #       name: nextcloud-main
+      #       subPath: config
+      #     - mountPath: /var/www/html/custom_apps
+      #       name: nextcloud-main
+      #       subPath: custom_apps
+      #     - mountPath: /var/www/tmp
+      #       name: nextcloud-main
+      #       subPath: tmp
+      #     - mountPath: /var/www/html/themes
+      #       name: nextcloud-main
+      #       subPath: themes
 
     # Extra mounts for the pods. Example shown is for connecting a legacy NFS volume
     # to NextCloud pods in Kubernetes. This can then be configured in External Storage
@@ -445,23 +445,83 @@ nextcloud:
     enabled: true
 
     type: cronjob
-    ## Cronjob sidecar resource requests and limits
-    ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-    ##
-    resources: {}
+    # Runs crond as a sidecar container in the Nextcloud pod
+    # Note: crond requires root
+    sidecar:
+      ## Cronjob sidecar resource requests and limits
+      ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+      ##
+      resources: {}
 
-    # Allow configuration of lifecycle hooks
-    # ref: https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
-    lifecycle:
-      {}
-      # postStartCommand: []
-      # preStopCommand: []
-    # Set securityContext parameters. For example, you may need to define runAsNonRoot directive
-    securityContext: {}
-    #   runAsUser: 33
-    #   runAsGroup: 33
-    #   runAsNonRoot: true
-    #   readOnlyRootFilesystem: true
+      # Allow configuration of lifecycle hooks
+      # ref: https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
+      lifecycle: {}
+      # lifecycle:
+      #   postStartCommand: []
+      #   preStopCommand: []
+      # Set securityContext parameters. For example, you may need to define runAsNonRoot directive
+      securityContext: {}
+      #   runAsUser: 33
+      #   runAsGroup: 33
+      #   runAsNonRoot: true
+      #   readOnlyRootFilesystem: true
+
+      # The command the cronjob container executes.
+      command:
+        - /cron.sh
+
+    # Uses a Kubernetes CronJob to execute the Nextcloud cron tasks
+    # Note: can run as non-root user. Should run as same user as the Nextcloud pod.
+    cronjob:
+      # Use a CronJob instead of crond sidecar container
+      # crond does not work when not running as root user
+      # Note: requires `persistence.enabled=true`
+      schedule: "*/5 * * * *"
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 5
+      labels: {}
+      annotations: {}
+      backoffLimit: 1
+      affinity: {}
+      # Often RWO volumes are used. But the cronjob pod needs access to the same volume as the nextcloud pod.
+      # Depending on your provider two pods on the same node can still access the same volume.
+      # Following config ensures that the cronjob pod is scheduled on the same node as the nextcloud pod.
+      # affinity:
+      #   podAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       - labelSelector:
+      #           matchExpressions:
+      #             - key: app.kubernetes.io/name
+      #               operator: In
+      #               values:
+      #                 - nextcloud
+      #             - key: app.kubernetes.io/component
+      #               operator: In
+      #               values:
+      #                 - app
+      #         topologyKey: kubernetes.io/hostname
+
+      ## Resource requests and limits
+      ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+      ##
+      resources: {}
+      # Allow configuration of lifecycle hooks
+      # ref: https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
+      # Set securityContext parameters. For example, you may need to define runAsNonRoot directive
+      securityContext:
+        runAsUser: 33
+        runAsGroup: 33
+        runAsNonRoot: true
+        readOnlyRootFilesystem: true
+
+      # The command to run in the cronjob container
+      # Example to incerase memory limit: php -d memory_limit=2G ...
+      command:
+        - php
+        - -f
+        - /var/www/html/cron.php
+        - --
+        - --verbose
 
   service:
     type: ClusterIP
