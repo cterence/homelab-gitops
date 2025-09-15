@@ -444,6 +444,7 @@ nextcloud:
   cronjob:
     enabled: true
 
+    type: cronjob
     ## Cronjob sidecar resource requests and limits
     ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
     ##
