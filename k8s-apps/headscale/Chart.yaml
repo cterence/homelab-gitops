@@ -7,7 +7,7 @@ dependencies:
   - name: app-template
     alias: headscale
     repository: https://bjw-s-labs.github.io/helm-charts
-    version: 4.2.0
+    version: 4.3.0
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
