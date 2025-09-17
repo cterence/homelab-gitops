@@ -20,7 +20,7 @@ app-template:
         main:
           image:
             repository: wolveix/satisfactory-server
-            tag: v1.9.9@sha256:464d11e36e10a2399bd2faaf1057a0825ac62a71ebdb6ee7e8a449584116945c
+            tag: v1.9.10@sha256:e103700ae6ae4c50f19dac80eadb2a805c5b885e179ae2a40850e967bf189efd
           env:
             TZ: Europe/Paris
           ports:
