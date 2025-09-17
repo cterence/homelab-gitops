@@ -40,7 +40,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/versity/versitygw
-            tag: v1.0.17@sha256:a13b9adbda0ea9d4b1d929e4bed327e4eccc18d13c23f7e5d192d987dde5651d
+            tag: v1.0.18@sha256:90f8280610a889d705ae93ae4b4064d74ffa9f3b565aacf2e3372b0614d7a796
           args:
             - posix
             - /buckets
