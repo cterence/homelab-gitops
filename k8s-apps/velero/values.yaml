@@ -106,7 +106,7 @@ velero:
   # If the value is a string then it is evaluated as a template.
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.12.2@sha256:bef271808e0547bb70f69f0430cc73f7a2fa938949c50f7b31171018be967335
+      image: velero/velero-plugin-for-aws:v1.13.0@sha256:0b08ec0d150424fa914487e6665d7c84fff0c6a8eca76a23fa6d09e621d36d8a
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
