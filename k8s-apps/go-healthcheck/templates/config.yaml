@@ -1,4 +1,26 @@
 apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: k8s-go-healthcheck
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: go-healthcheck
+      server:
+        url: "https://kubernetes.default"
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          namespace: external-secrets
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: "k8s-secret-store"
+          namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: go-healthcheck-config
