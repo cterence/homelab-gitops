@@ -431,6 +431,42 @@ app-template:
                   port: http
                   path: /health
 
+    flareproxy:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+      containers:
+        flareproxy:
+          image:
+            repository: mickey3721/flareproxy
+            tag: latest@sha256:5d6b4ea0c6b9024a6de9933e18fe068f2a92504e5a41d3212036cf519885bbc3
+          env:
+            TZ: Europe/Paris
+            FLARESOLVERR_URL: http://arr-stack-flaresolverr:8191/v1
+          ports:
+            - name: http
+              containerPort: 8080
+          # probes:
+          #   liveness:
+          #     enabled: true
+          #     custom: true
+          #     spec:
+          #       httpGet:
+          #         port: http
+          #         path: /
+          #   readiness:
+          #     enabled: true
+          #     custom: true
+          #     spec:
+          #       httpGet:
+          #         port: http
+          #         path: /
+
     qbittorrent:
       type: deployment
       strategy: Recreate
@@ -724,6 +760,12 @@ app-template:
       ports:
         http:
           port: 8191
+    flareproxy:
+      controller: flareproxy
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
     qbittorrent:
       controller: qbittorrent
       type: ClusterIP
