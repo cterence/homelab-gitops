@@ -7,3 +7,6 @@ dependencies:
   - name: changedetection-io
     repository: https://zekker6.github.io/helm-charts
     version: 1.60.0
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 4.3.0
