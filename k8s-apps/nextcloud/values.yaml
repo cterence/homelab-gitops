@@ -482,24 +482,23 @@ nextcloud:
       labels: {}
       annotations: {}
       backoffLimit: 1
-      affinity: {}
       # Often RWO volumes are used. But the cronjob pod needs access to the same volume as the nextcloud pod.
       # Depending on your provider two pods on the same node can still access the same volume.
       # Following config ensures that the cronjob pod is scheduled on the same node as the nextcloud pod.
-      # affinity:
-      #   podAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       - labelSelector:
-      #           matchExpressions:
-      #             - key: app.kubernetes.io/name
-      #               operator: In
-      #               values:
-      #                 - nextcloud
-      #             - key: app.kubernetes.io/component
-      #               operator: In
-      #               values:
-      #                 - app
-      #         topologyKey: kubernetes.io/hostname
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - nextcloud
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - app
+              topologyKey: kubernetes.io/hostname
 
       ## Resource requests and limits
       ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
