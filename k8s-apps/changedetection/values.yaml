@@ -14,6 +14,7 @@ changedetection-io:
   env:
     # -- Set the container timezone
     TZ: UTC
+    WEBDRIVER_URL: http://chrome:4444/wd/hub
 
   # -- Configures service settings for the chart.
   # @default -- See values.yaml
@@ -54,3 +55,45 @@ changedetection-io:
       mountPath: /datastore
       accessMode: ReadWriteOnce
       size: 1Gi
+
+app-template:
+  global:
+    fullnameOverride: chrome
+  controllers:
+    chrome:
+      containers:
+        chrome:
+          image:
+            repository: selenium/standalone-chrome-debug
+            tag: 3.141.59
+          ports:
+            - name: http
+              containerPort: 4444
+          env:
+            TZ: Europe/Paris
+          restartPolicy: Always
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /active?token=local
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /active?token=local
+
+  persistence:
+    shm:
+      enabled: true
+      type: emptyDir
+      medium: Memory
+      advancedMounts:
+        chrome:
+          chrome:
+            - path: /dev/shm
