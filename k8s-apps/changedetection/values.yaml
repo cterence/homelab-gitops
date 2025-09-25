@@ -65,7 +65,7 @@ app-template:
         chrome:
           image:
             repository: selenium/standalone-chrome-debug
-            tag: 3.141.59
+            tag: 3.141.59@sha256:0c59037d0a095d7edb7b956e95a24573a6a441654a1acd2f7bebad048ef16e65
           ports:
             - name: http
               containerPort: 4444
