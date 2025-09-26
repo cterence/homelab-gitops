@@ -1,9 +1,9 @@
 longhorn:
-  image:
-    longhorn:
-      manager:
-        tag: v1.9.0-hotfix-1 # https://longhorn.io/docs/1.9.0/important-notes/#warning
-        
+  # image:
+  #   longhorn:
+  #     manager:
+  #       tag: v1.9.0-hotfix-1 # https://longhorn.io/docs/1.9.0/important-notes/#warning
+
   preUpgradeChecker:
     jobEnabled: false
     upgradeVersionCheck: false
@@ -21,18 +21,18 @@ longhorn:
     reclaimPolicy: Retain
 
   defaultSettings:
-    defaultReplicaCount: 2
+    defaultReplicaCount: "2"
     backupTarget: s3://longhorn-backup-tch@eu-central-003/v1/
     backupTargetCredentialSecret: backup-credentials
-    storageMinimalAvailablePercentage: 10
-    storageReservedPercentageForDefaultDisk: 10
+    storageMinimalAvailablePercentage: "10"
+    storageReservedPercentageForDefaultDisk: "10"
     removeSnapshotsDuringFilesystemTrim: enabled
     autoCleanupSystemGeneratedSnapshot: "true"
     autoCleanupRecurringJobBackupSnapshot: "true"
     autoCleanupSnapshotWhenDeleteBackup: "true"
-    storageOverProvisioningPercentage: 200
+    storageOverProvisioningPercentage: "200"
     orphanAutoDeletion: "true"
-    concurrentAutomaticEngineUpgradePerNodeLimit: 5
+    concurrentAutomaticEngineUpgradePerNodeLimit: "5"
   ingress:
     enabled: true
     ingressClassName: nginx
