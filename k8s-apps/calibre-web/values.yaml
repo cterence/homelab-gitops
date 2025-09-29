@@ -77,6 +77,8 @@ app-template:
               enabled: true
               custom: true
               spec:
+                failureThreshold: 10
+                timeoutSeconds: 5
                 httpGet:
                   port: http
                   path: /api/status
@@ -84,6 +86,8 @@ app-template:
               enabled: true
               custom: true
               spec:
+                failureThreshold: 10
+                timeoutSeconds: 5
                 httpGet:
                   port: http
                   path: /api/status
