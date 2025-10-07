@@ -5,8 +5,7 @@ velero:
 
   # Labels settings in namespace
   namespace:
-    labels:
-      {}
+    labels: {}
       # Enforce Pod Security Standards with Namespace Labels
       # https://kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/
       # - key: pod-security.kubernetes.io/enforce
@@ -60,8 +59,7 @@ velero:
   #
   # If using kube2iam or kiam, use the following annotation with your AWS_ACCOUNT_ID
   # and VELERO_ROLE_NAME filled in:
-  podAnnotations:
-    {}
+  podAnnotations: {}
     #  iam.amazonaws.com/role: "arn:aws:iam::<AWS_ACCOUNT_ID>:role/<VELERO_ROLE_NAME>"
 
   # Additional pod labels for Velero deployment's template. Optional
@@ -73,8 +71,7 @@ velero:
 
   # Resource requests/limits to specify for the Velero deployment.
   # https://velero.io/docs/v1.6/customize-installation/#customize-resource-requests-and-limits
-  resources:
-    {}
+  resources: {}
     # requests:
     #   cpu: 500m
     #   memory: 128Mi
@@ -121,14 +118,12 @@ velero:
   # SecurityContext to use for the Velero deployment. Optional.
   # Set fsGroup for `AWS IAM Roles for Service Accounts`
   # see more informations at: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
     # fsGroup: 1337
 
   # Container Level Security Context for the 'velero' container of the Velero deployment. Optional.
   # See: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-  containerSecurityContext:
-    {}
+  containerSecurityContext: {}
     # allowPrivilegeEscalation: false
     # capabilities:
     #   drop: ["ALL"]
@@ -328,9 +323,6 @@ velero:
   ## and additional server settings.
   ##
   configuration:
-    repositoryMaintenanceJob:
-      latestJobsCount: 1
-
     # Parameters for the BackupStorageLocation(s). Configure multiple by adding other element(s) to the backupStorageLocation slice.
     # See https://velero.io/docs/v1.6/api-types/backupstoragelocation/
     backupStorageLocation:
@@ -410,6 +402,12 @@ velero:
 
         # annotations allows adding arbitrary annotations to this VolumeSnapshotLocation resource. Optional.
         annotations: {}
+    repositoryMaintenanceJob:
+      repositoryConfigData:
+        name: "velero-repo-maintenance"
+        global:
+          keepLatestMaintenanceJobs: 1
+    # `velero server` default: velero
 
     # These are server-level settings passed as CLI flags to the `velero server` command. Velero
     # uses default values if they're not passed in, so they only need to be explicitly specified
@@ -553,8 +551,7 @@ velero:
     priorityClassName: ""
     # Resource requests/limits to specify for the node-agent daemonset deployment. Optional.
     # https://velero.io/docs/v1.6/customize-installation/#customize-resource-requests-and-limits
-    resources:
-      {}
+    resources: {}
       # requests:
       #   cpu: 500m
       #   memory: 512Mi
@@ -689,8 +686,7 @@ velero:
   #         readOnlyRootFilesystem: true
   #         runAsUser: 1001
   #         runAsGroup: 999
-  configMaps:
-    {}
+  configMaps: {}
     # remove-argocd-instance-label:
     #   labels: {}
     #   data:
