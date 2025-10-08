@@ -41,8 +41,7 @@ pocket-id:
       # -- Image pull policy.
       pullPolicy: IfNotPresent
 
-    resources:
-      {}
+    resources: {}
       # We usually recommend not to specify default resources and to leave this as a conscious
       # choice for the user. This also increases chances charts run on environments with little
       # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -54,8 +53,7 @@ pocket-id:
       #   cpu: 100m
       #   memory: 128Mi
 
-    securityContext:
-      {}
+    securityContext: {}
       # capabilities:
       #   drop:
       #   - ALL
@@ -273,8 +271,7 @@ pocket-id:
   # -- Labels to be added to the pods.
   podLabels: {}
 
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
     # fsGroup: 2000
 
   # -- Node selector for the pods.
@@ -284,8 +281,7 @@ pocket-id:
   tolerations: []
 
   # -- Affinity settings for the pods.
-  affinity:
-    {}
+  affinity: {}
     # nodeAffinity:
     #   requiredDuringSchedulingIgnoredDuringExecution:
     #     nodeSelectorTerms:
@@ -304,7 +300,7 @@ cnpg-cluster:
   type: postgresql
   mode: standalone
   version:
-    postgresql: "17"
+    postgresql: "18"
   cluster:
     instances: 1
     imageCatalogRef:
