@@ -278,7 +278,7 @@ cnpg-cluster:
     import:
       type: microservice
       databases: ["home-assistant"]
-      schemaOnly: true
+      schemaOnly: false
       source:
         host: home-assistant-cnpg-cluster-pg17-rw
         username: home-assistant
