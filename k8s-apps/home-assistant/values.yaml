@@ -49,7 +49,7 @@ home-assistant:
     database-secret:
       enabled: true
       type: secret
-      objectName: cnpg-cluster-pg17-app
+      objectName: cnpg-cluster-app
       mountPath: "/config/database-secret"
       defaultMode: "0400"
       readOnly: true
