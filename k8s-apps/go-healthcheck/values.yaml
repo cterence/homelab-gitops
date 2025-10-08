@@ -37,7 +37,7 @@ cnpgClusters:
     namespace: attic
   - name: arr-stack-cnpg-cluster-jellystat
     namespace: arr-stack
-  - name: home-assistant-cnpg-cluster-pg17
+  - name: home-assistant-cnpg-cluster
     namespace: home-assistant
   - name: immich-cnpg-cluster-vectorchord
     namespace: immich
