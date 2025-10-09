@@ -66,7 +66,7 @@ app-template:
         sockpuppet-chrome:
           image:
             repository: dgtlmoon/sockpuppetbrowser
-            tag: latest
+            tag: latest@sha256:9f2df6791a4cd9b2c3138cb62b5a8de7f27953cab84729fe09d28cbd341a8973
           ports:
             - name: ws
               containerPort: 3000
