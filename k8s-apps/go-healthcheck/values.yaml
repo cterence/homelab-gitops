@@ -41,7 +41,7 @@ cnpgClusters:
     namespace: home-assistant
   - name: immich-cnpg-cluster-vectorchord
     namespace: immich
-  - name: nextcloud-cnpg-cluster-pg17
+  - name: nextcloud-cnpg-cluster
     namespace: nextcloud
   - name: paperless-ngx-cnpg-cluster-pg17
     namespace: paperless-ngx

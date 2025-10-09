@@ -349,7 +349,7 @@ nextcloud:
     ## Use a existing secret
     existingSecret:
       enabled: true
-      secretName: nextcloud-cnpg-cluster-pg17-app
+      secretName: nextcloud-cnpg-cluster-app
       usernameKey: username
       passwordKey: password
       hostKey: host
