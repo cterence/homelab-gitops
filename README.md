@@ -82,7 +82,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [qtap](./scripts/../k8s-apps/qtap) | eBPF agent that captures pre-encrypted network traffic | ❌ |
 | [radicale](./scripts/../k8s-apps/radicale) | Free and Open-Source CalDAV and CardDAV Server | ❌ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
-| [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ✅ |
+| [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
 | [scrobble-deduplicator](./scripts/../k8s-apps/scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles | ✅ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ✅ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
