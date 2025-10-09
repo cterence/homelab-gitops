@@ -208,7 +208,7 @@ cnpg-cluster:
   type: postgresql
   mode: recovery
   version:
-    postgresql: "17"
+    postgresql: "18"
   cluster:
     instances: 1
     imageCatalogRef:
