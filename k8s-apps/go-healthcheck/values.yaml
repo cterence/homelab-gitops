@@ -43,7 +43,7 @@ cnpgClusters:
     namespace: immich
   - name: nextcloud-cnpg-cluster
     namespace: nextcloud
-  - name: paperless-ngx-cnpg-cluster-pg17
+  - name: paperless-ngx-cnpg-cluster
     namespace: paperless-ngx
   - name: pocket-id-cnpg-cluster
     namespace: pocket-id

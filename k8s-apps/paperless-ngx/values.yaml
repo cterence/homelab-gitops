@@ -41,22 +41,22 @@ app-template:
             PAPERLESS_DBHOST:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: host
             PAPERLESS_DBNAME:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: dbname
             PAPERLESS_DBUSER:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: user
             PAPERLESS_DBPASS:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: password
           probes:
             liveness:
@@ -108,7 +108,7 @@ app-template:
             PAPERLESS_DBPASS:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-pg17-app"
+                  name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: password
 
   service:
@@ -195,6 +195,52 @@ redis:
     replicaCount: 0
     pdb:
       create: false
+
+cnpg-cluster:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: paperless-ngx
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["paperless-ngx"]
+      schemaOnly: false
+      source:
+        host: paperless-ngx-cnpg-cluster-pg17-rw
+        username: paperless-ngx
+        database: paperless-ngx
+        passwordSecret:
+          name: paperless-ngx-cnpg-cluster-pg17-app
+          key: password
+        sslKeySecret:
+          name: paperless-ngx-cnpg-cluster-pg17-replication
+          key: tls.key
+        sslCertSecret:
+          name: paperless-ngx-cnpg-cluster-pg17-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: paperless-ngx-cnpg-cluster-pg17-ca
+          key: ca.crt
 
 cnpg-cluster-pg17:
   type: postgresql
