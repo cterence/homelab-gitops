@@ -50,12 +50,10 @@ spec:
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
-          # - name: pihole
           - name: pocket-id
             serverSideApply: true
             serverSideDiff: true
           - name: reloader
-          - name: satisfactory-server
           - name: scrobble-deduplicator
           - name: snapshot-controller
           - name: tailscale-operator
