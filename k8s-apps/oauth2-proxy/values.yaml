@@ -94,7 +94,7 @@ oauth2-proxy:
       - fbq.terence.cloud
       - grafana.terence.cloud
       - headscale.terence.cloud
-      - httpbin.terence.cloud
+      - phttpbin.terence.cloud
       - jl.terence.cloud
       - komoplane.terence.cloud
       - lid.terence.cloud

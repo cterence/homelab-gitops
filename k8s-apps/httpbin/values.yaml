@@ -28,7 +28,7 @@ app-template:
           port: 8080
 
   ingress:
-    main:
+    private:
       enabled: true
       className: "nginx"
       annotations:
@@ -37,6 +37,26 @@ app-template:
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
         nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+      hosts:
+        - host: phttpbin.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: phttpbin-tls
+          hosts:
+            - phttpbin.terence.cloud
+
+    public:
+      enabled: true
+      className: "nginx"
+      annotations:
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       hosts:
         - host: httpbin.terence.cloud
