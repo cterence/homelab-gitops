@@ -686,30 +686,6 @@ vaultwarden:
     customHeadersConfigMap:
       Request-Id: $req_id
 
-cnpg-cluster-pg17:
-  type: postgresql
-  mode: standalone
-  version:
-    postgresql: "17"
-  cluster:
-    instances: 1
-    imageCatalogRef:
-      kind: ClusterImageCatalog
-      name: postgresql
-    storage:
-      size: 10Gi
-    resources: {}
-    primaryUpdateMethod: switchover
-    primaryUpdateStrategy: unsupervised
-    logLevel: "info"
-    monitoring:
-      enabled: true
-      podMonitor:
-        enabled: true
-    postgresql: {}
-    initdb:
-      database: vaultwarden
-
 cnpg-cluster:
   type: postgresql
   mode: recovery
