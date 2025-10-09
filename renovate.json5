@@ -64,6 +64,11 @@
       "matchPackageNames": ["/longhorn/"],
       "enabled": false
     },
+    // apps on 0ver but allowed to automerge
+    {
+      "matchPackageNames": ["/ghcr.io\\/dgtlmoon\\/changedetection.io/","/otel\\/opentelemetry-collector-contrib/","/opentelemtry-collector/","/opentelemetry-operator/","/ghcr.io\\/gtsteffaniak\\/filebrowser/"],
+      "automerge": true
+    },
   ],
   customDatasources: {
     garage: {
