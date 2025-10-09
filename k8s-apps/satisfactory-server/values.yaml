@@ -230,7 +230,7 @@ cnpg-cluster-pg17:
     storage:
       size: 10Gi
     annotations:
-      cnpg.io/hibernation: "on"
+      cnpg.io/hibernation: "off"
     resources: {}
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
@@ -264,4 +264,53 @@ cnpg-cluster-pg17:
           key: tls.crt
         sslRootCertSecret:
           name: satisfactory-server-cnpg-cluster-ca
+          key: ca.crt
+
+cnpg-cluster:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 10Gi
+    annotations:
+      cnpg.io/hibernation: "off"
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    # monitoring:
+    #   enabled: true
+    #   podMonitor:
+    #     enabled: true
+    enablePDB: false
+    postgresql: {}
+    initdb:
+      database: frm
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["frm"]
+      schemaOnly: false
+      source:
+        host: satisfactory-server-cnpg-cluster-pg17-rw
+        username: frm
+        database: frm
+        passwordSecret:
+          name: satisfactory-server-cnpg-cluster-pg17-app
+          key: password
+        sslKeySecret:
+          name: satisfactory-server-cnpg-cluster-pg17-replication
+          key: tls.key
+        sslCertSecret:
+          name: satisfactory-server-cnpg-cluster-pg17-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: satisfactory-server-cnpg-cluster-pg17-ca
           key: ca.crt
