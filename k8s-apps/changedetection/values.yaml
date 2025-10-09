@@ -14,7 +14,8 @@ changedetection-io:
   env:
     # -- Set the container timezone
     TZ: UTC
-    WEBDRIVER_URL: http://chrome:4444/wd/hub
+    # WEBDRIVER_URL: http://changedetection-chrome:4444/wd/hub
+    PLAYWRIGHT_DRIVER_URL: ws://sockpuppet-chrome:3000
 
   # -- Configures service settings for the chart.
   # @default -- See values.yaml
@@ -55,43 +56,49 @@ changedetection-io:
       mountPath: /datastore
       accessMode: ReadWriteOnce
       size: 1Gi
-# app-template:
-#   controllers:
-#     chrome:
-#       containers:
-#         chrome:
-#           nameOverride: chrome
-#           image:
-#             repository: selenium/standalone-chrome-debug
-#             tag: 3.141.59
-#           ports:
-#             - name: http
-#               containerPort: 4444
-#           env:
-#             TZ: Europe/Paris
-#           restartPolicy: Always
-#           probes:
-#             liveness:
-#               enabled: true
-#               custom: true
-#               spec:
-#                 httpGet:
-#                   port: http
-#                   path: /active?token=local
-#             readiness:
-#               enabled: true
-#               custom: true
-#               spec:
-#                 httpGet:
-#                   port: http
-#                   path: /active?token=local
 
-#   persistence:
-#     shm:
-#       enabled: true
-#       type: emptyDir
-#       medium: Memory
-#       advancedMounts:
-#         chrome:
-#           chrome:
-#             - path: /dev/shm
+app-template:
+  global:
+    fullnameOverride: sockpuppet-chrome
+  controllers:
+    sockpuppet-chrome:
+      containers:
+        sockpuppet-chrome:
+          image:
+            repository: dgtlmoon/sockpuppetbrowser
+            tag: latest
+          ports:
+            - name: ws
+              containerPort: 3000
+          env:
+            TZ: Europe/Paris
+            SCREEN_WIDTH: 1920
+            SCREEN_HEIGHT: 1024
+            SCREEN_DEPTH: 16
+            MAX_CONCURRENT_CHROME_PROCESSES: 10
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - python3 /usr/src/app/docker-health-check.py --host http://localhost
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - python3 /usr/src/app/docker-health-check.py --host http://localhost
+
+  service:
+    sockpuppet-chrome:
+      controller: sockpuppet-chrome
+      ports:
+        ws:
+          port: 3000
