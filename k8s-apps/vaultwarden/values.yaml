@@ -102,15 +102,13 @@ vaultwarden:
 
   ## @param podSecurityContext Pod security options
   ##
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
     # fsGroup: 1001
     # supplementalGroups:
     #   - 1001
 
   ## @param securityContext Default security options to run vault as read only container without privilege escalation
-  securityContext:
-    {}
+  securityContext: {}
     # allowPrivilegeEscalation: false
     # privileged: false
     # readOnlyRootFilesystem: true
@@ -196,8 +194,7 @@ vaultwarden:
 
   ## @param resources Resource configurations
   ##
-  resources:
-    {}
+  resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -284,7 +281,7 @@ vaultwarden:
     uriOverride: ""
     ## @param database.existingSecret Name of an existing secret containing the database URI
     ##
-    existingSecret: "vaultwarden-cnpg-cluster-pg17-app"
+    existingSecret: "vaultwarden-cnpg-cluster-app"
     ## @param database.existingSecretKey Key in the existing secret
     ##
     existingSecretKey: "uri"
@@ -303,8 +300,7 @@ vaultwarden:
   ## Refer to https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification for details
   ##
   # TODO: Uncomment and configure the following block
-  pushNotifications:
-    {}
+  pushNotifications: {}
     # installationId: ""
     # installationKey: ""
     # relayUri: "https://push.bitwarden.com"
@@ -713,3 +709,49 @@ cnpg-cluster-pg17:
     postgresql: {}
     initdb:
       database: vaultwarden
+
+cnpg-cluster:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "17"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 10Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: vaultwarden
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["vaultwarden"]
+      schemaOnly: false
+      source:
+        host: vaultwarden-cnpg-cluster-pg17-rw
+        username: vaultwarden
+        database: vaultwarden
+        passwordSecret:
+          name: vaultwarden-cnpg-cluster-pg17-app
+          key: password
+        sslKeySecret:
+          name: vaultwarden-cnpg-cluster-pg17-replication
+          key: tls.key
+        sslCertSecret:
+          name: vaultwarden-cnpg-cluster-pg17-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: vaultwarden-cnpg-cluster-pg17-ca
+          key: ca.crt

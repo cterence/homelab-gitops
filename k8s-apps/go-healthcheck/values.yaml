@@ -47,7 +47,7 @@ cnpgClusters:
     namespace: paperless-ngx
   - name: pocket-id-cnpg-cluster
     namespace: pocket-id
-  - name: vaultwarden-cnpg-cluster-pg17
+  - name: vaultwarden-cnpg-cluster
     namespace: vaultwarden
 
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-3.7.3/charts/library/common/values.schema.json
