@@ -276,8 +276,8 @@ app-template:
       containers:
         lidarr:
           image:
-            repository: blampe/lidarr
-            tag: latest@sha256:14f4d54e808571cef6ffe6217be17f906972ea6d9ee3d92ac53fc212e9178124
+            repository: lscr.io/linuxserver/lidarr
+            tag: 2.14.5.4836-ls6@sha256:5661b79d7245ec0c196a5a35ac13be44c6d76563d9e5bf855b3ffa3b91160999
           env:
             TZ: Europe/Paris
             PUID: 1000
@@ -392,7 +392,7 @@ app-template:
         configarr:
           image:
             repository: configarr/configarr
-            tag: 1.17.0@sha256:4172697d8685e0218ac88315250425fcd23efcd1bb2fb96903138aeef11b71a5
+            tag: 1.16.0@sha256:a91b105afdd8b1abeb8ceb98bdf9ebff3829b02f18b95f740a57cd92de5b2a00
           env:
             TZ: Europe/Paris
 
@@ -409,7 +409,7 @@ app-template:
         flaresolverr:
           image:
             repository: ghcr.io/flaresolverr/flaresolverr
-            tag: v3.4.2@sha256:42ffb1cc56088899e91a7382bc611b00fa7cbd016accfed12c0695275ca18451
+            tag: v3.4.1@sha256:5379a9209c86870558d77c8cdf7efdf300aecf0447617a05dc77e0491d53f34c
           env:
             TZ: Europe/Paris
           ports:
