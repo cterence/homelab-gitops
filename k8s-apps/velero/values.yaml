@@ -639,8 +639,10 @@ velero:
       template:
         storageLocation: v2
         includedNamespaces:
+          - anki-sync-server
           - arr-stack
           - calibre-web
+          - changedetection
           - home-assistant
           - immich
           - nextcloud
