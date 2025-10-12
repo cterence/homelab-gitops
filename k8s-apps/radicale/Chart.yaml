@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: radicale
     repository: oci://tccr.io/truecharts
-    version: 8.8.0
+    version: 8.9.0
