@@ -638,7 +638,7 @@ nextcloud:
 
     image:
       repository: xperimental/nextcloud-exporter
-      tag: 0.8.0@sha256:a4163ed0041217dde749d398b98a8ec9961b493714f6042e03223dca1bdb68af
+      tag: 0.9.0@sha256:166e0c92954033f4eee06bac7e3487aeb0f8a2e51b7d4414a855b108cc7b0cf8
       pullPolicy: IfNotPresent
       # pullSecrets:
       #   - myRegistrKeySecretName
