@@ -399,7 +399,7 @@ app-template:
     rangemusique:
       type: cronjob
       cronjob:
-        schedule: "*/5 * * * *"
+        schedule: "4/5 * * * *"
         successfulJobsHistory: 1
         failedJobsHistory: 1
       containers:
@@ -411,6 +411,8 @@ app-template:
             TZ: Europe/Paris
             INPUT_DIR: /in
             OUTPUT_DIR: /out
+          command: /bin/bash
+          args: ["/run-rangemusique.sh"]
 
     flaresolverr:
       type: deployment
@@ -1319,6 +1321,16 @@ app-template:
             - path: /run-soularr.sh
               subPath: run-soularr.sh
 
+    rangemusique-script:
+      type: configMap
+      identifier: rangemusique-script
+      defaultMode: 0664
+      advancedMounts:
+        rangemusique:
+          rangemusique:
+            - path: /run-rangemusique.sh
+              subPath: run-rangemusique.sh
+
     # huntarr-config:
     #   type: persistentVolumeClaim
     #   accessMode: ReadWriteOnce
@@ -1406,6 +1418,19 @@ app-template:
           echo "soularr done"
           rm /data/.soularr.lock
           echo "removed lockfile at /data/.soularr.lock"
+
+    rangemusique-script:
+      data:
+        run-rangemusique.sh: |
+          #!/bin/bash
+
+          FILE=/out/.soularr.lock
+          if [ -f $FILE ]; then
+            echo "soularr lockfile detected, not running rangemusique"
+          else
+            echo "soularr lockfile not detected, running rangemusique"
+            /app/main
+          fi
 
 cnpg-cluster-jellystat:
   type: postgresql
