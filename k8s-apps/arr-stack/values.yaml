@@ -683,8 +683,8 @@ app-template:
             tag: latest@sha256:71a0b9e5a522d76bb0ffdb6d720d681fde22417b3a5acc9ecae61c89d05d8afc
           env:
             TZ: Europe/Paris
-          command: python
-          args: ["-u", "/app/soularr.py", "--no-lock-file", "false"]
+          command: /bin/bash
+          args: ["/run-soularr.sh"]
 
     huntarr:
       enabled: false
@@ -1309,6 +1309,16 @@ app-template:
             - path: /data/config.ini
               subPath: config.ini
 
+    soularr-script:
+      type: configMap
+      identifier: soularr-script
+      defaultMode: 0664
+      advancedMounts:
+        soularr:
+          soularr:
+            - path: /run-soularr.sh
+              subPath: run-soularr.sh
+
     # huntarr-config:
     #   type: persistentVolumeClaim
     #   accessMode: ReadWriteOnce
@@ -1385,6 +1395,17 @@ app-template:
               modify: true
               share: true
               realtime: true
+
+    soularr-script:
+      data:
+        run-soularr.sh: |
+          #!/bin/bash
+          touch /data/.soularr.lock
+          echo "created lockfile at /data/.soularr.lock"
+          python -u /app/soularr.py
+          echo "soularr done"
+          rm /data/.soularr.lock
+          echo "removed lockfile at /data/.soularr.lock"
 
 cnpg-cluster-jellystat:
   type: postgresql
