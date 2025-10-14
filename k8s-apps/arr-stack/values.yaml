@@ -396,6 +396,22 @@ app-template:
           env:
             TZ: Europe/Paris
 
+    rangemusique:
+      type: cronjob
+      cronjob:
+        schedule: "*/5 * * * *"
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+      containers:
+        rangemusique:
+          image:
+            repository: ghcr.io/cterence/rangemusique
+            tag: latest@sha256:2e85ce77100b08970f62ceb8687d7108c20e4640c0c8da5c934b992a710d78e0
+          env:
+            TZ: Europe/Paris
+            INPUT_DIR: /in
+            OUTPUT_DIR: /out
+
     flaresolverr:
       type: deployment
       strategy: RollingUpdate
@@ -1066,6 +1082,10 @@ app-template:
           soularr:
             - path: /downloads
               subPath: download/slskd/complete
+        rangemusique:
+          rangemusique:
+            - path: /in
+              subPath: download/slskd/complete
 
     music:
       enabled: true
@@ -1088,6 +1108,9 @@ app-template:
         soularr:
           soularr:
             - path: /data
+        rangemusique:
+          rangemusique:
+            - path: /out
 
     jellyfin-config:
       enabled: true
