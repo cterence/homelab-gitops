@@ -684,7 +684,7 @@ app-template:
           env:
             TZ: Europe/Paris
           command: python
-          args: ["-u", "/app/soularr.py"]
+          args: ["-u", "/app/soularr.py", "--no-lock-file", "false"]
 
     huntarr:
       enabled: false
