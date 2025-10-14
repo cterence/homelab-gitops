@@ -4,32 +4,6 @@
 
 # These entries are shared between all the Immich components
 immich:
-  env:
-    REDIS_HOSTNAME: '{{ printf "%s-redis-master" .Release.Name }}'
-    DB_HOSTNAME:
-      valueFrom:
-        secretKeyRef:
-          name: immich-cnpg-cluster-vectorchord-app
-          key: host
-    DB_USERNAME:
-      valueFrom:
-        secretKeyRef:
-          name: immich-cnpg-cluster-vectorchord-app
-          key: username
-    DB_DATABASE_NAME:
-      valueFrom:
-        secretKeyRef:
-          name: immich-cnpg-cluster-vectorchord-app
-          key: dbname
-    # -- You should provide your own secret outside of this helm-chart and use `postgresql.global.postgresql.auth.existingSecret` to provide credentials to the postgresql instance
-    DB_PASSWORD:
-      valueFrom:
-        secretKeyRef:
-          name: immich-cnpg-cluster-vectorchord-app
-          key: password
-    IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
-    IMMICH_LOG_LEVEL: log
-    IMMICH_CONFIG_FILE: /templated-config/immich-config.yaml
   immich:
     metrics:
       # Enabling this will create the service monitors needed to monitor immich with the prometheus operator
@@ -78,83 +52,82 @@ immich:
         storageLabelClaim: preferred_username
         storageQuotaClaim: immich_quota
 
-  # Dependencies
-
-  postgresql:
-    enabled: false
-    image:
-      repository: tensorchord/pgvecto-rs
-      tag: pg14-v0.2.0@sha256:739cdd626151ff1f796dc95a6591b55a714f341c737e27f045019ceabf8e8c52
-    global:
-      postgresql:
-        auth:
-          username: immich
-          database: immich
-          existingSecret: immich-postgres-user-password
-          secretKeys:
-            userPasswordKey: "DB_PASSWORD"
-            adminPasswordKey: "ADMIN_PASSWORD"
-            replicationPasswordKey: "REPLICATION_PASSWORD"
-    primary:
-      initdb:
-        scripts:
-          create-extensions.sql: |
-            CREATE EXTENSION cube;
-            CREATE EXTENSION earthdistance;
-            CREATE EXTENSION vectors;
-      containerSecurityContext:
-        enabled: false
-        runAsUser: 0
-        runAsGroup: 0
-        runAsNonRoot: false
-      podSecurityContext:
-        enabled: false
-      persistence:
-        enabled: true
-        # existingClaim: immich-postgresql-data
-
-  redis:
+  valkey:
     enabled: true
-    architecture: standalone
-    auth:
-      enabled: false
-      usePasswordFiles: false
-    master:
-      resourcesPreset: micro
-      persistence:
-        labels:
-          velero.io/exclude-from-backup: "true"
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: docker.io/valkey/valkey
+              tag: 8.1-alpine@sha256:e706d1213aaba6896c162bb6a3a9e1894e1a435f28f8f856d14fab2e10aa098b
+              pullPolicy: IfNotPresent
+    persistence:
+      data:
+        enabled: true
+        size: 1Gi
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
 
   # Immich components
-
   server:
     enabled: true
-    controller:
-      strategy: Recreate
-    image:
-      repository: ghcr.io/immich-app/immich-server
-      pullPolicy: IfNotPresent
-      tag: v2.0.1@sha256:8286638680f0a38a7cb380be64ed77d1d1cfe6d0e0b843f64bff92b24289078d
-    securityContext:
-      privileged: true
-    initContainers:
-      envsubst:
-        image: bhgedigital/envsubst:latest@sha256:36a92e9344ef965e9318c8d2f70dd35cad654a4615b889c6a4dd483ca1ddec7c
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            envsubst < /config/immich-config.yaml > /templated-config/immich-config.yaml
-        env:
-          POCKET_ID_CLIENT_SECRET:
-            valueFrom:
-              secretKeyRef:
-                name: immich-pocket-id-client-secret
-                key: client-secret
-        volumeMounts:
-          - name: config
-            mountPath: /config
-          - name: templated-config
-            mountPath: /templated-config
+    IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
+    IMMICH_LOG_LEVEL: log
+    IMMICH_CONFIG_FILE: /templated-config/immich-config.yaml
+    controllers:
+      main:
+        strategy: Recreate
+        containers:
+          main:
+            env:
+              DB_HOSTNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-cnpg-cluster-vectorchord-app
+                    key: host
+              DB_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-cnpg-cluster-vectorchord-app
+                    key: username
+              DB_DATABASE_NAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-cnpg-cluster-vectorchord-app
+                    key: dbname
+              # -- You should provide your own secret outside of this helm-chart and use `postgresql.global.postgresql.auth.existingSecret` to provide credentials to the postgresql instance
+              DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-cnpg-cluster-vectorchord-app
+                    key: password
+            image:
+              repository: ghcr.io/immich-app/immich-server
+              pullPolicy: IfNotPresent
+              tag: v2.0.1@sha256:8286638680f0a38a7cb380be64ed77d1d1cfe6d0e0b843f64bff92b24289078d
+            securityContext:
+              privileged: true
+        initContainers:
+          envsubst:
+            image:
+              repository: bhgedigital/envsubst
+              tag: latest@sha256:36a92e9344ef965e9318c8d2f70dd35cad654a4615b889c6a4dd483ca1ddec7c
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                envsubst < /config/immich-config.yaml > /templated-config/immich-config.yaml
+            env:
+              POCKET_ID_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-pocket-id-client-secret
+                    key: client-secret
+            volumeMounts:
+              - name: config
+                mountPath: /config
+              - name: templated-config
+                mountPath: /templated-config
     ingress:
       main:
         enabled: true
@@ -170,7 +143,7 @@ immich:
           gethomepage.dev/group: "Media"
           gethomepage.dev/icon: "immich"
           nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-        ingressClassName: nginx
+        className: nginx
         hosts:
           - host: immich.terence.cloud
             paths:
@@ -191,20 +164,23 @@ immich:
         hostPathType: "CharDevice"
   machine-learning:
     enabled: true
-    controller:
-      strategy: Recreate
-    image:
-      repository: ghcr.io/immich-app/immich-machine-learning
-      pullPolicy: IfNotPresent
-      tag: v2.0.1@sha256:45626a33361ef7ed361de41b0d2dc19e5949442cdf0a8eb64b157dc8a04e9855
-    env:
-      TRANSFORMERS_CACHE: /cache
+    controllers:
+      main:
+        strategy: Recreate
+        containers:
+          main:
+            env:
+              TRANSFORMERS_CACHE: /cache
+            image:
+              repository: ghcr.io/immich-app/immich-machine-learning
+              pullPolicy: IfNotPresent
+              tag: v2.0.1@sha256:45626a33361ef7ed361de41b0d2dc19e5949442cdf0a8eb64b157dc8a04e9855
     persistence:
       cache:
         enabled: true
         size: 10Gi
         # Optional: Set this to pvc to avoid downloading the ML models every start.
-        type: pvc
+        type: persistentVolumeClaim
         accessMode: ReadWriteOnce
         # storageClass: your-class
         labels:
