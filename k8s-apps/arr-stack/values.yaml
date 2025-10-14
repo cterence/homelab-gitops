@@ -406,7 +406,7 @@ app-template:
         rangemusique:
           image:
             repository: ghcr.io/cterence/rangemusique
-            tag: latest@sha256:2e85ce77100b08970f62ceb8687d7108c20e4640c0c8da5c934b992a710d78e0
+            tag: latest@sha256:14051462a3d950c594ed7d445791754f5dfbb8a0d4392f010d793aa9954a3d6c
           env:
             TZ: Europe/Paris
             INPUT_DIR: /in
