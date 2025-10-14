@@ -1447,6 +1447,19 @@ app-template:
             /app/main
           fi
 
+    rangemusique-script:
+      data:
+        run-rangemusique.sh: |
+          #!/bin/bash
+
+          FILE=/out/.soularr.lock
+          if [ -f $FILE ]; then
+            echo "soularr lockfile detected, not running rangemusique"
+          else
+            echo "soularr lockfile not detected, running rangemusique"
+            /app/main
+          fi
+
 cnpg-cluster-jellystat:
   type: postgresql
   mode: standalone
