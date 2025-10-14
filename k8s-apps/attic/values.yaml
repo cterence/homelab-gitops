@@ -65,7 +65,7 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      size: 30Gi
+      size: 50Gi
       globalMounts:
         - path: /attic
     config:
