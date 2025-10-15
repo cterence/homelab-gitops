@@ -4,5 +4,3 @@ metadata:
   name: selfsigned
 spec:
   selfSigned: {}
-  ca:
-    secretName: selfsigned
