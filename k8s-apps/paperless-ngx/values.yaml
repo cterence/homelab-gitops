@@ -11,7 +11,7 @@ app-template:
         PAPERLESS_OCR_LANGUAGE: fra+eng
         PAPERLESS_TASK_WORKERS: "2"
         PAPERLESS_THREADS_PER_WORKER: "4"
-        PAPERLESS_REDIS: redis://{{ .Release.Name }}-redis-master
+        PAPERLESS_REDIS: redis://{{ .Release.Name }}-valkey
         PAPERLESS_LOGOUT_REDIRECT_URL: "https://{{ (first .Values.ingress.main.hosts).host }}/oauth2/sign_out"
         # Paperless keeps the original file
         PAPERLESS_OCR_USER_ARGS: '{"invalidate_digital_signatures": true}'
@@ -180,21 +180,12 @@ app-template:
       accessMode: ReadWriteOnce
       size: 4Gi
 
-redis:
-  enabled: true
-  auth:
-    enabled: false
-    usePasswordFiles: false
-    username: ""
-  master:
-    persistence:
-      enabled: true
-      labels:
-        velero.io/exclude-from-backup: "true"
-  replica:
-    replicaCount: 0
-    pdb:
-      create: false
+valkey:
+  dataStorage:
+    enabled: true
+    requestedSize: "1Gi"
+    labels:
+      velero.io/exclude-from-backup: "true"
 
 cnpg-cluster:
   type: postgresql
