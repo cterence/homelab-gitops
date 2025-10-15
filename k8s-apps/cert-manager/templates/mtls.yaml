@@ -21,3 +21,20 @@ metadata:
 spec:
   ca:
     secretName: mtls-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mtls-client
+spec:
+  secretName: mtls-client
+  duration: 8760h
+  renewBefore: 720h
+  commonName: mtls-client
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: mtls-ca
+    kind: ClusterIssuer
