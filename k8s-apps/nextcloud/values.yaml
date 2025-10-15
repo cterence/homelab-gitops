@@ -702,3 +702,5 @@ valkey:
   dataStorage:
     enabled: true
     requestedSize: "1Gi"
+    labels:
+      velero.io/exclude-from-backup: "true"
