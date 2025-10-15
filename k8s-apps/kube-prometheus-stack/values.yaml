@@ -57,7 +57,7 @@ kube-prometheus-stack:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "monitoring/mtls-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       hosts:
         - prometheus.terence.cloud
@@ -286,7 +286,7 @@ kube-prometheus-stack:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "monitoring/mtls-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       hosts:
         - alertmanager.terence.cloud
