@@ -10,7 +10,7 @@ app-template:
         api:
           image:
             repository: ghcr.io/cterence/chatterbox-tts-api
-            tag: latest
+            tag: latest@sha256:9693bea33f65811a372d0ebc915f67876dda291903baecc50a04c02924aff332
           env:
             TZ: Europe/Paris
             # API Configuration
@@ -61,7 +61,7 @@ app-template:
         frontend:
           image:
             repository: ghcr.io/cterence/chatterbox-tts-frontend
-            tag: latest
+            tag: latest@sha256:64a16521e01f0300823825f532a626cf4e581cc39c0bd895df542c7a37eb1de3
           env:
             TZ: Europe/Paris
           ports:
