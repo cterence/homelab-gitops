@@ -37,6 +37,9 @@ spec:
           name: homelab
           version: 1.0
           timeout: 5
+          httpClientCertPath: /etc/ssl/private/tls.crt
+          httpClientKeyPath: /etc/ssl/private/tls.key
+          httpStatusCodeErrorThreshold: 400
           targets:
             http:
               {{- range .Values.urls }}

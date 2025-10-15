@@ -129,3 +129,15 @@ app-template:
             - path: /app/config.yaml
               readOnly: true
               subPath: config.yaml
+    mtls-client:
+      type: secret
+      name: mtls-client
+      advancedMounts:
+        main:
+          main:
+            - path: /etc/ssl/private/tls.crt
+              readOnly: true
+              subPath: tls.crt
+            - path: /etc/ssl/private/tls.key
+              readOnly: true
+              subPath: tls.key
