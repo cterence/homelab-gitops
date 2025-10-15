@@ -55,9 +55,9 @@ app-template:
       enabled: true
       className: "nginx"
       annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"

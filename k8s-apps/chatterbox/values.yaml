@@ -1,0 +1,152 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  controllers:
+    main:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        api:
+          image:
+            repository: ghcr.io/cterence/chatterbox-tts-api
+            tag: latest
+          env:
+            TZ: Europe/Paris
+            # API Configuration
+            PORT: 4123
+            HOST: 0.0.0.0
+            # TTS Model Settings
+            EXAGGERATION: 0.5
+            CFG_WEIGHT: 0.5
+            TEMPERATURE: 0.8
+            # Text Processing
+            MAX_CHUNK_LENGTH: 280
+            MAX_TOTAL_LENGTH: 3000
+            # Long Text TTS Settings
+            LONG_TEXT_DATA_DIR: /data/long_text_jobs
+            LONG_TEXT_MAX_LENGTH: 100000
+            LONG_TEXT_CHUNK_SIZE: 2500
+            LONG_TEXT_SILENCE_PADDING_MS: 200
+            LONG_TEXT_JOB_RETENTION_DAYS: 7
+            LONG_TEXT_MAX_CONCURRENT_JOBS: 3
+            # Voice and Model Settings
+            VOICE_SAMPLE_PATH: /app/voice-sample.mp3
+            DEVICE: auto
+            MODEL_CACHE_DIR: /cache
+            VOICE_LIBRARY_DIR: /voices
+            # Memory Settings
+            MEMORY_CLEANUP_INTERVAL: 5
+            CUDA_CACHE_CLEAR_INTERVAL: 3
+            ENABLE_MEMORY_MONITORING: true
+          ports:
+            - name: api
+              containerPort: 4123
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: api
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: api
+                  path: /health
+
+        frontend:
+          image:
+            repository: ghcr.io/cterence/chatterbox-tts-frontend
+            tag: latest
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: frontend
+              containerPort: 80
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: frontend
+                  path: /frontend-health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: frontend
+                  path: /frontend-health
+  service:
+    api:
+      controller: main
+      type: ClusterIP
+      ports:
+        api:
+          port: 4123
+
+    frontend:
+      controller: main
+      type: ClusterIP
+      ports:
+        frontend:
+          port: 80
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
+      className: "nginx"
+      hosts:
+        - host: &host tts.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: frontend
+                port: frontend
+      tls:
+        - secretName: tts-tls
+          hosts:
+            - *host
+
+  persistence:
+    cache:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      advancedMounts:
+        main:
+          api:
+            - path: /cache
+
+    voices:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      advancedMounts:
+        main:
+          api:
+            - path: /voices
+
+    long-text-jobs:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      advancedMounts:
+        main:
+          api:
+            - path: /data/long_text_jobs

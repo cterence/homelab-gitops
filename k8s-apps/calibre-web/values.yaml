@@ -179,16 +179,18 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/proxy-body-size: 100m
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Calibre"
         gethomepage.dev/description: "A book library manager."
         gethomepage.dev/group: "Media"
         gethomepage.dev/icon: "calibre"
-        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
       className: "nginx"
       hosts:
         - host: &host1 calibre.terence.cloud
@@ -206,9 +208,11 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host2 calibredl.terence.cloud

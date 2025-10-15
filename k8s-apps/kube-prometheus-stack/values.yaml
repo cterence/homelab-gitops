@@ -42,8 +42,7 @@ kube-prometheus-stack:
               requests:
                 storage: 10Gi
 
-      thanos:
-        {}
+      thanos: {}
         # objectStorageConfig:
         #   key: objstore.yml
         #   name: thanos-objstore-secret
@@ -55,8 +54,11 @@ kube-prometheus-stack:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       hosts:
         - prometheus.terence.cloud
       tls:
@@ -148,8 +150,7 @@ kube-prometheus-stack:
         longhorn:
           gnetId: 16888
           datasource: Prometheus
-      extra:
-        {}
+      extra: {}
         # pihole-overview:
         #   gnetId: 10176
         #   datasource: Prometheus
@@ -282,8 +283,11 @@ kube-prometheus-stack:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       hosts:
         - alertmanager.terence.cloud
       paths:

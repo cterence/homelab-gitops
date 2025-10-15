@@ -42,8 +42,11 @@ longhorn:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
-      nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-      nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+      external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+      nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+      nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
   metrics:
     serviceMonitor:
       enabled: true

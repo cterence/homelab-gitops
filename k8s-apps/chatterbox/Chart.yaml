@@ -1,0 +1,9 @@
+apiVersion: v2
+name: chatterbox
+description: Local, OpenAI-compatible text-to-speech (TTS) API using Chatterbox, enabling users to generate voice cloned speech anywhere the OpenAI API is used (e.g. Open WebUI, AnythingLLM, etc.)
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 4.3.0
