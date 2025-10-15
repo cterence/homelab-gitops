@@ -850,8 +850,13 @@ app-template:
 
     jellystat:
       annotations:
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host jstat.terence.cloud
@@ -870,8 +875,13 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        # nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        # nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host son.terence.cloud
@@ -890,8 +900,13 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        # nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        # nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host rad.terence.cloud
@@ -910,8 +925,13 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        # nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        # nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host lid.terence.cloud
@@ -930,8 +950,13 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
-        nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        # nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+        # nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host prow.terence.cloud
@@ -948,8 +973,13 @@ app-template:
 
     bazarr:
       annotations:
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host baz.terence.cloud
@@ -966,8 +996,13 @@ app-template:
 
     qbittorrent:
       annotations:
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "nginx"
       hosts:
         - host: &host qb.terence.cloud
