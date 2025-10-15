@@ -50,6 +50,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [calibre-web](./scripts/../k8s-apps/calibre-web) | Web app for browsing, reading and downloading eBooks stored in a Calibre database | ✅ |
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes | ✅ |
 | [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts | ✅ |
+| [chatterbox](./scripts/../k8s-apps/chatterbox) | Local, OpenAI-compatible text-to-speech (TTS) API using Chatterbox, enabling users to generate voice cloned speech anywhere the OpenAI API is used (e.g. Open WebUI, AnythingLLM, etc.) | ❌ |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance | ✅ |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter | ✅ |
 | [crowdsec](./scripts/../k8s-apps/crowdsec) | Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI | ✅ |
@@ -59,7 +60,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
 | [headscale](./scripts/../k8s-apps/headscale) | An open source, self-hosted implementation of the Tailscale control server | ❌ |
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
-| [homepage](./scripts/../k8s-apps/homepage) | A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations | ✅ |
+| [homepage](./scripts/../k8s-apps/homepage) | A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations | ❌ |
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution | ✅ |
 | [ingress-nginx](./scripts/../k8s-apps/ingress-nginx) | Ingress-NGINX Controller for Kubernetes | ✅ |
