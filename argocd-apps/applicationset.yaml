@@ -27,7 +27,6 @@ spec:
             serverSideApply: true
           - name: go-healthcheck
           - name: home-assistant
-          - name: homepage
           - name: httpbin
           - name: immich
           - name: it-tools
