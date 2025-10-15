@@ -59,7 +59,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-client"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       hosts:
         - host: httpbin.terence.cloud
