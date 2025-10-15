@@ -190,7 +190,6 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "calibre-web/mtls-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-        nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
       className: "nginx"
       hosts:
         - host: &host1 calibre.terence.cloud
