@@ -651,6 +651,10 @@ vaultwarden:
       gethomepage.dev/group: "Security"
       gethomepage.dev/icon: "vaultwarden"
       nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
+      external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+      nginx.ingress.kubernetes.io/auth-tls-secret: "vaultwarden/mtls-ca"
+      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
     ## @param ingress.labels Additional labels for the ingress resource.
     ##
     labels: {}
