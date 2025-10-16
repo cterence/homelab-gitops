@@ -5,8 +5,10 @@ metadata:
 spec:
   dataFrom:
     - extract:
+        conversionStrategy: Default
         key: client-auth-ca
         decodingStrategy: Auto
+        metadataPolicy: None
   refreshInterval: 1h0m0s
   secretStoreRef:
     kind: ClusterSecretStore
