@@ -31,11 +31,13 @@ argo-cd:
         enabled: true
 
   redis:
+    image:
+      repository: docker.io/valkey/valkey
+      tag: 9.0-alpine@sha256:73f3aa08d95879525aa0dc84ebf6b82b59b898a24e8067a37d6250c31ee2c4d4
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
-
   repoServer:
     useEphemeralHelmWorkingDir: false
     logLevel: warn
@@ -57,7 +59,7 @@ argo-cd:
             helm plugin install https://github.com/hypnoglow/helm-s3;
         env:
           - name: HELM_PLUGINS
-            value: /home/argocd/cmp-server/plugins
+            value: /home/argocd/cmp-server/pluginsc
         volumeMounts:
           - mountPath: /home/argocd/cmp-server/plugins
             name: plugins
