@@ -31,6 +31,7 @@ argo-cd:
         enabled: true
 
   redis:
+    name: valkey
     image:
       repository: docker.io/valkey/valkey
       tag: 9.0-alpine@sha256:73f3aa08d95879525aa0dc84ebf6b82b59b898a24e8067a37d6250c31ee2c4d4
