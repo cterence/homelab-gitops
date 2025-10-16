@@ -36,7 +36,7 @@ changedetection-io:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "changedetection/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "changedetection/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       ingressClassName: nginx
       hosts:

@@ -60,7 +60,7 @@ app-template:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/mtls-ca"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
         nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
       hosts:

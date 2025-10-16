@@ -39,6 +39,10 @@ spec:
     name: mtls-ca
     kind: ClusterIssuer
 ---
+# kubectl get secret mtls-client -n cert-manager -o jsonpath='{.data.tls\.crt}' | base64 -d > client.crt
+# kubectl get secret mtls-client -n cert-manager -o jsonpath='{.data.tls\.key}' | base64 -d > client.key
+# openssl pkcs12 -export -out client.p12 -inkey client.key -in client.crt
+# cat client.crt client.key > client.pem
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

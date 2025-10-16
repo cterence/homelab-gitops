@@ -1,14 +1,12 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: mtls-ca
+  name: client-auth-ca
 spec:
   dataFrom:
     - extract:
-        conversionStrategy: Default
-        key: mtls-ca
+        key: client-auth-ca
         decodingStrategy: Auto
-        metadataPolicy: None
   refreshInterval: 1h0m0s
   secretStoreRef:
     kind: ClusterSecretStore
@@ -16,4 +14,4 @@ spec:
   target:
     creationPolicy: Owner
     deletionPolicy: Retain
-    name: mtls-ca
+    name: client-auth-ca
