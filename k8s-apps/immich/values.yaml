@@ -137,11 +137,6 @@ immich:
           external-dns.alpha.kubernetes.io/target: home.terence.cloud
           external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
           cert-manager.io/cluster-issuer: letsencrypt
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: "Immich"
-          gethomepage.dev/description: "Photo library management."
-          gethomepage.dev/group: "Media"
-          gethomepage.dev/icon: "immich"
           nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         className: nginx
         hosts:

@@ -45,11 +45,12 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        gethomepage.dev/enabled: "true"
-        gethomepage.dev/name: _app_
-        gethomepage.dev/description: _description_
-        gethomepage.dev/group: _group_
-        gethomepage.dev/icon: _icon_
+        # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        # nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        # nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        # nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/client-auth-ca"
+        # nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        # nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
         # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
         # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User

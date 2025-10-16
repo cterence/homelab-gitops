@@ -52,11 +52,6 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        gethomepage.dev/enabled: "true"
-        gethomepage.dev/name: it-tools
-        gethomepage.dev/description: Collection of handy online tools for developers
-        gethomepage.dev/group: Tooling
-        gethomepage.dev/icon: it-tools
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       className: "nginx"
       hosts:
