@@ -1,11 +1,11 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: client-auth-ca
+  name: client-auth-cert
 spec:
   dataFrom:
     - extract:
-        key: client-auth-ca
+        key: client-auth
         decodingStrategy: Auto
   refreshInterval: 1h0m0s
   secretStoreRef:
@@ -14,4 +14,4 @@ spec:
   target:
     creationPolicy: Owner
     deletionPolicy: Retain
-    name: client-auth-ca
+    name: client-auth-cert

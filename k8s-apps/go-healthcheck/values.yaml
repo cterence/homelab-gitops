@@ -129,9 +129,9 @@ app-template:
             - path: /app/config.yaml
               readOnly: true
               subPath: config.yaml
-    mtls-client:
+    client-auth-cert:
       type: secret
-      name: mtls-client
+      name: client-auth-cert
       advancedMounts:
         main:
           main:
