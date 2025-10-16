@@ -61,7 +61,7 @@
       registryUrls: ["https://git.deuxfleurs.fr/Deuxfleurs/garage/raw/branch/main/script/helm/garage/Chart.yaml"],
     },
     {
-      "matchPackageNames": ["/longhorn/"],
+      "matchPackageNames": ["/longhorn/", "/crocodilestick\\/calibre-web-automated/"],
       "enabled": false
     },
     // apps on 0ver but allowed to automerge

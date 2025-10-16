@@ -20,37 +20,42 @@ app-template:
         main:
           image:
             repository: crocodilestick/calibre-web-automated
-            tag: V3.1.4@sha256:577e846f104fd21453ef306eefb4a95dd95b3b9ddd2463a150944494284da0fd
+            tag: V3.1.4
           env:
             TZ: Europe/Paris
-            # DOCKER_MODS: "lscr.io/linuxserver/mods:universal-calibre"
+            DOCKER_MODS: "lscr.io/linuxserver/mods:universal-calibre"
             LOG_LEVEL: DEBUG
+            PUID: "911"
+            PGID: "911"
           ports:
             - name: http
               containerPort: 8083
-          # probes:
-          #   liveness:
-          #     enabled: true
-          #     custom: true
-          #     spec:
-          #       httpGet:
-          #         port: http
-          #         path: /health
-          #   readiness:
-          #     enabled: true
-          #     custom: true
-          #     spec:
-          #       httpGet:
-          #         port: http
-          #         path: /health
-          #   startup:
-          #     enabled: true
-          #     custom: true
-          #     spec:
-          #       httpGet:
-          #         port: http
-          #         path: /health
-          #       failureThreshold: 15
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+                  # path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+                  # path: /health
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+                  # path: /health
+                failureThreshold: 15
     book-downloader:
       type: deployment
       annotations:
