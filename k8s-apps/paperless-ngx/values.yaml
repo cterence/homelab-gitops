@@ -125,18 +125,13 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/proxy-body-size: 100m
-        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        # nginx.ingress.kubernetes.io/configuration-snippet: |
-        #   auth_request_set $auth_header $upstream_http_x_auth_request_user;
-        #   proxy_set_header 'remote-user' $auth_header;
-        gethomepage.dev/enabled: "true"
-        gethomepage.dev/name: "Paperless"
-        gethomepage.dev/description: "A document management system."
-        gethomepage.dev/group: "Media"
-        gethomepage.dev/icon: "paperless-ngx"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "paperless-ngx/client-auth-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
       hosts:
         - host: paperless.terence.cloud
           paths:
