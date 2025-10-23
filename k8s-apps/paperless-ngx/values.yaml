@@ -176,6 +176,7 @@ app-template:
       size: 4Gi
 
 valkey:
+  deploymentStrategy: Recreate
   dataStorage:
     enabled: true
     requestedSize: "1Gi"

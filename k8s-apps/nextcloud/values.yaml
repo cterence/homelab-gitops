@@ -694,6 +694,7 @@ cnpg-cluster:
           key: ca.crt
 
 valkey:
+  deploymentStrategy: Recreate
   dataStorage:
     enabled: true
     requestedSize: "1Gi"
