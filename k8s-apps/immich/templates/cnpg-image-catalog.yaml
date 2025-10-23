@@ -1,8 +1,0 @@
-apiVersion: postgresql.cnpg.io/v1
-kind: ImageCatalog
-metadata:
-  name: cloudnative-pgvectors
-spec:
-  images:
-    - major: 16
-      image: ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.5-v0.3.0
