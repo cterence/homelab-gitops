@@ -185,7 +185,7 @@ cnpg-cluster-vectorchord:
   type: postgresql
   mode: recovery
   version:
-    postgresql: "16"
+    postgresql: "17"
   recovery:
     method: import
     import:
