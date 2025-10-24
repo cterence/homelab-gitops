@@ -1,0 +1,20 @@
+apiVersion: v2
+name: gitea
+description: Self-hosted Git service with a lightweight code hosting solution written in Go
+type: application
+version: 0.1.0
+dependencies:
+  - name: gitea
+    repository: https://dl.gitea.io/charts/
+    version: 12.4.0
+  - name: cluster
+    alias: cnpg-cluster
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.3.1
+  - name: valkey
+    repository: https://valkey.io/valkey-helm/
+    version: 0.7.6
+  - name: app-template
+    alias: gitea-mirror
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 4.4.0

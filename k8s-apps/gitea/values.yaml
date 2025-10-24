@@ -1,0 +1,709 @@
+gitea:
+  # Default values for gitea.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+  ## @section Global
+  #
+  ## @param global.imageRegistry global image registry override
+  ## @param global.imagePullSecrets global image pull secrets override; can be extended by `imagePullSecrets`
+  ## @param global.storageClass global storage class override
+  ## @param global.hostAliases global hostAliases which will be added to the pod's hosts files
+  global:
+    imageRegistry: ""
+    ## E.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    imagePullSecrets: []
+    storageClass: ""
+    hostAliases: []
+    # - ip: 192.168.137.2
+    #   hostnames:
+    #   - example.com
+
+  ## @param namespace An explicit namespace to deploy gitea into. Defaults to the release namespace if not specified
+  namespace: ""
+
+  ## @param replicaCount number of replicas for the deployment
+  replicaCount: 1
+
+  ## @section strategy
+  ## @param strategy.type strategy type
+  ## @param strategy.rollingUpdate.maxSurge maxSurge
+  ## @param strategy.rollingUpdate.maxUnavailable maxUnavailable
+  strategy:
+    type: "Recreate"
+
+  ## @param clusterDomain cluster domain
+  clusterDomain: cluster.local
+
+  ## @section Image
+  ## @param image.registry image registry, e.g. gcr.io,docker.io
+  ## @param image.repository Image to start for this pod
+  ## @param image.tag Visit: [Image tag](https://hub.docker.com/r/gitea/gitea/tags?page: 1&ordering: last_updated). Defaults to `appVersion` within Chart.yaml.
+  ## @param image.digest Image digest. Allows to pin the given image tag. Useful for having control over mutable tags like `latest`
+  ## @param image.pullPolicy Image pull policy
+  ## @param image.rootless Wether or not to pull the rootless version of Gitea, only works on Gitea 1.14.x or higher
+  ## @param image.fullOverride Completely overrides the image registry, path/image, tag and digest. **Adjust `image.rootless` accordingly and review [Rootless defaults](#rootless-defaults).**
+  image:
+    registry: "docker.gitea.com"
+    repository: gitea
+    pullPolicy: IfNotPresent
+    rootless: true
+
+  ## @param imagePullSecrets Secret to use for pulling the image
+  imagePullSecrets: []
+
+  ## @section Security
+  # Security context is only usable with rootless image due to image design
+  ## @param podSecurityContext.fsGroup Set the shared file system group for all containers in the pod.
+  podSecurityContext:
+    fsGroup: 1000
+
+  ## @param containerSecurityContext Security context
+  containerSecurityContext: {}
+  #   allowPrivilegeEscalation: false
+  #   capabilities:
+  #     drop:
+  #       - ALL
+  #   # Add the SYS_CHROOT capability for root and rootless images if you intend to
+  #   # run pods on nodes that use the container runtime cri-o. Otherwise, you will
+  #   # get an error message from the SSH server that it is not possible to read from
+  #   # the repository.
+  #   # https://gitea.com/gitea/helm-gitea/issues/161
+  #     add:
+  #       - SYS_CHROOT
+  #   privileged: false
+  #   readOnlyRootFilesystem: true
+  #   runAsGroup: 1000
+  #   runAsNonRoot: true
+  #   runAsUser: 1000
+
+  ## @deprecated The securityContext variable has been split two:
+  ## - containerSecurityContext
+  ## - podSecurityContext.
+  ## @param securityContext Run init and Gitea containers as a specific securityContext
+  securityContext: {}
+
+  ## @param podDisruptionBudget Pod disruption budget
+  podDisruptionBudget: {}
+  #  maxUnavailable: 1
+  #  minAvailable: 1
+
+  ## @section Service
+  service:
+    ## @param service.http.type Kubernetes service type for web traffic
+    ## @param service.http.port Port number for web traffic
+    ## @param service.http.clusterIP ClusterIP setting for http autosetup for deployment is None
+    ## @param service.http.loadBalancerIP LoadBalancer IP setting
+    ## @param service.http.nodePort NodePort for http service
+    ## @param service.http.externalTrafficPolicy If `service.http.type` is `NodePort` or `LoadBalancer`, set this to `Local` to enable source IP preservation
+    ## @param service.http.externalIPs External IPs for service
+    ## @param service.http.ipFamilyPolicy HTTP service dual-stack policy
+    ## @param service.http.ipFamilies HTTP service dual-stack familiy selection,for dual-stack parameters see official kubernetes [dual-stack concept documentation](https://kubernetes.io/docs/concepts/services-networking/dual-stack/).
+    ## @param service.http.loadBalancerSourceRanges Source range filter for http loadbalancer
+    ## @param service.http.annotations HTTP service annotations
+    ## @param service.http.labels HTTP service additional labels
+    ## @param service.http.loadBalancerClass Loadbalancer class
+    http:
+      type: ClusterIP
+      port: 3000
+      clusterIP: None
+      loadBalancerIP:
+      nodePort:
+      externalTrafficPolicy:
+      externalIPs:
+      ipFamilyPolicy:
+      ipFamilies:
+      loadBalancerSourceRanges: []
+      annotations: {}
+      labels: {}
+      loadBalancerClass:
+    ## @param service.ssh.type Kubernetes service type for ssh traffic
+    ## @param service.ssh.port Port number for ssh traffic
+    ## @param service.ssh.clusterIP ClusterIP setting for ssh autosetup for deployment is None
+    ## @param service.ssh.loadBalancerIP LoadBalancer IP setting
+    ## @param service.ssh.nodePort NodePort for ssh service
+    ## @param service.ssh.externalTrafficPolicy If `service.ssh.type` is `NodePort` or `LoadBalancer`, set this to `Local` to enable source IP preservation
+    ## @param service.ssh.externalIPs External IPs for service
+    ## @param service.ssh.ipFamilyPolicy SSH service dual-stack policy
+    ## @param service.ssh.ipFamilies SSH service dual-stack familiy selection,for dual-stack parameters see official kubernetes [dual-stack concept documentation](https://kubernetes.io/docs/concepts/services-networking/dual-stack/).
+    ## @param service.ssh.hostPort HostPort for ssh service
+    ## @param service.ssh.loadBalancerSourceRanges Source range filter for ssh loadbalancer
+    ## @param service.ssh.annotations SSH service annotations
+    ## @param service.ssh.labels SSH service additional labels
+    ## @param service.ssh.loadBalancerClass Loadbalancer class
+    ssh:
+      type: ClusterIP
+      port: 22
+      clusterIP: None
+      loadBalancerIP:
+      nodePort:
+      externalTrafficPolicy:
+      externalIPs:
+      ipFamilyPolicy:
+      ipFamilies:
+      hostPort:
+      loadBalancerSourceRanges: []
+      annotations: {}
+      labels: {}
+      loadBalancerClass:
+
+  ## @section Ingress
+  ## @param ingress.enabled Enable ingress
+  ## @param ingress.className DEPRECATED: Ingress class name.
+  ## @param ingress.pathType Ingress Path Type
+  ## @param ingress.annotations Ingress annotations
+  ## @param ingress.hosts[0].host Default Ingress host
+  ## @param ingress.hosts[0].paths[0].path Default Ingress path
+  ## @param ingress.tls Ingress tls settings
+  ingress:
+    enabled: true
+    className: "nginx"
+    pathType: Prefix
+    annotations:
+      external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      cert-manager.io/cluster-issuer: letsencrypt
+      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+      nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+      nginx.ingress.kubernetes.io/auth-tls-secret: "gitea/client-auth-ca"
+      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+    hosts:
+      - host: git.terence.cloud
+        paths:
+          - path: /
+    tls:
+      - secretName: gitea-tls
+        hosts:
+          - git.terence.cloud
+
+  ## @section deployment
+  #
+  ## @param resources Kubernetes resources
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  ## Use an alternate scheduler, e.g. "stork".
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  ## @param schedulerName Use an alternate scheduler, e.g. "stork"
+  schedulerName: ""
+
+  ## @param nodeSelector NodeSelector for the deployment
+  nodeSelector: {}
+
+  ## @param tolerations Tolerations for the deployment
+  tolerations: []
+
+  ## @param affinity Affinity for the deployment
+  affinity: {}
+
+  ## @param topologySpreadConstraints TopologySpreadConstraints for the deployment
+  topologySpreadConstraints: []
+
+  ## @param dnsConfig dnsConfig for the deployment
+  dnsConfig: {}
+
+  ## @param priorityClassName priorityClassName for the deployment
+  priorityClassName: ""
+
+  ## @param deployment.env  Additional environment variables to pass to containers
+  ## @param deployment.terminationGracePeriodSeconds How long to wait until forcefully kill the pod
+  ## @param deployment.labels Labels for the deployment
+  ## @param deployment.annotations Annotations for the Gitea deployment to be created
+  deployment:
+    env: []
+      # - name: VARIABLE
+      #   value: my-value
+    terminationGracePeriodSeconds: 60
+    labels: {}
+    annotations: {}
+
+  ## @section ServiceAccount
+
+  ## @param serviceAccount.create Enable the creation of a ServiceAccount
+  ## @param serviceAccount.name Name of the created ServiceAccount, defaults to release name. Can also link to an externally provided ServiceAccount that should be used.
+  ## @param serviceAccount.automountServiceAccountToken Enable/disable auto mounting of the service account token
+  ## @param serviceAccount.imagePullSecrets Image pull secrets, available to the ServiceAccount
+  ## @param serviceAccount.annotations Custom annotations for the ServiceAccount
+  ## @param serviceAccount.labels Custom labels for the ServiceAccount
+  serviceAccount:
+    create: false
+    name: ""
+    automountServiceAccountToken: false
+    imagePullSecrets: []
+    # - name: private-registry-access
+    annotations: {}
+    labels: {}
+
+  ## @section Persistence
+  #
+  ## @param persistence.enabled Enable persistent storage
+  ## @param persistence.create Whether to create the persistentVolumeClaim for shared storage
+  ## @param persistence.mount Whether the persistentVolumeClaim should be mounted (even if not created)
+  ## @param persistence.claimName Use an existing claim to store repository information
+  ## @param persistence.size Size for persistence to store repo information
+  ## @param persistence.accessModes AccessMode for persistence
+  ## @param persistence.labels Labels for the persistence volume claim to be created
+  ## @param persistence.annotations.helm.sh/resource-policy Resource policy for the persistence volume claim
+  ## @param persistence.storageClass Name of the storage class to use
+  ## @param persistence.subPath Subdirectory of the volume to mount at
+  ## @param persistence.volumeName Name of persistent volume in PVC
+  persistence:
+    enabled: true
+    create: true
+    mount: true
+    claimName: gitea-shared-storage
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+    labels: {}
+    storageClass:
+    subPath:
+    volumeName: ""
+    annotations:
+      helm.sh/resource-policy: keep
+
+  ## @param extraContainers Additional sidecar containers to run in the pod
+  extraContainers: []
+  #  - name: sidecar-bob
+  #    image: busybox
+  #    command: [/bin/sh, -c, 'echo "Hello world"']
+
+  ## @param preExtraInitContainers Additional init containers to run in the pod before gitea runs it owns init containers.
+  preExtraInitContainers: []
+  # - name: pre-init-container
+  #   image: docker.io/library/busybox
+  #   command: [ /bin/sh, -c, 'echo "Hello world! I am a pre init container."' ]
+
+  ## @param postExtraInitContainers Additional init containers to run in the pod after gitea runs it owns init containers.
+  postExtraInitContainers: []
+  # - name: post-init-container
+  #   image: docker.io/library/busybox
+  #   command: [ /bin/sh, -c, 'echo "Hello world! I am a post init container."' ]
+
+  ## @param extraVolumes Additional volumes to mount to the Gitea deployment
+  extraVolumes: []
+  # - name: postgres-ssl-vol
+  #   secret:
+  #     secretName: gitea-postgres-ssl
+
+  ## @param extraContainerVolumeMounts Mounts that are only mapped into the Gitea runtime/main container, to e.g. override custom templates.
+  extraContainerVolumeMounts: []
+
+  ## @param extraInitVolumeMounts Mounts that are only mapped into the init-containers. Can be used for additional preconfiguration.
+  extraInitVolumeMounts: []
+
+  ## @deprecated The extraVolumeMounts variable has been split two:
+  ## - extraContainerVolumeMounts
+  ## - extraInitVolumeMounts
+  ## As an example, can be used to mount a client cert when connecting to an external Postgres server.
+  ## @param extraVolumeMounts **DEPRECATED** Additional volume mounts for init containers and the Gitea main container
+  extraVolumeMounts: []
+  # - name: postgres-ssl-vol
+  #   readOnly: true
+  #   mountPath: "/pg-ssl"
+
+  ## @section Init
+  ## @param initPreScript Bash shell script copied verbatim to the start of the init-container.
+  initPreScript: ""
+  ## @param initContainersScriptsVolumeMountPath Path to mount the scripts consumed from the Secrets
+  initContainersScriptsVolumeMountPath: "/usr/sbinx"
+  #
+  # initPreScript: |
+  #   mkdir -p /data/git/.postgresql
+  #   cp /pg-ssl/* /data/git/.postgresql/
+  #   chown -R git:git /data/git/.postgresql/
+  #   chmod 400 /data/git/.postgresql/postgresql.key
+
+  ## @param initContainers.resources.limits initContainers.limits Kubernetes resource limits for init containers
+  ## @param initContainers.resources.requests.cpu initContainers.requests.cpu Kubernetes cpu resource limits for init containers
+  ## @param initContainers.resources.requests.memory initContainers.requests.memory Kubernetes memory resource limits for init containers
+  initContainers:
+    resources:
+      limits: {}
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  # Configure commit/action signing prerequisites
+  ## @section Signing
+  #
+  ## @param signing.enabled Enable commit/action signing
+  ## @param signing.gpgHome GPG home directory
+  ## @param signing.privateKey Inline private gpg key for signed internal Git activity
+  ## @param signing.existingSecret Use an existing secret to store the value of `signing.privateKey`
+  signing:
+    enabled: false
+    gpgHome: /data/git/.gnupg
+    privateKey: ""
+    existingSecret: ""
+
+  ## @param gitea.metrics.enabled Enable Gitea metrics
+  ## @param gitea.metrics.token used for `bearer` token authentication on metrics endpoint. If not specified or empty metrics endpoint is public.
+  ## @param gitea.metrics.serviceMonitor.enabled Enable Gitea metrics service monitor. Requires, that `gitea.metrics.enabled` is also set to true, to enable metrics generally.
+  ## @param gitea.metrics.serviceMonitor.interval Interval at which metrics should be scraped. If not specified Prometheus' global scrape interval is used.
+  ## @param gitea.metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping.
+  ## @param gitea.metrics.serviceMonitor.scheme HTTP scheme to use for scraping. For example `http` or `https`. Default is http.
+  ## @param gitea.metrics.serviceMonitor.scrapeTimeout Timeout after which the scrape is ended. If not specified, global Prometheus scrape timeout is used.
+  ## @param gitea.metrics.serviceMonitor.tlsConfig TLS configuration to use when scraping the metric endpoint by Prometheus.
+  metrics:
+    enabled: false
+    token:
+    serviceMonitor:
+      enabled: false
+      #  additionalLabels:
+      #    prometheus-release: prom1
+      interval: ""
+      relabelings: []
+      scheme: ""
+      scrapeTimeout: ""
+      tlsConfig: {}
+
+  gitea:
+    ## @param gitea.config.server.SSH_PORT SSH port for rootlful Gitea image
+    ## @param gitea.config.server.SSH_LISTEN_PORT SSH port for rootless Gitea image
+    config:
+      #  APP_NAME: "Gitea: Git with a cup of tea"
+      #  RUN_MODE: dev
+      server:
+        SSH_PORT: 22 # rootful image
+        SSH_LISTEN_PORT: 2222 # rootless image
+      database:
+        DB_TYPE: postgres
+        HOST: gitea-cnpg-cluster-rw
+        NAME: gitea
+        USER: gitea
+      cache:
+        ADAPTER: redis
+        HOST: redis://gitea-valkey:6379/0?pool_size=100&idle_timeout=180s
+      session:
+        PROVIDER: redis
+        PROVIDER_CONFIG: redis://gitea-valkey:6379/0?pool_size=100&idle_timeout=180s
+
+    #
+    #  security:
+    #    PASSWORD_COMPLEXITY: spec
+
+    ## @param gitea.additionalConfigSources Additional configuration from secret or configmap
+    additionalConfigSources: []
+    #   - secret:
+    #       secretName: gitea-app-ini-oauth
+    #   - configMap:
+    #       name: gitea-app-ini-plaintext
+
+    ## @param gitea.additionalConfigFromEnvs Additional configuration sources from environment variables
+    additionalConfigFromEnvs:
+      - name: GITEA__database__PASSWD
+        valueFrom:
+          secretKeyRef:
+            name: gitea-cnpg-cluster-app
+            key: password
+
+    ## @param gitea.admin.username Username for the Gitea admin user
+    ## @param gitea.admin.existingSecret Use an existing secret to store admin user credentials
+    ## @param gitea.admin.password Password for the Gitea admin user
+    ## @param gitea.admin.email Email for the Gitea admin user
+    ## @param gitea.admin.passwordMode Mode for how to set/update the admin user password. Options are: initialOnlyNoReset, initialOnlyRequireReset, and keepUpdated
+    admin:
+      existingSecret: gitea-admin-credentials
+      email: "gitea@local.domain"
+      passwordMode: keepUpdated
+
+  ## @param gitea.podAnnotations Annotations for the Gitea pod
+  podAnnotations: {}
+
+  ## @param gitea.ssh.logLevel Configure OpenSSH's log level. Only available for root-based Gitea image.
+  ssh:
+    logLevel: "INFO"
+
+  ## @section LivenessProbe
+  #
+  ## @param gitea.livenessProbe.enabled Enable liveness probe
+  ## @param gitea.livenessProbe.tcpSocket.port Port to probe for liveness
+  ## @param gitea.livenessProbe.initialDelaySeconds Initial delay before liveness probe is initiated
+  ## @param gitea.livenessProbe.timeoutSeconds Timeout for liveness probe
+  ## @param gitea.livenessProbe.periodSeconds Period for liveness probe
+  ## @param gitea.livenessProbe.successThreshold Success threshold for liveness probe
+  ## @param gitea.livenessProbe.failureThreshold Failure threshold for liveness probe
+  # Modify the liveness probe for your needs or completely disable it by commenting out.
+  livenessProbe:
+    enabled: true
+    tcpSocket:
+      port: http
+    initialDelaySeconds: 200
+    timeoutSeconds: 1
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 10
+
+  ## @section ReadinessProbe
+  #
+  ## @param gitea.readinessProbe.enabled Enable readiness probe
+  ## @param gitea.readinessProbe.tcpSocket.port Port to probe for readiness
+  ## @param gitea.readinessProbe.initialDelaySeconds Initial delay before readiness probe is initiated
+  ## @param gitea.readinessProbe.timeoutSeconds Timeout for readiness probe
+  ## @param gitea.readinessProbe.periodSeconds Period for readiness probe
+  ## @param gitea.readinessProbe.successThreshold Success threshold for readiness probe
+  ## @param gitea.readinessProbe.failureThreshold Failure threshold for readiness probe
+  # Modify the readiness probe for your needs or completely disable it by commenting out.
+  readinessProbe:
+    enabled: true
+    tcpSocket:
+      port: http
+    initialDelaySeconds: 5
+    timeoutSeconds: 1
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 3
+
+  # # Uncomment the startup probe to enable and modify it for your needs.
+  ## @section StartupProbe
+  #
+  ## @param gitea.startupProbe.enabled Enable startup probe
+  ## @param gitea.startupProbe.tcpSocket.port Port to probe for startup
+  ## @param gitea.startupProbe.initialDelaySeconds Initial delay before startup probe is initiated
+  ## @param gitea.startupProbe.timeoutSeconds Timeout for startup probe
+  ## @param gitea.startupProbe.periodSeconds Period for startup probe
+  ## @param gitea.startupProbe.successThreshold Success threshold for startup probe
+  ## @param gitea.startupProbe.failureThreshold Failure threshold for startup probe
+  startupProbe:
+    enabled: false
+    tcpSocket:
+      port: http
+    initialDelaySeconds: 60
+    timeoutSeconds: 1
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 10
+
+  checkDeprecation: true
+  test:
+    enabled: true
+    image:
+      name: busybox
+      tag: latest
+
+  ## @param extraDeploy Array of extra objects to deploy with the release
+  ##
+  extraDeploy:
+    - apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      metadata:
+        name: gitea-admin-credentials
+        annotations:
+          argocd.argoproj.io/sync-options: ServerSideApply=true
+      spec:
+        refreshInterval: "0"
+        target:
+          name: gitea-admin-credentials
+          creationPolicy: Owner
+          template:
+            engineVersion: v2
+            data:
+              username: "gitea_admin"
+              password: '{{ printf "{{ .password }}" }}'
+        dataFrom:
+          - sourceRef:
+              generatorRef:
+                apiVersion: generators.external-secrets.io/v1alpha1
+                kind: ClusterGenerator
+                name: password
+    - apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      metadata:
+        name: client-auth-ca
+      spec:
+        dataFrom:
+          - extract:
+              key: client-auth-ca
+              decodingStrategy: Auto
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: k8s-cert-manager
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: client-auth-ca
+
+  # Disabled dependencies
+  valkey-cluster:
+    enabled: false
+  valkey:
+    enabled: false
+  postgresql-ha:
+    enabled: false
+  postgresql:
+    enabled: false
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "18"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 1Gi
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles:
+      - name: gitea
+        connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        replication: true
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    postgresql: {}
+    initdb:
+      database: gitea
+
+valkey:
+  deploymentStrategy: Recreate
+  dataStorage:
+    enabled: true
+    requestedSize: "1Gi"
+    labels:
+      velero.io/exclude-from-backup: "true"
+
+gitea-mirror:
+  global:
+    fullnameOverride: gitea-mirror
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  configMaps:
+    config:
+      data:
+        NODE_ENV: production
+        DATABASE_URL: file:data/gitea-mirror.db
+        HOST: "0.0.0.0"
+        PORT: "4321"
+        # BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-your-secret-key-change-this-in-production}
+        BETTER_AUTH_URL: https://gitm.terence.cloud
+        BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:4321
+        # GitHub/Gitea Mirror Config
+      #   GITHUB_USERNAME: ${GITHUB_USERNAME:-}
+      #   GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      #   GITHUB_EXCLUDED_ORGS: ${GITHUB_EXCLUDED_ORGS:-}
+      #   SKIP_FORKS: ${SKIP_FORKS:-false}
+      #   PRIVATE_REPOSITORIES: ${PRIVATE_REPOSITORIES:-false}
+      #   MIRROR_ISSUES: ${MIRROR_ISSUES:-false}
+      #   MIRROR_WIKI: ${MIRROR_WIKI:-false}
+      #   MIRROR_STARRED: ${MIRROR_STARRED:-false}
+      #   MIRROR_ORGANIZATIONS: ${MIRROR_ORGANIZATIONS:-false}
+      #   PRESERVE_ORG_STRUCTURE: ${PRESERVE_ORG_STRUCTURE:-false}
+      #   ONLY_MIRROR_ORGS: ${ONLY_MIRROR_ORGS:-false}
+      #   SKIP_STARRED_ISSUES: ${SKIP_STARRED_ISSUES:-false}
+      #   MIRROR_ISSUE_CONCURRENCY: ${MIRROR_ISSUE_CONCURRENCY:-3}
+      #   MIRROR_PULL_REQUEST_CONCURRENCY: ${MIRROR_PULL_REQUEST_CONCURRENCY:-5}
+      #   GITEA_URL: ${GITEA_URL:-}
+      #   GITEA_TOKEN: ${GITEA_TOKEN:-}
+      #   GITEA_USERNAME: ${GITEA_USERNAME:-}
+      #   GITEA_ORGANIZATION: ${GITEA_ORGANIZATION:-github-mirrors}
+      #   GITEA_ORG_VISIBILITY: ${GITEA_ORG_VISIBILITY:-public}
+      #   DELAY: ${DELAY:-3600}
+      # # Scheduling and Sync Configuration (Issue #72 fixes)
+      #   SCHEDULE_ENABLED: ${SCHEDULE_ENABLED:-false}
+      #   GITEA_MIRROR_INTERVAL: ${GITEA_MIRROR_INTERVAL:-8h}
+      #   AUTO_IMPORT_REPOS: ${AUTO_IMPORT_REPOS:-true}
+      #   AUTO_MIRROR_REPOS: ${AUTO_MIRROR_REPOS:-false}
+      # # Repository Cleanup Configuration
+      #   CLEANUP_DELETE_IF_NOT_IN_GITHUB: ${CLEANUP_DELETE_IF_NOT_IN_GITHUB:-false}
+      #   CLEANUP_ORPHANED_REPO_ACTION: ${CLEANUP_ORPHANED_REPO_ACTION:-archive}
+      #   CLEANUP_DRY_RUN: ${CLEANUP_DRY_RUN:-true}
+      # Optional: Skip TLS verification (insecure, use only for testing)
+      #   GITEA_SKIP_TLS_VERIFY: ${GITEA_SKIP_TLS_VERIFY:-false}
+      # Header Authentication (for Reverse Proxy SSO)
+  controllers:
+    main:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/raylabshq/gitea-mirror
+            tag: v3.8.8@sha256:b3809b2e7cef6f42bbd27f6624c2e29d98ef7aab10b9a39619f83fe37d076f88
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - configMapRef:
+                identifier: config
+          ports:
+            - name: http
+              containerPort: 4321
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 4321
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+        nginx.ingress.kubernetes.io/auth-tls-secret: "gitea/client-auth-ca"
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      className: "nginx"
+      hosts:
+        - host: &host gitm.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: gitea-mirror-tls
+          hosts:
+            - *host
+
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 500Mi
+      globalMounts:
+        - path: /app/data

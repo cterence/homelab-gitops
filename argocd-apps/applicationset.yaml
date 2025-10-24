@@ -25,6 +25,7 @@ spec:
           - name: external-dns
           - name: external-secrets
             serverSideApply: true
+          - name: gitea
           - name: go-healthcheck
           - name: home-assistant
           - name: httpbin
