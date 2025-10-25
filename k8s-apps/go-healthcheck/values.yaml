@@ -19,6 +19,8 @@ urls:
   - https://jf.terence.cloud/health
   - https://js.terence.cloud/api/v1/status
   - https://jstat.terence.cloud/auth/isconfigured
+  - https://git.terence.cloud/api/healthz
+  - https://gitm.terence.cloud/api/health
   - https://lid.terence.cloud/ping
   - https://longhorn.terence.cloud
   - https://next.terence.cloud/status.php
@@ -38,6 +40,8 @@ cnpgClusters:
     namespace: attic
   - name: arr-stack-cnpg-cluster-jellystat
     namespace: arr-stack
+  - name: gitea-cnpg-cluster
+    namespace: gitea
   - name: home-assistant-cnpg-cluster
     namespace: home-assistant
   - name: immich-cnpg-cluster-vectorchord

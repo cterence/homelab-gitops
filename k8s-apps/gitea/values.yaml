@@ -633,10 +633,18 @@ gitea-mirror:
           probes:
             liveness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /api/health
             readiness:
               enabled: true
-              type: HTTP
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /api/health
 
   service:
     main:
