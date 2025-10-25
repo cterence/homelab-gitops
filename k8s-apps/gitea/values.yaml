@@ -604,42 +604,8 @@ gitea-mirror:
         DATABASE_URL: file:data/gitea-mirror.db
         HOST: "0.0.0.0"
         PORT: "4321"
-        # BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-your-secret-key-change-this-in-production}
         BETTER_AUTH_URL: https://gitm.terence.cloud
         BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:4321
-        # GitHub/Gitea Mirror Config
-      #   GITHUB_USERNAME: ${GITHUB_USERNAME:-}
-      #   GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      #   GITHUB_EXCLUDED_ORGS: ${GITHUB_EXCLUDED_ORGS:-}
-      #   SKIP_FORKS: ${SKIP_FORKS:-false}
-      #   PRIVATE_REPOSITORIES: ${PRIVATE_REPOSITORIES:-false}
-      #   MIRROR_ISSUES: ${MIRROR_ISSUES:-false}
-      #   MIRROR_WIKI: ${MIRROR_WIKI:-false}
-      #   MIRROR_STARRED: ${MIRROR_STARRED:-false}
-      #   MIRROR_ORGANIZATIONS: ${MIRROR_ORGANIZATIONS:-false}
-      #   PRESERVE_ORG_STRUCTURE: ${PRESERVE_ORG_STRUCTURE:-false}
-      #   ONLY_MIRROR_ORGS: ${ONLY_MIRROR_ORGS:-false}
-      #   SKIP_STARRED_ISSUES: ${SKIP_STARRED_ISSUES:-false}
-      #   MIRROR_ISSUE_CONCURRENCY: ${MIRROR_ISSUE_CONCURRENCY:-3}
-      #   MIRROR_PULL_REQUEST_CONCURRENCY: ${MIRROR_PULL_REQUEST_CONCURRENCY:-5}
-      #   GITEA_URL: ${GITEA_URL:-}
-      #   GITEA_TOKEN: ${GITEA_TOKEN:-}
-      #   GITEA_USERNAME: ${GITEA_USERNAME:-}
-      #   GITEA_ORGANIZATION: ${GITEA_ORGANIZATION:-github-mirrors}
-      #   GITEA_ORG_VISIBILITY: ${GITEA_ORG_VISIBILITY:-public}
-      #   DELAY: ${DELAY:-3600}
-      # # Scheduling and Sync Configuration (Issue #72 fixes)
-      #   SCHEDULE_ENABLED: ${SCHEDULE_ENABLED:-false}
-      #   GITEA_MIRROR_INTERVAL: ${GITEA_MIRROR_INTERVAL:-8h}
-      #   AUTO_IMPORT_REPOS: ${AUTO_IMPORT_REPOS:-true}
-      #   AUTO_MIRROR_REPOS: ${AUTO_MIRROR_REPOS:-false}
-      # # Repository Cleanup Configuration
-      #   CLEANUP_DELETE_IF_NOT_IN_GITHUB: ${CLEANUP_DELETE_IF_NOT_IN_GITHUB:-false}
-      #   CLEANUP_ORPHANED_REPO_ACTION: ${CLEANUP_ORPHANED_REPO_ACTION:-archive}
-      #   CLEANUP_DRY_RUN: ${CLEANUP_DRY_RUN:-true}
-      # Optional: Skip TLS verification (insecure, use only for testing)
-      #   GITEA_SKIP_TLS_VERIFY: ${GITEA_SKIP_TLS_VERIFY:-false}
-      # Header Authentication (for Reverse Proxy SSO)
   controllers:
     main:
       type: deployment
@@ -653,6 +619,11 @@ gitea-mirror:
             tag: v3.8.9@sha256:85e8e530eaba9a5fa07e672152216dd2cc2e5b7512ee34dd3c34aaac9b9813a3
           env:
             TZ: Europe/Paris
+            BETTER_AUTH_SECRET:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-better-auth-secret"
+                  key: password
           envFrom:
             - configMapRef:
                 identifier: config
