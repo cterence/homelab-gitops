@@ -558,7 +558,7 @@ cnpg-cluster:
       kind: ClusterImageCatalog
       name: postgresql
     storage:
-      size: 1Gi
+      size: 5Gi
     resources: {}
     primaryUpdateMethod: switchover
     primaryUpdateStrategy: unsupervised
