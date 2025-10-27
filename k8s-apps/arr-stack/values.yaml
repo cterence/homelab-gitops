@@ -411,6 +411,11 @@ app-template:
             TZ: Europe/Paris
             INPUT_DIR: /in
             OUTPUT_DIR: /out
+            JELLYFIN_URL: http://arr-stack-jellyfin:8096
+            LIDARR_URL: http://arr-stack-lidarr:8686
+          envFrom:
+            - secretRef:
+                name: rangemusique-api-keys
           command: /bin/bash
           args: ["/run-rangemusique.sh"]
 
