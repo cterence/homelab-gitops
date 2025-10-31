@@ -16,6 +16,8 @@ loki:
       enabled: true
     storage:
       type: "filesystem"
+      bucketNames:
+        chunks: "i_have_to_be_defined" # https://github.com/grafana/loki/pull/19051
     schemaConfig:
       configs:
         - from: "2024-01-01"
