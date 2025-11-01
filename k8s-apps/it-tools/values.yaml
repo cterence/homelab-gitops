@@ -14,27 +14,27 @@ app-template:
         # Configure the main application container
         main:
           image:
-            repository: corentinth/it-tools
-            tag: 2024.5.13-a0bc346@sha256:c191615f23eb6a18b8faca4dba15fc11caefea250ce3a8e29d249757544092eb
+            repository: ghcr.io/sharevb/it-tools
+            tag: 2025.10.19@sha256:be0780e34ee8851819c5dc62d7247efc27e038d07f122db7f01417ff03c5e67a
           env:
             TZ: Europe/Paris
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
           probes:
             liveness:
               enabled: true
               custom: true
               spec:
                 httpGet:
-                  port: 80
+                  port: 8080
                   path: /
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
-                  port: 80
+                  port: 8080
                   path: /
   service:
     # Configure a service for the main application
@@ -44,7 +44,7 @@ app-template:
       ports:
         http:
           port: 8080
-          targetPort: 80
+          targetPort: 8080
 
   ingress:
     # Configure an Ingress for the main application
