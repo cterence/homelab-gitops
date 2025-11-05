@@ -642,7 +642,7 @@ nextcloud:
 
 cnpg-cluster:
   type: postgresql
-  mode: recovery
+  mode: standalone
   version:
     postgresql: "17"
   cluster:

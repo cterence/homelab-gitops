@@ -183,7 +183,7 @@ immich:
 
 cnpg-cluster-vectorchord:
   type: postgresql
-  mode: recovery
+  mode: standalone
   version:
     postgresql: "17"
   recovery:

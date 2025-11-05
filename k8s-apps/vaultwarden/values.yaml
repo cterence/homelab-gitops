@@ -687,7 +687,7 @@ vaultwarden:
 
 cnpg-cluster:
   type: postgresql
-  mode: recovery
+  mode: standalone
   version:
     postgresql: "18"
   cluster:
