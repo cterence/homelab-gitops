@@ -643,6 +643,7 @@ velero:
           - arr-stack
           - calibre-web
           - changedetection
+          - gitea
           - home-assistant
           - immich
           - nextcloud
