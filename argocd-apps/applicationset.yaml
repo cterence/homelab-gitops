@@ -10,6 +10,7 @@ spec:
         elements:
           - name: anki-sync-server
           - name: argocd
+            serverSideApply: true
           - name: arr-stack
           - name: attic
           - name: blackbox-exporter
