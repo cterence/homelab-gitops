@@ -165,10 +165,6 @@ gitea:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       cert-manager.io/cluster-issuer: letsencrypt
-      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-      nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-      nginx.ingress.kubernetes.io/auth-tls-secret: "gitea/client-auth-ca"
-      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
     hosts:
       - host: git.terence.cloud
@@ -589,7 +585,11 @@ valkey:
 
 gitea-mirror:
   global:
+    nameOverride: gitea-mirror
     fullnameOverride: gitea-mirror
+    labels:
+      app.kubernetes.io/instance: gitea-mirror
+      app.kubernetes.io/name: gitea-mirror
   defaultPodOptions:
     automountServiceAccountToken: false
     securityContext:
