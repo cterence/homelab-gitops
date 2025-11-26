@@ -140,6 +140,9 @@ traefik:
       bouncer:
         moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
         version: v1.4.6
+      traefik-real-ip:
+        moduleName: github.com/soulbalz/traefik-real-ip
+        version: v1.0.3
     # -- Enable experimental local plugins
     localPlugins: {}
     # -- Enable OTLP logging experimental feature.
@@ -1203,6 +1206,14 @@ traefik:
           browserXssFilter: true
           referrerPolicy: "strict-origin-when-cross-origin"
           customFrameOptionsValue: "SAMEORIGIN"
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: traefik-real-ip
+      spec:
+        plugin:
+          traefik-real-ip:
+            excludednets: []
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
