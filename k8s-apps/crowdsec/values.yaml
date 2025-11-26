@@ -175,7 +175,6 @@ crowdsec:
       enabled: false
       annotations:
         # we only want http to the backend so we need this annotation
-        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
       # labels: {}
       ingressClassName: "" # nginx
       host: "" # crowdsec-api.example.com
