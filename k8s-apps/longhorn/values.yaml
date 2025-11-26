@@ -47,6 +47,7 @@ longhorn:
       nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
       nginx.ingress.kubernetes.io/auth-tls-secret: "longhorn-system/client-auth-ca"
       nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
   metrics:
     serviceMonitor:
       enabled: true

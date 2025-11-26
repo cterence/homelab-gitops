@@ -95,6 +95,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-secret: "paperless-ngx/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
         nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       hosts:
         - host: paperless.terence.cloud
           paths:

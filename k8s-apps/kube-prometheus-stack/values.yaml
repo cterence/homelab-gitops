@@ -59,6 +59,7 @@ kube-prometheus-stack:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "monitoring/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       hosts:
         - prometheus.terence.cloud
       tls:
@@ -282,6 +283,7 @@ kube-prometheus-stack:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "monitoring/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       hosts:
         - alertmanager.terence.cloud
       paths:

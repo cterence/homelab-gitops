@@ -201,6 +201,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "calibre-web/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host1 calibre.terence.cloud
@@ -223,6 +224,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "calibre-web/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host2 calibredl.terence.cloud

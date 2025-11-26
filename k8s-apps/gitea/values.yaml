@@ -665,6 +665,7 @@ gitea-mirror:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "gitea/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host gitm.terence.cloud

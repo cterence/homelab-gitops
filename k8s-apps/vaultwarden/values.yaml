@@ -650,6 +650,7 @@ vaultwarden:
       nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
       nginx.ingress.kubernetes.io/auth-tls-secret: "vaultwarden/client-auth-ca"
       nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
     ## @param ingress.labels Additional labels for the ingress resource.
     ##
     labels: {}
