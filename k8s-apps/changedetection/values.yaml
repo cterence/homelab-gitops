@@ -56,6 +56,9 @@ changedetection-io:
       mountPath: /datastore
       accessMode: ReadWriteOnce
       size: 1Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
 
 app-template:
   global:

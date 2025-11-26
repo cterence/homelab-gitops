@@ -237,6 +237,9 @@ vaultwarden:
       path: "/data"
       accessMode: "ReadWriteOnce"
       keepPvc: true
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
 
     ## @param attachments Attachments directory configuration, refer to values.yaml for parameters.
     ## By default, attachments/ is located inside the data directory.
@@ -248,6 +251,9 @@ vaultwarden:
       path: /files
       accessMode: "ReadWriteOnce"
       keepPvc: true
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
 
   ## @param webVaultEnabled Enable Web Vault
   ##
