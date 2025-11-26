@@ -36,9 +36,10 @@ kube-prometheus-stack:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/storage.md
       storageSpec:
         volumeClaimTemplate:
-          # annotations:
-          #   helm.sh/resource-policy: keep
-          #   argocd.argoproj.io/sync-options: Delete=false
+          metadata:
+            annotations:
+              helm.sh/resource-policy: keep
+              argocd.argoproj.io/sync-options: Delete=false
           spec:
             accessModes: ["ReadWriteOnce"]
             resources:
