@@ -131,10 +131,6 @@ kube-prometheus-stack:
     # Organise dashboards by provider, with the provider's name as the key.
     dashboards:
       default: # The "default" provider is defined below.
-        nginx-ingress-controller:
-          url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/nginx.json
-        ingress-request-performance:
-          url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/grafana/dashboards/request-handling-performance.json
         cloudnativepg:
           gnetId: 20417
           datasource: Prometheus

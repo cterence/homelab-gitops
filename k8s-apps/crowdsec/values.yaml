@@ -348,7 +348,7 @@ crowdsec:
     # -- environment variables from crowdsecurity/crowdsec docker image
     env:
       - name: COLLECTIONS
-        value: "crowdsecurity/nginx"
+        value: "crowdsecurity/traefik"
       # by default we configure the docker-logs parser to be able to parse docker logs in k8s
       # by default we disable local API on the agent pod
       # - name: SCENARIOS

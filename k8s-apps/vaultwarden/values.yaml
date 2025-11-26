@@ -639,7 +639,7 @@ vaultwarden:
     ## @param ingress.nginxIngressAnnotations Add nginx specific ingress annotations
     ## This annotations are only makes sense for the kubernetes nginx ingress controller (https://kubernetes.github.io/ingress-nginx/)
     ##
-    nginxIngressAnnotations: true
+    nginxIngressAnnotations: false
     ## @param ingress.additionalAnnotations Additional annotations for the ingress resource.
     ##
     additionalAnnotations:

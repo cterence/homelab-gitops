@@ -1235,7 +1235,6 @@ traefik:
         plugin:
           fail2ban:
             enabled: true
-            logLevel: DEBUG
             allowlist:
               ip:
                 - "109.0.228.97"
