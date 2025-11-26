@@ -198,9 +198,6 @@ app-template:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/proxy-body-size: 100m
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "calibre-web/client-auth-ca"
-        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:

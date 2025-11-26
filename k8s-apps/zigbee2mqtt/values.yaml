@@ -109,9 +109,6 @@ zigbee2mqtt:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-        nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: "zigbee2mqtt/client-auth-ca"
-        nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       ingressClassName: "traefik"
       hosts:
