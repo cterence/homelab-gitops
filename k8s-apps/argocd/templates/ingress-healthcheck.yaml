@@ -5,20 +5,16 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/target: home.terence.cloud
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "false" # 403 on the github actions runner
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: traefik
   rules:
     - host: argocd.terence.cloud
-    # - host: k8s-ingress.snow-delta.ts.net
       http:
         paths:
           - backend:
               service:
                 name: argocd-server
                 port:
-                  name: https
-            # path: /argocd/healthz
+                  name: http
             path: /healthz
             pathType: ImplementationSpecific
