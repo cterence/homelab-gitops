@@ -192,7 +192,6 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        nginx.ingress.kubernetes.io/proxy-body-size: "0"
       className: "traefik"
       hosts:
         - host: &host versity.terence.cloud
@@ -211,7 +210,6 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        nginx.ingress.kubernetes.io/proxy-body-size: "0"
         nginx.ingress.kubernetes.io/use-regex: "true"
         nginx.ingress.kubernetes.io/rewrite-target: /$2
       className: "traefik"
