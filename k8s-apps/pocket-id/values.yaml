@@ -241,7 +241,9 @@ pocket-id:
       # -- Storage size for the PVC.
       size: 10Gi
       # -- Annotations applied to PVC.
-      annotations: {}
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
 
   ingress:
     # -- Specifies whether ingress should be enabled.

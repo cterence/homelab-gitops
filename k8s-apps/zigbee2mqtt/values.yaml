@@ -15,6 +15,9 @@ zigbee2mqtt:
       mountPath: "/data"
       targetSelectAll: true
       size: 1Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
     conbee-device:
       enabled: true
       type: hostPath

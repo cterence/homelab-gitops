@@ -50,6 +50,9 @@ loki:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution: []
     persistence:
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       size: 20Gi
 
   backend:

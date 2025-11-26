@@ -270,6 +270,7 @@ gitea:
     volumeName: ""
     annotations:
       helm.sh/resource-policy: keep
+      argocd.argoproj.io/sync-options: Delete=false
 
   ## @param extraContainers Additional sidecar containers to run in the pod
   extraContainers: []

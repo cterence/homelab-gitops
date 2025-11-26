@@ -74,10 +74,16 @@ mosquitto:
       enabled: true
       mountPath: "/mosquitto/data"
       size: 1Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
     configinc:
       enabled: true
       mountPath: "/mosquitto/configinc"
       size: 10Mi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
     mosquitto-config:
       enabled: true
       mountPath: "/mosquitto/config/mosquitto.conf"

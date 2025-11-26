@@ -35,6 +35,9 @@ home-assistant:
       mountPath: /config
       targetSelectAll: true
       size: 1Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
     init:
       enabled: true
       type: configmap

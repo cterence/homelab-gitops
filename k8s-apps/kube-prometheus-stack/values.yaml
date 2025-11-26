@@ -190,6 +190,9 @@ kube-prometheus-stack:
         - ReadWriteOnce
       finalizers:
         - kubernetes.io/pvc-protection
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
 
     datasources:
       datasources.yaml:

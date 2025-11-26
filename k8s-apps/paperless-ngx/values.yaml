@@ -107,6 +107,9 @@ app-template:
     data:
       enabled: true
       retain: true
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       globalMounts:
         - path: /usr/src/paperless/data
       accessMode: ReadWriteOnce
@@ -114,6 +117,9 @@ app-template:
     media:
       enabled: true
       retain: true
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       globalMounts:
         - path: /usr/src/paperless/media
       accessMode: ReadWriteOnce
@@ -121,6 +127,9 @@ app-template:
     export:
       enabled: true
       retain: true
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       globalMounts:
         - path: /usr/src/paperless/export
       accessMode: ReadWriteOnce
@@ -128,6 +137,9 @@ app-template:
     consume:
       enabled: true
       retain: true
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       globalMounts:
         - path: /usr/src/paperless/consume
       accessMode: ReadWriteOnce
@@ -140,6 +152,9 @@ valkey:
     requestedSize: "1Gi"
     labels:
       velero.io/exclude-from-backup: "true"
+    annotations:
+      helm.sh/resource-policy: keep
+      argocd.argoproj.io/sync-options: Delete=false
 
 cnpg-cluster:
   type: postgresql
