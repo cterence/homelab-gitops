@@ -357,7 +357,7 @@ traefik:
       # -- Name of the ingress class this controller satisfies
       ingressClass: "nginx"
       # -- Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class
-      ingressClassByName: false
+      ingressClassByName: true
       # -- Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified
       watchIngressWithoutClass: false
       # -- Namespace the controller watches for updates to Kubernetes objects. All namespaces are watched if this parameter is left empty. When using `rbac.namespaced`, it will watch helm release namespace and namespaces listed in this array.
