@@ -69,7 +69,14 @@ traefik:
     #   hostPath:
     #     path: /var/run/statsd-exporter
     # -- Additional initContainers (e.g. for setting file permission as shown below)
-    initContainers: []
+    initContainers:
+      - name: modsecurity
+        image: docker.io/owasp/modsecurity-crs:4.20.0-nginx-alpine-202511100111
+        restartPolicy: Always
+        ports:
+          - name: http
+            containerPort: 8080
+
     # The "volume-permissions" init container is required if you run into permission issues.
     # Related issue: https://github.com/traefik/traefik-helm-chart/issues/396
     # - name: volume-permissions
@@ -146,6 +153,9 @@ traefik:
       fail2ban:
         moduleName: github.com/tomMoulard/fail2ban
         version: v0.8.9
+      modsecurity:
+        moduleName: github.com/acouvreur/traefik-modsecurity-plugin
+        version: v1.3.0
     # -- Enable experimental local plugins
     localPlugins: {}
     # -- Enable OTLP logging experimental feature.
@@ -900,6 +910,7 @@ traefik:
       middlewares:
         - traefik-secure-headers@kubernetescrd
         - traefik-fail2ban@kubernetescrd
+        - traefik-modsecurity@kubernetescrd
         - traefik-crowdsec@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
@@ -1244,7 +1255,15 @@ traefik:
               findtime: "1m"
               maxretry: 4
               statuscode: "400-499"
-
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: modsecurity
+      spec:
+        plugin:
+          modsecurity:
+            modSecurityUrl: http://localhost:8080
+            maxBodySize: 100000000
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
   namespaceOverride: ""
