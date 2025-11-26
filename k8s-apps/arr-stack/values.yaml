@@ -537,7 +537,7 @@ app-template:
         qbittorrent:
           image:
             repository: lscr.io/linuxserver/qbittorrent
-            tag: 5.1.2-r0-ls403@sha256:a3fe8465b4fa5e711358338ee90a958424033ec1e5030dda98d565efc25e0816
+            tag: 5.1.4-r0-ls428@sha256:26a08cd60d81e632aba8947b2c64dfd5f870a5f4a837ec4abedf2e1d174df891
           env:
             TZ: Europe/Paris
             PUID: 1000
