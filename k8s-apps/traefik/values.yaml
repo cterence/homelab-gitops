@@ -71,7 +71,7 @@ traefik:
     # -- Additional initContainers (e.g. for setting file permission as shown below)
     initContainers:
       - name: modsecurity
-        image: docker.io/owasp/modsecurity-crs:nginx-alpine
+        image: docker.io/owasp/modsecurity-crs:nginx-alpine@sha256:b072067f11714eb78c5ea67eb5fcfe41ebdfbec2ff23cd5589ff248a924847da
         restartPolicy: Always
         securityContext:
           runAsUser: 0
