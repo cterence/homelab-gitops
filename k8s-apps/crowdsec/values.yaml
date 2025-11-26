@@ -302,7 +302,7 @@ crowdsec:
         # -- program name related to specific parser you will use (see https://hub.crowdsec.net/author/crowdsecurity/configurations/docker-logs)
         program: traefik
         # -- If set to true, will poll the files using os.Stat instead of using inotify
-        poll_without_inotify: false
+        poll_without_inotify: true
     # -- pod priority class name
     priorityClassName: ""
 
