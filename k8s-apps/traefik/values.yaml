@@ -562,14 +562,14 @@ traefik:
       headerLabels: {} # @schema type:[object, null]
       service:
         # -- Create a dedicated metrics service to use with ServiceMonitor
-        enabled: false
+        enabled: true
         labels: {}
         annotations: {}
       # -- When set to true, it won't check if Prometheus Operator CRDs are deployed
       disableAPICheck: # @schema type:[boolean, null]
       serviceMonitor:
         # -- Enable optional CR for Prometheus Operator. See EXAMPLES.md for more details.
-        enabled: false
+        enabled: true
         apiVersion: "monitoring.coreos.com/v1"
         metricRelabelings: []
         relabelings: []
@@ -585,7 +585,7 @@ traefik:
         namespaceSelector: {}
       prometheusRule:
         # -- Enable optional CR for Prometheus Operator. See EXAMPLES.md for more details.
-        enabled: false
+        enabled: true
         apiVersion: "monitoring.coreos.com/v1"
         additionalLabels: {}
         namespace: ""
