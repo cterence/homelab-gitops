@@ -645,7 +645,6 @@ vaultwarden:
     additionalAnnotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
       external-dns.alpha.kubernetes.io/target: "home.terence.cloud"
-      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
     ## @param ingress.labels Additional labels for the ingress resource.

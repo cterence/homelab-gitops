@@ -252,7 +252,6 @@ pocket-id:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
-      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       # kubernetes.io/ingress.class: traefik
       # kubernetes.io/tls-acme: "true"
     # -- Ingress host configuration.

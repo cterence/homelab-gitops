@@ -33,7 +33,6 @@ nextcloud:
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
       nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: letsencrypt
       # Keep this in sync with the README.md:

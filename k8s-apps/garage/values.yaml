@@ -140,7 +140,6 @@ garage:
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt
           external-dns.alpha.kubernetes.io/target: home.terence.cloud
-          nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
           external-dns.alpha.kubernetes.io/cloudflare-proxied: "false" # 2 level subdomain unsupported by Cloudflare
         labels: {}
         hosts:

@@ -47,13 +47,6 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        # nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-        # nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/client-auth-ca"
-        # nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-        # nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
-        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User
       className: "traefik"
       hosts:
         - host: &host _subdomain_.terence.cloud

@@ -5,9 +5,6 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/target: home.terence.cloud
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "false" # 403 on the github actions runner
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
 spec:
   ingressClassName: traefik
   rules:
