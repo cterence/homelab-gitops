@@ -136,7 +136,10 @@ traefik:
       # -- Enable traefik experimental GatewayClass CRD
       enabled: false
     # -- Enable experimental plugins
-    plugins: {}
+    plugins:
+      bouncer:
+        moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+        version: v1.4.6
     # -- Enable experimental local plugins
     localPlugins: {}
     # -- Enable OTLP logging experimental feature.
