@@ -19,7 +19,7 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  name: https
+                  name: http
             # path: /argocd/api/webhook
             path: /api/webhook
             pathType: ImplementationSpecific
