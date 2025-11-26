@@ -349,6 +349,7 @@ argo-cd:
       https: true
   configs:
     cm:
+      server.insecure: "true"
       url: https://argocd.terence.cloud
       resource.exclusions: |
         - apiGroups:
