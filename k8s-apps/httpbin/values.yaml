@@ -34,10 +34,7 @@ app-template:
       annotations:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
-        # nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-        # nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
-        # nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User,X-Auth-Request-Email
-        # nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       hosts:
         - host: phttpbin.terence.cloud
           paths:
@@ -63,6 +60,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-secret: "httpbin/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
         nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       hosts:
         - host: httpbin.terence.cloud
           paths:
