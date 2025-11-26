@@ -346,10 +346,9 @@ argo-cd:
         # - k8s-ingress.snow-delta.ts.net
       tls: true
       ingressClassName: traefik
-      https: false
+      https: true
   configs:
     cm:
-      server.insecure: "true"
       url: https://argocd.terence.cloud
       resource.exclusions: |
         - apiGroups:
