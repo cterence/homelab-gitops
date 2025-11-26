@@ -227,6 +227,9 @@ app-template:
   persistence:
     buckets:
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 2Gi
       advancedMounts:

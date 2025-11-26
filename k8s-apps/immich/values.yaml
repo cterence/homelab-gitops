@@ -67,6 +67,9 @@ immich:
         enabled: true
         size: 1Gi
         type: persistentVolumeClaim
+        annotations:
+          helm.sh/resource-policy: keep
+          argocd.argoproj.io/sync-options: Delete=false
         accessMode: ReadWriteOnce
 
   # Immich components
@@ -173,6 +176,9 @@ immich:
         size: 10Gi
         # Optional: Set this to pvc to avoid downloading the ML models every start.
         type: persistentVolumeClaim
+        annotations:
+          helm.sh/resource-policy: keep
+          argocd.argoproj.io/sync-options: Delete=false
         accessMode: ReadWriteOnce
         # storageClass: your-class
         labels:

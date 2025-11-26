@@ -99,6 +99,9 @@ app-template:
     config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 100Mi
       globalMounts:
@@ -107,6 +110,9 @@ app-template:
     data:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 200Gi
       globalMounts:

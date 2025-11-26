@@ -4,6 +4,8 @@ metadata:
   name: immich-library-data
   annotations:
     argocd.argoproj.io/sync-options: ServerSideApply=true
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Delete=false
 spec:
   accessModes:
     - ReadWriteOnce

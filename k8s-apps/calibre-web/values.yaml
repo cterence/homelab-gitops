@@ -253,6 +253,9 @@ app-template:
     config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 50Mi
       globalMounts:
@@ -262,6 +265,9 @@ app-template:
       size: 10Gi
       accessMode: ReadWriteOnce
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       advancedMounts:
         main:
           main:
@@ -275,5 +281,8 @@ app-template:
       size: 10Gi
       accessMode: ReadWriteOnce
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       globalMounts:
         - path: /cwa-book-ingest
