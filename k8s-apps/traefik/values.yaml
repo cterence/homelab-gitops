@@ -143,6 +143,9 @@ traefik:
       traefik-real-ip:
         moduleName: github.com/soulbalz/traefik-real-ip
         version: v1.0.3
+      fail2ban:
+        moduleName: github.com/tomMoulard/fail2ban
+        version: v0.8.9
     # -- Enable experimental local plugins
     localPlugins: {}
     # -- Enable OTLP logging experimental feature.
@@ -895,10 +898,9 @@ traefik:
       #   - namespace-name1@kubernetescrd
       #   - namespace-name2@kubernetescrd
       middlewares:
-        - traefik-crowdsec@kubernetescrd
         - traefik-secure-headers@kubernetescrd
-        # - traefik-real-ip-logger@kubernetescrd
-        # - traefik-traefik-real-ip@kubernetescrd
+        - traefik-fail2ban@kubernetescrd
+        - traefik-crowdsec@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
         metrics: # @schema type:[boolean, null]; default: true
@@ -1225,6 +1227,24 @@ traefik:
         plugin:
           traefik-real-ip:
             excludednets: []
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: fail2ban
+      spec:
+        plugin:
+          fail2ban:
+            enabled: true
+            logLevel: DEBUG
+            allowlist:
+              ip:
+                - "109.0.228.97"
+                - "34.74.119.20"
+            rules:
+              bantime: "3h"
+              findtime: "1m"
+              maxretry: 4
+              statuscode: "400-499"
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
