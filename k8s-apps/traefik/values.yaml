@@ -467,7 +467,7 @@ traefik:
 
     access:
       # -- To enable access logs
-      enabled: false
+      enabled: true
       # -- Set [access log format](https://doc.traefik.io/traefik/observability/access-logs/#format)
       format: # @schema enum:["common", "genericCLF", "json", null]; type:[string, null]; default: "common"
       # filePath: "/var/log/traefik/access.log
