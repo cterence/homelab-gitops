@@ -295,7 +295,7 @@ traefik:
 
     kubernetesIngress:
       # -- Load Kubernetes Ingress provider
-      enabled: false
+      enabled: true
       # -- Allows to reference ExternalName services in Ingress
       allowExternalNameServices: false
       # -- Allows to return 503 when there are no endpoints available
