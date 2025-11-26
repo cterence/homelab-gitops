@@ -82,7 +82,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/proxy-body-size: "0"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host oc.terence.cloud
           paths:

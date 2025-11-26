@@ -136,7 +136,7 @@ garage:
     s3:
       api:
         enabled: true
-        className: "nginx"
+        className: "traefik"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt
           external-dns.alpha.kubernetes.io/target: home.terence.cloud
@@ -156,7 +156,7 @@ garage:
               - "s3-garage.terence.cloud"
       web:
         enabled: false
-        className: "nginx"
+        className: "traefik"
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt
           external-dns.alpha.kubernetes.io/target: home.terence.cloud
@@ -177,8 +177,7 @@ garage:
             hosts:
               - "*.web.garage.terence.cloud"
 
-  resources:
-    {}
+  resources: {}
     # The following are indicative for a small-size deployement, for anything serious double them.
     # limits:
     #   cpu: 100m

@@ -46,7 +46,7 @@ app-template:
         nginx.ingress.kubernetes.io/proxy-body-size: "0"
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host attic.terence.cloud
           paths:

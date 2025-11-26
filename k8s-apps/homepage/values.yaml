@@ -46,7 +46,7 @@ homepage:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-      ingressClassName: "nginx"
+      ingressClassName: "traefik"
       hosts:
         - host: &host "apps.terence.cloud"
           paths:
@@ -61,14 +61,12 @@ homepage:
   config:
     # To use an existing ConfigMap uncomment this line and specify the name
     # useExistingConfigMap: existing-homepage-configmap
-    bookmarks:
-      []
+    bookmarks: []
       # - Developer:
       #     - Github:
       #         - abbr: GH
       #           href: https://github.com/
-    services:
-      []
+    services: []
       # - My First Group:
       #     - My First Service:
       #         href: http://localhost/

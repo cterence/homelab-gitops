@@ -138,7 +138,7 @@ immich:
           external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
           cert-manager.io/cluster-issuer: letsencrypt
           nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-        className: nginx
+        className: traefik
         hosts:
           - host: immich.terence.cloud
             paths:

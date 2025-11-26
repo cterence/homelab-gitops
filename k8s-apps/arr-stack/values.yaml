@@ -821,7 +821,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host jf.terence.cloud
           paths:
@@ -839,7 +839,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host js.terence.cloud
           paths:
@@ -862,7 +862,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host jstat.terence.cloud
           paths:
@@ -887,7 +887,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host son.terence.cloud
           paths:
@@ -912,7 +912,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host rad.terence.cloud
           paths:
@@ -937,7 +937,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host lid.terence.cloud
           paths:
@@ -962,7 +962,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host prow.terence.cloud
           paths:
@@ -985,7 +985,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host baz.terence.cloud
           paths:
@@ -1008,7 +1008,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host qb.terence.cloud
           paths:
@@ -1034,7 +1034,7 @@ app-template:
         nginx.ingress.kubernetes.io/proxy-body-size: "0"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
         nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host fbq.terence.cloud
           paths:
@@ -1057,7 +1057,7 @@ app-template:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host slskd.terence.cloud
           paths:
@@ -1076,7 +1076,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host hunt.terence.cloud
           paths:

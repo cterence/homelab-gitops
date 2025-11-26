@@ -355,7 +355,7 @@ traefik:
       # -- Ingress Class Controller value this controller satisfies
       controllerClass: "k8s.io/ingress-nginx"
       # -- Name of the ingress class this controller satisfies
-      ingressClass: "nginx"
+      ingressClass: "traefik"
       # -- Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class
       ingressClassByName: false
       # -- Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified

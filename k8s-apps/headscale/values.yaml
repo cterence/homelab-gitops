@@ -441,7 +441,7 @@ headscale:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host headscale.terence.cloud
           paths:
@@ -460,7 +460,7 @@ headscale:
         nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
         nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
         external-dns.alpha.kubernetes.io/exclude: "true"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: *host
           paths:

@@ -12,8 +12,7 @@ crowdsec:
     # -- pullPolicy
     pullPolicy: IfNotPresent
     # -- pullSecrets
-    pullSecrets:
-      []
+    pullSecrets: []
       # - name: ""
     # -- docker image tag
     tag: "v1.7.3@sha256:4beb1633cf4f41bb6f9e64d065d151d3aa5e3aa7082d5c3061a243037db0d890"
@@ -32,8 +31,7 @@ crowdsec:
     # -- To better understand stages in parsers, you can take a look at https://docs.crowdsec.net/docs/next/parsers/intro/
     parsers:
       s00-raw: {}
-      s01-parse:
-        {}
+      s01-parse: {}
         # example-parser.yaml: |
         #   filter: "evt.Line.Labels.type == 'myProgram'"
         #   onsuccess: next_stage
@@ -50,8 +48,7 @@ crowdsec:
               - "46.193.107.14"
               - "34.74.119.20"
     # -- to better understand how to write a scenario, you can take a look at https://docs.crowdsec.net/docs/next/scenarios/intro
-    scenarios:
-      {}
+    scenarios: {}
       # myScenario.yaml: |
       #   type: trigger
       #    name: myName/MyScenario
@@ -60,12 +57,10 @@ crowdsec:
       #    ...
     # -- to better understand how to write a postoverflow, you can take a look at (https://docs.crowdsec.net/docs/next/whitelist/create/#whitelist-in-postoverflows)
     postoverflows:
-      s00-enrich:
-        {}
+      s00-enrich: {}
         # rdnsEnricher.yaml: |
         #   ...
-      s01-whitelist:
-        {}
+      s01-whitelist: {}
         # myRdnsWhitelist.yaml: |
         #   ...
     # -- Simulation configuration (https://docs.crowdsec.net/docs/next/scenarios/simulation/)
@@ -110,8 +105,7 @@ crowdsec:
               - "127.0.0.1/32"
               - "10.244.0.0/8"
     # -- notifications configuration (https://docs.crowdsec.net/docs/next/notification_plugins/intro)
-    notifications:
-      {}
+    notifications: {}
       # email.yaml: |
       #   type: email
       #   name: email_default
@@ -278,11 +272,9 @@ crowdsec:
       # -- Shared LAPI secret. Will be generated randomly if not specified. Size must be > 64 characters
       csLapiSecret: ""
     # -- Any extra secrets you may need (for example, external DB password)
-    extraSecrets:
-      {}
+    extraSecrets: {}
       # dbPassword: randomPass
-    lifecycle:
-      {}
+    lifecycle: {}
       # preStop:
       #   exec:
       #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
@@ -293,8 +285,7 @@ crowdsec:
   # agent will deploy pod on every node as daemonSet to read wanted pods logs
   agent:
     # -- To add custom acquisitions using available datasources (https://docs.crowdsec.net/docs/next/data_sources/intro)
-    additionalAcquisition:
-      []
+    additionalAcquisition: []
       # - source: kinesis
       #   stream_name: my-stream
       #   labels:
@@ -310,7 +301,7 @@ crowdsec:
         # -- to select pod logs to process
         podName: ingress-nginx-controller-*
         # -- program name related to specific parser you will use (see https://hub.crowdsec.net/author/crowdsecurity/configurations/docker-logs)
-        program: nginx
+        program: traefik
         # -- If set to true, will poll the files using os.Stat instead of using inotify
         poll_without_inotify: false
 

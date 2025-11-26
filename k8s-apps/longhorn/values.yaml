@@ -35,7 +35,7 @@ longhorn:
     concurrentAutomaticEngineUpgradePerNodeLimit: "5"
   ingress:
     enabled: true
-    ingressClassName: nginx
+    ingressClassName: traefik
     host: longhorn.terence.cloud
     tls: true
     tlsSecret: longhorn-tls

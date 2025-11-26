@@ -38,7 +38,7 @@ changedetection-io:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "changedetection/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      ingressClassName: nginx
+      ingressClassName: traefik
       hosts:
         - host: cd.terence.cloud
           paths:

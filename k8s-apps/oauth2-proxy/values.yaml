@@ -81,7 +81,7 @@ oauth2-proxy:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-    className: nginx
+    className: traefik
     path: /oauth2
     pathType: Prefix
     # Every host that needs oauth authentication

@@ -633,9 +633,9 @@ vaultwarden:
     ##
     enabled: true
     ## @param ingress.class Ingress resource class
-    ## The Ingress class to use, e. g. "nginx" for a nginx ingress controller or "alb" for a AWS LB controller.
+    ## The Ingress class to use, e. g. "traefik" for a nginx ingress controller or "alb" for a AWS LB controller.
     #
-    class: "nginx"
+    class: "traefik"
     ## @param ingress.nginxIngressAnnotations Add nginx specific ingress annotations
     ## This annotations are only makes sense for the kubernetes nginx ingress controller (https://kubernetes.github.io/ingress-nginx/)
     ##
@@ -669,7 +669,7 @@ vaultwarden:
     ## Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
     ##
     pathType: "Prefix"
-    ## @param ingress.tlsSecret Kubernetes secret containing the SSL certificate when using the "nginx" class.
+    ## @param ingress.tlsSecret Kubernetes secret containing the SSL certificate when using the "traefik" class.
     ##
     tlsSecret: "vaultwarden-tls"
     ## @param ingress.nginxAllowList Comma-separated list of IP addresses and subnets to allow.

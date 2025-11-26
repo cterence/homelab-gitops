@@ -159,7 +159,7 @@ gitea:
   ## @param ingress.tls Ingress tls settings
   ingress:
     enabled: true
-    className: "nginx"
+    className: "traefik"
     pathType: Prefix
     annotations:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
@@ -664,7 +664,7 @@ gitea-mirror:
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "gitea/client-auth-ca"
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host gitm.terence.cloud
           paths:

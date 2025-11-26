@@ -86,7 +86,7 @@ radicale:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0,::/0"
-      ingressClassName: "nginx"
+      ingressClassName: "traefik"
       hosts:
         - host: &host radicale.terence.cloud
           paths:
