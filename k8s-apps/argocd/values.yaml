@@ -345,7 +345,7 @@ argo-cd:
         argocd.terence.cloud
         # - k8s-ingress.snow-delta.ts.net
       tls: true
-      ingressClassName: nginx
+      ingressClassName: traefik
       https: true
   configs:
     cm:
