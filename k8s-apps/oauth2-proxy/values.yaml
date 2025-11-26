@@ -1,4 +1,7 @@
 oauth2-proxy:
+  extraArgs:
+    - --reverse-proxy=true
+
   proxyVarsAsSecrets: true
   config:
     # existingSecret: google-oauth2-credentials
@@ -76,7 +79,7 @@ oauth2-proxy:
             - claim: preferred_username
 
   ingress:
-    enabled: false
+    enabled: true
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
@@ -86,28 +89,7 @@ oauth2-proxy:
     pathType: Prefix
     # Every host that needs oauth authentication
     hosts:
-      - alertmanager.terence.cloud
-      - argocd.terence.cloud
-      - calibre.terence.cloud
-      - calibredl.terence.cloud
-      - cd.terence.cloud
-      - fbq.terence.cloud
       - grafana.terence.cloud
-      - headscale.terence.cloud
-      - phttpbin.terence.cloud
-      - jl.terence.cloud
-      - komoplane.terence.cloud
-      - lid.terence.cloud
-      - longhorn.terence.cloud
-      - np.terence.cloud
-      - ntfy.terence.cloud
-      - pihole.terence.cloud
-      - prometheus.terence.cloud
-      - prow.terence.cloud
-      - rad.terence.cloud
-      - son.terence.cloud
-      - tailout.terence.cloud
-      - z2m.terence.cloud
 
   metrics:
     enabled: true
