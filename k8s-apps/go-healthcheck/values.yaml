@@ -112,7 +112,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         nginx.ingress.kubernetes.io/limit-rpm: "10"
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-      className: "nginx"
+      className: "traefik"
       hosts:
         - host: &host health.terence.cloud
           paths:

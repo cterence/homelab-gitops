@@ -1096,7 +1096,17 @@ traefik:
   #
   # In some cases, it can avoid the need for additional, extended or adhoc deployments.
   # See #595 for more details and traefik/tests/values/extra.yaml for example.
-  extraObjects: []
+  extraObjects:
+    - apiVersion: traefik.io/v1alpha1
+      kind: TLSOption
+      metadata:
+        name: client-auth
+        namespace: cert-manager
+      spec:
+        clientAuth:
+          secretNames:
+            - client-auth-ca
+          clientAuthType: RequireAndVerifyClientCert
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
