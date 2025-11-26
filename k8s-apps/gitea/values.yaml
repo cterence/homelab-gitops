@@ -160,7 +160,7 @@ gitea:
   ingress:
     enabled: true
     className: "traefik"
-    pathType: Prefix
+    pathType: ImplementationSpecific
     annotations:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
@@ -169,6 +169,7 @@ gitea:
       nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
       nginx.ingress.kubernetes.io/auth-tls-secret: "gitea/client-auth-ca"
       nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
     hosts:
       - host: git.terence.cloud
         paths:
