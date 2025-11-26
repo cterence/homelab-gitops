@@ -742,7 +742,9 @@ traefik:
 
   # -- Additional Environment variables to be passed to Traefik's binary
   # @default -- See _values.yaml_
-  env: []
+  env:
+    - name: TZ
+      value: Europe/Paris
 
   # -- Environment variables to be passed to Traefik's binary from configMaps or secrets
   envFrom: []
