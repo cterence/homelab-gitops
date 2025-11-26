@@ -58,6 +58,7 @@ spec:
           - name: scrobble-deduplicator
           - name: snapshot-controller
           - name: tailscale-operator
+          - name: traefik
           - name: vaultwarden
           - name: velero
           - name: versity-gw

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: traefik
+description: A Traefik based Kubernetes ingress controller
+type: application
+version: 0.1.0
+dependencies:
+  - name: traefik
+    repository: https://traefik.github.io/charts
+    version: 37.4.0
