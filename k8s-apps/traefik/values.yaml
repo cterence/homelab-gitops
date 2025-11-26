@@ -585,7 +585,7 @@ traefik:
         namespaceSelector: {}
       prometheusRule:
         # -- Enable optional CR for Prometheus Operator. See EXAMPLES.md for more details.
-        enabled: true
+        enabled: false
         apiVersion: "monitoring.coreos.com/v1"
         additionalLabels: {}
         namespace: ""
