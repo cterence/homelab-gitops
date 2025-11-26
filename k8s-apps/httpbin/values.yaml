@@ -30,7 +30,7 @@ app-template:
   ingress:
     private:
       enabled: true
-      className: "nginx"
+      className: "traefik"
       annotations:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         cert-manager.io/cluster-issuer: letsencrypt
@@ -53,7 +53,7 @@ app-template:
 
     public:
       enabled: true
-      className: "nginx"
+      className: "traefik"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
