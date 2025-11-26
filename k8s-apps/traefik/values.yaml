@@ -71,12 +71,53 @@ traefik:
     # -- Additional initContainers (e.g. for setting file permission as shown below)
     initContainers:
       - name: modsecurity
-        image: docker.io/owasp/modsecurity-crs:4.20.0-nginx-alpine-202511100111
+        image: docker.io/owasp/modsecurity-crs:nginx-alpine
         restartPolicy: Always
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
         ports:
           - name: http
-            containerPort: 8080
-
+            containerPort: 8081
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          failureThreshold: 3
+        env:
+          - name: BACKEND
+            value: http://httpbin.httpbin:8080
+          - name: ACCESSLOG
+            value: /dev/null
+          - name: METRICSLOG
+            value: /dev/null
+          - name: PORT
+            value: "8081"
+          - name: SSL_PORT
+            value: "7443"
+          - name: DETECTION_PARANOIA
+            value: "2"
+          - name: BLOCKING_PARANOIA
+            value: "2"
+          - name: ANOMALY_INBOUND
+            value: "10"
+          - name: ANOMALY_OUTBOUND
+            value: "5"
+          - name: MODSEC_AUDIT_LOG_FORMAT
+            value: Native
     # The "volume-permissions" init container is required if you run into permission issues.
     # Related issue: https://github.com/traefik/traefik-helm-chart/issues/396
     # - name: volume-permissions
@@ -911,7 +952,6 @@ traefik:
         - traefik-secure-headers@kubernetescrd
         - traefik-fail2ban@kubernetescrd
         - traefik-modsecurity@kubernetescrd
-        - traefik-crowdsec@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
         metrics: # @schema type:[boolean, null]; default: true
@@ -1262,7 +1302,7 @@ traefik:
       spec:
         plugin:
           modsecurity:
-            modSecurityUrl: http://localhost:8080
+            modSecurityUrl: http://localhost:8081
             maxBodySize: 100000000
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
