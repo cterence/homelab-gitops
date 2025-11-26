@@ -209,14 +209,13 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        nginx.ingress.kubernetes.io/use-regex: "true"
-        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-strip-first-path@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host versity.terence.cloud
           paths:
-            - path: /webdav(/|$)(.*)
-              pathType: ImplementationSpecific
+            - path: /webdav
+              pathType: Prefix
               service:
                 identifier: webdav
                 port: http

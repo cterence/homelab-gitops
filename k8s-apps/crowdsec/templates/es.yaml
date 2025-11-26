@@ -15,6 +15,6 @@ spec:
     - secretKey: ENROLL_KEY
       remoteRef:
         key: crowdsec_enroll_key
-    - secretKey: BOUNCER_KEY_nginx
+    - secretKey: BOUNCER_KEY_traefik
       remoteRef:
-        key: crowdsec_bouncer_nginx_api_key
+        key: crowdsec_bouncer_key_traefik

@@ -12,6 +12,7 @@ urls:
   # - https://calibre.terence.cloud/health
   - https://calibre.terence.cloud
   - https://calibredl.terence.cloud/request/api/status
+  - https://cwd.terence.cloud/health
   - https://convert.terence.cloud
   - https://ha.terence.cloud
   - https://httpbin.terence.cloud
