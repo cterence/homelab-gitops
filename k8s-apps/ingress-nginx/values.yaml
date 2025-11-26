@@ -70,6 +70,8 @@ ingress-nginx:
         topologyKey: kubernetes.io/hostname
         maxSkew: 1
         whenUnsatisfiable: ScheduleAnyway
+    admissionWebhooks:
+      enabled: false
   ingress:
     options:
       allow-snippet-annotations: "true"
