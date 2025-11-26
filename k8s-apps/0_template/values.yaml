@@ -67,5 +67,8 @@ app-template:
   #     type: persistentVolumeClaim
   #     accessMode: ReadWriteOnce
   #     size: 50Mi
+  #     annotations:
+  #       helm.sh/resource-policy: keep
+  #       argocd.argoproj.io/sync-options: Delete=false
   #     globalMounts:
   #       - path: /config

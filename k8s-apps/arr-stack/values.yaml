@@ -1065,6 +1065,9 @@ app-template:
       size: 1200Gi
       labels:
         velero.io/exclude-from-backup: "true"
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       advancedMounts:
         jellyfin:
           jellyfin:
@@ -1105,6 +1108,9 @@ app-template:
     music:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 100Gi
       advancedMounts:
@@ -1130,6 +1136,9 @@ app-template:
     jellyfin-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 30Gi
       advancedMounts:
@@ -1150,6 +1159,9 @@ app-template:
     jellyseerr-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 1Gi
       advancedMounts:
@@ -1160,6 +1172,9 @@ app-template:
     jellystat-backup-data:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 1Gi
       advancedMounts:
@@ -1170,6 +1185,9 @@ app-template:
     sonarr-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 1Gi
       advancedMounts:
@@ -1180,6 +1198,9 @@ app-template:
     radarr-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 1Gi
       advancedMounts:
@@ -1190,6 +1211,9 @@ app-template:
     lidarr-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 2Gi
       advancedMounts:
@@ -1200,6 +1224,9 @@ app-template:
     qbittorrent-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 1Gi
       advancedMounts:
@@ -1220,6 +1247,9 @@ app-template:
     prowlarr-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 3Gi
       advancedMounts:
@@ -1230,6 +1260,9 @@ app-template:
     bazarr-config:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 100Mi
       advancedMounts:
@@ -1271,6 +1304,9 @@ app-template:
     filebrowser-quantum-db:
       enabled: true
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 100Mi
       advancedMounts:
@@ -1298,6 +1334,9 @@ app-template:
 
     slskd-data:
       type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 500Mi
       advancedMounts:
@@ -1343,15 +1382,6 @@ app-template:
           rangemusique:
             - path: /run-rangemusique.sh
               subPath: run-rangemusique.sh
-
-    # huntarr-config:
-    #   type: persistentVolumeClaim
-    #   accessMode: ReadWriteOnce
-    #   size: 1Gi
-    #   advancedMounts:
-    #     huntarr:
-    #       huntarr:
-    #         - path: /config
 
   configMaps:
     configarr-config:
@@ -1427,32 +1457,6 @@ app-template:
           echo "soularr done"
           rm $FILE
           echo "removed lockfile at $FILE"
-
-    rangemusique-script:
-      data:
-        run-rangemusique.sh: |
-          #!/bin/bash
-
-          FILE=/out/.soularr.lock
-          if [ -f $FILE ]; then
-            echo "soularr lockfile detected, not running rangemusique"
-          else
-            echo "soularr lockfile not detected, running rangemusique"
-            /app/main
-          fi
-
-    rangemusique-script:
-      data:
-        run-rangemusique.sh: |
-          #!/bin/bash
-
-          FILE=/out/.soularr.lock
-          if [ -f $FILE ]; then
-            echo "soularr lockfile detected, not running rangemusique"
-          else
-            echo "soularr lockfile not detected, running rangemusique"
-            /app/main
-          fi
 
     rangemusique-script:
       data:
