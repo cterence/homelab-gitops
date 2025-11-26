@@ -401,10 +401,10 @@ traefik:
   # - "--providers.file.filename=/config/dynamic.toml"
   # - "--ping"
   # - "--ping.entrypoint=web"`
-  volumes: []
-  # - name: public-cert
-  #   mountPath: "/certs"
-  #   type: secret
+  volumes:
+    - name: crowdsec-bouncer-key
+      mountPath: "/crowdsec-bouncer-key"
+      type: secret
   # - name: '{{ printf "%s-configs" .Release.Name }}'
   #   mountPath: "/config"
   #   type: configMap
@@ -883,7 +883,8 @@ traefik:
       # It follows the provider naming convention: https://doc.traefik.io/traefik/providers/overview/#provider-namespace
       #   - namespace-name1@kubernetescrd
       #   - namespace-name2@kubernetescrd
-      middlewares: []
+      middlewares:
+        - traefik-crowdsec@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
         metrics: # @schema type:[boolean, null]; default: true
@@ -1100,6 +1101,23 @@ traefik:
   # In some cases, it can avoid the need for additional, extended or adhoc deployments.
   # See #595 for more details and traefik/tests/values/extra.yaml for example.
   extraObjects:
+    - apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      metadata:
+        name: crowdsec-bouncer-key
+        annotations:
+          argocd.argoproj.io/sync-wave: "-1"
+      spec:
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: gitlab-secret-store
+        target:
+          name: crowdsec-bouncer-key
+          creationPolicy: Owner
+        data:
+          - secretKey: api-key
+            remoteRef:
+              key: crowdsec_bouncer_nginx_api_key
     - apiVersion: traefik.io/v1alpha1
       kind: TLSOption
       metadata:
@@ -1145,6 +1163,21 @@ traefik:
           middlewares:
             - name: oauth2-proxy-errors
             - name: oauth2-proxy-auth
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: crowdsec
+      spec:
+        plugin:
+          bouncer:
+            enabled: true
+            forwardedHeadersTrustedIPs:
+              - 10.0.10.23/32
+              - 10.0.20.0/24
+            clientTrustedIPs:
+              - 192.168.1.0/24
+            crowdsecLapiKey: /crowdsec-bouncer-key/api-key
+            crowdsecLapiHost: crowdsec-service.crowdsec:8080
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
