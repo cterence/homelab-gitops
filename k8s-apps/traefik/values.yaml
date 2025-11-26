@@ -885,6 +885,7 @@ traefik:
       #   - namespace-name2@kubernetescrd
       middlewares:
         - traefik-crowdsec@kubernetescrd
+        - traefik-secure-headers@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
         metrics: # @schema type:[boolean, null]; default: true
@@ -1187,6 +1188,21 @@ traefik:
         replacePathRegex:
           regex: "^/[^/]+(/|$)(.*)"
           replacement: "/$2"
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: secure-headers
+        namespace: traefik
+      spec:
+        headers:
+          stsSeconds: 15552000
+          stsIncludeSubdomains: true
+          stsPreload: true
+          forceSTSHeader: true
+          contentTypeNosniff: true
+          browserXssFilter: true
+          referrerPolicy: "strict-origin-when-cross-origin"
+          customFrameOptionsValue: "SAMEORIGIN"
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
