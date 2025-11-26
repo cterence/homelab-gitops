@@ -861,6 +861,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -886,6 +887,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -911,6 +913,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -936,6 +939,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -961,6 +965,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -984,6 +989,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -1007,6 +1013,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
@@ -1030,6 +1037,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
         nginx.ingress.kubernetes.io/proxy-body-size: "0"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
@@ -1056,6 +1064,7 @@ app-template:
         nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
         nginx.ingress.kubernetes.io/auth-tls-secret: "arr-stack/client-auth-ca"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
       className: "traefik"
       hosts:
