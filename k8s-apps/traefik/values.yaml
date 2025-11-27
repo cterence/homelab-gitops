@@ -181,7 +181,7 @@ traefik:
             - 10.0.0.0/8
             - 192.168.1.0/24
             - 109.0.228.97
-            - 34.74.119.20
+            - 34.75.201.84
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
@@ -237,7 +237,7 @@ traefik:
             allowLocalRequests: true
             allowUnknownCountries: true
             allowedIPAddresses:
-              - 34.74.119.20 # gatus
+              - 34.75.201.84 # gatus
               # github webhooks
               - 192.30.252.0/22
               - 185.199.108.0/22
