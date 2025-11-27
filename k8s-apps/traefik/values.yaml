@@ -201,8 +201,8 @@ traefik:
         moduleName: github.com/tomMoulard/fail2ban
         version: v0.8.9
       modsecurity:
-        moduleName: github.com/acouvreur/traefik-modsecurity-plugin
-        version: v1.3.0
+        moduleName: github.com/madebymode/traefik-modsecurity-plugin
+        version: v1.6.0
     # -- Enable experimental local plugins
     localPlugins: {}
     # -- Enable OTLP logging experimental feature.
@@ -953,6 +953,7 @@ traefik:
       #   - namespace-name2@kubernetescrd
       middlewares:
         - traefik-secure-headers@kubernetescrd
+        - traefik-autodetect-content-type@kubernetescrd
         - traefik-fail2ban@kubernetescrd
         # - traefik-modsecurity@kubernetescrd
       observability: # @schema additionalProperties: false
@@ -1228,18 +1229,28 @@ traefik:
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
+        name: autodetect-content-type
+      spec:
+        contentType: {}
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
         name: secure-headers
         namespace: traefik
       spec:
         headers:
-          stsSeconds: 15552000
+          browserXssFilter: true
+          contentTypeNosniff: true
+          customFrameOptionsValue: "SAMEORIGIN"
+          forceSTSHeader: true
+          frameDeny: true
+          referrerPolicy: "strict-origin-when-cross-origin"
           stsIncludeSubdomains: true
           stsPreload: true
-          forceSTSHeader: true
-          contentTypeNosniff: true
-          browserXssFilter: true
-          referrerPolicy: "strict-origin-when-cross-origin"
-          customFrameOptionsValue: "SAMEORIGIN"
+          stsSeconds: 15552000
+          customResponseHeaders: # remove unnecessary headers which expose used server software
+            server: ""
+            x-powered-by: ""
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
