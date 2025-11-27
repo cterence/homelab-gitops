@@ -1280,6 +1280,8 @@ traefik:
         REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf: |
           SecRule REQUEST_HEADERS:User-Agent "@rx ^kube-probe/.*$" \
             "id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920350"
+          SecRule REQUEST_HEADERS:User-Agent "@rx ^GitHub-Hookshot/.*$" \
+            "id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=931130,ctl:ruleRemoveById=932281"
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
