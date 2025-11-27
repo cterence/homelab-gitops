@@ -22,7 +22,6 @@ spec:
             namespace: cnpg-system
             serverSideApply: true
           - name: convertx
-          - name: crowdsec
           - name: external-dns
           - name: external-secrets
             serverSideApply: true
