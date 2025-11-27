@@ -74,7 +74,7 @@ traefik:
     # -- Additional initContainers (e.g. for setting file permission as shown below)
     initContainers:
       - name: modsecurity
-        image: docker.io/owasp/modsecurity-crs:4.20.0-nginx-alpine-202511100111@sha256:b072067f11714eb78c5ea67eb5fcfe41ebdfbec2ff23cd5589ff248a924847da
+        image: docker.io/owasp/modsecurity-crs:4.20.0-apache-alpine-202511100111@sha256:bd07bd19a2f5a97ffffedeb5c7e7960c04eac212152a0cb4d134290a5767ca6f
         restartPolicy: Always
         securityContext:
           runAsUser: 0
@@ -82,47 +82,39 @@ traefik:
         ports:
           - name: http
             containerPort: 8081
-        livenessProbe:
-          httpGet:
-            path: /
-            port: http
-            scheme: HTTP
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: http
-            scheme: HTTP
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
-          failureThreshold: 3
         env:
           - name: BACKEND
             value: http://httpbin.httpbin:8080
-          - name: ACCESSLOG
+          # - name: ACCESSLOG
+          #   value: /dev/null
+          - name: METRICSLOG
             value: /dev/null
           - name: MODSEC_REQ_BODY_LIMIT_ACTION
             value: ProcessPartial
-          - name: METRICSLOG
-            value: /dev/null
+          - name: MODSEC_REQ_BODY_LIMIT
+            value: "1073741824"
+          - name: MODSEC_REQ_BODY_NOFILES_LIMIT
+            value: "1073741824"
+          - name: MODSEC_RESP_BODY_LIMIT
+            value: "1073741824"
           - name: PORT
             value: "8081"
           - name: SSL_PORT
             value: "7443"
           - name: DETECTION_PARANOIA
-            value: "2"
+            value: "1"
           - name: BLOCKING_PARANOIA
-            value: "2"
+            value: "1"
           - name: ANOMALY_INBOUND
             value: "10"
           - name: ANOMALY_OUTBOUND
             value: "5"
           - name: ALLOWED_METHODS
-            value: "GET HEAD POST PUT DELETE OPTIONS PROPFIND MKCOL"
+            value: "GET HEAD POST PUT DELETE OPTIONS PROPFIND MKCOL MOVE COPY"
+          - name: ALLOWED_REQUEST_CONTENT_TYPE
+            value: "|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json| |application/octet-stream|"
+          - name: MODSEC_REQ_BODY_ACCESS
+            value: "Off"
         volumeMounts:
           - name: modsecurity-request-exclusion-rules
             mountPath: /etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
@@ -197,9 +189,6 @@ traefik:
       traefik-real-ip:
         moduleName: github.com/soulbalz/traefik-real-ip
         version: v1.0.3
-      fail2ban:
-        moduleName: github.com/tomMoulard/fail2ban
-        version: v0.8.9
       modsecurity:
         moduleName: github.com/madebymode/traefik-modsecurity-plugin
         version: v1.6.0
@@ -952,9 +941,8 @@ traefik:
       #   - namespace-name1@kubernetescrd
       #   - namespace-name2@kubernetescrd
       middlewares:
-        - traefik-fail2ban@kubernetescrd
         - traefik-secure-headers@kubernetescrd
-        # - traefik-modsecurity@kubernetescrd
+        - traefik-modsecurity@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
         metrics: # @schema type:[boolean, null]; default: true
@@ -1184,6 +1172,25 @@ traefik:
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
+        name: secure-headers
+        namespace: traefik
+      spec:
+        headers:
+          browserXssFilter: true
+          contentTypeNosniff: true
+          customFrameOptionsValue: "SAMEORIGIN"
+          forceSTSHeader: true
+          frameDeny: true
+          referrerPolicy: "strict-origin-when-cross-origin"
+          stsIncludeSubdomains: true
+          stsPreload: true
+          stsSeconds: 15552000
+          customResponseHeaders: # remove unnecessary headers which expose used server software
+            server: ""
+            x-powered-by: ""
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
         name: oauth2-proxy-auth
       spec:
         forwardAuth:
@@ -1228,50 +1235,6 @@ traefik:
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
-        name: secure-headers
-        namespace: traefik
-      spec:
-        headers:
-          browserXssFilter: true
-          contentTypeNosniff: true
-          customFrameOptionsValue: "SAMEORIGIN"
-          forceSTSHeader: true
-          frameDeny: true
-          referrerPolicy: "strict-origin-when-cross-origin"
-          stsIncludeSubdomains: true
-          stsPreload: true
-          stsSeconds: 15552000
-          customResponseHeaders: # remove unnecessary headers which expose used server software
-            server: ""
-            x-powered-by: ""
-    - apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      metadata:
-        name: traefik-real-ip
-      spec:
-        plugin:
-          traefik-real-ip:
-            excludednets: []
-    - apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      metadata:
-        name: fail2ban
-      spec:
-        plugin:
-          fail2ban:
-            enabled: true
-            allowlist:
-              ip:
-                - "109.0.228.97"
-                - "34.74.119.20"
-            rules:
-              bantime: "3h"
-              findtime: "1m"
-              maxretry: 4
-              statuscode: "400-499"
-    - apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      metadata:
         name: modsecurity
       spec:
         plugin:
@@ -1279,6 +1242,10 @@ traefik:
             modSecurityUrl: http://localhost:8081
             maxBodySize: 1000000000
             timeoutMillis: 120000
+            jailEnabled: true
+            JailTimeDurationSecs: 600
+            badRequestsThresholdCount: 5
+            badRequestsThresholdPeriodSecs: 60
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
