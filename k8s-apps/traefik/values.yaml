@@ -105,9 +105,9 @@ traefik:
           - name: SSL_PORT
             value: "7443"
           - name: DETECTION_PARANOIA
-            value: "2"
+            value: "1"
           - name: BLOCKING_PARANOIA
-            value: "2"
+            value: "1"
           - name: ANOMALY_INBOUND
             value: "10"
           - name: ANOMALY_OUTBOUND
