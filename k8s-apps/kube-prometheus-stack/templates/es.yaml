@@ -1,0 +1,37 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: telegram-bot-token
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: telegram-bot-token
+    creationPolicy: Owner
+  data:
+    - secretKey: token
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: alertmanager_bot_token
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: pocket-id-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: pocket-id-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: grafana_pocket_id_client_secret

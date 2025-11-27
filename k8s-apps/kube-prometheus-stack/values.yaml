@@ -90,6 +90,8 @@ kube-prometheus-stack:
     serviceMonitor:
       scrapeTimeout: 5s
 
+    envFromSecret: pocket-id-credentials
+
     ingress:
       enabled: true
       ingressClassName: traefik
@@ -112,11 +114,14 @@ kube-prometheus-stack:
         signout_redirect_url: "https://grafana.terence.cloud/oauth2/sign_out"
       auth.basic:
         enabled: false
-      auth.proxy:
+      auth.oauth_generic:
         enabled: true
-        header_name: X-Auth-Request-Email
-        header_property: email
+        auto_login: true
         auto_sign_up: true
+        auth_url: https://auth.terence.cloud/auth
+        token_url: https://auth.terence.cloud/token
+        api_url: https://auth.terence.cloud/userinfo
+        client_id: 1eded5c9-3543-4344-bd35-67a741fc0d8a
       users:
         allow_sign_up: false
         auto_assign_org: true
