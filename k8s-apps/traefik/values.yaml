@@ -103,8 +103,8 @@ traefik:
         env:
           - name: BACKEND
             value: http://httpbin.httpbin:8080
-          # - name: ACCESSLOG
-          #   value: /dev/null
+          - name: ACCESSLOG
+            value: /dev/null
           - name: MODSEC_REQ_BODY_LIMIT_ACTION
             value: ProcessPartial
           - name: METRICSLOG
