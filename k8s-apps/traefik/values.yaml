@@ -73,8 +73,11 @@ traefik:
         moduleName: github.com/madebymode/traefik-modsecurity-plugin
         version: v1.6.0
       geoblock:
-        moduleName: "github.com/PascalMinder/geoblock"
+        moduleName: github.com/PascalMinder/geoblock
         version: v0.3.3
+      souin:
+        moduleName: github.com/darkweak/souin
+        version: v1.7.8
     localPlugins: {}
     otlpLogs: false
     knative: false
@@ -138,6 +141,7 @@ traefik:
         - traefik-geoblock@kubernetescrd
         - traefik-modsecurity@kubernetescrd
         - traefik-secure-headers@kubernetescrd
+        - traefik-souin@kubernetescrd
     metrics:
       port: 9100
       expose:
@@ -254,6 +258,16 @@ traefik:
             logLocalRequests: false
             silentStartUp: true
             unknownCountryApiResponse: nil
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: souin
+      spec:
+        plugin:
+        souin:
+          default_cache:
+            ttl: 10s
+          log_level: debug
 
   ingressClass:
     enabled: true
