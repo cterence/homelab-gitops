@@ -954,7 +954,7 @@ traefik:
       middlewares:
         - traefik-secure-headers@kubernetescrd
         - traefik-fail2ban@kubernetescrd
-        - traefik-modsecurity@kubernetescrd
+        # - traefik-modsecurity@kubernetescrd
       observability: # @schema additionalProperties: false
         # -- Enables metrics for this entryPoint.
         metrics: # @schema type:[boolean, null]; default: true
