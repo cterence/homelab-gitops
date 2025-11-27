@@ -79,7 +79,7 @@ oauth2-proxy:
             - claim: preferred_username
 
   ingress:
-    enabled: true
+    enabled: false
     annotations:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
     className: traefik
