@@ -185,6 +185,7 @@ home-assistant:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         cert-manager.io/cluster-issuer: letsencrypt
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
       ingressClassName: "traefik"
       hosts:
         - host: &host "ha.terence.cloud"
