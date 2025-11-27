@@ -103,8 +103,10 @@ traefik:
         env:
           - name: BACKEND
             value: http://httpbin.httpbin:8080
-          - name: ACCESSLOG
-            value: /dev/null
+          # - name: ACCESSLOG
+          #   value: /dev/null
+          - name: MODSEC_REQ_BODY_LIMIT_ACTION
+            value: ProcessPartial
           - name: METRICSLOG
             value: /dev/null
           - name: PORT
@@ -114,13 +116,13 @@ traefik:
           - name: DETECTION_PARANOIA
             value: "2"
           - name: BLOCKING_PARANOIA
-            value: "1"
+            value: "2"
           - name: ANOMALY_INBOUND
             value: "10"
           - name: ANOMALY_OUTBOUND
             value: "5"
           - name: ALLOWED_METHODS
-            value: "GET HEAD POST PUT OPTIONS PROPFIND"
+            value: "GET HEAD POST PUT DELETE OPTIONS PROPFIND MKCOL"
         volumeMounts:
           - name: modsecurity-request-exclusion-rules
             mountPath: /etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
@@ -1271,7 +1273,8 @@ traefik:
         plugin:
           modsecurity:
             modSecurityUrl: http://localhost:8081
-            maxBodySize: 100000000
+            maxBodySize: 1000000000
+            timeoutMillis: 120000
     - apiVersion: v1
       kind: ConfigMap
       metadata:
