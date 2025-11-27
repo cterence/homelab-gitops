@@ -2,7 +2,6 @@ urls:
   - http://arr-stack-filebrowser-quantum.arr-stack:8080/health
   - http://arr-stack-flaresolverr.arr-stack:8191/health
   - http://kube-prometheus-stack-grafana.monitoring/api/health
-  - http://oauth2-proxy.oauth2-proxy/ping
   - https://alertmanager.terence.cloud/-/healthy
   - https://argocd.terence.cloud/healthz?full=true
   - https://attic.terence.cloud

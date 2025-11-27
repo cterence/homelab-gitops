@@ -45,7 +45,6 @@ spec:
           - name: mosquitto
           - name: nextcloud
             serverSideApply: true
-          - name: oauth2-proxy
           - name: opencloud
           - name: opentelemetry-collector
           - name: opentelemetry-operator
