@@ -71,8 +71,6 @@ traefik:
       - name: ok-server-script
         configMap:
           name: ok-server-script
-      - name: modsec-tmp
-        emptyDir: {}
     # - name: dsdsocket
     #   hostPath:
     #     path: /var/run/statsd-exporter
@@ -81,27 +79,20 @@ traefik:
       - name: ok-server
         image: docker.io/oven/bun:1.3-alpine
         restartPolicy: Always
-        securityContext:
-          runAsUser: 0
-          runAsNonRoot: false
-        command:
-          - bun
-        args:
-          - run
-          - /app/index.ts
+        command: ["bun"]
+        args: ["run", "/app/index.ts"]
+        env:
+          - name: PORT
+            value: "8082"
         volumeMounts:
           - name: ok-server-script
             mountPath: /app/index.ts
             subPath: index.ts
-        env:
-          - name: PORT
-            value: "8082"
       - name: modsecurity
         image: docker.io/owasp/modsecurity-crs:4.20.0-apache-alpine-202511100111@sha256:bd07bd19a2f5a97ffffedeb5c7e7960c04eac212152a0cb4d134290a5767ca6f
         restartPolicy: Always
         securityContext:
-          runAsUser: 0
-          runAsNonRoot: false
+          runAsUser: 100
         env:
           - name: BACKEND
             value: http://localhost:8082
@@ -114,9 +105,9 @@ traefik:
           - name: SSL_PORT
             value: "7443"
           - name: DETECTION_PARANOIA
-            value: "1"
+            value: "2"
           - name: BLOCKING_PARANOIA
-            value: "1"
+            value: "2"
           - name: ANOMALY_INBOUND
             value: "10"
           - name: ANOMALY_OUTBOUND
@@ -135,8 +126,6 @@ traefik:
           - name: modsecurity-request-exclusion-rules
             mountPath: /etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
             subPath: REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-          # - name: modsec-tmp
-          #   mountPath: /tmp
     # The "volume-permissions" init container is required if you run into permission issues.
     # Related issue: https://github.com/traefik/traefik-helm-chart/issues/396
     # - name: volume-permissions
@@ -1285,6 +1274,8 @@ traefik:
             "id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920350"
           SecRule REQUEST_HEADERS:User-Agent "@rx ^GitHub-Hookshot/.*$" \
             "id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=931130,ctl:ruleRemoveById=932281"
+          SecRule REQUEST_URI "@rx ^/api/assets" \
+            "id:1000003,phase:1,pass,nolog,ctl:ruleRemoveById=200004"
     - apiVersion: v1
       kind: ConfigMap
       metadata:
