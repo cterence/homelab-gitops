@@ -52,7 +52,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts | ✅ |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance | ✅ |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter | ✅ |
-| [crowdsec](./scripts/../k8s-apps/crowdsec) | Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI | ✅ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
 | [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go | ✅ |
