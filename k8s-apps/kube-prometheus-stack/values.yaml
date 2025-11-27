@@ -109,18 +109,23 @@ kube-prometheus-stack:
 
     # The oAuth2 proxy handles authentication, not Grafana.
     grafana.ini:
+      server:
+        root_url: https://grafana.terence.cloud
       auth:
         disable_login_form: true
-        signout_redirect_url: "https://grafana.terence.cloud/oauth2/sign_out"
+        signout_redirect_url: https://auth.terence.cloud/api/oidc/end-session
+        oauth_allow_insecure_email_lookup: true
       auth.basic:
         enabled: false
-      auth.oauth_generic:
+      auth.generic_oauth:
         enabled: true
+        name: Pocket ID
         auto_login: true
-        auto_sign_up: true
-        auth_url: https://auth.terence.cloud/auth
-        token_url: https://auth.terence.cloud/token
-        api_url: https://auth.terence.cloud/userinfo
+        allow_sign_up: true
+        scopes: openid email profile
+        auth_url: https://auth.terence.cloud/authorize
+        token_url: https://auth.terence.cloud/api/oidc/token
+        api_url: https://auth.terence.cloud/api/oidc/userinfo
         client_id: 1eded5c9-3543-4344-bd35-67a741fc0d8a
       users:
         allow_sign_up: false
@@ -134,6 +139,9 @@ kube-prometheus-stack:
       limits:
         cpu: 1000m
         memory: 512Mi
+
+    livenessProbe:
+      initialDelaySeconds: 30
 
     # Organise dashboards by provider, with the provider's name as the key.
     dashboards:
