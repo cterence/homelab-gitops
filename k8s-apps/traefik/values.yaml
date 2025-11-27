@@ -68,35 +68,47 @@ traefik:
       - name: modsecurity-request-exclusion-rules
         configMap:
           name: modsecurity-request-exclusion-rules
+      - name: ok-server-script
+        configMap:
+          name: ok-server-script
+      - name: modsec-tmp
+        emptyDir: {}
     # - name: dsdsocket
     #   hostPath:
     #     path: /var/run/statsd-exporter
     # -- Additional initContainers (e.g. for setting file permission as shown below)
     initContainers:
+      - name: ok-server
+        image: docker.io/oven/bun:1.3-alpine
+        restartPolicy: Always
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        command:
+          - bun
+        args:
+          - run
+          - /app/index.ts
+        volumeMounts:
+          - name: ok-server-script
+            mountPath: /app/index.ts
+            subPath: index.ts
+        env:
+          - name: PORT
+            value: "8082"
       - name: modsecurity
         image: docker.io/owasp/modsecurity-crs:4.20.0-apache-alpine-202511100111@sha256:bd07bd19a2f5a97ffffedeb5c7e7960c04eac212152a0cb4d134290a5767ca6f
         restartPolicy: Always
         securityContext:
           runAsUser: 0
           runAsNonRoot: false
-        ports:
-          - name: http
-            containerPort: 8081
         env:
           - name: BACKEND
-            value: http://httpbin.httpbin:8080
-          # - name: ACCESSLOG
-          #   value: /dev/null
+            value: http://localhost:8082
+          - name: ACCESSLOG
+            value: /dev/null
           - name: METRICSLOG
             value: /dev/null
-          - name: MODSEC_REQ_BODY_LIMIT_ACTION
-            value: ProcessPartial
-          - name: MODSEC_REQ_BODY_LIMIT
-            value: "1073741824"
-          - name: MODSEC_REQ_BODY_NOFILES_LIMIT
-            value: "1073741824"
-          - name: MODSEC_RESP_BODY_LIMIT
-            value: "1073741824"
           - name: PORT
             value: "8081"
           - name: SSL_PORT
@@ -113,12 +125,18 @@ traefik:
             value: "GET HEAD POST PUT DELETE OPTIONS PROPFIND MKCOL MOVE COPY"
           - name: ALLOWED_REQUEST_CONTENT_TYPE
             value: "|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json| |application/octet-stream|"
-          - name: MODSEC_REQ_BODY_ACCESS
-            value: "Off"
+          - name: MODSEC_REQ_BODY_LIMIT
+            value: "1073741824"
+          - name: MODSEC_REQ_BODY_NOFILES_LIMIT
+            value: "1073741824"
+          - name: MODSEC_RESP_BODY_LIMIT
+            value: "1073741824"
         volumeMounts:
           - name: modsecurity-request-exclusion-rules
             mountPath: /etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
             subPath: REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+          # - name: modsec-tmp
+          #   mountPath: /tmp
     # The "volume-permissions" init container is required if you run into permission issues.
     # Related issue: https://github.com/traefik/traefik-helm-chart/issues/396
     # - name: volume-permissions
@@ -1267,6 +1285,13 @@ traefik:
             "id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920350"
           SecRule REQUEST_HEADERS:User-Agent "@rx ^GitHub-Hookshot/.*$" \
             "id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=931130,ctl:ruleRemoveById=932281"
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: ok-server-script
+      data:
+        index.ts: |
+          Bun.serve({ async fetch(req: Request) { if (req.body) { for await (const chunk of req.body); } return new Response("OK"); }, maxRequestBodySize: Infinity, });
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
@@ -1277,19 +1302,3 @@ traefik:
 
   # -- This field overrides the default version extracted from image.tag
   versionOverride: ""
-
-  # -- Required for OCI Marketplace integration.
-  # See https://docs.public.content.oci.oraclecloud.com/en-us/iaas/Content/Marketplace/understanding-helm-charts.htm
-  oci_meta:
-    # -- Enable specific values for Oracle Cloud Infrastructure
-    enabled:
-      false
-      # -- It needs to be an ocir repo
-    repo: traefik
-    images:
-      proxy:
-        image: traefik@sha256:aaf0f6185419a50c74651448c1a5bf4606bd2d2ddb7b8749eed505d55bf8b8ea
-        tag: latest
-      hub:
-        image: traefik-hub
-        tag: latest
