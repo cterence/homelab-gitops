@@ -22,7 +22,7 @@ traefik:
     # -- Deployment or DaemonSet
     kind: Deployment
     # -- Number of pods of the deployment (only applies when kind == Deployment)
-    replicas: 2
+    replicas: 1
     # -- Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10)
     revisionHistoryLimit: # @schema type:[integer, null];minimum:0
     # -- Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if Traefik does not shut down
@@ -199,9 +199,6 @@ traefik:
       modsecurity:
         moduleName: github.com/madebymode/traefik-modsecurity-plugin
         version: v1.6.0
-      traefikoidc:
-        moduleName: github.com/lukaszraczylo/traefikoidc
-        version: v0.7.10
     # -- Enable experimental local plugins
     localPlugins: {}
     # -- Enable OTLP logging experimental feature.
@@ -1224,26 +1221,6 @@ traefik:
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
-        name: traefikoidc-pocket-id
-      spec:
-        plugin:
-          traefikoidc:
-            providerURL: https://auth.terence.cloud
-            clientID: 1eded5c9-3543-4344-bd35-67a741fc0d8a
-            clientSecret: urn:k8s:secret:pocket-id-oauth2-credentials:client-secret
-            sessionEncryptionKey: urn:k8s:secret:pocket-id-oauth2-credentials:cookie-secret
-            callbackURL: /oauth2/callback
-            logoutURL: /oauth2/sign_out
-            scopes:
-              - roles
-            headers:
-              - name: X-Auth-Request-Email
-                value: '{{ print "{{.Claims.email}}" }}'
-              - name: X-Auth-Request-User
-                value: '{{ print "{{.Claims.preferred_username}}" }}'
-    - apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      metadata:
         name: ip-allowlist
       spec:
         ipAllowList:
@@ -1271,24 +1248,6 @@ traefik:
       data:
         index.ts: |
           Bun.serve({ async fetch(req: Request) { if (req.body) { for await (const chunk of req.body); } return new Response("OK"); }, maxRequestBodySize: Infinity, });
-    - apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      metadata:
-        name: pocket-id-oauth2-credentials
-      spec:
-        secretStoreRef:
-          kind: ClusterSecretStore
-          name: gitlab-secret-store
-        target:
-          name: pocket-id-oauth2-credentials
-          creationPolicy: Owner
-        data:
-          - secretKey: client-secret
-            remoteRef:
-              key: traefikoidc_pocket_id_client_secret
-          - secretKey: cookie-secret
-            remoteRef:
-              key: traefikoidc_pocket_id_cookie_secret
 
   # -- This field overrides the default Release Namespace for Helm.
   # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`

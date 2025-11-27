@@ -22,7 +22,7 @@ To access my apps, I expose them directly on the internet with port-forwarding o
 - GitOps deployment with [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) and [Helm](https://helm.sh/)
 - Simple flat directory structure: [argocd-apps](/argocd-apps/) contains ArgoCD applications deploying umbrella Helm charts in [k8s-apps](/k8s-apps/)
 - Fully automated HTTPS exposition using [cert-manager](https://cert-manager.io/), [external-dns](https://kubernetes-sigs.github.io/external-dns) and [traefik](https://doc.traefik.io/traefik/)
-- Authentication of sensitive apps with [traefikoidc](https://plugins.traefik.io/plugins/6613338ea28c508f411a44d5/traefik-oidc) with [PocketID](https://pocket-id.org/) as a passkey-only OIDC provider
+- Authentication of sensitive apps with [PocketID](https://pocket-id.org/) as a passkey-only OIDC provider
 - WAF using [ModSecurity plugin](https://plugins.traefik.io/plugins/644d9a72ebafd55c9c740848/mx-m-owasp-crs-modsecurity-plugin) and some [hacks](https://github.com/cterence/homelab-gitops/blob/a3fc90f9bab0287c901fd8f3cbab295a695b7658/k8s-apps/traefik/values.yaml#L78)
 - Secrets management with [external-secrets](https://external-secrets.io/latest/) and [GitLab CI/CD variables](https://external-secrets.io/latest/provider/gitlab-variables/)
 - Dynamic volume provisioning and synchronous replication across nodes with [Longhorn](https://longhorn.io/)
