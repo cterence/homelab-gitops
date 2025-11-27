@@ -55,7 +55,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [crowdsec](./scripts/../k8s-apps/crowdsec) | Open-source and participative security solution offering crowdsourced protection against malicious IPs and access to the most advanced real-world CTI | ✅ |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
-| [garage](./scripts/../k8s-apps/garage) | S3-compatible object store for small self-hosted geo-distributed deployments | ❌ |
 | [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go | ✅ |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
@@ -76,8 +75,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
 | [pocket-id](./scripts/../k8s-apps/pocket-id) | Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services | ✅ |
-| [qtap](./scripts/../k8s-apps/qtap) | eBPF agent that captures pre-encrypted network traffic | ❌ |
-| [radicale](./scripts/../k8s-apps/radicale) | Free and Open-Source CalDAV and CardDAV Server | ❌ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
 | [scrobble-deduplicator](./scripts/../k8s-apps/scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles | ✅ |
