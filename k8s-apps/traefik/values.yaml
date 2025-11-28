@@ -232,33 +232,6 @@ traefik:
             jailTimeDurationSecs: 600
             badRequestsThresholdCount: 5
             badRequestsThresholdPeriodSecs: 60
-    - apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      metadata:
-        name: geoblock
-      spec:
-        plugin:
-          geoblock:
-            allowLocalRequests: true
-            allowUnknownCountries: true
-            allowedIPAddresses:
-              - 34.75.201.84 # gatus
-              # github webhooks
-              - 192.30.252.0/22
-              - 185.199.108.0/22
-              - 140.82.112.0/20
-              - 143.55.64.0/20
-            api: https://get.geojs.io/v1/ip/country/{ip}
-            apiTimeoutMs: "150"
-            cacheSize: "1000"
-            countries:
-              - FR
-            forceMonthlyUpdate: true
-            logAllowedRequests: false
-            logApiRequests: false
-            logLocalRequests: false
-            silentStartUp: true
-            unknownCountryApiResponse: nil
 
   ingressClass:
     enabled: true
