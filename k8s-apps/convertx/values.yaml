@@ -14,7 +14,7 @@ app-template:
       type: deployment
       labels:
         sablier.enable: "true"
-        sablier.group: default
+        sablier.group: "{{ .Release.Name }}"
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -52,7 +52,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-sablier@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,{{ .Release.Namespace }}-sablier@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host convert.terence.cloud

@@ -16,7 +16,7 @@ app-template:
       type: deployment
       labels:
         sablier.enable: "true"
-        sablier.group: default
+        sablier.group: "calibre-web"
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -63,7 +63,7 @@ app-template:
       type: deployment
       labels:
         sablier.enable: "true"
-        sablier.group: default
+        sablier.group: "calibre-web-downloader"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -203,7 +203,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-sablier@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: calibre-web-sablier-cw@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host1 calibre.terence.cloud
@@ -223,7 +223,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-sablier@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: calibre-web-sablier-cwd@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host2 calibredl.terence.cloud

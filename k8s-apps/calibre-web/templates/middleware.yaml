@@ -1,0 +1,33 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-cw
+spec:
+  plugin:
+    sablier:
+      dynamic:
+        displayName: calibre-web
+        refreshFrequency: 5s
+        showDetails: true
+        theme: shuffle
+      sablierUrl: http://sablier-sablier.sablier:10000
+      sessionDuration: 1m
+      ignoreUserAgent: curl
+      group: calibre-web
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-cwd
+spec:
+  plugin:
+    sablier:
+      dynamic:
+        displayName: calibre-web-downloader
+        refreshFrequency: 5s
+        showDetails: true
+        theme: shuffle
+      sablierUrl: http://sablier-sablier.sablier:10000
+      sessionDuration: 1m
+      ignoreUserAgent: curl
+      group: calibre-web-downloader
