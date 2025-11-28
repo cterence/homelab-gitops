@@ -245,7 +245,7 @@ traefik:
               - 143.55.64.0/20
             api: https://get.geojs.io/v1/ip/country/{ip}
             apiTimeoutMs: "150"
-            cacheSize: "15"
+            cacheSize: "1000"
             countries:
               - FR
             forceMonthlyUpdate: true
