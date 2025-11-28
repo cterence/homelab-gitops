@@ -12,6 +12,7 @@ spec:
           - name: argocd
             serverSideApply: true
           - name: arr-stack
+            scaleToZero: true
           - name: attic
           - name: blackbox-exporter
             namespace: monitoring

@@ -65,6 +65,9 @@ app-template:
     jellyseerr:
       type: deployment
       strategy: Recreate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "js"
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -557,6 +560,9 @@ app-template:
     filebrowser-quantum:
       type: deployment
       strategy: Recreate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "fbq"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -693,41 +699,6 @@ app-template:
           command: /bin/bash
           args: ["/run-soularr.sh"]
 
-    huntarr:
-      enabled: false
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      pod:
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-      containers:
-        huntarr:
-          image:
-            repository: huntarr/huntarr
-            tag: 8.2.10@sha256:b5a47c2b43806165f433d308d69a21e74a687ce59f4fcccb612d6a7acb3af6d7
-          env:
-            TZ: Europe/Paris
-          ports:
-            - name: http
-              containerPort: 9705
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /ping
-            readiness:
-              enabled: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /ping
-
   service:
     jellyfin:
       controller: jellyfin
@@ -807,13 +778,6 @@ app-template:
       ports:
         http:
           port: 5030
-    huntarr:
-      enabled: false
-      controller: huntarr
-      type: ClusterIP
-      ports:
-        http:
-          port: 9705
 
   ingress:
     jellyfin:
@@ -838,6 +802,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-js@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host js.terence.cloud
@@ -1003,6 +968,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-fbq@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host fbq.terence.cloud
@@ -1035,25 +1001,6 @@ app-template:
                 port: http
       tls:
         - secretName: slskd-tls
-          hosts:
-            - *host
-
-    huntarr:
-      enabled: false
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
-      className: "traefik"
-      hosts:
-        - host: &host hunt.terence.cloud
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: huntarr
-                port: http
-      tls:
-        - secretName: huntarr-tls
           hosts:
             - *host
 
