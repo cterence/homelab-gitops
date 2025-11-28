@@ -1,5 +1,4 @@
 urls:
-  - http://arr-stack-filebrowser-quantum.arr-stack:8080/health
   - http://arr-stack-flaresolverr.arr-stack:8191/health
   - https://alertmanager.terence.cloud/-/healthy
   - https://argocd.terence.cloud/healthz?full=true
@@ -11,7 +10,6 @@ urls:
   - https://ha.terence.cloud
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
-  - https://js.terence.cloud/api/v1/status
   - https://jstat.terence.cloud/auth/isconfigured
   - https://git.terence.cloud/api/healthz
   - https://gitm.terence.cloud/api/health
