@@ -52,6 +52,7 @@ spec:
             serverSideApply: true
             serverSideDiff: true
           - name: reloader
+          - name: sablier
           - name: scrobble-deduplicator
           - name: snapshot-controller
           - name: tailscale-operator

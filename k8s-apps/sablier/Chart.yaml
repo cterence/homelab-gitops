@@ -1,0 +1,9 @@
+apiVersion: v2
+name: sablier
+description: A free and open-source software to start workloads on demand and stop them after a period of inactivity
+type: application
+version: 0.1.0
+dependencies:
+  - name: sablier
+    repository: https://sablierapp.github.io/helm-charts
+    version: 1.0.3

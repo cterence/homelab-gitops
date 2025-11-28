@@ -75,6 +75,9 @@ traefik:
       geoblock:
         moduleName: github.com/PascalMinder/geoblock
         version: v0.3.3
+      sablier:
+        moduleName: github.com/sablierapp/sablier
+        version: v1.10.1
     localPlugins: {}
     otlpLogs: false
     knative: false
