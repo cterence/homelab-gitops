@@ -258,7 +258,7 @@ app-template:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
-      size: 50Mi
+      size: 200Mi
       globalMounts:
         - path: /config
     calibre-library:
