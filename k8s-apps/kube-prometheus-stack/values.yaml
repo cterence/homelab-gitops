@@ -92,6 +92,10 @@ kube-prometheus-stack:
 
     envFromSecret: pocket-id-credentials
 
+    labels:
+      sablier.enable: "true"
+      sablier.group: "grafana"
+
     ingress:
       enabled: true
       ingressClassName: traefik
@@ -100,6 +104,7 @@ kube-prometheus-stack:
         cert-manager.io/cluster-issuer: letsencrypt
         cert-manager.io/issue-temporary-certificate: "true"
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: monitoring-sablier@kubernetescrd
       hosts:
         - grafana.terence.cloud
       tls:

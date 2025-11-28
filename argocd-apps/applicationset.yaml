@@ -38,6 +38,7 @@ spec:
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
+            scaleToZero: true
           - name: loki
           - name: longhorn
             namespace: longhorn-system
