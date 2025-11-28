@@ -74,6 +74,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
 | [pocket-id](./scripts/../k8s-apps/pocket-id) | Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services | ✅ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
+| [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
 | [scrobble-deduplicator](./scripts/../k8s-apps/scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles | ✅ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ✅ |
