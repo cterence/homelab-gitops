@@ -267,7 +267,7 @@ traefik:
         plugin:
           sablier:
             dynamic:
-              displayName: Sablier
+              displayName: application
               refreshFrequency: 5s
               showDetails: true
               theme: shuffle
