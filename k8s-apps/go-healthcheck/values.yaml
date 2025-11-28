@@ -31,7 +31,7 @@ urls:
   - https://rad.terence.cloud/ping
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
-  - https://tools.terence.cloud
+  # - https://tools.terence.cloud
   - https://versity.terence.cloud/health
   - https://z2m.terence.cloud
 
