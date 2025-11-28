@@ -12,6 +12,9 @@ app-template:
     main:
       type: deployment
       strategy: RollingUpdate
+      labels:
+        sablier.enable: "false"
+        sablier.group: default
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -46,6 +49,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        # traefik.ingress.kubernetes.io/router.middlewares: traefik-sablier@kubernetescrd
         # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       className: "traefik"
       hosts:

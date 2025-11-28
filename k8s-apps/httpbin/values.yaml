@@ -3,6 +3,9 @@ app-template:
   controllers:
     main:
       type: deployment
+      labels:
+        sablier.enable: "true"
+        sablier.group: default
       containers:
         main:
           image:
@@ -28,26 +31,6 @@ app-template:
           port: 8080
 
   ingress:
-    private:
-      enabled: true
-      className: "traefik"
-      annotations:
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        cert-manager.io/cluster-issuer: letsencrypt
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-      hosts:
-        - host: phttpbin.terence.cloud
-          paths:
-            - path: /
-              pathType: ImplementationSpecific
-              service:
-                identifier: main
-                port: http
-      tls:
-        - secretName: phttpbin-tls
-          hosts:
-            - phttpbin.terence.cloud
-
     public:
       enabled: true
       className: "traefik"
@@ -55,7 +38,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-sablier@kubernetescrd
       hosts:
         - host: httpbin.terence.cloud
           paths:

@@ -16,12 +16,14 @@ spec:
           - name: blackbox-exporter
             namespace: monitoring
           - name: calibre-web
+            scaleToZero: true
           - name: cert-manager
           - name: changedetection
           - name: cloudnative-pg
             namespace: cnpg-system
             serverSideApply: true
           - name: convertx
+            scaleToZero: true
           - name: external-dns
           - name: external-secrets
             serverSideApply: true
@@ -29,6 +31,7 @@ spec:
           - name: go-healthcheck
           - name: home-assistant
           - name: httpbin
+            scaleToZero: true
           - name: immich
           - name: it-tools
             scaleToZero: true
@@ -42,6 +45,7 @@ spec:
             serverSideDiff: true
           - name: metallb
           - name: microbin
+            scaleToZero: true
           - name: mosquitto
           - name: nextcloud
             serverSideApply: true
