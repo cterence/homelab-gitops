@@ -280,7 +280,7 @@ app-template:
         lidarr:
           image:
             repository: lscr.io/linuxserver/lidarr
-            tag: 3.1.0.4875-ls12@sha256:01d64fdba60554f5928b2ff8294a45c2e049423d5a9bac62167c40bdaeca231f
+            tag: 3.1.0.4875-ls13@sha256:47e8b286474150a42477e278be9ddd5c7956b691c8684cd0dfd1530c423a4722
           env:
             TZ: Europe/Paris
             PUID: 1000
