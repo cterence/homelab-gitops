@@ -34,7 +34,7 @@ argo-cd:
     name: valkey
     image:
       repository: docker.io/valkey/valkey
-      tag: 9.0-alpine@sha256:b4ee67d73e00393e712accc72cfd7003b87d0fcd63f0eba798b23251bfc9c394
+      tag: 9.0-alpine@sha256:bef37d06d4856710973ee31dd1eac1482e4c8e6e7b847f999ad25433e646587b
     metrics:
       enabled: true
       serviceMonitor:
