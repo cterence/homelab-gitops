@@ -102,6 +102,11 @@ traefik:
       port: 8000
       expose:
         default: true
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
       exposedPort: 80
       forwardedHeaders:
         trustedIPs:
