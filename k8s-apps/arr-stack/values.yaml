@@ -693,7 +693,7 @@ app-template:
         soularr:
           image:
             repository: mrusse08/soularr
-            tag: latest@sha256:277236ed4281814742cec61422397749a0bb3e61dded08c399fcefea2d3fd5e6
+            tag: latest@sha256:6219aba2820f4fad0a2bc492330d34edd550c77134b061b2f111cc66de8fb058
           env:
             TZ: Europe/Paris
           command: /bin/bash
