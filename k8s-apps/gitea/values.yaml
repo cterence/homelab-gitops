@@ -166,7 +166,7 @@ gitea:
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       cert-manager.io/cluster-issuer: letsencrypt
       traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrdbernetescrd
     hosts:
       - host: git.terence.cloud
         paths:
