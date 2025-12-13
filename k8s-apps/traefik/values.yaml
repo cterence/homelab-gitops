@@ -223,6 +223,10 @@ traefik:
             "id:1000003,phase:1,pass,nolog,ctl:ruleRemoveById=200004"
           SecRule REQUEST_URI "@rx ^/_api/v1/(get-missing-paths|upload-path)" \
             "id:1000004,phase:1,nolog,pass,ctl:requestBodyAccess=Off"
+          SecRule REQUEST_URI "@rx ^/audio/" \
+            "id:1000005,phase:1,pass,nolog,ctl:ruleEngine=Off"
+          SecRule REQUEST_URI "@rx ^/videos/" \
+            "id:1000006,phase:1,pass,nolog,ctl:ruleEngine=Off"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
