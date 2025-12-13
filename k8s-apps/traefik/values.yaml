@@ -159,7 +159,7 @@ traefik:
         name: ok-server-script
       data:
         index.ts: |
-          Bun.serve({ async fetch(req: Request) { if (req.body) { for await (const chunk of req.body); } return new Response("OK"); }, maxRequestBodySize: Infinity, });
+          Bun.serve({ async fetch(req: Request) { if (req.body) { for await (const chunk of req.body); } return new Response("OK", { status: 200 }); }, maxRequestBodySize: Infinity, });
     - apiVersion: traefik.io/v1alpha1
       kind: TLSOption
       metadata:
