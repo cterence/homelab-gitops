@@ -822,7 +822,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
@@ -843,7 +843,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
@@ -864,6 +864,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
@@ -884,7 +885,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
@@ -906,6 +907,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host prow.terence.cloud
@@ -925,7 +927,7 @@ app-template:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
@@ -946,7 +948,7 @@ app-template:
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
@@ -988,7 +990,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
