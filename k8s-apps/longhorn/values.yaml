@@ -44,6 +44,7 @@ longhorn:
       external-dns.alpha.kubernetes.io/target: home.terence.cloud
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
   metrics:
     serviceMonitor:
       enabled: true

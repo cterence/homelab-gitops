@@ -60,6 +60,7 @@ kube-prometheus-stack:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
       hosts:
         - prometheus.terence.cloud
       tls:
@@ -294,8 +295,8 @@ kube-prometheus-stack:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
       hosts:
         - alertmanager.terence.cloud
       paths:
