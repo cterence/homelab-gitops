@@ -144,7 +144,7 @@ traefik:
         domains: []
       middlewares:
         - traefik-geoblock@kubernetescrd
-        - traefik-modsecurity@kubernetescrd
+        - traefik-secure-headers@kubernetescrd
     metrics:
       port: 9100
       expose:

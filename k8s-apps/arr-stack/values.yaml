@@ -784,6 +784,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host jf.terence.cloud
@@ -798,11 +799,35 @@ app-template:
           hosts:
             - *host
 
+    jellyfin-media:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.priority: "100"
+      className: "traefik"
+      hosts:
+        - host: &host jf.terence.cloud
+          paths:
+            - path: /videos
+              pathType: Prefix
+              service:
+                identifier: jellyfin
+                port: http
+            - path: /audio
+              pathType: Prefix
+              service:
+                identifier: jellyfin
+                port: http
+      tls:
+        - secretName: jellyfin-tls
+          hosts:
+            - *host
+
     jellyseerr:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrdbernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-js@kubernetescrd,traefik-modsecurity@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host js.terence.cloud
@@ -970,7 +995,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrdbernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-fbq@kubernetescrd,traefik-modsecurity@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host fbq.terence.cloud

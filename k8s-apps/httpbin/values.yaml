@@ -38,7 +38,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrdbernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd"
       hosts:
         - host: httpbin.terence.cloud
           paths:
