@@ -13,4 +13,4 @@ dependencies:
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
-    version: 0.3.1
+    version: 0.5.0
