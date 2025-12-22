@@ -285,7 +285,7 @@ kube-prometheus-stack:
         receiver: telegram
         routes:
           - matchers:
-              - alertname=~"CNPGClusterHA.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog"
+              - alertname=~"CNPGClusterHA.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog|InfoInhibitor"
             receiver: empty
 
     ingress:
