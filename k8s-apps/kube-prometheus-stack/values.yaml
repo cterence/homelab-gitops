@@ -359,10 +359,10 @@ kube-prometheus-stack:
         group_by: ["alertname"]
         group_wait: 0s
         receiver: telegram
-        routes:
-          - matchers:
-              - alertname=~"CNPGClusterHA.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog|InfoInhibitor"
-            receiver: empty
+        # routes:
+        #   - matchers:
+        #       - alertname=~"CNPGClusterHA.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog|InfoInhibitor"
+        #     receiver: empty
 
     ingress:
       enabled: true
