@@ -296,7 +296,7 @@ velero:
       # If used, it will take precedence over the kubectl.image.tag.
       # digest:
       # kubectl image tag. If used, it will take precedence over the cluster Kubernetes version.
-      tag: 1.34.2
+      tag: 1.35.0@sha256:5e47bfc2f1ba0558318d545f4899381db9c1c4ef3a352f5c51d365489262428f
     # Container Level Security Context for the 'kubectl' container of the crd jobs. Optional.
     # See: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
     containerSecurityContext: {}
