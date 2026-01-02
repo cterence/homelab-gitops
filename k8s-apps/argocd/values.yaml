@@ -52,12 +52,12 @@ argo-cd:
 
     initContainers:
       - name: helm-plugin-install
-        image: alpine/helm:3@sha256:aef9b56f64e866207d9591d0abd8f6d767b36aadd12edf68f8a719716d9d29c9
+        image: alpine/helm:4
         command: ["/bin/sh", "-c"]
         args:
           - |
-            helm plugin install https://github.com/aslafy-z/helm-git;
-            helm plugin install https://github.com/hypnoglow/helm-s3;
+            helm plugin install --verify=false https://github.com/aslafy-z/helm-git;
+            helm plugin install --verify=false https://github.com/hypnoglow/helm-s3;
         env:
           - name: HELM_PLUGINS
             value: /home/argocd/cmp-server/pluginsc
