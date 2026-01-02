@@ -5,5 +5,5 @@ type: application
 version: 0.1.0
 dependencies:
   - name: zigbee2mqtt
-    repository: oci://tccr.io/truecharts
+    repository: oci://oci.trueforge.org/truecharts
     version: 15.15.5

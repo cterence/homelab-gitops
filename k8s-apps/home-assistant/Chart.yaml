@@ -5,7 +5,7 @@ type: application
 version: 0.1.0
 dependencies:
   - name: home-assistant
-    repository: oci://tccr.io/truecharts
+    repository: oci://oci.trueforge.org/truecharts
     version: 28.19.8
   - name: cluster
     alias: cnpg-cluster
