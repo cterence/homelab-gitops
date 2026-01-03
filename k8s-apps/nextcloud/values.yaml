@@ -643,28 +643,6 @@ cnpg-cluster:
     postgresql: {}
     initdb:
       database: nextcloud
-  recovery:
-    method: import
-    import:
-      type: microservice
-      databases: ["nextcloud"]
-      schemaOnly: false
-      source:
-        host: nextcloud-cnpg-cluster-pg17-rw
-        username: nextcloud
-        database: nextcloud
-        passwordSecret:
-          name: nextcloud-cnpg-cluster-pg17-app
-          key: password
-        sslKeySecret:
-          name: nextcloud-cnpg-cluster-pg17-replication
-          key: tls.key
-        sslCertSecret:
-          name: nextcloud-cnpg-cluster-pg17-replication
-          key: tls.crt
-        sslRootCertSecret:
-          name: nextcloud-cnpg-cluster-pg17-ca
-          key: ca.crt
 
 valkey:
   deploymentStrategy: Recreate
