@@ -212,7 +212,7 @@ velero:
   # Settings for Velero's prometheus metrics. Enabled by default.
   metrics:
     enabled: true
-    scrapeInterval: 30s
+    scrapeInterval: 120s
     scrapeTimeout: 10s
 
     # service metdata if metrics are enabled

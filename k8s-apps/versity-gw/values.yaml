@@ -260,4 +260,4 @@ app-template:
           scheme: http
           path: /metrics
           interval: 30s
-          scrapeTimeout: 10s
+          scrapeTimeout: 120s
