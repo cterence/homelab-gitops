@@ -116,7 +116,7 @@ app-template:
         cloudflare-bypass:
           image:
             repository: ghcr.io/sarperavci/cloudflarebypassforscraping
-            tag: latest@sha256:51742d4d4bb252f4fee1be77fa6300690828ba03277c04cbc9b196d92cf2457d
+            tag: latest@sha256:23a4b471954dd25917f44c29e2f6bd36615b7892b36b64d463c06d50cbc27d92
           env:
             TZ: Europe/Paris
           ports:
