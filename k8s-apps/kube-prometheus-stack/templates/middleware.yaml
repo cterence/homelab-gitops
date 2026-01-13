@@ -11,6 +11,6 @@ spec:
         showDetails: true
         theme: shuffle
       sablierUrl: http://sablier-sablier.sablier:10000
-      sessionDuration: 1m
+      sessionDuration: 10m
       ignoreUserAgent: curl
       group: grafana
