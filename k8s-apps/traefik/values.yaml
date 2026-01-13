@@ -184,6 +184,7 @@ traefik:
         routes:
           - match: HostRegexp(`{host:.+}`) && !PathPrefix(`/.well-known/acme-challenge/`)
             kind: Rule
+            priority: 10000
             middlewares:
               - name: redirect-https
             services:
