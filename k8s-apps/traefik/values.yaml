@@ -226,6 +226,8 @@ traefik:
             "id:1000005,phase:1,pass,nolog,ctl:ruleEngine=Off"
           SecRule REQUEST_URI "@rx ^/videos/" \
             "id:1000006,phase:1,pass,nolog,ctl:ruleEngine=Off"
+          SecRule REQUEST_URI "@rx ^/.well-known/acme-challenge/" \
+            "id:1000007,phase:1,pass,nolog,ctl:ruleEngine=Off"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
