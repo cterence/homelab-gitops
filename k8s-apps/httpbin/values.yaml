@@ -39,6 +39,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
       hosts:
         - host: httpbin.terence.cloud
           paths:
