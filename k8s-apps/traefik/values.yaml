@@ -188,8 +188,7 @@ traefik:
             middlewares:
               - name: redirect-https
             services:
-              # Dummy service
-              - name: traefik
+              - name: noop@internal
                 kind: TraefikService
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
