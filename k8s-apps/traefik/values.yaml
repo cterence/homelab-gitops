@@ -164,6 +164,7 @@ traefik:
           secretNames:
             - client-auth-ca
           clientAuthType: RequireAndVerifyClientCert
+    # Middleware and catch-all ingress route to allow HTTP-01 challenges to succeed by allowing them use of port 80
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
@@ -182,14 +183,15 @@ traefik:
         entryPoints:
           - web
         routes:
-          - match: HostRegexp(`{host:.+}`) && !PathPrefix(`/.well-known/acme-challenge/`)
+          - match: PathPrefix(`/`) && !PathPrefix(`/.well-known/acme-challenge/`)
             kind: Rule
             priority: 10000
             middlewares:
               - name: redirect-https
             services:
-              - name: noop@internal
-                kind: TraefikService
+              - name: traefik
+                kind: Service
+                port: 80
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
