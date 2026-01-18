@@ -239,18 +239,29 @@ traefik:
         REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf: |
           SecRule REQUEST_HEADERS:User-Agent "@rx ^kube-probe/.*$" \
             "id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920350"
+
           SecRule REQUEST_HEADERS:User-Agent "@rx ^GitHub-Hookshot/.*$" \
             "id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=931130,ctl:ruleRemoveById=932281"
+
           SecRule REQUEST_URI "@rx ^/api/assets" \
             "id:1000003,phase:1,pass,nolog,ctl:ruleRemoveById=200004"
+
           SecRule REQUEST_URI "@rx ^/_api/v1/(get-missing-paths|upload-path)" \
             "id:1000004,phase:1,nolog,pass,ctl:requestBodyAccess=Off"
-          SecRule REQUEST_URI "@rx ^/audio/" \
+
+          <LocationMatch "(?i)^/(audio|videos)/">
+            RequestHeader unset Range
+          </LocationMatch>
+
+          SecRule REQUEST_URI "(?i)^/audio/" \
             "id:1000005,phase:1,pass,nolog,ctl:ruleEngine=Off"
-          SecRule REQUEST_URI "@rx ^/videos/" \
+
+          SecRule REQUEST_URI "(?i)^/videos/" \
             "id:1000006,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
           SecRule REQUEST_URI "@rx ^/.well-known/acme-challenge/" \
             "id:1000007,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
           SecRule REQUEST_URI "@rx ^/api/documents/" \
             "id:1000008,phase:1,pass,nolog,ctl:ruleRemoveById=942290"
     - apiVersion: traefik.io/v1alpha1
