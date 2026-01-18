@@ -78,7 +78,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
 | [scrobble-deduplicator](./scripts/../k8s-apps/scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles | ✅ |
-| [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ✅ |
+| [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ❌ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
 | [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller | ✅ |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
