@@ -61,7 +61,6 @@ spec:
           - name: reloader
           - name: sablier
           - name: scrobble-deduplicator
-          - name: snapshot-controller
           - name: tailscale-operator
           - name: traefik
           - name: vaultwarden
