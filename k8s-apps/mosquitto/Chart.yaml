@@ -6,4 +6,4 @@ version: 0.1.0
 dependencies:
   - name: mosquitto
     repository: oci://oci.trueforge.org/truecharts
-    version: 17.13.11
+    version: 17.13.12
