@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: gitea
     repository: https://dl.gitea.io/charts/
-    version: 12.4.0
+    version: 12.5.0
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
