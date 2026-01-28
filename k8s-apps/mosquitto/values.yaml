@@ -2,7 +2,7 @@
 mosquitto:
   image:
     repository: eclipse-mosquitto
-    tag: 2.0.22@sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d
+    tag: 2.0.22@sha256:90898877b5bbb95d7fa85c8835d264b12247133b18dea5b4379feb1d97f9ce8b
     pullPolicy: IfNotPresent
   service:
     main:
