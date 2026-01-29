@@ -267,6 +267,9 @@ traefik:
 
           SecRule REQUEST_URI "@rx ^/socket.io/" \
             "id:1000009,phase:1,pass,nolog,ctl:ruleRemoveById=980170,ctl:ruleRemoveById=920420"
+
+          SecRule REQUEST_URI "@rx ^/remote.php/dav/" \
+            "id:1000010,phase:1,pass,nolog,ctl:requestBodyAccess=Off"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
@@ -277,7 +280,7 @@ traefik:
             modSecurityUrl: http://localhost:8081
             maxBodySize: 1000000000
             timeoutMillis: 120000
-            jailEnabled: true
+            jailEnabled: false
             jailTimeDurationSecs: 600
             badRequestsThresholdCount: 5
             badRequestsThresholdPeriodSecs: 60
