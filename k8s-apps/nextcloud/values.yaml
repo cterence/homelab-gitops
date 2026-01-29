@@ -34,6 +34,7 @@ nextcloud:
       kubernetes.io/tls-acme: "true"
       cert-manager.io/cluster-issuer: letsencrypt
       traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+      traefik.ingress.kubernetes.io/router.priority: "10"
     tls:
       - secretName: nextcloud-tls
         hosts:

@@ -6,6 +6,7 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/target: home.terence.cloud
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    traefik.ingress.kubernetes.io/router.priority: "100"
 spec:
   ingressClassName: traefik
   rules:
