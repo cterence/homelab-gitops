@@ -1,0 +1,25 @@
+# Exclude remote.php from modsecurity due to special characters handling bug (#)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-dav
+  annotations:
+    external-dns.alpha.kubernetes.io/target: home.terence.cloud
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: next.terence.cloud
+      http:
+        paths:
+          - backend:
+              service:
+                name: nextcloud
+                port:
+                  name: http
+            path: /remote.php/dav
+            pathType: Prefix
+  tls:
+    - hosts:
+      - next.terence.cloud
+      secretName: nextcloud-tls

@@ -269,7 +269,7 @@ traefik:
             "id:1000009,phase:1,pass,nolog,ctl:ruleRemoveById=980170,ctl:ruleRemoveById=920420"
 
           SecRule REQUEST_URI "@rx ^/remote.php/dav/" \
-            "id:1000010,phase:1,pass,nolog,ctl:requestBodyAccess=Off"
+            "id:1000010,phase:1,pass,nolog,ctl:ruleEngine=Off"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
