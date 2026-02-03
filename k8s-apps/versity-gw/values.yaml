@@ -86,7 +86,7 @@ app-template:
         telegraf:
           image:
             repository: telegraf
-            tag: 1.37.1@sha256:d9c658cf29f505b91bd830f60720c5cc6a9e2e131198d6e2b6e525d58ecfa2d8
+            tag: 1.37.1@sha256:f6741bcdbb8704b408bbc2bda9e857bb78b4ed683c4aef8e3922d89f69754319
           env:
             TZ: Europe/Paris
           ports:
