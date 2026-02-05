@@ -237,6 +237,10 @@ traefik:
         name: modsecurity-request-exclusion-rules
       data:
         REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf: |
+          <LocationMatch "(?i)^/(audio|videos|api/assets)/">
+            RequestHeader unset Range
+          </LocationMatch>
+
           SecRule REQUEST_HEADERS:User-Agent "@rx ^kube-probe/.*$" \
             "id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920350"
 
@@ -248,10 +252,6 @@ traefik:
 
           SecRule REQUEST_URI "@rx ^/_api/v1/(get-missing-paths|upload-path)" \
             "id:1000004,phase:1,nolog,pass,ctl:requestBodyAccess=Off"
-
-          <LocationMatch "(?i)^/(audio|videos|assets)/">
-            RequestHeader unset Range
-          </LocationMatch>
 
           SecRule REQUEST_URI "(?i)^/audio/" \
             "id:1000005,phase:1,pass,nolog,ctl:ruleEngine=Off"
@@ -273,9 +273,6 @@ traefik:
 
           SecRule REQUEST_URI "@rx ^/api/auth/" \
             "id:1000011,phase:1,pass,nolog,ctl:ruleRemoveById=920420,ctl:ruleRemoveById=980170"
-
-          SecRule REQUEST_URI "@rx ^/api/assets/" \
-            "id:1000012,phase:1,pass,nolog,ctl:ruleEngine=Off"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
