@@ -270,6 +270,12 @@ traefik:
 
           SecRule REQUEST_URI "@rx ^/remote.php/dav/" \
             "id:1000010,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
+          SecRule REQUEST_URI "@rx ^/api/auth/" \
+            "id:1000011,phase:1,pass,nolog,ctl:ruleRemoveById=920420,ctl:ruleRemoveById=980170"
+
+          SecRule REQUEST_URI "@rx ^/api/assets/" \
+            "id:1000012,phase:1,pass,nolog,ctl:ruleEngine=Off"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
