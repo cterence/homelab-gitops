@@ -249,7 +249,7 @@ traefik:
           SecRule REQUEST_URI "@rx ^/_api/v1/(get-missing-paths|upload-path)" \
             "id:1000004,phase:1,nolog,pass,ctl:requestBodyAccess=Off"
 
-          <LocationMatch "(?i)^/(audio|videos)/">
+          <LocationMatch "(?i)^/(audio|videos|assets)/">
             RequestHeader unset Range
           </LocationMatch>
 
