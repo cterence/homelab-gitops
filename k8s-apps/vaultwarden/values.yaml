@@ -14,7 +14,7 @@ vaultwarden:
     ## @param image.tag Vaultwarden image tag
     ## Ref: https://hub.docker.com/r/vaultwarden/server/tags
     ##
-    tag: "1.35.2-alpine@sha256:dc364d362273e5604b13b02059dc98d60471e885c0a831e26be6c05ed5d488d0"
+    tag: "1.35.3-alpine@sha256:c40957876ec13c1cb0d2b08f86e8f738e6d06f7460bad9cdae216cded174c10d"
     ## @param image.pullPolicy Vaultwarden image pull policy
     ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     ##
