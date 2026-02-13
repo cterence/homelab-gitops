@@ -2,7 +2,6 @@ urls:
   - http://arr-stack-flaresolverr.arr-stack:8191/health
   - https://alertmanager.terence.cloud/-/healthy
   - https://argocd.terence.cloud/healthz?full=true
-  - https://attic.terence.cloud
   - https://auth.terence.cloud/healthz
   - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
@@ -28,8 +27,6 @@ urls:
   - https://z2m.terence.cloud
 
 cnpgClusters:
-  - name: attic-cnpg-cluster
-    namespace: attic
   - name: arr-stack-cnpg-cluster-jellystat
     namespace: arr-stack
   - name: gitea-cnpg-cluster
