@@ -46,7 +46,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [anki-sync-server](./scripts/../k8s-apps/anki-sync-server) | Sync server for AnkiDroid | ✅ |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
 | [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack | ✅ |
-| [attic](./scripts/../k8s-apps/attic) | Multi-tenant Nix Binary Cache | ✅ |
+| [attic](./scripts/../k8s-apps/attic) | Multi-tenant Nix Binary Cache | ❌ |
 | [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ✅ |
 | [calibre-web](./scripts/../k8s-apps/calibre-web) | Web app for browsing, reading and downloading eBooks stored in a Calibre database | ✅ |
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes | ✅ |
