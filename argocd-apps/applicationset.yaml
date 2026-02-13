@@ -13,7 +13,6 @@ spec:
             serverSideApply: true
           - name: arr-stack
             scaleToZero: true
-          - name: attic
           - name: blackbox-exporter
             namespace: monitoring
           - name: calibre-web
