@@ -132,14 +132,15 @@ traefik:
           - 192.168.1.0/24
           - 10.0.0.0/8
         insecure: false
-      tls:
-        enabled: true
-        options: ""
-        certResolver: ""
-        domains: []
-      middlewares:
-        - traefik-geoblock@kubernetescrd
-        - traefik-secure-headers@kubernetescrd
+      http:
+        tls:
+          enabled: true
+          options: ""
+          certResolver: ""
+          domains: []
+        middlewares:
+          - traefik-geoblock@kubernetescrd
+          - traefik-secure-headers@kubernetescrd
     metrics:
       port: 9100
       expose:
