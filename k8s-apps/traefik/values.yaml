@@ -212,6 +212,7 @@ traefik:
             - 192.168.1.0/24
             - 109.0.228.97
             - 34.75.201.84
+            - 212.234.168.153
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
