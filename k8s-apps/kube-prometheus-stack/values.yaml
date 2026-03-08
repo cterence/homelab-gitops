@@ -257,6 +257,7 @@ kube-prometheus-stack:
             - send_resolved: true
               bot_token_file: /etc/alertmanager/secrets/telegram-bot-token/token
               chat_id: -1002235030838
+              parse_mode: "MarkdownV2"
               message: |
                 {{- define "telegram.alert_list" -}}
                   {{- $maxLength := 3900 -}}
@@ -266,95 +267,85 @@ kube-prometheus-stack:
                   {{- $message_no_labels_is_truncated := false -}}
 
                   {{- range .Alerts -}}
-                    {{- $escape_regex := "([-_*\\[\\]()~`>#+=|{}.!])" -}}
+                    {{- $escape_regex := "([-_*[\\]()~`>#+=|{}.!])" -}}
 
                     {{- /* Build alert text */ -}}
-                    {{- $alertText := ""}}
-                    {{- if eq .Status "firing" }}
-                      {{- $alertText = "🔥 "}}
-                    {{- end -}}
-                    {{- if eq .Status "resolved" }}
-                      {{- $alertText = "✅ "}}
-                    {{- end -}}
+                    {{- $alertText := "" -}}
+                    {{- if eq .Status "firing" }}{{ $alertText = "🔥 " }}{{ end -}}
+                    {{- if eq .Status "resolved" }}{{ $alertText = "✅ " }}{{ end -}}
 
                     {{- $title := .Labels.alertname | reReplaceAll  $escape_regex "\\$1" -}}
-                    {{- if .Annotations.summary}}
-                      {{- $title = printf "%s \\- %s" $title (.Annotations.summary | reReplaceAll  $escape_regex "\\$1")  -}}
-                    {{- end }}
+                    {{- if .Annotations.summary -}}
+                      {{- $title = printf "%s \\- %s" $title (.Annotations.summary | reReplaceAll  $escape_regex "\\$1") -}}
+                    {{- end -}}
 
                     {{- $alertText = printf "%s***\\<%s\\> %s***\n" $alertText ( or .Labels.severity "no severity") $title -}}
-                    {{- if .Annotations.description}}
+
+                    {{- if .Annotations.description -}}
                       {{- $alertText = printf "%s_%s_\n" $alertText ( .Annotations.description | reReplaceAll $escape_regex "\\$1" ) -}}
-                    {{- end }}
+                    {{- end -}}
 
                     {{- if .GeneratorURL -}}
                       {{- $alertText = printf "%s[Source](%s)" $alertText (.GeneratorURL) -}}
-                    {{- end }}
+                    {{- end -}}
 
                     {{- if .Annotations.runbook_url -}}
                       {{- $alertText = printf "%s [Runbook](%s)" $alertText (.Annotations.runbook_url) -}}
                     {{- end -}}
 
-                    {{- /* Store alert text without labels in case all alerts would not fit message length limit  */ -}}
-                    {{- $message_tmp := "" -}}
-                    {{- if $message_no_labels  -}}
-                      {{- $message_tmp = printf "%s\n\n%s" $message_no_labels $alertText -}}
+                    {{- /* Store alert text without labels for fallback */ -}}
+                    {{- $tmp_no_labels := "" -}}
+                    {{- if $message_no_labels -}}
+                      {{- $tmp_no_labels = printf "%s\n\n%s" $message_no_labels $alertText -}}
                     {{- else -}}
-                      {{- $message_tmp = printf "%s" $alertText -}}
+                      {{- $tmp_no_labels = $alertText -}}
                     {{- end -}}
 
-                    {{- if $message_tmp | len | gt $maxLength  -}}
-                      {{- $message_no_labels = $message_tmp -}}
+                    {{- if $tmp_no_labels | len | lt $maxLength -}}
+                      {{- $message_no_labels = $tmp_no_labels -}}
                     {{- else -}}
                       {{- $message_no_labels_is_truncated = true -}}
                     {{- end -}}
 
-                    {{- /* Add labels to alert text */ -}}
+                    {{- /* Add labels to alert text for the full message */ -}}
                     {{- range .Labels.SortedPairs -}}
                       {{- if (eq .Name "alertname" "description" "summary" "runbook_url" "severity" "prometheus" ) | not -}}
-                      {{- $alertText = printf "%s\n🏷 %s: `%s`" $alertText (.Name | reReplaceAll $escape_regex "\\$1" ) .Value -}}
+                        {{- $alertText = printf "%s\n🏷 %s: `%s`" $alertText (.Name | reReplaceAll $escape_regex "\\$1" ) (.Value | reReplaceAll $escape_regex "\\$1") -}}
                       {{- end -}}
-                    {{- end }}
-
-                    {{- $message_tmp := "" -}}
-                    {{- if $message  -}}
-                      {{- $message_tmp = printf "%s\n\n%s" $message $alertText -}}
-                    {{- else -}}
-                      {{- $message_tmp = printf "%s" $alertText -}}
                     {{- end -}}
 
-                    {{- if $message_tmp | len | gt $maxLength  -}}
-                      {{- $message = $message_tmp -}}
+                    {{- $tmp_full := "" -}}
+                    {{- if $message -}}
+                      {{- $tmp_full = printf "%s\n\n%s" $message $alertText -}}
+                    {{- else -}}
+                      {{- $tmp_full = $alertText -}}
+                    {{- end -}}
+
+                    {{- if $tmp_full | len | lt $maxLength -}}
+                      {{- $message = $tmp_full -}}
                     {{- else -}}
                       {{- $message_is_truncated = true -}}
                     {{- end -}}
-
-                  {{- end -}}
-
-                  {{- $message =  printf "%s\n" $message -}}
-                  {{- if $message_is_truncated -}}
-                    {{- $message =  printf "%s\nMessage is truncated to fit telegram API limit" $message -}}
-                  {{- end -}}
-
-                  {{- $message_no_labels =  printf "%s\n" $message_no_labels -}}
-                  {{- if $message_no_labels_is_truncated -}}
-                    {{- $message_no_labels =  printf "%s\nMessage is truncated to fit telegram API limit" $message_no_labels -}}
                   {{- end -}}
 
                   {{- if $message_is_truncated -}}
-                    {{- $message_no_labels -}}
+                    {{- printf "%s\n\n*(Message truncated to fit Telegram limits)*" $message_no_labels -}}
                   {{- else -}}
                     {{- $message -}}
                   {{- end -}}
                 {{- end -}}
 
                 {{- define "telegram.message" -}}
-                🔥  firing: {{ len .Alerts.Firing }} ✅ resolved: {{ len .Alerts.Resolved }}
+                🔥 Firing: {{ .Alerts.Firing | len }}  ✅ Resolved: {{ .Alerts.Resolved | len }}
 
                 {{ template "telegram.alert_list" . }}
+
                 [See On AlertManager]({{ .ExternalURL }}/#/alerts?receiver={{ .Receiver }})
                 \#alerts
                 {{- end -}}
+
+                {{- /* THIS PART IS CRITICAL: It calls the template defined above */ -}}
+                {{ template "telegram.message" . }}
       route:
         group_by: ["alertname"]
         group_wait: 0s
