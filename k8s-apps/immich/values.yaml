@@ -234,6 +234,8 @@ cnpg-cluster-vectorchord:
           - CNPGClusterLogicalReplicationErrors
           - CNPGClusterLogicalReplicationStoppedCritical
           - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
     postgresql:
       shared_preload_libraries:
         - "vchord.so"

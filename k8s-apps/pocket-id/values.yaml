@@ -320,5 +320,7 @@ cnpg-cluster:
           - CNPGClusterLogicalReplicationErrors
           - CNPGClusterLogicalReplicationStoppedCritical
           - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
     initdb:
       database: pocket_id

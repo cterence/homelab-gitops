@@ -647,6 +647,8 @@ cnpg-cluster:
           - CNPGClusterLogicalReplicationErrors
           - CNPGClusterLogicalReplicationStoppedCritical
           - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
     postgresql: {}
     initdb:
       database: nextcloud

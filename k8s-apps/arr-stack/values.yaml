@@ -1483,6 +1483,8 @@ cnpg-cluster-jellystat:
           - CNPGClusterLogicalReplicationErrors
           - CNPGClusterLogicalReplicationStoppedCritical
           - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
     postgresql: {}
     initdb:
       database: jellystat
