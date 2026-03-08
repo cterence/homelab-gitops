@@ -177,6 +177,12 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
     postgresql: {}
     initdb:
       database: paperless-ngx
