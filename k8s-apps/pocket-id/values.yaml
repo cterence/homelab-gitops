@@ -314,5 +314,11 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
     initdb:
       database: pocket_id

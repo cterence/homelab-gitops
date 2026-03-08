@@ -228,6 +228,12 @@ cnpg-cluster-vectorchord:
       enabled: true
       podMonitor:
         enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
     postgresql:
       shared_preload_libraries:
         - "vchord.so"

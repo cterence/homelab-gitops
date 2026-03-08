@@ -1477,6 +1477,12 @@ cnpg-cluster-jellystat:
       enabled: true
       podMonitor:
         enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
     postgresql: {}
     initdb:
       database: jellystat
