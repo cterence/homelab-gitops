@@ -256,7 +256,7 @@ app-template:
         main:
           image:
             repository: danielszabo99/microbin
-            tag: 2.1.2@sha256:4e08d1d127e5804f5e43a63c0c9555497d506ee94abb570214134b73a4810f62
+            tag: 2.1.4@sha256:6660e5ccad0d764fa3c0032464ffb8f4b4f28c92a2eb9e39202b94cdc5b68909
           env:
             TZ: Europe/Paris
             MICROBIN_ADMIN_PASSWORD:
