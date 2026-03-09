@@ -42,8 +42,8 @@ spec:
           - name: loki
           - name: longhorn
             namespace: longhorn-system
-            serverSideApply: true
             serverSideDiff: true
+            serverSideApply: true
           - name: metallb
           - name: microbin
             scaleToZero: true
