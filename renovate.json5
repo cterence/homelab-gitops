@@ -60,10 +60,10 @@
       overrideDatasource: "custom.garage",
       registryUrls: ["https://git.deuxfleurs.fr/Deuxfleurs/garage/raw/branch/main/script/helm/garage/Chart.yaml"],
     },
-    {
-      "matchPackageNames": ["/longhorn/", "/crocodilestick\\/calibre-web-automated/"],
-      "enabled": false
-    },
+    // {
+    //   "matchPackageNames": ["/longhorn/", "/crocodilestick\\/calibre-web-automated/"],
+    //   "enabled": false
+    // },
     // apps on 0ver but allowed to automerge
     {
       "matchPackageNames": ["/ghcr.io\\/dgtlmoon\\/changedetection.io/","/otel\\/opentelemetry-collector-contrib/","/opentelemetry-operator/","/ghcr.io\\/gtsteffaniak\\/filebrowser/", "/qtap/", "mendhak/http-https-echo", "slskd/slskd"],
