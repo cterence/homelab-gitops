@@ -77,6 +77,13 @@ opentelemetry-collector:
             - tag_name: service.version
               key: app.kubernetes.io/version
               from: pod
+      filter/logs:
+        error_mode: ignore
+        logs:
+          exclude:
+            match_type: regexp
+            bodies:
+              - '.*"kube-probe/.*"'
     receivers:
       otlp:
         protocols:
@@ -109,6 +116,7 @@ opentelemetry-collector:
             - debug
             - otlphttp/loki
           processors:
+            - filter/logs
             - memory_limiter
             - batch
           receivers:
