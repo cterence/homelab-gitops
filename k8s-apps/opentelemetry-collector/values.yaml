@@ -83,7 +83,12 @@ opentelemetry-collector:
           exclude:
             match_type: regexp
             bodies:
-              - '.*"kube-probe/.*"'
+              - ".*kube-probe.*"
+              - ".*/health.*"
+              - ".*/metrics.*"
+              - ".*/status.*"
+              - ".*canary-push.*"
+              - ".*loki-canary.*"
     receivers:
       otlp:
         protocols:
