@@ -89,6 +89,7 @@ opentelemetry-collector:
               - ".*/status.*"
               - ".*canary-push.*"
               - ".*loki-canary.*"
+              - ".*MQTT publish.*"
     receivers:
       otlp:
         protocols:
