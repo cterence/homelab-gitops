@@ -630,7 +630,7 @@ gitea-mirror:
         main:
           image:
             repository: ghcr.io/raylabshq/gitea-mirror
-            tag: v3.13.1@sha256:d9386b4cda69f6c291c713c56bebd5f3db7effba5d85d8137829d54743c40afc
+            tag: v3.13.2@sha256:3953904f0bcd867740b16b60abd493279cb425329a3569a89746e9366a3f0516
           env:
             TZ: Europe/Paris
             BETTER_AUTH_SECRET:
