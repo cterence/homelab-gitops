@@ -36,14 +36,14 @@ local-path-provisioner:
     defaultClass: false
 
     ## The default volume type this storage class creates, can be "local" or "hostPath"
-    defaultVolumeType: hostPath
+    defaultVolumeType: local
 
     ## Set a StorageClass name
     ## Ignored if storageClass.create is false
     name: local-path
 
     ## ReclaimPolicy field of the class, which can be either Delete or Retain
-    reclaimPolicy: Delete
+    reclaimPolicy: Retain
 
     ## volumeBindingMode field controls when volume binding and dynamic provisioning should occur, can be  "Immediate" or "WaitForFirstConsumer"
     volumeBindingMode: WaitForFirstConsumer
