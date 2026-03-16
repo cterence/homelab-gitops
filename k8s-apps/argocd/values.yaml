@@ -57,8 +57,8 @@ argo-cd:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            helm plugin install --verify=false https://github.com/aslafy-z/helm-git;
-            helm plugin install --verify=false https://github.com/hypnoglow/helm-s3;
+            helm plugin install --verify=false https://github.com/aslafy-z/helm-git || true;
+            helm plugin install --verify=false https://github.com/hypnoglow/helm-s3 || true;
         env:
           - name: HELM_PLUGINS
             value: /helm-plugins/
