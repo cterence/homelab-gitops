@@ -39,6 +39,7 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
+
   repoServer:
     useEphemeralHelmWorkingDir: false
     logLevel: warn
@@ -60,7 +61,7 @@ argo-cd:
             helm plugin install --verify=false https://github.com/hypnoglow/helm-s3;
         env:
           - name: HELM_PLUGINS
-            value: /home/argocd/cmp-server/pluginsc
+            value: /home/argocd/cmp-server/plugins
         volumeMounts:
           - mountPath: /home/argocd/cmp-server/plugins
             name: plugins
