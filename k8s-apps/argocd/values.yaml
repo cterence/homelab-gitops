@@ -49,7 +49,7 @@ argo-cd:
         enabled: true
     env:
       - name: HELM_PLUGINS
-        value: /home/argocd/cmp-server/plugins
+        value: /helm-plugins/
 
     initContainers:
       - name: helm-plugin-install
@@ -61,10 +61,17 @@ argo-cd:
             helm plugin install --verify=false https://github.com/hypnoglow/helm-s3;
         env:
           - name: HELM_PLUGINS
-            value: /home/argocd/cmp-server/plugins
+            value: /helm-plugins/
         volumeMounts:
-          - mountPath: /home/argocd/cmp-server/plugins
-            name: plugins
+          - mountPath: /helm-plugins/
+            name: helm-plugins
+
+    volumes:
+      - name: helm-plugins
+        emptyDir: {}
+    volumeMounts:
+      - mountPath: /helm-plugins/
+        name: helm-plugins
 
   applicationSet:
     metrics:
