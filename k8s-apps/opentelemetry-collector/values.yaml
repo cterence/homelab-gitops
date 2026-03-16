@@ -39,6 +39,8 @@ opentelemetry-collector:
     exporters:
       debug:
         verbosity: basic
+      debug/detailed:
+        verbosity: detailed
       otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
       prometheus:
@@ -118,7 +120,7 @@ opentelemetry-collector:
       pipelines:
         logs:
           exporters:
-            - debug
+            - debug/detailed
             - otlphttp/loki
           processors:
             - filter
