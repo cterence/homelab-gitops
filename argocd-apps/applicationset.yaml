@@ -39,6 +39,7 @@ spec:
             namespace: monitoring
             serverSideApply: true
             scaleToZero: true
+          - name: local-path-provisioner
           - name: loki
           - name: longhorn
             namespace: longhorn-system

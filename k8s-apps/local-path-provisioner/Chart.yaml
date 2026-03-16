@@ -1,0 +1,9 @@
+apiVersion: v2
+name: local-path-provisioner
+description: Utilize the local storage in each node
+type: application
+version: 0.1.0
+dependencies:
+  - name: local-path-provisioner
+    repository: git+https://github.com/rancher/local-path-provisioner@deploy
+    version: v0.0.35
