@@ -89,8 +89,11 @@ opentelemetry-collector:
           - IsMatch(log.body, ".*canary-push.*")
           - IsMatch(log.body, ".*loki-canary.*")
           - IsMatch(log.body, ".*MQTT publish.*")
-          - IsMatch(log.body,".*/otlp/v1/logs.*")
-          - IsMatch(log.attributes["k8s_container_name"], "sockpuppet-chrome") and log.severity_number < SEVERITY_NUMBER_WARN
+          - IsMatch(log.body, ".*/otlp/v1/logs.*")
+          - resource.attributes["k8s.container.name"] == "sockpuppet-chrome" and log.severity_number < SEVERITY_NUMBER_WARN
+          - IsMatch(resource.attributes["k8s.namespace.name"], "argocd|loki") and log.severity_number < SEVERITY_NUMBER_WARN
+          - IsMatch(log.body, "Client .* closed its connection") and resource.attributes["k8s.container.name"] == "mosquitto"
+          - IsMatch(log.body, "New connection from .* on port .*") and resource.attributes["k8s.container.name"] == "mosquitto"
     receivers:
       otlp:
         protocols:
@@ -120,7 +123,7 @@ opentelemetry-collector:
       pipelines:
         logs:
           exporters:
-            - debug/detailed
+            - debug
             - otlphttp/loki
           processors:
             - filter
