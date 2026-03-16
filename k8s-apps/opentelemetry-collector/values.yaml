@@ -88,7 +88,7 @@ opentelemetry-collector:
           - IsMatch(log.body, ".*loki-canary.*")
           - IsMatch(log.body, ".*MQTT publish.*")
           - IsMatch(log.body,".*/otlp/v1/logs.*")
-          - IsMatch(log.body, "pppppp.*")
+          - IsMatch(log.attributes["pod"], "loki-canary.*")
     receivers:
       otlp:
         protocols:
