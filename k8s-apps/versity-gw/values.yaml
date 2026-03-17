@@ -15,21 +15,6 @@ app-template:
         VGW_REGION: eu-west-3
         VGW_METRICS_STATSD_SERVERS: 127.0.0.1:8125
 
-    telegraf:
-      data:
-        telegraf.conf: |
-          [[inputs.statsd]]
-          protocol = "udp"
-          service_address = ":8125"
-
-          [[outputs.prometheus_client]]
-          listen = ":9273"
-          expiration_interval = "60s"
-          collectors_exclude = ["gocollector", "process"]
-
-          [[outputs.health]]
-          service_address = "http://:8080"
-
   controllers:
     main:
       type: deployment
@@ -83,34 +68,6 @@ app-template:
                   port: http
                   path: /health
 
-        telegraf:
-          image:
-            repository: telegraf
-            tag: 1.38.1@sha256:eb37f58646a901dc7727cf448cae36daaefaba79de33b5058dab79aa4c04aefb
-          env:
-            TZ: Europe/Paris
-          ports:
-            - name: health
-              containerPort: 8080
-            - name: input
-              containerPort: 8125
-            - name: metrics
-              containerPort: 9273
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: health
-                  path: /
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: health
-                  path: /
     webdav:
       type: deployment
       strategy: Recreate
@@ -172,12 +129,6 @@ app-template:
       ports:
         http:
           port: 7070
-    metrics:
-      controller: main
-      type: ClusterIP
-      ports:
-        metrics:
-          port: 9273
     webdav:
       controller: webdav
       type: ClusterIP
@@ -241,23 +192,3 @@ app-template:
           webdav:
             - path: /var/lib/dav/data
               subPath: obsidian/Kindle
-
-    telegraf-config:
-      type: configMap
-      identifier: telegraf
-      advancedMounts:
-        main:
-          telegraf:
-            - path: /etc/telegraf/telegraf.conf
-              subPath: telegraf.conf
-
-  serviceMonitor:
-    main:
-      enabled: true
-      serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
-      endpoints:
-        - port: metrics
-          scheme: http
-          path: /metrics
-          interval: 30s
-          scrapeTimeout: 10s
