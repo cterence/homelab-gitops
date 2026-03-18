@@ -268,7 +268,8 @@ nextcloud:
 
     # Set securityContext parameters for the nextcloud CONTAINER only (will not affect nginx container).
     # For example, you may need to define runAsNonRoot directive
-    securityContext: {}
+    securityContext:
+      fsGroupChangePolicy: "OnRootMismatch"
     #   runAsUser: 33
     #   runAsGroup: 33
     #   runAsNonRoot: true
