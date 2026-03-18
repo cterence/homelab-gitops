@@ -13,8 +13,6 @@ spec:
             serverSideApply: true
           - name: arr-stack
             scaleToZero: true
-          - name: blackbox-exporter
-            namespace: monitoring
           - name: calibre-web
             scaleToZero: true
           - name: cert-manager
