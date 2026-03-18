@@ -268,7 +268,8 @@ nextcloud:
 
     # Set securityContext parameters for the nextcloud CONTAINER only (will not affect nginx container).
     # For example, you may need to define runAsNonRoot directive
-    securityContext: {}
+    securityContext:
+      fsGroupChangePolicy: "OnRootMismatch"
     #   runAsUser: 33
     #   runAsGroup: 33
     #   runAsNonRoot: true
@@ -421,6 +422,7 @@ nextcloud:
         runAsGroup: 33
         runAsNonRoot: true
         readOnlyRootFilesystem: true
+        fsGroupChangePolicy: "OnRootMismatch"
 
       # The command to run in the cronjob container
       # Example to incerase memory limit: php -d memory_limit=2G ...
