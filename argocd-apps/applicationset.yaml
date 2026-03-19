@@ -36,7 +36,6 @@ spec:
           - name: kube-prometheus-stack
             namespace: monitoring
             serverSideApply: true
-            scaleToZero: true
           - name: local-path-provisioner
           - name: loki
           - name: longhorn
