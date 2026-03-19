@@ -13,7 +13,6 @@ urls:
   - https://git.terence.cloud/api/healthz
   - https://gitm.terence.cloud/api/health
   - https://lid.terence.cloud/ping
-  - https://longhorn.terence.cloud
   - https://next.terence.cloud/status.php
   - https://oc.terence.cloud/status
   - https://paperless.terence.cloud/accounts/login/?next=/
