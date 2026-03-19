@@ -278,6 +278,9 @@ traefik:
 
           SecRule REQUEST_URI "@rx ^/v1/volumes/pvc-" \
             "id:1000012,phase:1,pass,nolog,ctl:ruleRemoveById=932235,ctl:ruleRemoveById=932250"
+
+          SecRule REQUEST_URI "@rx ^/Items" \
+            "id:1000013,phase:1,pass,nolog,ctl:ruleRemoveById=942220,ctl:ruleRemoveById=980170"
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
