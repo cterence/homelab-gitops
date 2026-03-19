@@ -38,10 +38,6 @@ spec:
             serverSideApply: true
           - name: local-path-provisioner
           - name: loki
-          - name: longhorn
-            namespace: longhorn-system
-            serverSideDiff: true
-            serverSideApply: true
           - name: metallb
           - name: microbin
             scaleToZero: true
