@@ -356,3 +356,10 @@ traefik:
   logs:
     access:
       enabled: true
+
+  metrics:
+    prometheus:
+      service:
+        enabled: true
+      serviceMonitor:
+        enabled: true
