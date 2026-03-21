@@ -13,7 +13,6 @@ app-template:
       data:
         VGW_HEALTH: /health
         VGW_REGION: eu-west-3
-        VGW_METRICS_STATSD_SERVERS: 127.0.0.1:8125
 
   controllers:
     main:
