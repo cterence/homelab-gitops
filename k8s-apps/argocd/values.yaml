@@ -123,28 +123,28 @@ argo-cd:
           {{end}}
       template.app-sync-succeeded: |
         message: |
+          {{ if .app.status.operationState }}
           App {{.app.metadata.name}} synced at {{ (call .time.Parse .app.status.operationState.startedAt).Local.Format "02/01/2006 15:04" }}.
+          {{ else }}
+          App {{.app.metadata.name}} synced successfully.
+          {{ end }}
     triggers:
       trigger.on-created: |
         - description: Application is created.
-          oncePer: app.metadata.name
-          send:
-          - app-created
-          when: "true"
+          oncePer: app.metadata.uid
+          send: [app-created]
+          when: app.status.operationState == nil
       trigger.on-deleted: |
         - description: Application is deleted.
-          oncePer: app.metadata.name
+          oncePer: app.metadata.uid
           send:
           - app-deleted
           when: app.metadata.deletionTimestamp != nil
       trigger.on-deployed: |
-        - description: Application is synced and healthy. Triggered once per commit.
+        - description: Application is synced and healthy.
           oncePer: app.status.operationState?.syncResult?.revision
-          send:
-          - app-deployed
-          when: app.status.operationState != nil and app.status.operationState.phase in ['Succeeded']
-            and app.status.health.status == 'Healthy' and (!time.Parse(app.status.health.lastTransitionTime).Add(1
-            * time.Minute).Before(time.Parse(app.status.operationState.finishedAt)) or time.Parse(app.status.health.lastTransitionTime).Before(time.Parse(app.status.operationState.startedAt)))
+          send: [app-deployed]
+          when: app.status.operationState?.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
       trigger.on-health-degraded: |
         - description: Application has degraded
           oncePer: app.status.operationState?.syncResult?.revision
