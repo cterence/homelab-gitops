@@ -1292,7 +1292,7 @@ app-template:
       advancedMounts:
         filebrowser-quantum:
           filebrowser-quantum:
-            - path: /home/filebrowser/database
+            - path: /home/filebrowser/data/database
 
     filebrowser-quantum-config:
       type: configMap
@@ -1300,7 +1300,7 @@ app-template:
       advancedMounts:
         filebrowser-quantum:
           filebrowser-quantum:
-            - path: /home/filebrowser/config.yaml
+            - path: /home/filebrowser/data/config.yaml
               subPath: config.yaml
 
     slskd-config:
