@@ -123,7 +123,7 @@ argo-cd:
           {{end}}
       template.app-sync-succeeded: |
         message: |
-          App {{.app.metadata.name}} synced at {{.app.status.operationState.finishedAt | time "02/01/2006 15:04"}}.
+          App {{.app.metadata.name}} synced at {{ (call .time.Parse .app.status.operationState.startedAt).Local.Format "02/01/2006 15:04" }}.
     triggers:
       trigger.on-created: |
         - description: Application is created.
