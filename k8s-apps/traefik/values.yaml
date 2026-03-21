@@ -361,5 +361,34 @@ traefik:
     prometheus:
       service:
         enabled: true
+      disableAPICheck: false
       serviceMonitor:
         enabled: true
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            separator: ;
+            regex: ^fluentd_output_status_buffer_(oldest|newest)_.+
+            replacement: $1
+            action: drop
+        relabelings:
+          - sourceLabels: [__meta_kubernetes_pod_node_name]
+            separator: ;
+            regex: ^(.*)$
+            targetLabel: nodename
+            replacement: $1
+            action: replace
+        jobLabel: traefik
+        interval: 30s
+        honorLabels: true
+      prometheusRule:
+        enabled: true
+        rules:
+          - alert: TraefikDown
+            expr: up{job="traefik-metrics"} == 0
+            for: 5m
+            labels:
+              context: traefik
+              severity: warning
+            annotations:
+              summary: "Traefik Down"
+              description: "{{ $labels.pod }} on {{ $labels.nodename }} is down"
