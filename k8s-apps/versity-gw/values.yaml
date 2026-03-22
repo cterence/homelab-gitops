@@ -126,7 +126,11 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      labels:
+        velero.io/exclude-from-backup: "true"
       pod:
+        labels:
+          velero.io/exclude-from-backup: "true"
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
