@@ -121,9 +121,67 @@ app-template:
                   port: http
                   path: /health
 
+    nfs:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
+      containers:
+        main:
+          image:
+            repository: ghcr.io/versity/versitygw
+            tag: v1.3.1@sha256:a86791b684a1dd3c5a255ca755bb51783a72696cf1b5a843f800b08bfd6f921c
+          args:
+            - posix
+            - /buckets
+            - --chuid
+            - --chgid
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - configMapRef:
+                identifier: versity
+            - secretRef:
+                name: versity-gw-credentials
+          ports:
+            - name: http
+              containerPort: 7070
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
   service:
     main:
       controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 7070
+    nfs:
+      controller: nfs
       type: ClusterIP
       ports:
         http:
@@ -191,3 +249,12 @@ app-template:
           webdav:
             - path: /var/lib/dav/data
               subPath: obsidian/Kindle
+
+    nfs:
+      type: persistentVolumeClaim
+      existingClaim: mx500-homelab3
+      advancedMounts:
+        nfs:
+          main:
+            - path: /buckets
+              subPath: versity-gw
