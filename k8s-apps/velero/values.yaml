@@ -671,6 +671,40 @@ velero:
           apiGroup: ""
           kind: ConfigMap
           name: volume-policy
+    versity-gw-v1:
+      disabled: false
+      schedule: "0 1 * * *"
+      useOwnerReferencesInBackup: false
+      paused: false
+      template:
+        storageLocation: versity-gw
+        includedNamespaces:
+          - anki-sync-server
+          - arr-stack
+          - calibre-web
+          - changedetection
+          - gitea
+          - home-assistant
+          - immich
+          - nextcloud
+          - paperless-ngx
+          - pocket-id
+          - satisfactory-server
+          - vaultwarden
+          - versity-gw
+          - zigbee2mqtt
+        includedResources:
+          - po
+          - pv
+          - pvc
+          - cm
+          - sa
+          - secret
+        ttl: 720h
+        resourcePolicy:
+          apiGroup: ""
+          kind: ConfigMap
+          name: volume-policy
 
   # Velero ConfigMaps.
   # Eg:
