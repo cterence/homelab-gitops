@@ -2,6 +2,10 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mx500-homelab3
+  annotations:
+    helm.sh/resource-policy: keep
+  labels:
+    velero.io/exclude-from-backup: "true"
 spec:
   capacity:
     storage: 2Ti
