@@ -354,28 +354,6 @@ velero:
           s3ForcePathStyle: true
           s3Url: https://s3.eu-central-003.backblazeb2.com
           checksumAlgorithm: ""
-      - name: nfs-homelab3
-        # provider is the name for the backup storage location provider.
-        provider: replicated.com/nfs
-        # bucket is the name of the bucket to store backups in. Required.
-        bucket: velero
-        # caCert defines a base64 encoded CA bundle to use when verifying TLS connections to the provider. Optional.
-        caCert:
-        # prefix is the directory under which all Velero data should be stored within the bucket. Optional.
-        prefix: "velero/v1"
-        # default indicates this location is the default backup storage location. Optional.
-        default: false
-        # validationFrequency defines how frequently Velero should validate the object storage. Optional.
-        validationFrequency: 24h
-        # accessMode determines if velero can write to this backup storage location. Optional.
-        # default to ReadWrite, ReadOnly is used during migrations and restores.
-        accessMode: ReadWrite
-        config:
-          path: /mx500-homelab3/k8s-data
-          server: 192.168.1.141
-          resticRepoPrefix: /var/velero-local-volume-provider/velero/restic
-        # annotations allows adding arbitrary annotations to this BackupStorageLocation resource. Optional.
-        annotations: {}
 
     # Parameters for the VolumeSnapshotLocation(s). Configure multiple by adding other element(s) to the volumeSnapshotLocation slice.
     # See https://velero.io/docs/v1.6/api-types/volumesnapshotlocation/
@@ -639,40 +617,6 @@ velero:
       paused: false
       template:
         storageLocation: v2
-        includedNamespaces:
-          - anki-sync-server
-          - arr-stack
-          - calibre-web
-          - changedetection
-          - gitea
-          - home-assistant
-          - immich
-          - nextcloud
-          - paperless-ngx
-          - pocket-id
-          - satisfactory-server
-          - vaultwarden
-          - versity-gw
-          - zigbee2mqtt
-        includedResources:
-          - po
-          - pv
-          - pvc
-          - cm
-          - sa
-          - secret
-        ttl: 720h
-        resourcePolicy:
-          apiGroup: ""
-          kind: ConfigMap
-          name: volume-policy
-    nfs-homelab3:
-      disabled: false
-      schedule: "0 1 * * *"
-      useOwnerReferencesInBackup: false
-      paused: false
-      template:
-        storageLocation: nfs-homelab3
         includedNamespaces:
           - anki-sync-server
           - arr-stack
