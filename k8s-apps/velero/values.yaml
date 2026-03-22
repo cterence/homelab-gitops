@@ -691,7 +691,6 @@ velero:
           - pocket-id
           - satisfactory-server
           - vaultwarden
-          - versity-gw
           - zigbee2mqtt
         includedResources:
           - po
