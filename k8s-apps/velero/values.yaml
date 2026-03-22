@@ -639,7 +639,7 @@ velero:
   schedules:
     v2:
       disabled: false
-      schedule: "0 0 * * *"
+      schedule: "0 2 * * *"
       useOwnerReferencesInBackup: false
       paused: false
       template:
@@ -673,7 +673,7 @@ velero:
           name: volume-policy
     versity-gw-v1:
       disabled: false
-      schedule: "0 1 * * *"
+      schedule: "0 */4 * * *"
       useOwnerReferencesInBackup: false
       paused: false
       template:
@@ -700,7 +700,7 @@ velero:
           - cm
           - sa
           - secret
-        ttl: 720h
+        ttl: 144h
         resourcePolicy:
           apiGroup: ""
           kind: ConfigMap
