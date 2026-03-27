@@ -150,8 +150,6 @@ app-template:
             - posix
             - --sidecar
             - /tmp/sidecar
-            - --chuid
-            - --chgid
             - /buckets
           env:
             TZ: Europe/Paris
