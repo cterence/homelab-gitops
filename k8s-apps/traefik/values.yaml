@@ -289,6 +289,9 @@ traefik:
           SecRule REQUEST_URI "@rx ^/terraform-states" \
             "id:1000015,phase:1,pass,nolog,ctl:ruleRemoveById=200002,ctl:ruleRemoveById=980170,ctl:ruleRemoveById=920450"
 
+          SecRule REQUEST_URI "@rx ^/upload" \
+            "id:1000016,phase:1,pass,nolog,ctl:ruleRemoveById=932370,ctl:ruleRemoveById=980170"
+
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
