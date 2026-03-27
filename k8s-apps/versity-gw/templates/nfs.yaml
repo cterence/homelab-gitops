@@ -17,6 +17,10 @@ spec:
   mountOptions:
     - hard
     - nfsvers=4.1
+    - nosuid
+    - noexec
+    - timeo=600
+    - retrans=2
   nfs:
     path: /mx500-homelab3/k8s-data
     server: 192.168.1.141
