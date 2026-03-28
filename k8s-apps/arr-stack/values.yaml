@@ -431,6 +431,7 @@ app-template:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+      replicas: 0
       containers:
         flaresolverr:
           image:
@@ -466,6 +467,7 @@ app-template:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+      replicas: 0
       containers:
         flareproxy:
           image:
