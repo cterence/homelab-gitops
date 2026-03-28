@@ -439,4 +439,4 @@ grafana-mcp-server:
                 generatorRef:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
-                  name: password
+                  name: short-password
