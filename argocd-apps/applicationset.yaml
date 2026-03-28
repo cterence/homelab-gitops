@@ -9,6 +9,7 @@ spec:
     - list:
         elements:
           - name: anki-sync-server
+            scaleToZero: true
           - name: argocd
             serverSideApply: true
           - name: arr-stack
@@ -58,6 +59,7 @@ spec:
           - name: vaultwarden
           - name: velero
           - name: versity-gw
+            scaleToZero: true
           - name: zigbee2mqtt
 
   template:

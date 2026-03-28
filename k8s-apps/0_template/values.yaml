@@ -76,3 +76,21 @@ app-template:
   #       argocd.argoproj.io/sync-options: Delete=false
   #     globalMounts:
   #       - path: /config
+
+  # rawResources:
+  #   sablier:
+  #     apiVersion: traefik.io/v1alpha1
+  #     kind: Middleware
+  #     spec:
+  #       spec:
+  #         plugin:
+  #           sablier:
+  #             dynamic:
+  #               displayName: "{{ .Release.Name }}"
+  #               refreshFrequency: 5s
+  #               showDetails: true
+  #               theme: shuffle
+  #             sablierUrl: http://sablier-sablier.sablier:10000
+  #             sessionDuration: 10m
+  #             ignoreUserAgent: curl
+  #             group: "{{ .Release.Name }}"

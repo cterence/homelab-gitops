@@ -3,6 +3,9 @@ app-template:
     main:
       type: deployment
       strategy: RollingUpdate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "{{ .Release.Name }}"
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -47,7 +50,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd,{{ .Release.Namespace }}-sablier@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host ankss.terence.cloud
@@ -73,3 +76,22 @@ app-template:
       size: 1Gi
       globalMounts:
         - path: /config
+
+  rawResources:
+    sablier:
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      forceRename: sablier
+      spec:
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: "{{ .Release.Name }}"
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: "{{ .Release.Name }}"
