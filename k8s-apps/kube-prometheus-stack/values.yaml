@@ -313,3 +313,101 @@ kube-prometheus-stack:
 
   kubeProxy:
     enabled: false
+
+grafana-mcp-server:
+  global:
+    fullnameOverride: grafana-mcp-server
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: grafana/mcp-grafana
+            tag: latest
+          env:
+            TZ: Europe/Paris
+            GRAFANA_URL: http://kube-prometheus-stack-grafana
+            GRAFANA_SERVICE_ACCOUNT_TOKEN:
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-mcp-credentials
+                  key: sa-token
+          ports:
+            - name: http
+              containerPort: 8000
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /healthz
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /healthz
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8000
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernetescrd"
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      className: "traefik"
+      hosts:
+        - host: &host gmcp.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: gmcp-tls
+          hosts:
+            - *host
+
+  rawResources:
+    grafana-mcp-credentials:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      spec:
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: gitlab-secret-store
+          target:
+            name: grafana-mcp-credentials
+            creationPolicy: Owner
+          data:
+            - secretKey: sa-token
+              remoteRef:
+                conversionStrategy: Default
+                decodingStrategy: None
+                metadataPolicy: None
+                key: grafana_mcp_service_account_token
