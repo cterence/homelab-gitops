@@ -1,5 +1,4 @@
 urls:
-  - http://arr-stack-flaresolverr.arr-stack:8191/health
   - https://alertmanager.terence.cloud/-/healthy
   - https://argocd.terence.cloud/healthz?full=true
   - https://auth.terence.cloud/healthz
@@ -20,7 +19,6 @@ urls:
   - https://rad.terence.cloud/ping
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
-  # - https://tools.terence.cloud
   - https://versity.terence.cloud/health
   - https://z2m.terence.cloud
 
