@@ -107,6 +107,7 @@ kube-prometheus-stack:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # traefik.ingress.kubernetes.io/router.middlewares: monitoring-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd
         traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       hosts:
         - grafana.terence.cloud
       tls:
