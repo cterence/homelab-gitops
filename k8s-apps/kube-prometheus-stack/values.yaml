@@ -376,8 +376,7 @@ grafana-mcp-server:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernetescrd"
-        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernetescrd,monitoring-grafana-mcp-auth@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host gmcp.terence.cloud
@@ -411,3 +410,33 @@ grafana-mcp-server:
                 decodingStrategy: None
                 metadataPolicy: None
                 key: grafana_mcp_service_account_token
+    grafana-mcp-auth-middleware:
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      forceRename: grafana-mcp-auth
+      spec:
+        spec:
+          basicAuth:
+            secret: grafana-mcp-auth
+    mcp-auth-secret:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      forceRename: grafana-mcp-auth
+      spec:
+        spec:
+          refreshInterval: "0"
+          target:
+            name: grafana-mcp-auth
+            creationPolicy: Owner
+            template:
+              type: kubernetes.io/basic-auth
+              engineVersion: v2
+              data:
+                username: "mcp"
+                password: '{{ printf "{{ .password }}" }}'
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: password
