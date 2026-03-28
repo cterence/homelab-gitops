@@ -4,7 +4,6 @@ urls:
   - https://auth.terence.cloud/healthz
   - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
-  - https://cwd.terence.cloud/health
   - https://ha.terence.cloud
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
