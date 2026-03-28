@@ -1,0 +1,44 @@
+falco:
+  image:
+    tag: latest
+  falco:
+    webserver:
+      prometheus_metrics_enabled: true
+  resources:
+    limits:
+      memory: 2Gi
+  driver:
+    kind: modern_ebpf
+  tty: true
+  collectors:
+    kubernetes:
+      enabled: true
+  metrics:
+    enabled: true
+  serviceMonitor:
+    create: true
+  grafana:
+    dashboards:
+      enabled: true
+      configMaps:
+        falco:
+          folder: Falco
+  falcosidekick:
+    enabled: true
+    replicaCount: 1
+    serviceMonitor:
+      enabled: true
+    prometheusRules:
+      enabled: true
+    grafana:
+      dashboards:
+        enabled: true
+        configMaps:
+          falcosidekick:
+            folder: Falco
+    config:
+      loki:
+        hostport: http://loki-headless.monitoring.svc.cluster.local:3100
+        grafanaDashboard:
+          configMap:
+            folder: Falco

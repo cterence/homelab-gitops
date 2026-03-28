@@ -1,0 +1,9 @@
+apiVersion: v2
+name: falco
+description: Cloud Native Runtime Security
+type: application
+version: 0.1.0
+dependencies:
+  - name: falco
+    repository: https://falcosecurity.github.io/charts
+    version: 8.0.1
