@@ -139,6 +139,9 @@ app-template:
     webdav:
       type: deployment
       strategy: Recreate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "calibre-web-webdav"
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -242,7 +245,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-cwwebdav@kubernetescrd,traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host3 cwd.terence.cloud

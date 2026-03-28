@@ -31,3 +31,21 @@ spec:
       sessionDuration: 10m
       ignoreUserAgent: curl
       group: calibre-web-downloader
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-cwwebdav
+spec:
+  plugin:
+    sablier:
+      dynamic:
+        displayName: calibre-web-webdav
+        refreshFrequency: 5s
+        showDetails: true
+        theme: shuffle
+      sablierUrl: http://sablier-sablier.sablier:10000
+      sessionDuration: 10m
+      ignoreUserAgent: curl
+      group: calibre-web-webdav
