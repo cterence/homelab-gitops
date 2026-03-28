@@ -14,7 +14,6 @@ urls:
   - https://gitm.terence.cloud/api/health
   - https://lid.terence.cloud/ping
   - https://next.terence.cloud/status.php
-  - https://oc.terence.cloud/status
   - https://paperless.terence.cloud/accounts/login/?next=/
   - https://prometheus.terence.cloud/-/healthy
   - https://qb.terence.cloud
