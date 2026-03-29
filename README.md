@@ -7,14 +7,11 @@
 </p></div>
 </div>
 
-## ⚙️ Hardware (2 nodes)
+## ⚙️ Hardware
 
 | Device                    | Name     | Specs                                                                 | OS    | Role                       |
 |---------------------------|----------|-----------------------------------------------------------------------|-------|----------------------------|
 | Lenovo ThinkCentre M75q-2 | homelab2 | Ryzen 5 Pro 5650GE (6 core / 12 threads) / 24GB RAM / 256GB + 1TB SSD | NixOS | k8s controller+worker node |
-| Lenovo ThinkCentre M75q-2 | homelab3 | Ryzen 5 Pro 5650GE (6 core / 12 threads) / 24GB RAM / 256GB + 1TB SSD | NixOS | k8s worker node            |
-
-To access my apps, I expose them directly on the internet with port-forwarding on my router.
 
 ## ✨ Features
 
@@ -25,9 +22,8 @@ To access my apps, I expose them directly on the internet with port-forwarding o
 - Authentication of sensitive apps with [PocketID](https://pocket-id.org/) as a passkey-only OIDC provider
 - WAF using [ModSecurity plugin](https://plugins.traefik.io/plugins/644d9a72ebafd55c9c740848/mx-m-owasp-crs-modsecurity-plugin) and some [hacks](https://github.com/cterence/homelab-gitops/blob/a3fc90f9bab0287c901fd8f3cbab295a695b7658/k8s-apps/traefik/values.yaml#L78)
 - Secrets management with [external-secrets](https://external-secrets.io/latest/) and [GitLab CI/CD variables](https://external-secrets.io/latest/provider/gitlab-variables/)
-- Dynamic volume provisioning and synchronous replication across nodes with [Longhorn](https://longhorn.io/)
 - Offsite data backup using [Velero](https://velero.io/) and [Backblaze B2](https://www.backblaze.com/cloud-storage)
-- Easy Backblaze-to-disk backup synchronization with [Kopia](https://kopia.io/) and a [custom script](https://github.com/cterence/nixos-config/blob/c95b2c0713a2472b11b2060ed28f6d4de75208f0/hosts/homelab2/home.nix#L120)
+- Easy Backblaze-to-disk backup synchronization with [Kopia](https://kopia.io/)
 - PostgreSQL database management with [CloudNativePG](https://cloudnative-pg.io/)
 - Observability with [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [Loki](https://grafana.com/oss/loki/) and [Opentelemetry Collector](https://opentelemetry.io/docs/collector/)
 - Alerting with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) and a [Telegram Bot](https://prometheus.io/docs/alerting/latest/configuration/#telegram_config)
@@ -41,99 +37,50 @@ To access my apps, I expose them directly on the internet with port-forwarding o
 This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) list of the apps I have configured and/or deployed. Click on an app to check its Helm configuration.
 
 <!-- BEGIN deployed-apps -->
-| App | Description | Is deployed |
-| --- | --- | --- |
-| [anki-sync-server](./scripts/../k8s-apps/anki-sync-server) | Sync server for AnkiDroid | ❌ |
-| [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
-| [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack | ✅ |
-| [attic](./scripts/../k8s-apps/attic) | Multi-tenant Nix Binary Cache | ❌ |
-| [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter) | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC | ❌ |
-| [calibre-web](./scripts/../k8s-apps/calibre-web) | Web app for browsing, reading and downloading eBooks stored in a Calibre database | ✅ |
-| [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes | ✅ |
-| [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts | ✅ |
-| [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance | ✅ |
-| [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter | ✅ |
-| [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
-| [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
-| [falco](./scripts/../k8s-apps/falco) | Cloud Native Runtime Security | ❌ |
-| [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go | ✅ |
-| [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
-| [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
-| [homepage](./scripts/../k8s-apps/homepage) | A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations | ❌ |
-| [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
-| [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution | ✅ |
-| [it-tools](./scripts/../k8s-apps/it-tools) | Collection of handy online tools for developers | ✅ |
-| [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
-| [local-path-provisioner](./scripts/../k8s-apps/local-path-provisioner) | Utilize the local storage in each node | ✅ |
-| [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
-| [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ❌ |
-| [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
-| [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app | ✅ |
-| [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
-| [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
-| [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing | ❌ |
-| [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
-| [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
-| [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
-| [pocket-id](./scripts/../k8s-apps/pocket-id) | Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services | ✅ |
-| [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
-| [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity | ✅ |
-| [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
-| [scrobble-deduplicator](./scripts/../k8s-apps/scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles | ✅ |
-| [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ❌ |
-| [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
-| [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller | ✅ |
-| [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
-| [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes | ✅ |
-| [versity-gw](./scripts/../k8s-apps/versity-gw) | High-performance S3 translation service | ✅ |
-| [zigbee2mqtt](./scripts/../k8s-apps/zigbee2mqtt) | Zigbee to MQTT bridge | ✅ |
+| App                                                                      | Description                                                                                                                                                                                                                                             | Is deployed |
+|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| [anki-sync-server](./scripts/../k8s-apps/anki-sync-server)               | Sync server for AnkiDroid                                                                                                                                                                                                                               | ❌           |
+| [argocd](./scripts/../k8s-apps/argocd)                                   | Declarative, GitOps continuous delivery tool for Kubernetes                                                                                                                                                                                             | ✅           |
+| [arr-stack](./scripts/../k8s-apps/arr-stack)                             | Arr Stack                                                                                                                                                                                                                                               | ✅           |
+| [attic](./scripts/../k8s-apps/attic)                                     | Multi-tenant Nix Binary Cache                                                                                                                                                                                                                           | ❌           |
+| [blackbox-exporter](./scripts/../k8s-apps/blackbox-exporter)             | Allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC                                                                                                                                                                          | ❌           |
+| [calibre-web](./scripts/../k8s-apps/calibre-web)                         | Web app for browsing, reading and downloading eBooks stored in a Calibre database                                                                                                                                                                       | ✅           |
+| [cert-manager](./scripts/../k8s-apps/cert-manager)                       | Automatically provision and manage TLS certificates in Kubernetes                                                                                                                                                                                       | ✅           |
+| [changedetection](./scripts/../k8s-apps/changedetection)                 | Website change detection, web page monitoring, and website change alerts                                                                                                                                                                                | ✅           |
+| [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg)                   | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance                                   | ✅           |
+| [convertx](./scripts/../k8s-apps/convertx)                               | Self-hosted online file converter                                                                                                                                                                                                                       | ✅           |
+| [external-dns](./scripts/../k8s-apps/external-dns)                       | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services                                                                                                                                          | ✅           |
+| [external-secrets](./scripts/../k8s-apps/external-secrets)               | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets                                                                                              | ✅           |
+| [falco](./scripts/../k8s-apps/falco)                                     | Cloud Native Runtime Security                                                                                                                                                                                                                           | ❌           |
+| [gitea](./scripts/../k8s-apps/gitea)                                     | Self-hosted Git service with a lightweight code hosting solution written in Go                                                                                                                                                                          | ✅           |
+| [go-healthcheck](./scripts/../k8s-apps/go-healthcheck)                   | Simple HTTP healthchecks                                                                                                                                                                                                                                | ✅           |
+| [home-assistant](./scripts/../k8s-apps/home-assistant)                   | Open source home automation that puts local control and privacy first                                                                                                                                                                                   | ✅           |
+| [homepage](./scripts/../k8s-apps/homepage)                               | A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations                                                                                                                                          | ❌           |
+| [httpbin](./scripts/../k8s-apps/httpbin)                                 | Echoes request data as JSON                                                                                                                                                                                                                             | ✅           |
+| [immich](./scripts/../k8s-apps/immich)                                   | High performance self-hosted photo and video management solution                                                                                                                                                                                        | ✅           |
+| [it-tools](./scripts/../k8s-apps/it-tools)                               | Collection of handy online tools for developers                                                                                                                                                                                                         | ✅           |
+| [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack)     | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅           |
+| [local-path-provisioner](./scripts/../k8s-apps/local-path-provisioner)   | Utilize the local storage in each node                                                                                                                                                                                                                  | ✅           |
+| [loki](./scripts/../k8s-apps/loki)                                       | Like Prometheus, but for logs                                                                                                                                                                                                                           | ✅           |
+| [longhorn](./scripts/../k8s-apps/longhorn)                               | Cloud-Native distributed storage built on and for Kubernetes                                                                                                                                                                                            | ❌           |
+| [metallb](./scripts/../k8s-apps/metallb)                                 | A network load-balancer implementation for Kubernetes using standard routing protocols                                                                                                                                                                  | ✅           |
+| [microbin](./scripts/../k8s-apps/microbin)                               | A secure, configurable file-sharing and URL shortening web app                                                                                                                                                                                          | ✅           |
+| [mosquitto](./scripts/../k8s-apps/mosquitto)                             | Open source MQTT broker                                                                                                                                                                                                                                 | ✅           |
+| [nextcloud](./scripts/../k8s-apps/nextcloud)                             | A safe home for all your data                                                                                                                                                                                                                           | ✅           |
+| [opencloud](./scripts/../k8s-apps/opencloud)                             | Excellent file sharing                                                                                                                                                                                                                                  | ❌           |
+| [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data                                                                                                                                                                     | ✅           |
+| [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator)   | Kubernetes Operator for OpenTelemetry Collector                                                                                                                                                                                                         | ✅           |
+| [paperless-ngx](./scripts/../k8s-apps/paperless-ngx)                     | Scan, index and archive all your physical documents                                                                                                                                                                                                     | ✅           |
+| [pocket-id](./scripts/../k8s-apps/pocket-id)                             | Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services                                                                                                                                             | ✅           |
+| [reloader](./scripts/../k8s-apps/reloader)                               | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig                                                                         | ✅           |
+| [sablier](./scripts/../k8s-apps/sablier)                                 | A free and open-source software to start workloads on demand and stop them after a period of inactivity                                                                                                                                                 | ✅           |
+| [satisfactory-server](./scripts/../k8s-apps/satisfactory-server)         | Satisfactory server                                                                                                                                                                                                                                     | ❌           |
+| [scrobble-deduplicator](./scripts/../k8s-apps/scrobble-deduplicator)     | Periodically delete duplicate Last.fm scrobbles                                                                                                                                                                                                         | ✅           |
+| [snapshot-controller](./scripts/../k8s-apps/snapshot-controller)         | Implements the control loop for CSI snapshot functionality                                                                                                                                                                                              | ❌           |
+| [tailscale-operator](./scripts/../k8s-apps/tailscale-operator)           | A Kubernetes Operator for Tailscale                                                                                                                                                                                                                     | ✅           |
+| [traefik](./scripts/../k8s-apps/traefik)                                 | A Traefik based Kubernetes ingress controller                                                                                                                                                                                                           | ✅           |
+| [vaultwarden](./scripts/../k8s-apps/vaultwarden)                         | Unofficial Bitwarden compatible server written in Rust                                                                                                                                                                                                  | ✅           |
+| [velero](./scripts/../k8s-apps/velero)                                   | Backup and migrate Kubernetes applications and their persistent volumes                                                                                                                                                                                 | ✅           |
+| [versity-gw](./scripts/../k8s-apps/versity-gw)                           | High-performance S3 translation service                                                                                                                                                                                                                 | ✅           |
+| [zigbee2mqtt](./scripts/../k8s-apps/zigbee2mqtt)                         | Zigbee to MQTT bridge                                                                                                                                                                                                                                   | ✅           |
 <!-- END deployed-apps -->
-
-## 🏗️ k0s quick install
-
-The install assumes that all external secrets are [already created in a GitLab project as CI/CD variables](https://external-secrets.io/latest/provider/gitlab-variables/).
-
-Start the k0s cluster:
-
-```bash
-cd ~/homelab-gitops
-sudo k0s install controller --enable-worker -c ./k0s.yaml
-sudo k0s start
-sleep 5
-sudo k0s status
-sudo k0s kubeconfig admin > ~/.kube/config
-kubectl taint nodes --all node-role.kubernetes.io/master-
-```
-
-Create the GitLab token secret used by external-secrets:
-
-```bash
-kubectl create ns external-secrets
-kubectl create secret generic gitlab-secret -n external-secrets --from-literal=token=glpat-xxx
-```
-
-Deploy external-secrets and ArgoCD apps:
-
-```bash
-cd ../../k8s-apps/external-secrets && helm dependency update && helm template external-secrets -n external-secrets . | kubectl apply -n external-secrets -f -
-kubectl create ns argocd
-cd ../../k8s-apps/argocd && helm dependency update && helm template argocd . -n argocd | kubectl apply -n argocd -f -
-kubectl apply -f ../../argocd-apps/app-of-apps.yaml -n argocd
-```
-
-Cluster should be ready!
-
-## 💣 Teardown
-
-Save the GitLab token secret
-
-  ```bash
-  kubectl get secret -n external-secrets gitlab-secret -o yaml > gitlab-secret.yaml
-  ```
-
-Teardown the cluster
-
-  ```bash
-  sudo k0s stop
-  sudo k0s reset -v -d
-  ```
