@@ -295,6 +295,9 @@ traefik:
           SecRule REQUEST_URI "@rx ^/api/resources" \
             "id:1000017,phase:1,pass,nolog,ctl:ruleRemoveById=911100,ctl:ruleRemoveById=942160,ctl:ruleRemoveById=949110,ctl:ruleRemoveById=980170"
 
+          SecRule REQUEST_HEADERS:User-Agent "@rx ^argocd-client/" \
+              "id:1000018,phase:1,pass,nolog,ctl:ruleRemoveById=920420"
+
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
