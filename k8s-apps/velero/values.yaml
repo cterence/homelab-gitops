@@ -284,7 +284,6 @@ velero:
       template:
         storageLocation: v2
         includedNamespaces:
-          - anki-sync-server
           - arr-stack
           - calibre-web
           - changedetection
@@ -294,7 +293,6 @@ velero:
           - nextcloud
           - paperless-ngx
           - pocket-id
-          - satisfactory-server
           - vaultwarden
           - versity-gw
           - zigbee2mqtt
@@ -318,7 +316,6 @@ velero:
       template:
         storageLocation: versity-gw-v2
         includedNamespaces:
-          - anki-sync-server
           - arr-stack
           - calibre-web
           - changedetection
@@ -328,7 +325,6 @@ velero:
           - nextcloud
           - paperless-ngx
           - pocket-id
-          - satisfactory-server
           - vaultwarden
           - versity-gw
           - zigbee2mqtt
@@ -339,7 +335,7 @@ velero:
           - cm
           - sa
           - secret
-        ttl: 144h
+        ttl: 168h
         resourcePolicy:
           apiGroup: ""
           kind: ConfigMap
