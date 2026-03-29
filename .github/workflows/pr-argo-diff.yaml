@@ -75,6 +75,7 @@ jobs:
               --local-repo-root $(git rev-parse --show-toplevel) \
               --local $PWD \
               --loglevel warn \
+              --server-side-diff=false \
               --exit-code=false)
             if [ -n "$DIFF" ]; then
               DIFF_OUTPUT="${DIFF_OUTPUT}\n\n### Diff for $APP:\n\`\`\`diff\n$DIFF\n\`\`\`"
