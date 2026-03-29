@@ -17,7 +17,10 @@ spec:
       remoteRef:
         key: {{ .Release.Name }}-maxmind-key
         property: maxmind-key
-
+    - secretKey: ENCRYPTION_KEY
+      remoteRef:
+        key: {{ .Release.Name }}-encryption-key
+        property: encryption-key
 ---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
@@ -34,3 +37,19 @@ spec:
     - secretKey: maxmind-key
       remoteRef:
         key: pocket_id_maxmind_key
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}-encryption-key
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: {{ .Release.Name }}-encryption-key
+    creationPolicy: Owner
+  data:
+    - secretKey: encryption-key
+      remoteRef:
+        key: pocket_id_encryption_key
