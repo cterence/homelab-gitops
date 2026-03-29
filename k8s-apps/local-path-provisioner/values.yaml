@@ -5,12 +5,12 @@ local-path-provisioner:
 
   image:
     repository: rancher/local-path-provisioner
-    tag: v0.0.35
+    tag: v0.0.35@sha256:34ff0847cc47ebf69656ba44a3de9324596d0036b66ffd323b21614dd8221530
     pullPolicy: IfNotPresent
 
   helperImage:
     repository: busybox
-    tag: latest
+    tag: latest@sha256:1487d0af5f52b4ba31c7e465126ee2123fe3f2305d638e7827681e7cf6c83d5e
 
   defaultSettings:
     registrySecret: ~
