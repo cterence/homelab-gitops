@@ -11,7 +11,7 @@
 
 | Device                    | Name     | Specs                                                                 | OS    | Role                       |
 |---------------------------|----------|-----------------------------------------------------------------------|-------|----------------------------|
-| Lenovo ThinkCentre M75q-2 | homelab2 | Ryzen 5 Pro 5650GE (6 core / 12 threads) / 24GB RAM / 256GB + 1TB SSD | NixOS | k8s controller+worker node |
+| Lenovo ThinkCentre M75q-2 | homelab2 | Ryzen 5 Pro 5650GE (6 core / 12 threads) / 24GB RAM / 256GB + 2TB SSD | NixOS | k8s controller+worker node |
 
 ## ✨ Features
 
