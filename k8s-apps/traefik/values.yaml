@@ -310,6 +310,9 @@ traefik:
           SecRule REQUEST_URI "@rx ^/api/stream" \
             "id:1000022,phase:1,pass,nolog,ctl:ruleEngine=Off"
 
+          SecRule REQUEST_URI "@rx ^/nix-cache" \
+            "id:1000023,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
