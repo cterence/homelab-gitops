@@ -140,7 +140,7 @@ velero:
           name: versity-gw-credentials
           key: config
         config:
-          region: eu-west-3
+          region: us-east-1
           s3ForcePathStyle: true
           s3Url: http://versity-gw-nfs.versity-gw:7070
           checksumAlgorithm: ""
