@@ -30,7 +30,7 @@ sablier:
 
     # -- Sablier image tag
     # (deafult) appVersion
-    tag: "1.11.1@sha256:000fab8e34adec9587b2424cc91e8526403ebea4b0636e9667f4123d450fe165"
+    tag: "1.11.2@sha256:ce28de9ff608b4f9107466db6812d0c655587246de44e1e4a1cbae3c3b9814fa"
 
   # -- Sablier imagePullPolicy
   imagePullPolicy: IfNotPresent
