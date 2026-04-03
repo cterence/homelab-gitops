@@ -13,22 +13,6 @@ app-template:
       data:
         VGW_HEALTH: /health
         VGW_REGION: us-east-1
-        VGW_METRICS_STATSD_SERVERS: 127.0.0.1:8125
-
-    telegraf:
-      data:
-        telegraf.conf: |
-          [[inputs.statsd]]
-          protocol = "udp"
-          service_address = ":8125"
-
-          [[outputs.prometheus_client]]
-          listen = ":9273"
-          expiration_interval = "60s"
-          collectors_exclude = ["gocollector", "process"]
-
-          [[outputs.health]]
-          service_address = "http://:8080"
 
   controllers:
     main:
