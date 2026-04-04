@@ -515,23 +515,22 @@ app-template:
                 topologyKey: kubernetes.io/hostname
       initContainers:
         gluetun:
-          enabled: false
+          enabled: true
           image:
             repository: ghcr.io/qdm12/gluetun
             tag: v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab
           env:
             TZ: Europe/Paris
-            VPN_SERVICE_PROVIDER: airvpn
+            VPN_SERVICE_PROVIDER: custom
             VPN_TYPE: wireguard
             VPN_INTERFACE: wg0
-            SERVER_REGIONS: Europe
-            WIREGUARD_ADDRESSES: 10.145.193.219/32,fd7d:76ee:e68f:a993:7c10:4d59:a5d7:9537/128
-            FIREWALL_VPN_INPUT_PORTS: "6887"
+            WIREGUARD_ADDRESSES: 192.168.2.2/32
+            FIREWALL_VPN_INPUT_PORTS: "51413"
             DNS_ADDRESS: 1.1.1.1
           restartPolicy: Always
           envFrom:
             - secretRef:
-                name: gluetun-wg-keys
+                name: gluetun-wg-vm-keys
           securityContext:
             capabilities:
               add:
@@ -548,7 +547,7 @@ app-template:
             TZ: Europe/Paris
             PUID: 1000
             PGID: 1000
-            TORRENTING_PORT: 6887
+            TORRENTING_PORT: 51413
           ports:
             - name: http
               containerPort: 8080

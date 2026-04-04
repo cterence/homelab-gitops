@@ -16,3 +16,18 @@ spec:
     - secretKey: WIREGUARD_PRESHARED_KEY
       remoteRef:
         key: airvpn_qbittorrent_wg_psk
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: gluetun-wg-vm-keys
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gitlab-secret-store
+  target:
+    name: gluetun-wg-vm-keys
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: gluetun_oracle_wg0_config
