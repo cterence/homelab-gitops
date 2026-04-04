@@ -75,6 +75,38 @@ app-template:
                   port: http
                   path: /health
 
+    # TODO: https://github.com/Mic92/niks3/issues/333
+    # gc:
+    #   type: cronjob
+    #   annotations:
+    #     reloader.stakater.com/auto: "true"
+    #   cronjob:
+    #     schedule: "0 0 * * *"
+    #     successfulJobsHistory: 1
+    #     failedJobsHistory: 1
+    #   containers:
+    #     main:
+    #       image:
+    #         repository: ghcr.io/mic92/niks3
+    #         tag: v1.4.0
+    #       envFrom:
+    #         - secretRef:
+    #             name: versity-credentials
+    #         - secretRef:
+    #             name: api-token
+    #       env:
+    #         TZ: Europe/Paris
+    #         NIKS3_DB:
+    #           valueFrom:
+    #             secretKeyRef:
+    #               name: "{{ .Release.Name }}-cnpg-cluster-app"
+    #               key: fqdn-uri
+    #         NIKS3_S3_ENDPOINT: versity.terence.cloud
+    #         NIKS3_S3_BUCKET: nix-cache
+    #         NIKS3_S3_REGION: us-east-1
+    #         NIKS3_SIGN_KEY_PATHS: /secrets/signing-key
+    #         NIKS3_ENABLE_READ_PROXY: "true"
+
   service:
     main:
       controller: main
