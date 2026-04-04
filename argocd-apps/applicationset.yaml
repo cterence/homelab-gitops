@@ -43,6 +43,7 @@ spec:
           - name: mosquitto
           - name: nextcloud
             serverSideApply: true
+          - name: niks3
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx
