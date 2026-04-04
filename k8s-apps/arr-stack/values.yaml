@@ -639,7 +639,7 @@ app-template:
             - name: http
               containerPort: 5030
             - name: slskd
-              containerPort: 39332
+              containerPort: 51413
           probes:
             liveness:
               enabled: true
@@ -656,22 +656,22 @@ app-template:
                   path: /health
 
         gluetun:
-          enabled: false
+          enabled: true
           dependsOn: slskd
           image:
             repository: ghcr.io/qdm12/gluetun
             tag: v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab
           env:
             TZ: Europe/Paris
-            VPN_SERVICE_PROVIDER: airvpn
+            VPN_SERVICE_PROVIDER: custom
             VPN_TYPE: wireguard
             VPN_INTERFACE: wg2
-            SERVER_REGIONS: Europe
-            WIREGUARD_ADDRESSES: 10.165.132.142/32,fd7d:76ee:e68f:a993:98e4:695c:3789:4b9d/128
-            FIREWALL_VPN_INPUT_PORTS: "39332"
+            WIREGUARD_ADDRESSES: 192.168.3.2/32
+            FIREWALL_VPN_INPUT_PORTS: "51413"
+            DNS_ADDRESS: 1.1.1.1
           envFrom:
             - secretRef:
-                name: gluetun-slskd-wg-keys
+                name: gluetun-wg-slskd-vm-keys
           securityContext:
             capabilities:
               add:
