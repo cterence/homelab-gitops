@@ -195,6 +195,14 @@ cnpg-cluster:
       enabled: true
       podMonitor:
         enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
     postgresql: {}
     initdb:
       database: niks3
