@@ -656,7 +656,7 @@ app-template:
                   path: /health
 
         gluetun:
-          enabled: true
+          enabled: false
           dependsOn: slskd
           image:
             repository: ghcr.io/qdm12/gluetun
