@@ -74,7 +74,7 @@ openbao:
       # -- image repo to use for k8s image
       repository: "hashicorp/vault-k8s"
       # -- image tag to use for k8s image
-      tag: "1.7.2"
+      tag: "1.7.3@sha256:9dc040670fc917d99ef0c3341082d8700c8c9b67cc98a3867c4b93732b795d0f"
       # -- image pull policy to use for k8s image. if tag is "latest", set to "Always"
       pullPolicy: IfNotPresent
 
