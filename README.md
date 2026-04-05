@@ -68,6 +68,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
 | [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data | ✅ |
 | [niks3](./scripts/../k8s-apps/niks3) | S3-backed Nix binary cache with garbage collection | ✅ |
+| [openbao](./scripts/../k8s-apps/openbao) | Open source, community-driven fork of Vault managed by the Linux Foundation | ✅ |
 | [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing | ❌ |
 | [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data | ✅ |
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
