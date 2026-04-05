@@ -109,7 +109,7 @@ app-template:
         companion:
           image:
             repository: featheredtoast/ficsit-remote-monitoring-companion
-            tag: latest@sha256:a3ee509539d508af6e78addd0d4a453ca8fa04ba25aa10a092131a62f168623b
+            tag: latest@sha256:6c003115f5b748687cdff1dea963d956a005fee6239265e357ea8b14c7bfb18b
           env:
             TZ: Europe/Paris
             FRM_HOST: satisfactory-server-frm
