@@ -61,12 +61,10 @@ external-secrets:
 
   podLabels: {}
 
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
     # fsGroup: 2000
 
-  securityContext:
-    {}
+  securityContext: {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -74,8 +72,7 @@ external-secrets:
     # runAsNonRoot: true
     # runAsUser: 1000
 
-  resources:
-    {}
+  resources: {}
     # requests:
     #   cpu: 10m
     #   memory: 32Mi
@@ -112,6 +109,27 @@ external-secrets:
                   namespace: external-secrets
                   key: token
             projectID: "34242337"
+    - apiVersion: external-secrets.io/v1
+      kind: ClusterSecretStore
+      metadata:
+        name: openbao-secret-store
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+      spec:
+        provider:
+          vault:
+            server: http://openbao.openbao:8200
+            path: kvv2
+            version: v2
+            auth:
+              kubernetes:
+                mountPath: kubernetes
+                role: external-secrets
+                serviceAccountRef:
+                  name: external-secrets
+                  namespace: external-secrets
+                  audiences:
+                    - openbao
     - apiVersion: generators.external-secrets.io/v1alpha1
       kind: ClusterGenerator
       metadata:

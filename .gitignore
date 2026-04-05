@@ -3,3 +3,4 @@ Chart.lock
 *.tfstate
 *.tfvars
 .terraform
+**/*.tmp.yaml
