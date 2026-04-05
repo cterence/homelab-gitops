@@ -29,14 +29,13 @@ metadata:
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: {{ .Release.Name }}-maxmind-key
     creationPolicy: Owner
-  data:
-    - secretKey: maxmind-key
-      remoteRef:
-        key: pocket_id_maxmind_key
+  dataFrom:
+    - extract:
+        key: pocket-id/pocket-id-maxmind-key
 ---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
@@ -45,11 +44,10 @@ metadata:
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: {{ .Release.Name }}-encryption-key
     creationPolicy: Owner
-  data:
-    - secretKey: encryption-key
-      remoteRef:
-        key: pocket_id_encryption_key
+  dataFrom:
+    - extract:
+        key: pocket-id/pocket-id-encryption-key
