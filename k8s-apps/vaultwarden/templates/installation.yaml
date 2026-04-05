@@ -5,14 +5,10 @@ metadata:
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: vaultwarden-installation
     creationPolicy: Owner
-  data:
-    - secretKey: PUSH_INSTALLATION_ID
-      remoteRef:
-        key: vaultwarden_installation_id
-    - secretKey: PUSH_INSTALLATION_KEY
-      remoteRef:
-        key: vaultwarden_installation_key
+  dataFrom:
+    - extract:
+        key: vaultwarden/vaultwarden-installation

@@ -5,11 +5,10 @@ metadata:
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: vaultwarden-admin-token
     creationPolicy: Owner
-  data:
-    - secretKey: token
-      remoteRef:
-        key: vaultwarden_admin_token
+  dataFrom:
+    - extract:
+        key: vaultwarden/vaultwarden-admin-token
