@@ -1,44 +1,14 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: immich-nextcloud-uploader-api-key
-spec:
-  secretStoreRef:
-    kind: ClusterSecretStore
-    name: gitlab-secret-store
-  target:
-    name: immich-nextcloud-uploader-api-key
-    creationPolicy: Owner
-  data:
-    - secretKey: api-key
-      remoteRef:
-        conversionStrategy: Default
-        decodingStrategy: None
-        metadataPolicy: None
-        key: immich_nextcloud_uploader_api_key
----
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
   name: nextcloud
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: nextcloud
     creationPolicy: Owner
-    template:
-      engineVersion: v2
-      data:
-        # These are bogus creds :)
-        nextcloud-username: admin
-        nextcloud-password: changeme
-        nextcloud-token: "{{ printf "{{ .token }}" }}"
-  data:
-    - secretKey: token
-      remoteRef:
-        conversionStrategy: Default
-        decodingStrategy: None
-        metadataPolicy: None
-        key: nextcloud_token
+  dataFrom:
+    - extract:
+        key: nextcloud/nextcloud
