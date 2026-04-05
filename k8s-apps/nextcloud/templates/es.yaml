@@ -12,3 +12,6 @@ spec:
   dataFrom:
     - extract:
         key: nextcloud/nextcloud
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
