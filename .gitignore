@@ -1,2 +1,5 @@
 *.tgz
 Chart.lock
+*.tfstate
+*.tfvars
+.terraform

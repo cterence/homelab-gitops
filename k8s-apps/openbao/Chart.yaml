@@ -1,0 +1,9 @@
+apiVersion: v2
+name: openbao
+description: Open source, community-driven fork of Vault managed by the Linux Foundation
+type: application
+version: 0.1.0
+dependencies:
+  - name: openbao
+    repository: https://openbao.github.io/openbao-helm
+    version: 0.26.2

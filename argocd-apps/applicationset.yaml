@@ -44,6 +44,7 @@ spec:
           - name: nextcloud
             serverSideApply: true
           - name: niks3
+          - name: openbao
           - name: opentelemetry-collector
           - name: opentelemetry-operator
           - name: paperless-ngx

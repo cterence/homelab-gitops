@@ -1,0 +1,15 @@
+keys:
+  - &framework13 age1dz90388umnh8nmk2akt89le408t7488ruax60zdww2lhgvasrp0q5tlal8
+  - &homelab2 age1ky8phu7rmf6yashsrp25ep22yc4nulm7eakss2l764rhf0m4r3tqm0jgz8
+  - &homelab3 age1can73zkeq8v9r4a8egrmrnx753jdd2fss9l08jmc8pvh3jyptf2spz20nu
+  - &stronghold age1966dt3tnupyte5aw7nggn8cmp2uh498nyjgv08tnxfdc8ur884ysnnq34s
+  - &t14s age1tjd9fn32wuykv83zejgjw4azqtetw5lzqae602hcgmgmzsagg37q2d7ka5
+creation_rules:
+  - path_regex: terraform/secrets/[^/]+\.(yaml|json|env|ini|toml)$
+    key_groups:
+      - age:
+          - *framework13
+          - *homelab2
+          - *homelab3
+          - *stronghold
+          - *t14s
