@@ -96,22 +96,6 @@ external-secrets:
     - apiVersion: external-secrets.io/v1
       kind: ClusterSecretStore
       metadata:
-        name: gitlab-secret-store
-        annotations:
-          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-      spec:
-        provider:
-          gitlab:
-            auth:
-              SecretRef:
-                accessToken:
-                  name: gitlab-secret
-                  namespace: external-secrets
-                  key: token
-            projectID: "34242337"
-    - apiVersion: external-secrets.io/v1
-      kind: ClusterSecretStore
-      metadata:
         name: openbao-secret-store
         annotations:
           argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
