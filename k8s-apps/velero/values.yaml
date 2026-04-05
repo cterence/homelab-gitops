@@ -38,24 +38,13 @@ velero:
       spec:
         secretStoreRef:
           kind: ClusterSecretStore
-          name: gitlab-secret-store
+          name: openbao-secret-store
         target:
           name: backblaze-credentials
           creationPolicy: Owner
-          template:
-            engineVersion: v2
-            data:
-              config: |
-                [default]
-                aws_access_key_id = "{{"{{ .access_key }}"}}"
-                aws_secret_access_key = "{{"{{ .secret_key }}"}}"
-        data:
-          - secretKey: access_key
-            remoteRef:
-              key: velero_backblaze_access_key_id
-          - secretKey: secret_key
-            remoteRef:
-              key: velero_backblaze_secret_access_key
+        dataFrom:
+          - extract:
+              key: velero/backblaze-credentials
   metrics:
     enabled: true
     scrapeInterval: 120s
