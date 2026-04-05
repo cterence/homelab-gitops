@@ -3,21 +3,23 @@ data "sops_file" "secrets" {
 }
 
 locals {
-  split_keys = [for k in keys(data.sops_file.secrets.data) : split(".", k)]
+  regex_pattern = "^([^.]+)\\.([^.]+)\\.(.+)$"
 
   grouped_secrets = {
-    for k0, vals0 in { for k in local.split_keys : k[0] => k... } : k0 => {
-      for k1, vals1 in { for v in vals0 : v[1] => v... } : k1 => {
-        for v in vals1 : v[2] => data.sops_file.secrets.data[join(".", v)]
-      }
-    }
+    for k, v in data.sops_file.secrets.data : k => v
+    if can(regex(local.regex_pattern, k))
   }
 
-  vault_map = merge([
-    for ns, secrets in local.grouped_secrets : {
-      for s_name, s_data in secrets : "${ns}/${s_name}" => s_data
-    }
-  ]...)
+  vault_map = {
+    for k, v in local.grouped_secrets :
+    format("%s/%s", regex(local.regex_pattern, k)[0], regex(local.regex_pattern, k)[1]) => {
+      (regex(local.regex_pattern, k)[2]) = v
+    }...
+  }
+
+  final_vault_map = {
+    for path, data_list in local.vault_map : path => merge(data_list...)
+  }
 }
 
 resource "vault_mount" "kvv2" {
@@ -92,7 +94,7 @@ resource "vault_kubernetes_auth_backend_role" "external_secrets" {
 }
 
 resource "vault_kv_secret_v2" "secrets" {
-  for_each = nonsensitive(local.vault_map)
+  for_each = nonsensitive(local.final_vault_map)
 
   mount                = vault_mount.kvv2.path
   name                 = each.key
