@@ -1,33 +1,14 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: gluetun-wg-keys
-spec:
-  secretStoreRef:
-    kind: ClusterSecretStore
-    name: gitlab-secret-store
-  target:
-    name: gluetun-wg-keys
-    creationPolicy: Owner
-  data:
-    - secretKey: WIREGUARD_PRIVATE_KEY
-      remoteRef:
-        key: airvpn_qbittorrent_wg_privkey
-    - secretKey: WIREGUARD_PRESHARED_KEY
-      remoteRef:
-        key: airvpn_qbittorrent_wg_psk
----
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
   name: gluetun-wg-vm-keys
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: gluetun-wg-vm-keys
     creationPolicy: Owner
   dataFrom:
     - extract:
-        key: gluetun_oracle_wg0_config
+        key: arr-stack/gluetun-wg-vm-keys

@@ -2,56 +2,12 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: slskd-config
-  annotations:
-    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: slskd-config
-    template:
-      engineVersion: v2
-      data:
-        slskd.yml: |
-          remote_file_management: true
-          debug: false
-          directories:
-            incomplete: /download/incomplete
-            downloads: /download/complete
-          shares:
-            directories:
-              - /music
-          soulseek:
-            username: ildiluvio
-            password: {{ "{{ .soulseek_password }}" }}
-            listen_port: 39332
-          web:
-            authentication:
-              disabled: false
-              username: slskd
-              password: {{ "{{ .slskd_password }}" }}
-              api_keys:
-                my_api_key:
-                  key: {{ "{{ .slskd_api_key }}" }}
-                  cidr: 0.0.0.0/0,::/0
-
-  data:
-    - secretKey: slskd_api_key
-      remoteRef:
-        conversionStrategy: Default
-        decodingStrategy: None
-        metadataPolicy: None
-        key: slskd_api_key
-    - secretKey: soulseek_password
-      remoteRef:
-        conversionStrategy: Default
-        decodingStrategy: None
-        metadataPolicy: None
-        key: soulseek_password
-    - secretKey: slskd_password
-      remoteRef:
-        conversionStrategy: Default
-        decodingStrategy: None
-        metadataPolicy: None
-        key: slskd_password
+  dataFrom:
+    - extract:
+        key: arr-stack/slskd-config

@@ -5,14 +5,10 @@ metadata:
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gitlab-secret-store
+    name: openbao-secret-store
   target:
     name: rangemusique-api-keys
     creationPolicy: Owner
-  data:
-    - secretKey: JELLYFIN_API_KEY
-      remoteRef:
-        key: rangemusique_jellyfin_api_key
-    - secretKey: LIDARR_API_KEY
-      remoteRef:
-        key: lidarr_api_key
+  dataFrom:
+    - extract:
+        key: arr-stack/rangemusique-api-keys
