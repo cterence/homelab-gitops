@@ -159,39 +159,6 @@ app-template:
               readOnly: true
 
   rawResources:
-    signing-key:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      spec:
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: gitlab-secret-store
-          target:
-            name: signing-key
-            creationPolicy: Owner
-          data:
-            - secretKey: signing-key
-              remoteRef:
-                key: niks3_signing_key
-    versity:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      spec:
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: gitlab-secret-store
-          target:
-            name: versity-credentials
-            creationPolicy: Owner
-          data:
-            - secretKey: NIKS3_S3_ACCESS_KEY
-              remoteRef:
-                key: versity_root_access_key
-            - secretKey: NIKS3_S3_SECRET_KEY
-              remoteRef:
-                key: versity_root_secret_key
     api-token:
       apiVersion: external-secrets.io/v1
       kind: ExternalSecret
@@ -199,14 +166,41 @@ app-template:
         spec:
           secretStoreRef:
             kind: ClusterSecretStore
-            name: gitlab-secret-store
+            name: openbao-secret-store
           target:
             name: api-token
             creationPolicy: Owner
-          data:
-            - secretKey: NIKS3_API_TOKEN
-              remoteRef:
-                key: niks3_api_token
+          dataFrom:
+            - extract:
+                key: niks3/api-token
+    signing-key:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      spec:
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: signing-key
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: niks3/signing-key
+    versity:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      spec:
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: versity-credentials
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: niks3/versity-credentials
 
 cnpg-cluster:
   type: postgresql
