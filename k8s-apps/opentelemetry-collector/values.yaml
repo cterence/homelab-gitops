@@ -86,10 +86,9 @@ opentelemetry-collector:
           - IsMatch(log.body, ".*/health.*")
           - IsMatch(log.body, ".*/metrics.*")
           - IsMatch(log.body, ".*/status.*")
-          - IsMatch(log.body, ".*canary-push.*")
-          - IsMatch(log.body, ".*loki-canary.*")
           - IsMatch(log.body, ".*MQTT publish.*")
           - IsMatch(log.body, ".*/otlp/v1/logs.*")
+          - IsMatch(log.body, ".*revoked lease.*")
           - resource.attributes["k8s.container.name"] == "sockpuppet-chrome" and log.severity_number < SEVERITY_NUMBER_WARN
           - IsMatch(resource.attributes["k8s.namespace.name"], "argocd|loki") and log.severity_number < SEVERITY_NUMBER_WARN
           - IsMatch(log.body, "Client .* closed its connection") and resource.attributes["k8s.container.name"] == "mosquitto"

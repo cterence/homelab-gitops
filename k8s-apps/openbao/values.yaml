@@ -1468,7 +1468,7 @@ openbao:
         - alert: OpenBaoSealed
           annotations:
             message: OpenBao is sealed.
-          expr: vault_core_unsealed != 1
+          expr: absent_over_time(vault_core_unsealed[1m]) > 0
           for: 1m
           labels:
             severity: critical
