@@ -1456,7 +1456,7 @@ openbao:
 
       # Deploy the PrometheusRule custom resource for AlertManager based alerts.
       # Requires that AlertManager is properly deployed.
-      enabled: false
+      enabled: true
 
       # Selector labels to add to the PrometheusRules.
       # When empty, defaults to:
@@ -1464,21 +1464,14 @@ openbao:
       selectors: {}
 
       # Some example rules.
-      rules: []
-      #  - alert: vault-HighResponseTime
-      #    annotations:
-      #      message: The response time of OpenBao is over 500ms on average over the last 5 minutes.
-      #    expr: vault_core_handle_request{quantile="0.5", namespace="mynamespace"} > 500
-      #    for: 5m
-      #    labels:
-      #      severity: warning
-      #  - alert: vault-HighResponseTime
-      #    annotations:
-      #      message: The response time of OpenBao is over 1s on average over the last 10 minutes.
-      #    expr: vault_core_handle_request{quantile="0.5", namespace="mynamespace"} > 1000
-      #    for: 10m
-      #    labels:
-      #      severity: critical
+      rules:
+        - alert: OpenBaoSealed
+          annotations:
+            message: OpenBao is sealed.
+          expr: vault_core_unsealed != 1
+          for: 1m
+          labels:
+            severity: critical
 
     grafanaDashboard:
       # Enable deployment of the OpenBao Grafana dashboard.
