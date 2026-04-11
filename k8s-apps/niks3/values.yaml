@@ -35,7 +35,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/mic92/niks3
-            tag: v1.4.0
+            tag: main@sha256:d70c335b4d5e3fe017583e1c586498e52d846e8a437ff009e580651d2dcbb5d5
           envFrom:
             - secretRef:
                 name: versity-credentials
