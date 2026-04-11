@@ -35,7 +35,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/mic92/niks3
-            tag: v1.4.0
+            tag: main@sha256:d70c335b4d5e3fe017583e1c586498e52d846e8a437ff009e580651d2dcbb5d5
           envFrom:
             - secretRef:
                 name: versity-credentials
@@ -87,7 +87,7 @@ app-template:
           command: ["/bin/sh", "-c"]
           args:
             [
-              "/bin/niks3 gc --older-than 168h --auth-token-path /secrets/auth-token-file/NIKS3_API_TOKEN || true",
+              "/bin/niks3 gc --older-than 168h --auth-token-path /secrets/auth-token-file/NIKS3_API_TOKEN",
             ]
           image:
             repository: ghcr.io/cterence/niks3
