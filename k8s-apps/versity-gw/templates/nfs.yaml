@@ -22,7 +22,7 @@ spec:
     - timeo=600
     - retrans=2
   nfs:
-    path: /mx500-homelab3/k8s-data
+    path: /mx500-homelab3
     server: 192.168.1.141
 ---
 apiVersion: v1
