@@ -34,6 +34,7 @@ app-template:
       containers:
         main:
           image:
+            # TODO: stick to release when status code mismatch between client & server fixed
             repository: ghcr.io/mic92/niks3
             tag: main@sha256:d70c335b4d5e3fe017583e1c586498e52d846e8a437ff009e580651d2dcbb5d5
           envFrom:
@@ -90,6 +91,7 @@ app-template:
               "/bin/niks3 gc --older-than 168h --auth-token-path /secrets/auth-token-file/NIKS3_API_TOKEN",
             ]
           image:
+            # TODO: use remote image when https://github.com/Mic92/niks3/pull/344 merged & released
             repository: ghcr.io/cterence/niks3
             tag: latest
           envFrom:
