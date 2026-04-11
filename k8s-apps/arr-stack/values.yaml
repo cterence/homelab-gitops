@@ -501,6 +501,11 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        dnsPolicy: None
+        dnsConfig:
+          nameservers:
+            - 1.1.1.1
+            - 8.8.8.8
         annotations:
           backup.velero.io/backup-volumes-excludes: data
         affinity:
