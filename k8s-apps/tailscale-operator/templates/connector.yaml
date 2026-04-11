@@ -1,0 +1,10 @@
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: k8s-svc
+spec:
+  replicas: 1
+  hostnamePrefix: k8s-svc
+  subnetRouter:
+    advertiseRoutes:
+      - "10.96.0.0/12"
