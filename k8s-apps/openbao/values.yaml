@@ -385,7 +385,7 @@ openbao:
       # -- image repo to use for server image
       repository: "openbao/openbao"
       # -- image tag to use for server image - defaults to chart appVersion
-      tag: "@sha256:6c75c97223873807260352f269640935a07db0c26b3dbf12a98a36ec43ad9878"
+      tag: ""
       # -- image pull policy to use for server image. if tag is "latest", set to "Always"
       pullPolicy: IfNotPresent
 
@@ -1321,7 +1321,7 @@ openbao:
         # -- image repo to use for agent image
         repository: "openbao/openbao"
         # -- image tag to use for agent image - defaults to chart appVersion
-        tag: "@sha256:6c75c97223873807260352f269640935a07db0c26b3dbf12a98a36ec43ad9878"
+        tag: ""
         # -- image pull policy to use for agent image. if tag is "latest", set to "Always"
         pullPolicy: IfNotPresent
 
