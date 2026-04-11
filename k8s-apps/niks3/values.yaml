@@ -93,7 +93,7 @@ app-template:
           image:
             # TODO: use remote image when https://github.com/Mic92/niks3/pull/344 merged & released
             repository: ghcr.io/cterence/niks3
-            tag: latest
+            tag: latest@sha256:b8ed7cd5f88b99c610e30eddc8efab655456549d6cd847f1f94a7efadf0cba40
           envFrom:
             - secretRef:
                 name: versity-credentials
