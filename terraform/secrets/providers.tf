@@ -20,7 +20,7 @@ terraform {
 provider "sops" {}
 
 provider "vault" {
-  address = "http://localhost:8200"
+  address = "http://openbao.snow-delta.ts.net:8200"
 }
 
 provider "kubernetes" {
