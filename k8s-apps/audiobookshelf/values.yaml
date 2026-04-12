@@ -1,0 +1,137 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      labels:
+        sablier.enable: "false"
+        sablier.group: "{{ .Release.Name }}"
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/advplyr/audiobookshelf
+            tag: 2.33.1
+          env:
+            TZ: Europe/Paris
+            PORT: 13378
+          ports:
+            - name: http
+              containerPort: 13378
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 13378
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        # traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd"
+        # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      className: "traefik"
+      hosts:
+        - host: &host abs.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: abs-tls
+          hosts:
+            - *host
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      globalMounts:
+        - path: /config
+    metadata:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      globalMounts:
+        - path: /metadata
+    audiobooks:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      globalMounts:
+        - path: /audiobooks
+    ebooks:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      globalMounts:
+        - path: /ebooks
+    podcasts:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      globalMounts:
+        - path: /podcasts
+
+  # rawResources:
+  #   sablier:
+  #     apiVersion: traefik.io/v1alpha1
+  #     kind: Middleware
+  #     spec:
+  #       spec:
+  #         plugin:
+  #           sablier:
+  #             dynamic:
+  #               displayName: "{{ .Release.Name }}"
+  #               refreshFrequency: 5s
+  #               showDetails: true
+  #               theme: shuffle
+  #             sablierUrl: http://sablier-sablier.sablier:10000
+  #             sessionDuration: 10m
+  #             ignoreUserAgent: curl
+  #             group: "{{ .Release.Name }}"
