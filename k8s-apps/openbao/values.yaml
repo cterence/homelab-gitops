@@ -885,7 +885,8 @@ openbao:
       # Extra annotations for the service definition. This can either be YAML or a
       # YAML-formatted multi-line templated string map of the annotations to apply
       # to the service.
-      annotations: {}
+      annotations:
+        tailscale.com/expose: "true"
       # Extra labels for the service definition.
       # This should be a YAML map of the labels to apply to the service
       extraLabels: {}
