@@ -216,25 +216,6 @@ app-template:
           hosts:
             - *host2
 
-    webdav:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-      className: "traefik"
-      hosts:
-        - host: &host3 abswd.terence.cloud
-          paths:
-            - path: /
-              pathType: ImplementationSpecific
-              service:
-                identifier: webdav
-                port: http
-      tls:
-        - secretName: abs-webdav-tls
-          hosts:
-            - *host3
-
   persistence:
     config-abs:
       enabled: true

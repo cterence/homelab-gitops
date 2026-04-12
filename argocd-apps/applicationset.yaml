@@ -13,8 +13,6 @@ spec:
           - name: audiobookshelf
           - name: arr-stack
             scaleToZero: true
-          - name: calibre-web
-            scaleToZero: true
           - name: cert-manager
           - name: changedetection
           - name: cloudnative-pg
