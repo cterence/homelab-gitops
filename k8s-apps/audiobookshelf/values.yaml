@@ -114,6 +114,11 @@ app-template:
         sablier.group: "calibre-web-webdav"
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
       containers:
         main:
           image:
@@ -216,10 +221,9 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-cwwebdav@kubernetescrd,traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd"
       className: "traefik"
       hosts:
-        - host: &host3 cwd.terence.cloud
+        - host: &host3 abswd.terence.cloud
           paths:
             - path: /
               pathType: ImplementationSpecific
@@ -227,7 +231,7 @@ app-template:
                 identifier: webdav
                 port: http
       tls:
-        - secretName: calibre-webdav-tls
+        - secretName: abs-webdav-tls
           hosts:
             - *host3
 
@@ -312,20 +316,22 @@ app-template:
           main:
             - path: /podcasts
 
-  # rawResources:
-  #   sablier:
-  #     apiVersion: traefik.io/v1alpha1
-  #     kind: Middleware
-  #     spec:
-  #       spec:
-  #         plugin:
-  #           sablier:
-  #             dynamic:
-  #               displayName: "{{ .Release.Name }}"
-  #               refreshFrequency: 5s
-  #               showDetails: true
-  #               theme: shuffle
-  #             sablierUrl: http://sablier-sablier.sablier:10000
-  #             sessionDuration: 10m
-  #             ignoreUserAgent: curl
-  #             group: "{{ .Release.Name }}"
+  rawResources:
+    webdav-password:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      forceRename: "{{ .Release.Name }}-webdav-password"
+      annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
+      spec:
+        spec:
+          refreshInterval: "0"
+          target:
+            name: "{{ .Release.Name }}-webdav-password"
+            creationPolicy: Owner
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: short-password
