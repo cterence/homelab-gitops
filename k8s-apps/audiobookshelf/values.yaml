@@ -106,6 +106,49 @@ app-template:
                 tcpSocket:
                   port: http
 
+    webdav:
+      type: deployment
+      strategy: Recreate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "calibre-web-webdav"
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/cterence/apachewebdav
+            tag: 2.4.65-bookworm@sha256:0aa4a0b399a5711005fcb38e8a6776f5518b18aa514f44f0da8e6fdb46333e77
+          env:
+            TZ: Europe/Paris
+            UID: "1000"
+            GID: "100"
+            USERNAME: kindle
+            NO_CHOWN_DATA: "true"
+            PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-webdav-password"
+                  key: password
+          ports:
+            - name: http
+              containerPort: 80
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
   service:
     main:
       controller: main
@@ -119,6 +162,12 @@ app-template:
       ports:
         http:
           port: 8084
+    webdav:
+      controller: webdav
+      type: ClusterIP
+      ports:
+        http:
+          port: 80
 
   ingress:
     main:
@@ -161,6 +210,26 @@ app-template:
         - secretName: shelfmark-tls
           hosts:
             - *host2
+
+    webdav:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-cwwebdav@kubernetescrd,traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd"
+      className: "traefik"
+      hosts:
+        - host: &host3 cwd.terence.cloud
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              service:
+                identifier: webdav
+                port: http
+      tls:
+        - secretName: calibre-webdav-tls
+          hosts:
+            - *host3
 
   persistence:
     config-abs:
@@ -226,6 +295,10 @@ app-template:
         shelfmark:
           main:
             - path: /ebooks
+        webdav:
+          main:
+            - path: /var/lib/dav/data
+              readOnly: true
     podcasts:
       enabled: true
       type: persistentVolumeClaim
