@@ -190,6 +190,9 @@ app-template:
     nfs:
       controller: nfs
       type: ClusterIP
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: "versity-gw-nfs"
       ports:
         http:
           port: 7070
