@@ -81,7 +81,7 @@ openbao:
     # -- agentImage sets the repo and tag of the OpenBao image to use for the OpenBao Agent
     # containers.  This should be set to the official OpenBao image.  OpenBao 1.3.1+ is
     # required.
-    agentImage:
+    agentI@sha256:6c75c97223873807260352f269640935a07db0c26b3dbf12a98a36ec43ad9878mage:
       # -- image registry to use for agent image
       registry: "quay.io"
       # -- image repo to use for agent image
@@ -385,7 +385,7 @@ openbao:
       # -- image repo to use for server image
       repository: "openbao/openbao"
       # -- image tag to use for server image - defaults to chart appVersion
-      tag: ""
+      tag: "@sha256:6c75c97223873807260352f269640935a07db0c26b3dbf12a98a36ec43ad9878"
       # -- image pull policy to use for server image. if tag is "latest", set to "Always"
       pullPolicy: IfNotPresent
 
@@ -1323,7 +1323,7 @@ openbao:
         # -- image repo to use for agent image
         repository: "openbao/openbao"
         # -- image tag to use for agent image - defaults to chart appVersion
-        tag: ""
+        tag: "@sha256:6c75c97223873807260352f269640935a07db0c26b3dbf12a98a36ec43ad9878"
         # -- image pull policy to use for agent image. if tag is "latest", set to "Always"
         pullPolicy: IfNotPresent
 
