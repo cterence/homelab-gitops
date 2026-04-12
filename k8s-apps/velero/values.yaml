@@ -274,6 +274,7 @@ velero:
         storageLocation: v2
         includedNamespaces:
           - arr-stack
+          - audiobookshelf
           - calibre-web
           - changedetection
           - gitea
