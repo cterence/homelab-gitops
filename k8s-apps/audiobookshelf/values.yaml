@@ -35,6 +35,76 @@ app-template:
             readiness:
               enabled: true
               type: HTTP
+    shelfmark:
+      type: deployment
+      # labels:
+      #   sablier.enable: "true"
+      #   sablier.group: "calibre-web-downloader"
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+      containers:
+        main:
+          image:
+            repository: ghcr.io/calibrain/shelfmark
+            tag: v1.2.1@sha256:5e00d47cccaa3b67234855d950d016c50691b78197a68adf15a624f6c08acee2
+          env:
+            TZ: Europe/Paris
+            FLASK_PORT: 8084
+            FLASK_DEBUG: false
+            CLOUDFLARE_PROXY_URL: http://localhost:8000
+            INGEST_DIR: /ebooks
+            UID: "0"
+            GID: "0"
+            APP_ENV: prod
+          ports:
+            - name: http
+              containerPort: 8084
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                failureThreshold: 10
+                timeoutSeconds: 5
+                httpGet:
+                  port: http
+                  path: /api/status
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                failureThreshold: 10
+                timeoutSeconds: 5
+                httpGet:
+                  port: http
+                  path: /api/status
+        cloudflare-bypass:
+          image:
+            repository: ghcr.io/sarperavci/cloudflarebypassforscraping
+            tag: latest@sha256:c514191fad713649bceff1bb11d2cb7596aba031e9242e7c2e8ca8464d6ae32a
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8000
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: http
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: http
 
   service:
     main:
@@ -43,6 +113,12 @@ app-template:
       ports:
         http:
           port: 13378
+    shelfmark:
+      controller: shelfmark
+      type: ClusterIP
+      ports:
+        http:
+          port: 8084
 
   ingress:
     main:
@@ -54,7 +130,7 @@ app-template:
         # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       className: "traefik"
       hosts:
-        - host: &host abs.terence.cloud
+        - host: &host1 abs.terence.cloud
           paths:
             - path: /
               pathType: Prefix
@@ -64,10 +140,30 @@ app-template:
       tls:
         - secretName: abs-tls
           hosts:
-            - *host
+            - *host1
+
+    shelfmark:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+      className: "traefik"
+      hosts:
+        - host: &host2 shfm.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: shelfmark
+                port: http
+      tls:
+        - secretName: shelfmark-tls
+          hosts:
+            - *host2
 
   persistence:
-    config:
+    config-abs:
       enabled: true
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
@@ -75,8 +171,22 @@ app-template:
       annotations:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
-      globalMounts:
-        - path: /config
+      advancedMounts:
+        main:
+          main:
+            - path: /config
+    config-shelfmark:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 50Mi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      advancedMounts:
+        shelfmark:
+          main:
+            - path: /config
     metadata:
       enabled: true
       type: persistentVolumeClaim
@@ -85,8 +195,10 @@ app-template:
       annotations:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
-      globalMounts:
-        - path: /metadata
+      advancedMounts:
+        main:
+          main:
+            - path: /metadata
     audiobooks:
       enabled: true
       type: persistentVolumeClaim
@@ -95,8 +207,10 @@ app-template:
       annotations:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
-      globalMounts:
-        - path: /audiobooks
+      advancedMounts:
+        main:
+          main:
+            - path: /audiobooks
     ebooks:
       enabled: true
       type: persistentVolumeClaim
@@ -105,8 +219,13 @@ app-template:
       annotations:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
-      globalMounts:
-        - path: /ebooks
+      advancedMounts:
+        main:
+          main:
+            - path: /ebooks
+        shelfmark:
+          main:
+            - path: /ebooks
     podcasts:
       enabled: true
       type: persistentVolumeClaim
@@ -115,8 +234,10 @@ app-template:
       annotations:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
-      globalMounts:
-        - path: /podcasts
+      advancedMounts:
+        main:
+          main:
+            - path: /podcasts
 
   # rawResources:
   #   sablier:
