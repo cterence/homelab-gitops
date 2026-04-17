@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: kube-prometheus-stack
     repository: https://prometheus-community.github.io/helm-charts
-    version: 83.5.1
+    version: 83.6.0
   - name: app-template
     alias: grafana-mcp-server
     repository: https://bjw-s-labs.github.io/helm-charts
