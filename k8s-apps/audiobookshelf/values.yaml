@@ -21,7 +21,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/advplyr/audiobookshelf
-            tag: 2.33.1
+            tag: 2.33.2@sha256:a44ed89b3e845faa1f7d353f2cc89b2fcd8011737dd14075fa963cf9468da3a5
           env:
             TZ: Europe/Paris
             PORT: 13378
