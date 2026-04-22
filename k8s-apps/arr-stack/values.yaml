@@ -359,7 +359,7 @@ app-template:
         bazarr:
           image:
             repository: lscr.io/linuxserver/bazarr
-            tag: v1.5.6-ls344@sha256:d736df5df0286373a26d34f47aa413cb8aeada74f6338dac372a6d37ba1b3b0d
+            tag: v1.5.6-ls345@sha256:7563f01bf27554df58e10544a4bb83479258883315a31cd1c929293e908144d0
           env:
             TZ: Europe/Paris
             PUID: 1000
