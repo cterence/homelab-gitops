@@ -47,21 +47,31 @@ provider "registry.terraform.io/hashicorp/kubernetes" {
 }
 
 provider "registry.terraform.io/hashicorp/vault" {
-  version     = "5.8.0"
-  constraints = "5.8.0"
+  version     = "5.9.0"
+  constraints = "5.9.0"
   hashes = [
-    "h1:eSJgYoJoVMce2xjJJCeAZnJELsC4RoqaotD0fgfn6dw=",
-    "zh:18e79b42c8c155a5c541a45d54a6ccdeab23c404c239acdeed336a17cbfc2fd4",
-    "zh:241f50d1ea40030578034b4440e41676f1c9b5e8a2be5cd3afdb6e387914e0bf",
-    "zh:3c25da9ca98df3ae13fd08aa32a94ae4d15959cbb7165044b5f411d16317dfa1",
+    "h1:8wcXxEMo7XvCnrtZHSpAuWmRfYiZkWn2tssshB1BDzo=",
+    "h1:CpKRWozyc36CCxa+hZlY1ijxlyzBlWsRZ5bgvbu7W7Q=",
+    "h1:Hv644I6KtZ+2+13+bv+Ld5e/z5UmD6H7xQ2nSVl+enU=",
+    "h1:LDJjxnA0gLYl2AL/Nwgi5LC6ewH5XMLgJQGy6XIm790=",
+    "h1:LWqZBwqDKJ34d5is+G+pllFHJTrpGGXiM+8cvH0NIXY=",
+    "h1:UDdB8dJjdVrssGSIT0eX5NNCN4wHsDJJ6NqlLNq8mbE=",
+    "h1:j0yV7CGpRj9rm/hESErE+viI9+qBdxJ8PWTWCQoaMQ8=",
+    "h1:tlcLUw0X01ZQZD54HWBNgACABq8XDJiHjTCgKekBb3c=",
+    "h1:tyF29uBSCKYxHJGSdW6r8VaGO7VhZhsUU339SaX3iJw=",
+    "h1:wZvzVH/fBsPQyWeVW85M1sCQ/Q3ik2V3PrigTJHI35o=",
+    "h1:xBFCiv8/2pz9xDOFYqD9gzgW/D9ePRp8EfwLXZpl9m0=",
+    "zh:16e23a37c0965938544af282a7bc13dabca445f462ab27829f98e936ace4d263",
+    "zh:249fcf9da1a690fe9aa44a7421fad89a425afb0c2ce7eaf306d75daddd691af5",
+    "zh:3d92af386049a229a428f21b938a22df61703447c8ceed65c73f111a64e627d2",
+    "zh:4033fedf9d4f54f0aacf7c4a79e20978bcd67c0a8ab9411acd447db1469108a4",
+    "zh:51c78d0dc378037bbaf3cd26ff29fae7c40d7b134b40d059b982257987c15f9f",
     "zh:78d5eefdd9e494defcb3c68d282b8f96630502cac21d1ea161f53cfe9bb483b3",
-    "zh:85a2cf2e47fe7eab5c81ad5051668c09dcdfd6b6318420f42b91ea179dee8eb0",
-    "zh:861d09d5ab848704cea3bf6c6765288e60938634bf54ed3c29dd2d9a9dc8f7c9",
-    "zh:9822fc41def7ef6f9ffe6ef8d6aaf5014870961d12f5050b60997fa0c12699e1",
-    "zh:9b63003071d47299bd2cb85af0a7d9b33329a8152a5ed06cdd3ba46e839f0c43",
-    "zh:c3ce51f4ab24ac788a0a3eeb0ec16c04f38b74ad9997f86d4dca384ab1472a5a",
-    "zh:c53702a1e829226c63baac15af2f727a8979e00384e220862c8047fd2fcf6b38",
-    "zh:e68cebb3c78f0fed01a3e15ac54f09b4276418d7b7d12811bcc79568e58dcfc1",
-    "zh:f8d97c753305077ddcbd9e60780c5b06b173de2127943b9590d7e8decda4bd7a",
+    "zh:86e414b7327343de676ec506d30c557a514dbd992b27a2670466adaf9ed69718",
+    "zh:879c3a61ed8d183a68ddb590e63a7e0d6aab8d8044fd4a13658e7b1661395a9d",
+    "zh:8d548617543ee2ce0340972a5df93e7ac37b7895d4bf506bd587f8daac58e6d6",
+    "zh:8d75b3bbfd9a536c8c1d84504cb3d1c8e1a3fd30e377a51a6311476632363103",
+    "zh:922f625a36642c49daa432e07c12e72ff75025e0b9afda8d7240f38c6789fe46",
+    "zh:fbceae685b395acaff6c820ed7d7eaa6250ef4769e04481145dc50e09b89db2f",
   ]
 }
