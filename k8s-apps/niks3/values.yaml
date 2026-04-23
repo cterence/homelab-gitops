@@ -36,7 +36,7 @@ app-template:
           image:
             # TODO: stick to release when status code mismatch between client & server fixed
             repository: ghcr.io/mic92/niks3
-            tag: main@sha256:d98aaf4ddb2e286dd39012b521ef64de432fc8f980c436a43c3572a23ae1634a
+            tag: main@sha256:4edda4a9d0e889a0224701c047ad47863a166c9efe3d9efc33d0ce66cd0952de
           envFrom:
             - secretRef:
                 name: versity-credentials
