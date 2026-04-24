@@ -3,7 +3,7 @@ home-assistant:
   image:
     repository: docker.io/homeassistant/home-assistant
     pullPolicy: IfNotPresent
-    tag: 2026.4.3@sha256:ae0800c81fea16bc1241ce03bddb9c6260566e90f58b09d3e5a629e4f68bdc0b
+    tag: 2026.4.4@sha256:c1e5f0147f4cb51ccb05bb30b62a1269cc1bd48a6274792d3b38a77ab274dfd2
   service:
     main:
       ports:
