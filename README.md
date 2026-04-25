@@ -40,6 +40,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | App | Description | Is deployed |
 | --- | --- | --- |
 | [anki-sync-server](./scripts/../k8s-apps/anki-sync-server) | Sync server for AnkiDroid | ❌ |
+| [anubis](./scripts/../k8s-apps/anubis) | Weighs the soul of incoming HTTP requests to stop AI crawlers | ✅ |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes | ✅ |
 | [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack | ✅ |
 | [attic](./scripts/../k8s-apps/attic) | Multi-tenant Nix Binary Cache | ❌ |
