@@ -29,7 +29,6 @@ app-template:
             TARGET: " "
             REDIRECT_DOMAINS: "*.terence.cloud"
             PUBLIC_URL: https://anubis.terence.cloud
-            COOKIE_DOMAIN: "terence.cloud"
             SLOG_LEVEL: debug
             USE_REMOTE_ADDRESS: "false"
             JWT_RESTRICTION_HEADER: X-Real-Ip
