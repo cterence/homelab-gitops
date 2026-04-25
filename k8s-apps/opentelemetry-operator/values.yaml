@@ -4,6 +4,12 @@ opentelemetry-operator:
       repository: otel/opentelemetry-collector-k8s
     serviceMonitor:
       enabled: true
+      metricsEndpoints:
+        - port: metrics
+          scheme: https
+          bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+          tlsConfig:
+            insecureSkipVerify: true
     prometheusRule:
       enabled: true
     createRbacPermissions: true
