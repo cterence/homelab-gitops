@@ -4,14 +4,40 @@ opentelemetry-operator:
       repository: otel/opentelemetry-collector-k8s
     serviceMonitor:
       enabled: true
-      metricsEndpoints:
-        - port: metrics
-          scheme: https
-          bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-          tlsConfig:
-            insecureSkipVerify: true
     prometheusRule:
       enabled: true
     createRbacPermissions: true
     extraArgs:
       - --enable-go-instrumentation
+
+  extraObjects:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: opentelemetry-operator-auth-delegator
+      rules:
+        - apiGroups:
+            - authentication.k8s.io
+          resources:
+            - tokenreviews
+          verbs:
+            - create
+        - apiGroups:
+            - authorization.k8s.io
+          resources:
+            - subjectaccessreviews
+          verbs:
+            - create
+
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: opentelemetry-operator-auth-delegator-binding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: opentelemetry-operator-auth-delegator
+      subjects:
+        - kind: ServiceAccount
+          name: opentelemetry-operator # Match the SA name from your log
+          namespace: opentelemetry-operator # Match your namespace
