@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      labels:
+        sablier.enable: "false"
+        sablier.group: "{{ .Release.Name }}"
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/techarohq/anubis
+            tag: v1.25.0
+          env:
+            TZ: Europe/Paris
+            BIND: ":8080"
+            METRICS_BIND: ":9090"
+            TARGET: " "
+            REDIRECT_DOMAINS: "*.terence.cloud"
+            PUBLIC_URL: https://anubis.terence.cloud
+            COOKIE_DOMAIN: "terence.cloud"
+            SLOG_LEVEL: debug
+            USE_REMOTE_ADDRESS: "false"
+            JWT_RESTRICTION_HEADER: X-Real-Ip
+            COOKIE_DYNAMIC_DOMAIN: "true"
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: metrics
+                  path: /healthz
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: metrics
+                  path: /healthz
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+      className: "traefik"
+      hosts:
+        - host: &host anubis.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: anubis-tls
+          hosts:
+            - *host
+
+  rawResources:
+    anubis:
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      spec:
+        spec:
+          forwardAuth:
+            address: https://anubis.terence.cloud/.within.website/x/cmd/anubis/api/check
+            trustForwardHeader: true
