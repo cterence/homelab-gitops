@@ -30,9 +30,7 @@ app-template:
             REDIRECT_DOMAINS: "*.terence.cloud"
             PUBLIC_URL: https://anubis.terence.cloud
             SLOG_LEVEL: debug
-            USE_REMOTE_ADDRESS: "false"
-            JWT_RESTRICTION_HEADER: X-Real-Ip
-            COOKIE_DYNAMIC_DOMAIN: "true"
+            COOKIE_DOMAIN: "terence.cloud"
           ports:
             - name: http
               containerPort: 8080
@@ -88,5 +86,4 @@ app-template:
       spec:
         spec:
           forwardAuth:
-            address: https://anubis.terence.cloud/.within.website/x/cmd/anubis/api/check
-            trustForwardHeader: true
+            address: http://anubis.anubis.svc.cluster.local:8080/.within.website/x/cmd/anubis/api/check
