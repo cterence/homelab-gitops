@@ -8,7 +8,7 @@ loki:
     ingester:
       chunk_encoding: snappy
     limits_config:
-      retention_period: 7d
+      retention_period: 30d
       allow_structured_metadata: true
     commonConfig:
       replication_factor: 1

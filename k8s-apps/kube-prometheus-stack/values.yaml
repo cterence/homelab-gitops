@@ -5,7 +5,7 @@ kube-prometheus-stack:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
       scrapeInterval: 120s
 
-      retention: 3d
+      retention: 30d
 
       # Watch all PrometheusRules in the cluster.
       ruleNamespaceSelector:
@@ -41,7 +41,7 @@ kube-prometheus-stack:
               helm.sh/resource-policy: keep
               argocd.argoproj.io/sync-options: Delete=false
           spec:
-            accessModes: ["ReadWriteOnce"]
+            accessModes: [ "ReadWriteOnce" ]
             resources:
               requests:
                 storage: 10Gi
@@ -153,7 +153,8 @@ kube-prometheus-stack:
 
     # Organise dashboards by provider, with the provider's name as the key.
     dashboards:
-      default: # The "default" provider is defined below.
+      default:
+        # The "default" provider is defined below.
         cloudnativepg:
           gnetId: 20417
           datasource: Prometheus
@@ -243,7 +244,7 @@ kube-prometheus-stack:
       storage:
         volumeClaimTemplate:
           spec:
-            accessModes: ["ReadWriteOnce"]
+            accessModes: [ "ReadWriteOnce" ]
             resources:
               requests:
                 storage: 1Gi
@@ -275,7 +276,7 @@ kube-prometheus-stack:
                 {{ end }}
                 <a href="{{ .ExternalURL }}">View in Alertmanager</a>
       route:
-        group_by: ["alertname"]
+        group_by: [ "alertname" ]
         group_wait: 0s
         receiver: telegram
         routes:
@@ -376,7 +377,8 @@ grafana-mcp-server:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernetescrd,monitoring-grafana-mcp-auth@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernet\
+          escrd,monitoring-grafana-mcp-auth@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host gmcp.terence.cloud
@@ -433,7 +435,7 @@ grafana-mcp-server:
               engineVersion: v2
               data:
                 username: "mcp"
-                password: '{{ printf "{{ .password }}" }}'
+                password: "{{ printf \"{{ .password }}\" }}"
           dataFrom:
             - sourceRef:
                 generatorRef:
