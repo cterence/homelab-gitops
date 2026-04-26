@@ -4,7 +4,7 @@ app-template:
     main:
       type: deployment
       labels:
-        sablier.enable: "false"
+        sablier.enable: "true"
         sablier.group: "{{ .Release.Name }}"
       containers:
         main:
@@ -38,7 +38,9 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: "anubis-anubis@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace
+          }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd,anubis-anu\
+          bis@kubernetescrd"
       hosts:
         - host: httpbin.terence.cloud
           paths:
