@@ -336,7 +336,7 @@ grafana-mcp-server:
         main:
           image:
             repository: grafana/mcp-grafana
-            tag: latest@sha256:85cec6951b67fbbc48ad10eda67981a2d59f2bc9a0b0781b619db4276f2593cb
+            tag: latest@sha256:60a4e3a417a69eeb864a72052c53b4aa4466ff3577d6ef9bacc671f4b77d7090
           env:
             TZ: Europe/Paris
             GRAFANA_URL: http://kube-prometheus-stack-grafana
