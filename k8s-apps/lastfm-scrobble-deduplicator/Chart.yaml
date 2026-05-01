@@ -1,5 +1,5 @@
 apiVersion: v2
-name: scrobble-deduplicator
+name: lastfm-scrobble-deduplicator
 description: Periodically delete duplicate Last.fm scrobbles
 type: application
 version: 0.1.0

@@ -11,4 +11,4 @@ spec:
     creationPolicy: Owner
   dataFrom:
     - extract:
-        key: "scrobble-deduplicator/lastfm-credentials"
+        key: "lastfm-scrobble-deduplicator/lastfm-credentials"

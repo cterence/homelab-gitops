@@ -27,8 +27,8 @@ app-template:
       containers:
         app:
           image:
-            repository: ghcr.io/cterence/scrobble-deduplicator
-            tag: latest@sha256:5e7ff7acc77fc2fa6bea870480af617c1f608828ff6bafc0461fe0cf2fc36934
+            repository: ghcr.io/cterence/lastfm-scrobble-deduplicator
+            tag: latest@sha256:d3954268ed168c61e1e677915a3ef1ba9df77d455635803e71f369ad1147c2be
           command:
             - /bin/bash
             - -c
