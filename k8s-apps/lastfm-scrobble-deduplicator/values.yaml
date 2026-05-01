@@ -28,7 +28,7 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/lastfm-scrobble-deduplicator
-            tag: latest@sha256:d3954268ed168c61e1e677915a3ef1ba9df77d455635803e71f369ad1147c2be
+            tag: latest@sha256:a28054dd49d3193347cfa79ce9aff55adccea66ec8b34c5bac65f6068e69da5b
           command:
             - /bin/bash
             - -c
