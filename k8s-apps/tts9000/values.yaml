@@ -22,7 +22,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/cterence/tts9000
-            tag: latest@sha256:18513107184ee3681d474961a8b8ac314a5c78b501cefd6b4a199fba12a39712
+            tag: latest@sha256:3e7a68e7ec3fd485cf22f0f32d4ee74397b3d5b1b6c6d5d4a32107691818d1c2
           env:
             TZ: Europe/Paris
           envFrom:
