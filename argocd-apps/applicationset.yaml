@@ -56,6 +56,7 @@ spec:
           - name: sablier
           - name: tailscale-operator
           - name: traefik
+          - name: tts9000
           - name: vaultwarden
           - name: velero
           - name: versity-gw

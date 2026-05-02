@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      labels:
+        sablier.enable: "false"
+        sablier.group: "{{ .Release.Name }}"
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        main:
+          image:
+            repository: ghcr.io/cterence/tts9000
+            tag: latest@sha256:471f8fff1cc0eb34f469c073864cbb2b0b4c84abab909008da7117a962ccdfc2
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - secretRef:
+                name: credentials
+  persistence:
+    generated:
+      enabled: true
+      type: emptyDir
+      advancedMounts:
+        main:
+          main:
+            - path: /app/generated
+
+  rawResources:
+    credentials:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      forceRename: "credentials"
+      annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
+      spec:
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: "credentials"
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: tts9000/credentials
