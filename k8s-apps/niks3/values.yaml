@@ -49,7 +49,7 @@ app-template:
                 secretKeyRef:
                   name: "{{ .Release.Name }}-cnpg-cluster-app"
                   key: fqdn-uri
-            NIKS3_S3_ENDPOINT: versity.terence.cloud
+            NIKS3_S3_ENDPOINT: versity-gw-main.versity-gw
             NIKS3_S3_BUCKET: nix-cache
             NIKS3_S3_REGION: us-east-1
             NIKS3_SIGN_KEY_PATHS: /secrets/signing-key
@@ -85,10 +85,11 @@ app-template:
         failedJobsHistory: 1
       containers:
         main:
-          command: ["/bin/sh", "-c"]
+          command: [ "/bin/sh", "-c" ]
           args:
             [
-              "/bin/niks3 gc --older-than 168h --auth-token-path /secrets/auth-token-file/NIKS3_API_TOKEN",
+              "/bin/niks3 gc --older-than 168h --auth-token-path
+                /secrets/auth-token-file/NIKS3_API_TOKEN",
             ]
           image:
             # TODO: use remote image when https://github.com/Mic92/niks3/pull/344 merged & released
