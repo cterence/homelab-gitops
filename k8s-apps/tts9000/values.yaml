@@ -55,3 +55,7 @@ app-template:
           dataFrom:
             - extract:
                 key: tts9000/credentials
+                conversionStrategy: Default
+                decodingStrategy: None
+                metadataPolicy: None
+                nullBytePolicy: Ignore
