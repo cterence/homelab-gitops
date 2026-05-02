@@ -57,6 +57,7 @@ spec:
           - name: tailscale-operator
           - name: traefik
           - name: tts9000
+            scaleToZero: true
           - name: vaultwarden
           - name: velero
           - name: versity-gw
