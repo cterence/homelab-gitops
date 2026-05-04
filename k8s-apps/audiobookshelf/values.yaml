@@ -191,6 +191,11 @@ app-template:
               service:
                 identifier: main
                 port: http
+            - path: /dav
+              pathType: Prefix
+              service:
+                identifier: webdav
+                port: http
       tls:
         - secretName: abs-tls
           hosts:
