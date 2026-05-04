@@ -180,7 +180,8 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        # traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernet\
+          escrd,audiobookshelf-strip-dav-prefix@kubernetescrd"
         # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       className: "traefik"
       hosts:
@@ -341,3 +342,12 @@ app-template:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: short-password
+    strip-prefix:
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      forceRename: "strip-dav-prefix"
+      spec:
+        spec:
+          stripPrefix:
+            prefixes:
+              - "/dav"
