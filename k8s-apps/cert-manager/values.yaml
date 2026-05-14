@@ -1,4 +1,7 @@
 cert-manager:
+  extraEnv:
+    - name: TZ
+      value: Europe/Paris
   installCRDs: true
   prometheus:
     enabled: true
