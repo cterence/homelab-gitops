@@ -1,89 +1,112 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:best-practices",
-    ":timezone(Europe/Paris)",
-    ":label(renovate)",
-    ":semanticPrefixFix",
-    ":separateMultipleMajorReleases",
-    ":automergeBranch",
-    ":automergeStableNonMajor",
-    ":automergeDigest",
-    ":skipStatusChecks",
+    'config:best-practices',
+    ':timezone(Europe/Paris)',
+    ':label(renovate)',
+    ':semanticPrefixFix',
+    ':separateMultipleMajorReleases',
+    ':automergeBranch',
+    ':automergeStableNonMajor',
+    ':automergeDigest',
+    ':skipStatusChecks',
   ],
-  dependencyDashboardTitle: "🤖 Renovate Dashboard",
-  commitMessageTopic: "{{depName}}",
-  commitMessageExtra: "to {{newVersion}}",
-  commitMessageSuffix: "",
+  dependencyDashboardTitle: '🤖 Renovate Dashboard',
+  commitMessageTopic: '{{depName}}',
+  commitMessageExtra: 'to {{newVersion}}',
+  commitMessageSuffix: '',
   ignorePaths: [],
-  regexManagers: [
+  customManagers: [
     {
-      fileMatch: ["(^|/)Chart\\.yaml$"],
-      matchStrings: [
-        "repository: git\\+https://github\.com/(?<packageName>[^@\\s]+)@(?:[^?\\s]+)\\?ref=(?<currentValue>[^\\s]+)\\s+version: (?<currentVersion>[^\\s]+)"
+      customType: 'regex',
+      managerFilePatterns: [
+        '/(^|/)Chart\\.yaml$/',
       ],
-      datasourceTemplate: "github-tags"
-    }
+      matchStrings: [
+        'repository: git\\+https://github.com/(?<packageName>[^@\\s]+)@(?:[^?\\s]+)\\?ref=(?<currentValue>[^\\s]+)\\s+version: (?<currentVersion>[^\\s]+)',
+      ],
+      datasourceTemplate: 'github-tags',
+    },
   ],
   packageRules: [
     {
-      "matchManagers": ["helmv3"],
-      "matchPackageNames": ["local-path-provisioner"],
-      "enabled": false
-    },
-    {
-      matchDatasources: ["helm"],
-      commitMessageTopic: "chart {{depName}}",
-    },
-    {
-      matchDatasources: ["docker"],
-      commitMessageTopic: "image {{depName}}"
-    },
-    {
-      // example: 1.31.2.4975-ls107
-      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<revision>\\d+)-ls(?<build>\\d+)$",
+      matchManagers: [
+        'helmv3',
+      ],
       matchPackageNames: [
-        "/^lscr.io\\/linuxserver\\//"
-      ]
+        'local-path-provisioner',
+      ],
+      enabled: false,
     },
     {
-      // example: v1.5.1-ls295
-      versioning: "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<build>\\d+)$",
+      matchDatasources: [
+        'helm',
+      ],
+      commitMessageTopic: 'chart {{depName}}',
+    },
+    {
+      matchDatasources: [
+        'docker',
+      ],
+      commitMessageTopic: 'image {{depName}}',
+    },
+    {
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<revision>\\d+)-ls(?<build>\\d+)$',
       matchPackageNames: [
-        "/^lscr.io\\/linuxserver\\/bazarr/"
-      ]
+        '/^lscr.io\\/linuxserver\\//',
+      ],
     },
     {
-      // example: 10.10.6ubu2404-ls53
-      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?<compatibility>ubu\\d+)-ls(?<build>\\d+)$",
+      versioning: 'regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<build>\\d+)$',
       matchPackageNames: [
-        "/^lscr.io\\/linuxserver\\/jellyfin/"
-      ]
+        '/^lscr.io\\/linuxserver\\/bazarr/',
+      ],
     },
     {
-      // example: 5.0.3-r0-ls373
-      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<compatibility>r\\d)-ls(?<build>\\d+)$",
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?<compatibility>ubu\\d+)-ls(?<build>\\d+)$',
       matchPackageNames: [
-        "/^lscr.io\\/linuxserver\\/qbittorrent/"
-      ]
+        '/^lscr.io\\/linuxserver\\/jellyfin/',
+      ],
     },
     {
-      // custom datasource for looking up new helm chart versions in a git repo
-      matchPackageNames: ["garage"],
-      matchDatasources: ["helm"],
-      overrideDatasource: "custom.garage",
-      registryUrls: ["https://git.deuxfleurs.fr/Deuxfleurs/garage/raw/branch/main/script/helm/garage/Chart.yaml"],
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<compatibility>r\\d)-ls(?<build>\\d+)$',
+      matchPackageNames: [
+        '/^lscr.io\\/linuxserver\\/qbittorrent/',
+      ],
     },
-    // apps on 0ver but allowed to automerge
     {
-      "matchPackageNames": ["/ghcr.io\\/dgtlmoon\\/changedetection.io/","/otel\\/opentelemetry-collector-contrib/","/opentelemetry-operator/","/opentelemetry-collector/","/ghcr.io\\/gtsteffaniak\\/filebrowser/", "/qtap/", "mendhak/http-https-echo", "slskd/slskd", "/valkey/"],
-      "automerge": true
+      matchPackageNames: [
+        'garage',
+      ],
+      matchDatasources: [
+        'helm',
+      ],
+      overrideDatasource: 'custom.garage',
+      registryUrls: [
+        'https://git.deuxfleurs.fr/Deuxfleurs/garage/raw/branch/main/script/helm/garage/Chart.yaml',
+      ],
+    },
+    {
+      matchPackageNames: [
+        '/ghcr.io\\/dgtlmoon\\/changedetection.io/',
+        '/otel\\/opentelemetry-collector-contrib/',
+        '/opentelemetry-operator/',
+        '/opentelemetry-collector/',
+        '/ghcr.io\\/gtsteffaniak\\/filebrowser/',
+        '/qtap/',
+        'mendhak/http-https-echo',
+        'slskd/slskd',
+        '/valkey/',
+      ],
+      automerge: true,
     },
   ],
   customDatasources: {
     garage: {
-      format: "yaml",
-      transformTemplates: ["{\"releases\":[{\"version\": $.version}]}"]
-    }
-  }
+      format: 'yaml',
+      transformTemplates: [
+        '{"releases":[{"version": $.version}]}',
+      ],
+    },
+  },
 }
