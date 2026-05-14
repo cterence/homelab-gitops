@@ -6,6 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     external-dns.alpha.kubernetes.io/target: home.terence.cloud
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    traefik.ingress.kubernetes.io/router.pathmatcher: PathRegexp
 spec:
   ingressClassName: traefik
   rules:
@@ -17,8 +18,7 @@ spec:
                 name: immich-server
                 port:
                   name: http
-            # This regex matches any of the three prefixes followed by anything or nothing
-            path: /{path:(s|_app|api/assets)}.*
+            path: /(s|_app|api/(assets|albums|timeline)|.+\.(css|png)).*
             pathType: ImplementationSpecific
   tls:
     - hosts:
