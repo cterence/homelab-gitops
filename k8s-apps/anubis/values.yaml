@@ -29,7 +29,7 @@ app-template:
             TARGET: " "
             REDIRECT_DOMAINS: "*.terence.cloud"
             PUBLIC_URL: https://anubis.terence.cloud
-            SLOG_LEVEL: debug
+            # SLOG_LEVEL: debug
             COOKIE_DOMAIN: "terence.cloud"
           ports:
             - name: http
