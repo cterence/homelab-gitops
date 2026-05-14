@@ -6,6 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     external-dns.alpha.kubernetes.io/target: home.terence.cloud
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    traefik.ingress.kubernetes.io/router.pathmatcher: PathRegexp
 spec:
   ingressClassName: traefik
   rules:
@@ -17,36 +18,8 @@ spec:
                 name: nextcloud
                 port:
                   name: http
-            path: /s
-            pathType: Prefix
-          - backend:
-              service:
-                name: nextcloud
-                port:
-                  name: http
-            path: /apps
-            pathType: Prefix
-          - backend:
-              service:
-                name: nextcloud
-                port:
-                  name: http
-            path: /core
-            pathType: Prefix
-          - backend:
-              service:
-                name: nextcloud
-                port:
-                  name: http
-            path: /dist
-            pathType: Prefix
-          - backend:
-              service:
-                name: nextcloud
-                port:
-                  name: http
-            path: /public.php/dav/files/
-            pathType: Prefix
+            path: /(s|apps|core|dist|public\.php/dav/files/).*
+            pathType: ImplementationSpecific
   tls:
     - hosts:
       - share.terence.cloud
