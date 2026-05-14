@@ -17,22 +17,9 @@ spec:
                 name: immich-server
                 port:
                   name: http
-            path: /s
-            pathType: Prefix
-          - backend:
-              service:
-                name: immich-server
-                port:
-                  name: http
-            path: /_app
-            pathType: Prefix
-          - backend:
-              service:
-                name: immich-server
-                port:
-                  name: http
-            path: /api/assets
-            pathType: Prefix
+            # This regex matches any of the three prefixes followed by anything or nothing
+            path: /{path:(s|_app|api/assets)}.*
+            pathType: ImplementationSpecific
   tls:
     - hosts:
       - imms.terence.cloud
