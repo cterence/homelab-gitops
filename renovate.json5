@@ -16,7 +16,21 @@
   commitMessageExtra: "to {{newVersion}}",
   commitMessageSuffix: "",
   ignorePaths: [],
+  regexManagers: [
+    {
+      fileMatch: ["(^|/)Chart\\.yaml$"],
+      matchStrings: [
+        "repository: git\\+https://github\.com/(?<packageName>[^@\\s]+)@(?:[^?\\s]+)\\?ref=(?<currentValue>[^\\s]+)\\s+version: (?<currentVersion>[^\\s]+)"
+      ],
+      datasourceTemplate: "github-tags"
+    }
+  ],
   packageRules: [
+    {
+      "matchManagers": ["helmv3"],
+      "matchPackageNames": ["local-path-provisioner"],
+      "enabled": false
+    },
     {
       matchDatasources: ["helm"],
       commitMessageTopic: "chart {{depName}}",
