@@ -376,7 +376,9 @@ traefik:
     sendAnonymousUsage: false
 
   additionalArguments: []
-  env: []
+  env:
+    - name: TZ
+      value: Europe/Paris
   envFrom: []
 
   tlsOptions: {}
