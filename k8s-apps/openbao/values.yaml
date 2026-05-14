@@ -87,7 +87,7 @@ openbao:
       # -- image repo to use for agent image
       repository: "openbao/openbao"
       # -- image tag to use for agent image - defaults to chart appVersion
-      tag: ""
+      tag: "2.5.3@sha256:fdc6da21ca6963560c32336fd7feb9cf2d5e52668f1a1647205a4b41171f0806"
       # -- image pull policy to use for agent image. if tag is "latest", set to "Always"
       pullPolicy: IfNotPresent
 
