@@ -35,7 +35,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/mic92/niks3
-            tag: v1.5.0@sha256:939bd4650dd5772151b6c557612c090b97a8729c810de91fcfe2d445f0d99372
+            tag: v1.4.0
           envFrom:
             - secretRef:
                 name: versity-credentials
@@ -84,11 +84,10 @@ app-template:
         failedJobsHistory: 1
       containers:
         main:
-          command: [ "/bin/sh", "-c" ]
-          args:
-            [
+          command: ["/bin/sh", "-c"]
+          args: [
               "/bin/niks3 gc --older-than 168h --auth-token-path
-                /secrets/auth-token-file/NIKS3_API_TOKEN",
+              /secrets/auth-token-file/NIKS3_API_TOKEN",
             ]
           image:
             # TODO: use remote image when https://github.com/Mic92/niks3/pull/344 merged & released
