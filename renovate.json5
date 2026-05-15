@@ -80,10 +80,10 @@
       "automerge": true
     },
     // apps not allowed to update
-    {
-      "matchPackageNames": ["/ghcr.io\\/mic92\\/niks3/"],
-      "enabled": false
-    },
+    // {
+    //   "matchPackageNames": ["/ghcr.io\\/mic92\\/niks3/"],
+    //   "enabled": false
+    // },
   ],
   customDatasources: {
     garage: {
