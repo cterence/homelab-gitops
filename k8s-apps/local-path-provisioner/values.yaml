@@ -5,7 +5,7 @@ local-path-provisioner:
 
   image:
     repository: rancher/local-path-provisioner
-    tag: v0.0.35@sha256:34ff0847cc47ebf69656ba44a3de9324596d0036b66ffd323b21614dd8221530
+    tag: v0.0.36@sha256:1eba82e9c386038b4af6d69cca7519fac738c28c42735ed48ce70c882ad0d80f
     pullPolicy: IfNotPresent
 
   helperImage:
