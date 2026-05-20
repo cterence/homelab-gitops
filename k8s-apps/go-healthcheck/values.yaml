@@ -59,7 +59,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/cterence/go-healthcheck
-            tag: latest@sha256:092d62aa5452a475fcc66e310dceee9d8f28a842a718202566cc6d2a85d7f1d8
+            tag: latest@sha256:bea789b371990c8369cdf660c77dc34f78c8c09fc8b40238fe70d66ad35cd65c
             pullPolicy: Always
           env:
             TZ: Europe/Paris
