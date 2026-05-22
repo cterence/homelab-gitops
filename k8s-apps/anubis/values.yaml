@@ -87,3 +87,5 @@ app-template:
         spec:
           forwardAuth:
             address: http://anubis.anubis.svc.cluster.local:8080/.within.website/x/cmd/anubis/api/check
+            maxResponseBodySize: 1048576
+            trustForwardHeader: false
