@@ -163,9 +163,10 @@ app-template:
 
   rawResources:
     api-token:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      spec:
+      enabled: true
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
         spec:
           secretStoreRef:
             kind: ClusterSecretStore
@@ -177,9 +178,10 @@ app-template:
             - extract:
                 key: niks3/api-token
     signing-key:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      spec:
+      enabled: true
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
         spec:
           secretStoreRef:
             kind: ClusterSecretStore
@@ -191,9 +193,10 @@ app-template:
             - extract:
                 key: niks3/signing-key
     versity:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      spec:
+      enabled: true
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
         spec:
           secretStoreRef:
             kind: ClusterSecretStore

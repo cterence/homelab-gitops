@@ -395,9 +395,10 @@ grafana-mcp-server:
 
   rawResources:
     grafana-mcp-credentials:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      spec:
+      enabled: true
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
         spec:
           secretStoreRef:
             kind: ClusterSecretStore
@@ -413,18 +414,20 @@ grafana-mcp-server:
                 metadataPolicy: None
                 nullBytePolicy: Ignore
     grafana-mcp-auth-middleware:
-      apiVersion: traefik.io/v1alpha1
-      kind: Middleware
+      enabled: true
       forceRename: grafana-mcp-auth
-      spec:
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
         spec:
           basicAuth:
             secret: grafana-mcp-auth
     mcp-auth-secret:
-      apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
+      enabled: true
       forceRename: grafana-mcp-auth
-      spec:
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
         spec:
           refreshInterval: "0"
           target:
