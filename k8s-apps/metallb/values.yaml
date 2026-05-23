@@ -6,7 +6,9 @@ metallb:
       enabled: true
     prometheusRule:
       enabled: true
-  frr:
+    serviceMonitor:
+      enabled: false
+  frrk8s:
     enabled: false
 addressPools:
   - name: default
