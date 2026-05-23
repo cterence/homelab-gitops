@@ -79,9 +79,10 @@ app-template:
 
   # rawResources:
   #   sablier:
-  #     apiVersion: traefik.io/v1alpha1
-  #     kind: Middleware
-  #     spec:
+  #     enabled: true
+  #     manifest:
+  #       apiVersion: traefik.io/v1alpha1
+  #       kind: Middleware
   #       spec:
   #         plugin:
   #           sablier:

@@ -81,9 +81,10 @@ app-template:
 
   rawResources:
     anubis:
-      apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      spec:
+      enabled: true
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
         spec:
           forwardAuth:
             address: http://anubis.anubis.svc.cluster.local:8080/.within.website/x/cmd/anubis/api/check
