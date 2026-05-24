@@ -334,3 +334,23 @@ app-template:
           stripPrefix:
             prefixes:
               - "/dav"
+    sablier:
+      enabled: true
+      forceRename: "sablier"
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        metadata:
+          name: sablier
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: "{{ .Release.Name }}"
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: "{{ .Release.Name }}"
