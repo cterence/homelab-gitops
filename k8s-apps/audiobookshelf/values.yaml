@@ -39,7 +39,7 @@ app-template:
       type: deployment
       labels:
         sablier.enable: "true"
-        sablier.group: "{{ .Release.Name }}"
+        sablier.group: "shelfmark"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -111,7 +111,7 @@ app-template:
       strategy: Recreate
       labels:
         sablier.enable: "true"
-        sablier.group: "calibre-web-webdav"
+        sablier.group: "kindle-webdav"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
