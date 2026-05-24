@@ -14,7 +14,7 @@ app-template:
       strategy: RollingUpdate
       labels:
         sablier.enable: "true"
-        sablier.group: "{{ .Release.Name }}"
+        sablier.group: "{{ .Release.Name }}-main"
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
@@ -39,7 +39,7 @@ app-template:
       type: deployment
       labels:
         sablier.enable: "true"
-        sablier.group: "shelfmark"
+        sablier.group: "{{ .Release.Name }}-shelfmark"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -109,9 +109,6 @@ app-template:
     webdav:
       type: deployment
       strategy: Recreate
-      labels:
-        sablier.enable: "true"
-        sablier.group: "kindle-webdav"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -180,7 +177,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd,traefik-modsecurity@kubernetescrd,audiobookshelf-strip-dav-prefix@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-main@kubernetescrd,traefik-modsecurity@kubernetescrd,audiobookshelf-strip-dav-prefix@kubernetescrd"
         # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
       className: "traefik"
       hosts:
@@ -207,7 +204,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
         external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-shelfmark@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host2 shfm.terence.cloud
@@ -334,9 +331,10 @@ app-template:
           stripPrefix:
             prefixes:
               - "/dav"
-    sablier:
+
+    sablier-main:
       enabled: true
-      forceRename: "sablier"
+      forceRename: "sablier-main"
       manifest:
         apiVersion: traefik.io/v1alpha1
         kind: Middleware
@@ -353,4 +351,25 @@ app-template:
               sablierUrl: http://sablier-sablier.sablier:10000
               sessionDuration: 10m
               ignoreUserAgent: curl
-              group: "{{ .Release.Name }}"
+              group: "{{ .Release.Name }}-main"
+
+    sablier-shelfmark:
+      enabled: true
+      forceRename: "sablier-shelfmark"
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        metadata:
+          name: sablier
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: "{{ .Release.Name }}"
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: "{{ .Release.Name }}-shelfmark"
