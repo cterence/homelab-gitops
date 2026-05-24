@@ -109,6 +109,9 @@ app-template:
     webdav:
       type: deployment
       strategy: Recreate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "{{ .Release.Name }}-main"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
