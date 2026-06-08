@@ -90,9 +90,8 @@ app-template:
               /secrets/auth-token-file/NIKS3_API_TOKEN",
             ]
           image:
-            # TODO: use remote image when https://github.com/Mic92/niks3/pull/344 merged & released
-            repository: ghcr.io/cterence/niks3
-            tag: latest@sha256:b8ed7cd5f88b99c610e30eddc8efab655456549d6cd847f1f94a7efadf0cba40
+            repository: ghcr.io/mic92/niks3
+            tag: v1.6.1@sha256:d3168c2ecd6eb82292f87b2c015c896e86f19dfc160f88022b556f5b5bfcc30a
           envFrom:
             - secretRef:
                 name: versity-credentials
