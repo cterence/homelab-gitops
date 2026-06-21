@@ -231,7 +231,7 @@ app-template:
         radarr:
           image:
             repository: lscr.io/linuxserver/radarr
-            tag: 6.2.1.10461-ls306@sha256:7b45af3b660f5ff5f7d6d625bfa99960cb9265e902f1bef136486f6d2be73ee9
+            tag: 6.2.1.10461-ls307@sha256:1e95b5c13fe015361a9ae1c4d99fc2336816790aaea60fa74b2ffebe076a69e0
           env:
             TZ: Europe/Paris
             PUID: 1000
