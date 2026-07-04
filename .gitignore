@@ -4,3 +4,4 @@ Chart.lock
 *.tfvars
 .terraform
 **/*.tmp.yaml
+.worktrees/

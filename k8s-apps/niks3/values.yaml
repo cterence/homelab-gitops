@@ -53,6 +53,7 @@ app-template:
             NIKS3_S3_REGION: us-east-1
             NIKS3_SIGN_KEY_PATHS: /secrets/signing-key
             NIKS3_ENABLE_READ_PROXY: "true"
+            NIKS3_CACHE_URL: https://niks3.terence.cloud
           args:
             - --oidc-config
             - /config/oidc.json
