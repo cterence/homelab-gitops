@@ -575,6 +575,10 @@ app-template:
             - name: probe
               containerPort: 9115
           securityContext:
+            # Root + NET_RAW is required for blackbox's raw ICMP socket;
+            # a non-root UID drops the added capability from the effective set.
+            runAsUser: 0
+            runAsGroup: 0
             capabilities:
               add:
                 - NET_RAW
