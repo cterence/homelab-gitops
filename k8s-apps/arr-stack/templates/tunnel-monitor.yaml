@@ -1,0 +1,57 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: qbittorrent-tunnel
+  labels:
+    app.kubernetes.io/name: qbittorrent-tunnel
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/service: {{ .Release.Name }}-qbittorrent
+  endpoints:
+    - port: probe
+      path: /probe
+      interval: 60s
+      scrapeTimeout: 10s
+      params:
+        module:
+          - icmp_tunnel
+        target:
+          - 192.168.2.1
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          targetLabel: tunnel
+          replacement: qbittorrent-wg
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: qbittorrent-tunnel
+spec:
+  groups:
+    - name: wireguard-tunnel
+      rules:
+        - alert: WireguardTunnelDown
+          # probe_success from the in-pod blackbox sidecar pinging the wg peer.
+          expr: probe_success{service="{{ .Release.Name }}-qbittorrent"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: qBittorrent wireguard tunnel down
+            description: >-
+              ICMP probe to the wireguard peer 192.168.2.1 through gluetun has
+              failed for over 2 minutes. The tunnel to free-oracle-arm-1 is
+              likely down.
+        - alert: WireguardTunnelProbeMissing
+          # Sidecar or scrape gone: no probe data at all.
+          expr: absent(probe_success{service="{{ .Release.Name }}-qbittorrent"})
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: qBittorrent wireguard tunnel probe missing
+            description: >-
+              No probe_success metric from the qbittorrent tunnel monitor for
+              over 10 minutes. The sidecar or ServiceMonitor may be broken.
