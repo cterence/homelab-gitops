@@ -563,6 +563,41 @@ app-template:
               enabled: true
               type: HTTP
 
+        # Pings the wireguard peer through gluetun's netns so Prometheus can
+        # detect a dead tunnel even when the pod itself stays healthy.
+        tunnel-monitor:
+          image:
+            repository: quay.io/prometheus/blackbox-exporter
+            tag: v0.28.0@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+          args:
+            - --config.file=/config/blackbox.yml
+          ports:
+            - name: probe
+              containerPort: 9115
+          securityContext:
+            # Root + NET_RAW is required for blackbox's raw ICMP socket;
+            # a non-root UID drops the added capability from the effective set.
+            runAsUser: 0
+            runAsGroup: 0
+            capabilities:
+              add:
+                - NET_RAW
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: 9115
+                  path: /-/healthy
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: 9115
+                  path: /-/healthy
+
     filebrowser-quantum:
       type: deployment
       strategy: Recreate
@@ -771,6 +806,8 @@ app-template:
       ports:
         http:
           port: 8080
+        probe:
+          port: 9115
     filebrowser-quantum:
       controller: filebrowser-quantum
       type: ClusterIP
@@ -1262,6 +1299,15 @@ app-template:
             - path: /app/repos
               subPath: configarr-repos
 
+    tunnel-monitor-config:
+      type: configMap
+      identifier: tunnel-monitor-config
+      advancedMounts:
+        qbittorrent:
+          tunnel-monitor:
+            - path: /config/blackbox.yml
+              subPath: blackbox.yml
+
     configarr-config:
       type: configMap
       identifier: configarr-config
@@ -1367,6 +1413,16 @@ app-template:
               subPath: run-rangemusique.sh
 
   configMaps:
+    tunnel-monitor-config:
+      data:
+        blackbox.yml: |
+          modules:
+            icmp_tunnel:
+              prober: icmp
+              timeout: 5s
+              icmp:
+                preferred_ip_protocol: ip4
+
     configarr-config:
       data:
         config.yml: |
