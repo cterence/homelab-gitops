@@ -5,7 +5,7 @@ velero:
   dnsPolicy: ClusterFirst
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.14.1@sha256:1493a0039cd5cb31004cfbb52f8a1990bc0ed81497ce72516bc76fa9e21506c1
+      image: velero/velero-plugin-for-aws:v1.14.2@sha256:0751144c1c8e52d52c48717fbd13ad5a3061e612ae4d7ad744a946cd5b139d1a
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
