@@ -1477,12 +1477,13 @@ app-template:
             methods:
               noauth: true
           userDefaults:
-            permissions:
-              api: true
-              admin: true
-              modify: true
-              share: true
-              realtime: true
+            accounts:
+              permissions:
+                api: true
+                admin: true
+                modify: true
+                share: true
+                realtime: true
 
     soularr-script:
       data:
