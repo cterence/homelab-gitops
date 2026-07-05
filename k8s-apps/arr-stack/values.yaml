@@ -1469,7 +1469,7 @@ app-template:
         config.yaml: |
           server:
             port: 8080
-            database: "database/database.db"
+            database: "/home/filebrowser/data/database/database.db"
             sources:
               - path: /data
               - path: /music
@@ -1477,13 +1477,16 @@ app-template:
             methods:
               noauth: true
           userDefaults:
-            accounts:
+            account:
               permissions:
                 api: true
                 admin: true
                 modify: true
                 share: true
                 realtime: true
+                delete: true
+                create: true
+                download: true
 
     soularr-script:
       data:
