@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: nextcloud
     repository: https://nextcloud.github.io/helm/
-    version: 9.1.3
+    version: 9.2.0
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
