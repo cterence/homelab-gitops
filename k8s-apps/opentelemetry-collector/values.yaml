@@ -1,7 +1,7 @@
 opentelemetry-collector:
   image:
     repository: otel/opentelemetry-collector-contrib
-    tag: 0.155.0
+    tag: 0.155.0@sha256:4935caa35e9a4cb387e35732e8fb22b2b5759af8d12e7043357f03837f6e8df5
   mode: daemonset
   service:
     enabled: true
