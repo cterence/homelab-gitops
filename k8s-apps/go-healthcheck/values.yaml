@@ -28,7 +28,7 @@ cnpgClusters:
     namespace: gitea
   - name: home-assistant-cnpg-cluster
     namespace: home-assistant
-  - name: immich-cnpg-cluster-vectorchord
+  - name: immich-cnpg-cluster-blue
     namespace: immich
   - name: nextcloud-cnpg-cluster
     namespace: nextcloud
