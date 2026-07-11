@@ -336,7 +336,9 @@ grafana-mcp-server:
         main:
           image:
             repository: grafana/mcp-grafana
-            tag: 0.17.0
+            tag: 0.17.1
+          args:
+            - --allowed-hosts=*
           env:
             TZ: Europe/Paris
             GRAFANA_URL: http://kube-prometheus-stack-grafana
