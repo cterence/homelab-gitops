@@ -336,7 +336,7 @@ grafana-mcp-server:
         main:
           image:
             repository: grafana/mcp-grafana
-            tag: 0.17.1
+            tag: 0.17.1@sha256:d4e0044c0efbbd00a004871a8e679f990b57a7fa21b69a51357737ddbe9d57af
           args:
             - --allowed-hosts=*
           env:
