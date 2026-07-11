@@ -192,68 +192,6 @@ immich:
         labels:
           velero.io/exclude-from-backup: "true"
 
-cnpg-cluster-vectorchord:
-  type: postgresql
-  mode: standalone
-  version:
-    postgresql: "17"
-  recovery:
-    method: import
-    import:
-      type: microservice
-      databases: ["immich"]
-      source:
-        host: immich-cnpg-cluster-tmp-rw
-        username: immich
-        database: immich
-        passwordSecret:
-          name: immich-cnpg-cluster-tmp-app
-          key: password
-        sslKeySecret:
-          name: immich-cnpg-cluster-tmp-replication
-          key: tls.key
-        sslCertSecret:
-          name: immich-cnpg-cluster-tmp-replication
-          key: tls.crt
-        sslRootCertSecret:
-          name: immich-cnpg-cluster-tmp-ca
-          key: ca.crt
-  cluster:
-    instances: 1
-    imageCatalogRef:
-      kind: ImageCatalog
-      name: cloudnative-vectorchord
-    storage:
-      size: 8Gi
-      storageClass: ""
-    resources: {}
-    primaryUpdateMethod: switchover
-    primaryUpdateStrategy: unsupervised
-    logLevel: "info"
-    roles: []
-    monitoring:
-      enabled: true
-      podMonitor:
-        enabled: true
-      prometheusRule:
-        excludeRules:
-          - CNPGClusterLogicalReplicationErrorsCritical
-          - CNPGClusterLogicalReplicationErrors
-          - CNPGClusterLogicalReplicationStoppedCritical
-          - CNPGClusterLogicalReplicationStopped
-          - CNPGClusterHACritical
-          - CNPGClusterHAWarning
-    postgresql:
-      shared_preload_libraries:
-        - "vchord.so"
-    initdb:
-      database: immich
-      postInitSQL:
-        - CREATE EXTENSION IF NOT EXISTS "cube";
-        - CREATE EXTENSION IF NOT EXISTS "earthdistance";
-        - CREATE EXTENSION IF NOT EXISTS "vector";
-        - CREATE EXTENSION IF NOT EXISTS "vchord";
-
 cnpg-cluster-blue:
   type: postgresql
   mode: recovery
