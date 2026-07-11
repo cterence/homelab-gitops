@@ -87,23 +87,23 @@ immich:
               DB_HOSTNAME:
                 valueFrom:
                   secretKeyRef:
-                    name: immich-cnpg-cluster-vectorchord-app
+                    name: immich-cnpg-cluster-blue-app
                     key: host
               DB_USERNAME:
                 valueFrom:
                   secretKeyRef:
-                    name: immich-cnpg-cluster-vectorchord-app
+                    name: immich-cnpg-cluster-blue-app
                     key: username
               DB_DATABASE_NAME:
                 valueFrom:
                   secretKeyRef:
-                    name: immich-cnpg-cluster-vectorchord-app
+                    name: immich-cnpg-cluster-blue-app
                     key: dbname
               # -- You should provide your own secret outside of this helm-chart and use `postgresql.global.postgresql.auth.existingSecret` to provide credentials to the postgresql instance
               DB_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: immich-cnpg-cluster-vectorchord-app
+                    name: immich-cnpg-cluster-blue-app
                     key: password
             image:
               repository: ghcr.io/immich-app/immich-server
@@ -217,6 +217,68 @@ cnpg-cluster-vectorchord:
           key: tls.crt
         sslRootCertSecret:
           name: immich-cnpg-cluster-tmp-ca
+          key: ca.crt
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ImageCatalog
+      name: cloudnative-vectorchord
+    storage:
+      size: 8Gi
+      storageClass: ""
+    resources: {}
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    roles: []
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
+    postgresql:
+      shared_preload_libraries:
+        - "vchord.so"
+    initdb:
+      database: immich
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS "cube";
+        - CREATE EXTENSION IF NOT EXISTS "earthdistance";
+        - CREATE EXTENSION IF NOT EXISTS "vector";
+        - CREATE EXTENSION IF NOT EXISTS "vchord";
+
+cnpg-cluster-blue:
+  type: postgresql
+  mode: recovery
+  version:
+    postgresql: "18"
+  recovery:
+    method: import
+    import:
+      type: microservice
+      databases: ["immich"]
+      source:
+        host: immich-cnpg-cluster-vectorchord-rw
+        username: immich
+        database: immich
+        passwordSecret:
+          name: immich-cnpg-cluster-vectorchord-app
+          key: password
+        sslKeySecret:
+          name: immich-cnpg-cluster-vectorchord-replication
+          key: tls.key
+        sslCertSecret:
+          name: immich-cnpg-cluster-vectorchord-replication
+          key: tls.crt
+        sslRootCertSecret:
+          name: immich-cnpg-cluster-vectorchord-ca
           key: ca.crt
   cluster:
     instances: 1
