@@ -41,7 +41,7 @@ kube-prometheus-stack:
               helm.sh/resource-policy: keep
               argocd.argoproj.io/sync-options: Delete=false
           spec:
-            accessModes: [ "ReadWriteOnce" ]
+            accessModes: ["ReadWriteOnce"]
             resources:
               requests:
                 storage: 10Gi
@@ -244,7 +244,7 @@ kube-prometheus-stack:
       storage:
         volumeClaimTemplate:
           spec:
-            accessModes: [ "ReadWriteOnce" ]
+            accessModes: ["ReadWriteOnce"]
             resources:
               requests:
                 storage: 1Gi
@@ -276,7 +276,7 @@ kube-prometheus-stack:
                 {{ end }}
                 <a href="{{ .ExternalURL }}">View in Alertmanager</a>
       route:
-        group_by: [ "alertname" ]
+        group_by: ["alertname"]
         group_wait: 0s
         receiver: telegram
         routes:
@@ -336,7 +336,7 @@ grafana-mcp-server:
         main:
           image:
             repository: grafana/mcp-grafana
-            tag: 0.17.1
+            tag: 0.17.0
           env:
             TZ: Europe/Paris
             GRAFANA_URL: http://kube-prometheus-stack-grafana
@@ -377,7 +377,8 @@ grafana-mcp-server:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernet\
+        traefik.ingress.kubernetes.io/router.middlewares:
+          "traefik-modsecurity@kubernet\
           escrd,monitoring-grafana-mcp-auth@kubernetescrd"
       className: "traefik"
       hosts:
@@ -438,7 +439,7 @@ grafana-mcp-server:
               engineVersion: v2
               data:
                 username: "mcp"
-                password: "{{ printf \"{{ .password }}\" }}"
+                password: '{{ printf "{{ .password }}" }}'
           dataFrom:
             - sourceRef:
                 generatorRef:
