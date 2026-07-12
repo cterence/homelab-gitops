@@ -182,6 +182,18 @@ argo-cd:
         enabled: false
 
   server:
+    initContainers:
+      - name: wait-for-dex
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Waiting for argocd-dex-server to be reachable..."
+            until nc -z -w 2 argocd-dex-server 5556; do
+              echo "Dex is unreachable - retrying in 2 seconds..."
+              sleep 2
+            done
+            echo "Dex is up and running!"
     metrics:
       enabled: false
       serviceMonitor:
