@@ -29,6 +29,10 @@ argo-cd:
       enabled: true
       serviceMonitor:
         enabled: true
+    livenessProbe:
+      enabled: true
+    readinessProbe:
+      enabled: true
 
   redis:
     name: valkey
