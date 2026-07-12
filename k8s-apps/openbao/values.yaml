@@ -1496,7 +1496,7 @@ openbao:
       metadata:
         name: openbao-node-unsealer
       spec:
-        schedule: "*/1 * * * *"
+        schedule: "*/5 * * * *"
         concurrencyPolicy: Forbid
         successfulJobsHistoryLimit: 0
         failedJobsHistoryLimit: 1
