@@ -1490,19 +1490,58 @@ openbao:
       extraAnnotations: {}
 
   # extraObjects allows you to add any extra Kubernetes manifests to this chart
-  extraObjects: []
-  # Examples:
-  # Defining as a Structured YAML Object Example:
-  #   extraObjects:
-  #   - apiVersion: v1
-  #     kind: ConfigMap
-  #     metadata:
-  #       name: cert-manager-configmap-{{ .Release.Name }}
-  #
-  # Using a String for Advanced Templating Example:
-  #   extraObjects:
-  #   - |
-  #     apiVersion: v1
-  #     kind: ConfigMap
-  #     metadata:
-  #       name: cert-manager-configmap-{{ include "some-other-template" }}
+  extraObjects:
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: openbao-node-unsealer
+      spec:
+        schedule: "*/1 * * * *"
+        concurrencyPolicy: Forbid
+        successfulJobsHistoryLimit: 0
+        failedJobsHistoryLimit: 1
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                restartPolicy: OnFailure
+                volumes:
+                  - name: local-node-keys
+                    hostPath:
+                      path: /run/secrets/rendered/openbao-keys.yaml
+                      type: File
+                containers:
+                  - name: unsealer
+                    image: curlimages/curl:latest
+                    securityContext:
+                      runAsUser: 0
+                    volumeMounts:
+                      - name: local-node-keys
+                        mountPath: /app/openbao-keys.yaml
+                        readOnly: true
+                    command: ["/bin/sh", "-c"]
+                    args:
+                      - |
+                        echo "Checking OpenBao health..."
+                        until curl -s -o /dev/null -w "%{http_code}" http://openbao:8200/v1/sys/health | grep -E "^(200|503)$" > /dev/null; do
+                          sleep 2
+                        done
+
+                        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://openbao:8200/v1/sys/health)
+
+                        if [ "$HTTP_STATUS" = "503" ]; then
+                          echo "OpenBao is locked (HTTP 503). Fetching keys from node mount..."
+
+                          K1=$(grep 'unseal-key-1' /app/openbao-keys.yaml | awk -F': ' '{print $2}' | tr -d '"'\'' ')
+                          K2=$(grep 'unseal-key-2' /app/openbao-keys.yaml | awk -F': ' '{print $2}' | tr -d '"'\'' ')
+                          K3=$(grep 'unseal-key-3' /app/openbao-keys.yaml | awk -F': ' '{print $2}' | tr -d '"'\'' ')
+
+                          echo "Sending unseal keys..."
+                          curl -s -X PUT -d "{\"key\": \"$K1\"}" http://openbao:8200/v1/sys/unseal > /dev/null
+                          curl -s -X PUT -d "{\"key\": \"$K2\"}" http://openbao:8200/v1/sys/unseal > /dev/null
+                          curl -s -X PUT -d "{\"key\": \"$K3\"}" http://openbao:8200/v1/sys/unseal > /dev/null
+
+                          echo "Unseal commands sent successfully."
+                        else
+                          echo "OpenBao is already unsealed and operational (HTTP $HTTP_STATUS)."
+                        fi
