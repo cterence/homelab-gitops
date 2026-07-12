@@ -2,68 +2,8 @@ traefik:
   deployment:
     enabled: true
     replicas: 1
-    additionalVolumes:
-      - name: modsecurity-request-exclusion-rules
-        configMap:
-          name: modsecurity-request-exclusion-rules
-      - name: ok-server-script
-        configMap:
-          name: ok-server-script
-    initContainers:
-      - name: ok-server
-        image: docker.io/oven/bun:1.3-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0
-        restartPolicy: Always
-        command: ["bun"]
-        args: ["run", "/app/index.ts"]
-        env:
-          - name: PORT
-            value: "8082"
-        volumeMounts:
-          - name: ok-server-script
-            mountPath: /app/index.ts
-            subPath: index.ts
-      - name: modsecurity
-        image: docker.io/owasp/modsecurity-crs:4.20.0-apache-alpine-202511100111@sha256:bd07bd19a2f5a97ffffedeb5c7e7960c04eac212152a0cb4d134290a5767ca6f
-        restartPolicy: Always
-        securityContext:
-          runAsUser: 100
-        env:
-          - name: BACKEND
-            value: http://localhost:8082
-          - name: ACCESSLOG
-            value: /dev/null
-          - name: METRICSLOG
-            value: /dev/null
-          - name: PORT
-            value: "8081"
-          - name: SSL_PORT
-            value: "7443"
-          - name: DETECTION_PARANOIA
-            value: "1"
-          - name: BLOCKING_PARANOIA
-            value: "1"
-          - name: ANOMALY_INBOUND
-            value: "10"
-          - name: ANOMALY_OUTBOUND
-            value: "5"
-          - name: ALLOWED_METHODS
-            value: "GET HEAD POST PUT DELETE OPTIONS PROPFIND MKCOL MOVE COPY"
-          - name: ALLOWED_REQUEST_CONTENT_TYPE
-            value: "|application/x-www-form-urlencoded| |multipart/form-data|
-              |multipart/related| |text/xml| |application/xml|
-              |application/soap+xml| |application/json|
-              |application/cloudevents+json|
-              |application/cloudevents-batch+json| |application/octet-stream|"
-          - name: MODSEC_REQ_BODY_LIMIT
-            value: "1073741824"
-          - name: MODSEC_REQ_BODY_NOFILES_LIMIT
-            value: "1073741824"
-          - name: MODSEC_RESP_BODY_LIMIT
-            value: "1073741824"
-        volumeMounts:
-          - name: modsecurity-request-exclusion-rules
-            mountPath: /etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-            subPath: REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+    additionalVolumes: []
+    initContainers: []
 
   experimental:
     abortOnPluginFailure: false
@@ -249,6 +189,120 @@ traefik:
       metadata:
         name: modsecurity-request-exclusion-rules
       data:
+
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: modsecurity
+      spec:
+        plugin:
+          modsecurity:
+            modSecurityUrl: http://modsecurity:8081
+            maxBodySize: 1000000000
+            timeoutMillis: 120000
+            jailEnabled: false
+            jailTimeDurationSecs: 600
+            badRequestsThresholdCount: 5
+            badRequestsThresholdPeriodSecs: 60
+
+  ingressClass:
+    enabled: true
+    isDefaultClass: true
+    name: ""
+
+  api:
+    dashboard: true
+    basePath: "" # @schema type:[string, null]; default: "/"
+
+  providers:
+    # @schema additionalProperties: false
+    kubernetesCRD:
+      enabled: true
+      allowCrossNamespace: true
+      allowExternalNameServices: true
+      allowEmptyServices: true
+      ingressClass: ""
+      namespaces: []
+      nativeLBByDefault: false
+
+    kubernetesIngress:
+      enabled: true
+      allowExternalNameServices: true
+      allowEmptyServices: true
+      ingressClass: # @schema type:[string, null]
+      namespaces: []
+      publishedService:
+        enabled: true
+        pathOverride: ""
+      nativeLBByDefault: false
+      strictPrefixMatching: false
+
+    kubernetesGateway:
+      enabled: false
+
+  global:
+    checkNewVersion: false
+    sendAnonymousUsage: false
+
+  additionalArguments: []
+  env:
+    - name: TZ
+      value: Europe/Paris
+  envFrom: []
+
+  tlsOptions: {}
+  tlsStore: {}
+
+  service:
+    enabled: true
+    single: true
+    type: LoadBalancer
+    spec:
+      loadBalancerIP: "192.168.1.241"
+      externalTrafficPolicy: Local
+
+  metrics:
+    prometheus:
+      service:
+        enabled: true
+      disableAPICheck: true
+      serviceMonitor:
+        enabled: true
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            separator: ;
+            regex: ^fluentd_output_status_buffer_(oldest|newest)_.+
+            replacement: $1
+            action: drop
+        relabelings:
+          - sourceLabels: [__meta_kubernetes_pod_node_name]
+            separator: ;
+            regex: ^(.*)$
+            targetLabel: nodename
+            replacement: $1
+            action: replace
+        jobLabel: traefik
+        interval: 30s
+        honorLabels: true
+      prometheusRule:
+        enabled: true
+        rules:
+          - alert: TraefikDown
+            expr: up{job="traefik-metrics"} == 0
+            for: 5m
+            labels:
+              context: traefik
+              severity: warning
+            annotations:
+              summary: "Traefik Down"
+              description: "{{ $labels.pod }} on {{ $labels.nodename }} is down"
+
+modsecurity:
+  global:
+    fullnameOverride: modsecurity
+  configMaps:
+    modsecurity-request-exclusion-rules:
+      data:
         REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf: |
           <LocationMatch "(?i)^/(audio|videos|api/assets)/">
             RequestHeader unset Range
@@ -322,110 +376,99 @@ traefik:
 
           SecRule REQUEST_URI "@rx ^/nix-cache" \
             "id:1000023,phase:1,pass,nolog,ctl:ruleEngine=Off"
+    ok-server-script:
+      data:
+        index.ts: |
+          Bun.serve({ async fetch(req: Request) { if (req.body) { for await (const chunk of req.body); } return new Response("OK", { status: 200 }); }, maxRequestBodySize: Infinity, });
 
-    - apiVersion: traefik.io/v1alpha1
-      kind: Middleware
-      metadata:
-        name: modsecurity
-      spec:
-        plugin:
-          modsecurity:
-            modSecurityUrl: http://localhost:8081
-            maxBodySize: 1000000000
-            timeoutMillis: 120000
-            jailEnabled: false
-            jailTimeDurationSecs: 600
-            badRequestsThresholdCount: 5
-            badRequestsThresholdPeriodSecs: 60
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        modsecurity:
+          image:
+            repository: docker.io/owasp/modsecurity-crs
+            tag: 4.20.0-apache-alpine-202511100111@sha256:bd07bd19a2f5a97ffffedeb5c7e7960c04eac212152a0cb4d134290a5767ca6f
+          env:
+            TZ: Europe/Paris
+            BACKEND: http://localhost:8082
+            ACCESSLOG: /dev/null
+            METRICSLOG: /dev/null
+            PORT: "8081"
+            SSL_PORT: "7443"
+            DETECTION_PARANOIA: "1"
+            BLOCKING_PARANOIA: "1"
+            ANOMALY_INBOUND: "10"
+            ANOMALY_OUTBOUND: "5"
+            ALLOWED_METHODS: "GET HEAD POST PUT DELETE OPTIONS PROPFIND MKCOL MOVE COPY"
+            ALLOWED_REQUEST_CONTENT_TYPE: |
+              |application/x-www-form-urlencoded| |multipart/form-data|
+              |multipart/related| |text/xml| |application/xml|
+              |application/soap+xml| |application/json|
+              |application/cloudevents+json|
+              |application/cloudevents-batch+json| |application/octet-stream|
+            MODSEC_REQ_BODY_LIMIT: "1073741824"
+            MODSEC_REQ_BODY_NOFILES_LIMIT: "1073741824"
+            MODSEC_RESP_BODY_LIMIT: "1073741824"
+          ports:
+            - name: http
+              containerPort: 8081
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
 
-  ingressClass:
-    enabled: true
-    isDefaultClass: true
-    name: ""
-
-  api:
-    dashboard: true
-    basePath: "" # @schema type:[string, null]; default: "/"
-
-  providers:
-    # @schema additionalProperties: false
-    kubernetesCRD:
-      enabled: true
-      allowCrossNamespace: true
-      allowExternalNameServices: true
-      allowEmptyServices: true
-      ingressClass: ""
-      namespaces: []
-      nativeLBByDefault: false
-
-    kubernetesIngress:
-      enabled: true
-      allowExternalNameServices: true
-      allowEmptyServices: true
-      ingressClass: # @schema type:[string, null]
-      namespaces: []
-      publishedService:
-        enabled: true
-        pathOverride: ""
-      nativeLBByDefault: false
-      strictPrefixMatching: false
-
-    kubernetesGateway:
-      enabled: false
-
-  global:
-    checkNewVersion: false
-    sendAnonymousUsage: false
-
-  additionalArguments: []
-  env:
-    - name: TZ
-      value: Europe/Paris
-  envFrom: []
-
-  tlsOptions: {}
-  tlsStore: {}
+        ok-server:
+          image:
+            repository: docker.io/oven/bun
+            tag: 1.3-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0
+          env:
+            TZ: Europe/Paris
+            PORT: "8082"
+          ports:
+            - name: http
+              containerPort: 8082
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+          command: ["bun"]
+          args: ["run", "/app/index.ts"]
 
   service:
-    enabled: true
-    single: true
-    type: LoadBalancer
-    spec:
-      loadBalancerIP: "192.168.1.241"
-      externalTrafficPolicy: Local
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8081
 
-  metrics:
-    prometheus:
-      service:
-        enabled: true
-      disableAPICheck: false
-      serviceMonitor:
-        enabled: true
-        metricRelabelings:
-          - sourceLabels: [__name__]
-            separator: ;
-            regex: ^fluentd_output_status_buffer_(oldest|newest)_.+
-            replacement: $1
-            action: drop
-        relabelings:
-          - sourceLabels: [__meta_kubernetes_pod_node_name]
-            separator: ;
-            regex: ^(.*)$
-            targetLabel: nodename
-            replacement: $1
-            action: replace
-        jobLabel: traefik
-        interval: 30s
-        honorLabels: true
-      prometheusRule:
-        enabled: true
-        rules:
-          - alert: TraefikDown
-            expr: up{job="traefik-metrics"} == 0
-            for: 5m
-            labels:
-              context: traefik
-              severity: warning
-            annotations:
-              summary: "Traefik Down"
-              description: "{{ $labels.pod }} on {{ $labels.nodename }} is down"
+  persistence:
+    modsecurity-config:
+      enabled: true
+      type: configMap
+      identifier: modsecurity-request-exclusion-rules
+      advancedMounts:
+        main:
+          modsecurity:
+            - path: /etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+              subPath: REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+
+    ok-server-config:
+      enabled: true
+      type: configMap
+      identifier: ok-server-script
+      advancedMounts:
+        main:
+          ok-server:
+            - path: /app/index.ts
+              subPath: index.ts

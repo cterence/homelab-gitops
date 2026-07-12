@@ -7,3 +7,7 @@ dependencies:
   - name: traefik
     repository: https://traefik.github.io/charts
     version: 41.0.2
+  - name: app-template
+    alias: modsecurity
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.0.1
