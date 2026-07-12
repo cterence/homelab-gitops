@@ -16,7 +16,7 @@ traefik:
             done
             echo "modsecurity is up and running!"
   experimental:
-    abortOnPluginFailure: false
+    abortOnPluginFailure: true
     fastProxy:
       enabled: false
       debug: false
