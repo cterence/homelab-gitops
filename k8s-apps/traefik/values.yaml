@@ -4,14 +4,17 @@ traefik:
     replicas: 1
     additionalVolumes: []
     initContainers:
-      - name: wait-modsecurity
-        image: curlimages/curl
-        command:
-          [
-            "sh",
-            "-c",
-            "until curl -s --connect-timeout 2 --max-time 5 http://modsecurity:8081; do echo 'Waiting for modsecurity...'; sleep 1; done",
-          ]
+      - name: wait-for-modsecurity
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Waiting for modsecurity to be reachable..."
+            until nc -z -w 2 modsecurity 8081; do
+              echo "modsecurity is unreachable - retrying in 2 seconds..."
+              sleep 2
+            done
+            echo "modsecurity is up and running!"
   experimental:
     abortOnPluginFailure: false
     fastProxy:
