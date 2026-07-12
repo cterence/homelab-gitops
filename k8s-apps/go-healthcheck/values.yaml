@@ -4,6 +4,7 @@ urls:
   - https://auth.terence.cloud/healthz
   - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
+  - https://cd.terence.cloud/
   - https://ha.terence.cloud
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
@@ -12,6 +13,7 @@ urls:
   - https://gitm.terence.cloud/api/health
   - https://lid.terence.cloud/ping
   - https://next.terence.cloud/status.php
+  - https://niks3.terence.cloud/health
   - https://paperless.terence.cloud/accounts/login/?next=/
   - https://prometheus.terence.cloud/-/healthy
   - https://qb.terence.cloud
@@ -32,6 +34,8 @@ cnpgClusters:
     namespace: immich
   - name: nextcloud-cnpg-cluster
     namespace: nextcloud
+  - name: niks3-cnpg-cluster
+    namespace: niks3
   - name: paperless-ngx-cnpg-cluster
     namespace: paperless-ngx
   - name: pocket-id-cnpg-cluster
