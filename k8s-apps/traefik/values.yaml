@@ -3,8 +3,15 @@ traefik:
     enabled: true
     replicas: 1
     additionalVolumes: []
-    initContainers: []
-
+    initContainers:
+      - name: wait-modsecurity
+        image: curlimages/curl
+        command:
+          [
+            "sh",
+            "-c",
+            "until curl -s --connect-timeout 2 --max-time 5 http://modsecurity:8081; do echo 'Waiting for modsecurity...'; sleep 1; done",
+          ]
   experimental:
     abortOnPluginFailure: false
     fastProxy:
@@ -296,6 +303,9 @@ traefik:
             annotations:
               summary: "Traefik Down"
               description: "{{ $labels.pod }} on {{ $labels.nodename }} is down"
+
+  accessLog:
+    enabled: true
 
 modsecurity:
   global:
