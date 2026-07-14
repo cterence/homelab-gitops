@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ARGOCD_VERSION: v2.13.2
+  ARGOCD_VERSION: v3.4.5
 
 jobs:
   argocd_diff:
