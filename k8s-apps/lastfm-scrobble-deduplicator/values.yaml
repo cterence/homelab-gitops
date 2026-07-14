@@ -54,11 +54,6 @@ app-template:
             TIMEOUT: 600000
           restartPolicy: Always
           probes:
-            # Startup probe gates the main app container: with a native sidecar
-            # (restartPolicy: Always) Kubernetes only waits for the sidecar to be
-            # *started* before running the app. Without this, the app races ahead
-            # and dials ws://localhost:3000 before browserless binds the port,
-            # causing "connection refused".
             startup:
               enabled: true
               custom: true
