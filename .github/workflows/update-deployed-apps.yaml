@@ -2,6 +2,8 @@ name: Update deployed apps table
 
 on:
   push:
+    branches:
+      - main
     paths:
       - argocd-apps/applicationset.yaml
       - k8s-apps/**
