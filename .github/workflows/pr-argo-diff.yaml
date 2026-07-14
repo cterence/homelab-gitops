@@ -71,9 +71,11 @@ jobs:
         if: steps.apps.outputs.apps != ''
         run: |
           root=$(git rev-parse --show-toplevel)
-          {
-            echo 'output<<DIFF_EOF'
-            for app in ${{ steps.apps.outputs.apps }}; do
+          # Write to a file, not GITHUB_OUTPUT/env: a large diff passed as an
+          # env var to github-script overflows ARG_MAX ("Argument list too long").
+          : > diff.md
+          for app in ${{ steps.apps.outputs.apps }}; do
+            {
               echo "### Diff for \`$app\`"
               echo '```diff'
               (
@@ -90,18 +92,22 @@ jobs:
               ) || echo "(diff failed for $app - see logs)"
               echo '```'
               echo
-            done
-            echo DIFF_EOF
-          } >> "$GITHUB_OUTPUT"
+            } >> diff.md
+          done
 
       - name: Publish PR comment
         if: steps.apps.outputs.apps != ''
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-        env:
-          DIFF_OUTPUT: ${{ steps.diff.outputs.output }}
         with:
           script: |
-            const body = `### ArgoCD Diff Results\n\n${process.env.DIFF_OUTPUT}`;
+            const fs = require('fs');
+            const MAX = 60000; // GitHub comment hard limit is 65536 chars.
+            let diff = fs.readFileSync('diff.md', 'utf8');
+            if (diff.length > MAX) {
+              diff = diff.slice(0, MAX) +
+                '\n\n> **Diff truncated** (exceeded comment size limit). See the workflow logs for the full output.';
+            }
+            const body = `### ArgoCD Diff Results\n\n${diff}`;
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
