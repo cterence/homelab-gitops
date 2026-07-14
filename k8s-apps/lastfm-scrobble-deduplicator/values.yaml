@@ -54,6 +54,15 @@ app-template:
             TIMEOUT: 600000
           restartPolicy: Always
           probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /active?token=local
+                failureThreshold: 30
+                periodSeconds: 2
             liveness:
               enabled: true
               custom: true
