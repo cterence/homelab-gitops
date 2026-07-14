@@ -22,6 +22,8 @@ spec:
             serverSideApply: true
           - name: convertx
             scaleToZero: true
+          - name: disk-usage-exporter
+            namespace: monitoring
           - name: external-dns
           - name: external-secrets
             serverSideApply: true

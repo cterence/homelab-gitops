@@ -1,0 +1,9 @@
+apiVersion: v2
+name: disk-usage-exporter
+description: Per-directory disk usage Prometheus exporter for local-path volumes
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.0.1

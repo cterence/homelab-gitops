@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    # The exporter must read files owned by many different UIDs (each PVC dir has
+    # its own owner). Run as root so `du` can traverse every volume directory.
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+
+  controllers:
+    main:
+      type: daemonset
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/dundee/disk_usage_exporter/disk_usage_exporter-c4084307c537335c2ddb6f4b9b527422
+            tag: latest
+          args:
+            - --config=/config/config.yaml
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: metrics
+              containerPort: 9995
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+              spec:
+                httpGet:
+                  path: /metrics
+                  port: 9995
+            readiness:
+              enabled: true
+              type: HTTP
+              spec:
+                httpGet:
+                  path: /metrics
+                  port: 9995
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        metrics:
+          port: 9995
+
+  configMaps:
+    config:
+      enabled: true
+      data:
+        config.yaml: |
+          # Scan the local-path-provisioner root; dir-level 1 exposes one
+          # metric per PVC directory (pvc-<uuid>).
+          analyzed-path: /data
+          dir-level: 1
+          mode: http
+          bind-address: 0.0.0.0:9995
+          ignore-dirs:
+            - /proc
+            - /dev
+            - /sys
+            - /run
+
+  persistence:
+    config:
+      enabled: true
+      type: configMap
+      identifier: config
+      globalMounts:
+        - path: /config
+    # Read-only view of the on-disk local-path volume directories.
+    local-path:
+      enabled: true
+      type: hostPath
+      hostPath: /opt/local-path-provisioner
+      hostPathType: Directory
+      globalMounts:
+        - path: /data
+          readOnly: true
+
+  rawResources:
+    servicemonitor:
+      enabled: true
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: ServiceMonitor
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: disk-usage-exporter
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          endpoints:
+            - port: metrics
+              path: /metrics
+              interval: 5m
+              scrapeTimeout: 60s
