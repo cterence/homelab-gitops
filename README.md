@@ -67,6 +67,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
 | [homepage](./scripts/../k8s-apps/homepage) | A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations | ❌ |
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON | ✅ |
+| [image-builds](./scripts/../k8s-apps/image-builds) | ApplicationSet that builds images from image-builds/* subdirs | ✅ |
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution | ✅ |
 | [it-tools](./scripts/../k8s-apps/it-tools) | Collection of handy online tools for developers | ✅ |
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator | ✅ |
@@ -85,6 +86,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector | ✅ |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents | ✅ |
 | [pocket-id](./scripts/../k8s-apps/pocket-id) | Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services | ✅ |
+| [registry](./scripts/../k8s-apps/registry) | In-cluster OCI image registry (CNCF distribution) | ✅ |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig | ✅ |
 | [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
