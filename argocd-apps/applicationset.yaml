@@ -32,6 +32,7 @@ spec:
           - name: home-assistant
           - name: httpbin
             scaleToZero: true
+          - name: image-builds
           - name: immich
           - name: it-tools
             scaleToZero: true
@@ -55,6 +56,7 @@ spec:
           - name: pocket-id
             serverSideApply: true
             serverSideDiff: true
+          - name: registry
           - name: reloader
           - name: sablier
           - name: tailscale-operator

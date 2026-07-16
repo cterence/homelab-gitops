@@ -1,0 +1,37 @@
+{{- if not .Values.image }}{{ fail "image is required in build.yaml" }}{{- end }}
+{{- if not .Values.tag }}{{ fail "tag is required in build.yaml" }}{{- end }}
+{{- if not .Values.subPath }}{{ fail "subPath is required (set by the ApplicationSet)" }}{{- end }}
+{{- $name := printf "build-%s-%s" .Values.image .Values.tag | lower | replace "/" "-" | replace "_" "-" | trunc 63 | trimSuffix "-" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: image-build
+    image-build/image: {{ .Values.image | quote }}
+    image-build/tag: {{ .Values.tag | quote }}
+spec:
+  backoffLimit: {{ .Values.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: image-build
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kaniko
+          image: {{ .Values.kanikoImage }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+          args:
+            - --context=git://{{ .Values.repoURL }}.git#refs/heads/{{ .Values.branch }}
+            - --context-sub-path={{ .Values.subPath }}
+            - --dockerfile={{ .Values.dockerfile | default "Dockerfile" }}
+            - --destination={{ .Values.registry }}/{{ .Values.image }}:{{ .Values.tag }}
+            - --insecure
+            - --skip-tls-verify
+            - --cache=true
+            {{- range $k, $v := .Values.buildArgs }}
+            - --build-arg={{ $k }}={{ $v }}
+            {{- end }}
