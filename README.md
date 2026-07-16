@@ -32,6 +32,13 @@
 - Scale to zero using [Sablier](https://sablierapp.dev)
 - Any app you'd want to host: [Nextcloud](https://nextcloud.com/fr/), [Immich](https://immich.app/), [Paperless-ngx](https://docs.paperless-ngx.com/) and more (see below)
 
+## Image builds
+
+Declarative in-cluster image builds live in [`image-builds/`](image-builds/).
+Drop a subdir with a `Dockerfile` and `build.yaml`, commit, and ArgoCD builds
+and pushes the image to the in-cluster registry. See
+[`image-builds/README.md`](image-builds/README.md).
+
 ## 💻 What's currently deployed in my cluster ?
 
 This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) list of the apps I have configured and/or deployed. Click on an app to check its Helm configuration.

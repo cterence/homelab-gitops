@@ -1,0 +1,25 @@
+# Provided by each subdir's build.yaml (via ApplicationSet valueFiles)
+# and by the ApplicationSet parameters (subPath).
+image: ""            # required: repo path in the registry, e.g. "my-app"
+tag: ""              # required: image tag, e.g. "v1"; bump to trigger rebuild
+dockerfile: Dockerfile
+buildArgs: {}        # optional map of build-arg name -> value
+
+# Injected by the ApplicationSet as a Helm parameter.
+subPath: ""          # required: path within the repo, e.g. "image-builds/my-app"
+
+# Infra defaults (rarely overridden per build).
+registry: registry.registry:5000
+repoURL: github.com/cterence/homelab-gitops
+branch: main
+kanikoImage: gcr.io/kaniko-project/executor:v1.23.2
+backoffLimit: 2
+ttlSecondsAfterFinished: 86400
+
+# Kaniko container resources (overridable per build).
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 2Gi

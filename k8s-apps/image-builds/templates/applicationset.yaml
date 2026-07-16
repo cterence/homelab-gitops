@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: image-builds
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: git@github.com:cterence/homelab-gitops.git
+        revision: HEAD
+        directories:
+          - path: image-builds/*
+  template:
+    metadata:
+      name: "build-{{ `{{ .path.basename }}` }}"
+    spec:
+      project: default
+      sources:
+        - repoURL: git@github.com:cterence/homelab-gitops.git
+          targetRevision: HEAD
+          path: charts/image-build
+          helm:
+            valueFiles:
+              - "$values/{{ `{{ .path.path }}` }}/build.yaml"
+            parameters:
+              - name: subPath
+                value: "{{ `{{ .path.path }}` }}"
+        - repoURL: git@github.com:cterence/homelab-gitops.git
+          targetRevision: HEAD
+          ref: values
+      destination:
+        name: in-cluster
+        namespace: image-builds
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
