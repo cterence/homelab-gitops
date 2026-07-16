@@ -5,3 +5,4 @@ Chart.lock
 .terraform
 **/*.tmp.yaml
 .worktrees/
+docs/superpowers/
