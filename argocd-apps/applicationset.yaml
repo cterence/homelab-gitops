@@ -58,6 +58,7 @@ spec:
             serverSideDiff: true
           - name: registry
           - name: reloader
+          - name: rootly-gcal-sync
           - name: sablier
           - name: tailscale-operator
           - name: traefik
