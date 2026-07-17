@@ -11,6 +11,8 @@ metadata:
     app.kubernetes.io/managed-by: image-build
     image-build/image: {{ .Values.image | quote }}
     image-build/tag: {{ .Values.tag | quote }}
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   backoffLimit: {{ .Values.backoffLimit }}
   ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
