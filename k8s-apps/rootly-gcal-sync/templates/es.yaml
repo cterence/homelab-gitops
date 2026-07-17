@@ -1,0 +1,14 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: rootly-gcal-sync-credentials
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: openbao-secret-store
+  target:
+    name: rootly-gcal-sync-credentials
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: "rootly-gcal-sync/credentials"

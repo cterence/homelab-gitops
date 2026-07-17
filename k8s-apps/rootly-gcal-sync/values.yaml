@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  configMaps:
+    config:
+      data:
+        TZ: Europe/Paris
+        SYNC_DAYS: "90"
+        DRY_RUN: "false"
+        GOOGLE_APPLICATION_CREDENTIALS: /secrets/google-credentials.json
+
+  controllers:
+    app:
+      type: cronjob
+      cronjob:
+        schedule: "0 6 * * *"
+        timeZone: Europe/Paris
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+        concurrencyPolicy: Forbid
+      pod:
+        securityContext:
+          runAsNonRoot: true
+      containers:
+        app:
+          image:
+            repository: registry.registry:5000/rootly-gcal-sync
+            tag: v1
+          envFrom:
+            - configMapRef:
+                identifier: config
+          env:
+            ROOTLY_API_TOKEN:
+              valueFrom:
+                secretKeyRef:
+                  name: rootly-gcal-sync-credentials
+                  key: ROOTLY_API_TOKEN
+            ROOTLY_USER_EMAIL:
+              valueFrom:
+                secretKeyRef:
+                  name: rootly-gcal-sync-credentials
+                  key: ROOTLY_USER_EMAIL
+            GCAL_CALENDAR_ID:
+              valueFrom:
+                secretKeyRef:
+                  name: rootly-gcal-sync-credentials
+                  key: GCAL_CALENDAR_ID
+
+  persistence:
+    google-creds:
+      enabled: true
+      type: secret
+      name: rootly-gcal-sync-credentials
+      advancedMounts:
+        app:
+          app:
+            - path: /secrets/google-credentials.json
+              subPath: google-credentials.json
+              readOnly: true
