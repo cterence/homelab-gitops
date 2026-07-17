@@ -60,3 +60,27 @@ func TestReconcile_DuplicateExistingShiftIDDeletesExtra(t *testing.T) {
 		t.Fatalf("expected extra e2 in delete, got %+v", p.Delete)
 	}
 }
+
+func TestReconcile_DuplicateExistingShiftIDNotDesiredDeletesOnce(t *testing.T) {
+	desired := []DesiredEvent{}
+	existing := []ExistingEvent{
+		{ID: "e1", ShiftID: "a", Summary: "On-call: X", Start: "2026-01-01T00:00:00Z", End: "2026-01-02T00:00:00Z"},
+		{ID: "e2", ShiftID: "a", Summary: "On-call: X", Start: "2026-01-01T00:00:00Z", End: "2026-01-02T00:00:00Z"},
+	}
+
+	p := Reconcile(desired, existing)
+
+	if len(p.Create) != 0 || len(p.Update) != 0 {
+		t.Fatalf("expected no create/update, got create=%+v update=%+v", p.Create, p.Update)
+	}
+	counts := map[string]int{}
+	for _, e := range p.Delete {
+		counts[e.ID]++
+	}
+	if counts["e1"] != 1 || counts["e2"] != 1 {
+		t.Fatalf("expected e1 and e2 each deleted exactly once, got counts=%v delete=%+v", counts, p.Delete)
+	}
+	if len(p.Delete) != 2 {
+		t.Fatalf("expected 2 delete entries, got %d: %+v", len(p.Delete), p.Delete)
+	}
+}

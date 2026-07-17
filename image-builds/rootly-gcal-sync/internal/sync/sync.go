@@ -60,7 +60,7 @@ func Reconcile(desired []DesiredEvent, existing []ExistingEvent) Plan {
 			p.Update = append(p.Update, UpdatePair{Existing: e, Desired: d})
 		}
 	}
-	for _, e := range existing {
+	for _, e := range existingByShift {
 		if _, ok := desiredByShift[e.ShiftID]; !ok {
 			p.Delete = append(p.Delete, e)
 		}
