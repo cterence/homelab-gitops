@@ -51,6 +51,27 @@ app-template:
         http:
           port: 5000
 
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
+      className: "traefik"
+      hosts:
+        - host: &host registry.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: registry-tls
+          hosts:
+            - *host
+
   persistence:
     data:
       enabled: true
