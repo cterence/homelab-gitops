@@ -1514,6 +1514,203 @@ app-template:
             /app/main
           fi
 
+  rawResources:
+    configarr-secrets:
+      enabled: true
+      forceRename: configarr-secrets
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: configarr-secrets
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: arr-stack/configarr-secrets
+    gluetun-wg-vm-keys:
+      enabled: true
+      forceRename: gluetun-wg-vm-keys
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: gluetun-wg-vm-keys
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: arr-stack/gluetun-wg-vm-keys
+    jellystat-jwt-secret:
+      enabled: true
+      forceRename: jellystat-jwt-secret
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: jellystat-jwt-secret
+            creationPolicy: Owner
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: password
+    sablier-js:
+      enabled: true
+      forceRename: sablier-js
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: jellyseer
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: js
+    sablier-fbq:
+      enabled: true
+      forceRename: sablier-fbq
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: filebrowser
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: fbq
+    rangemusique-api-keys:
+      enabled: true
+      forceRename: rangemusique-api-keys
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: rangemusique-api-keys
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: arr-stack/rangemusique-api-keys
+    slskd-config:
+      enabled: true
+      forceRename: slskd-config
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: slskd-config
+          dataFrom:
+            - extract:
+                key: arr-stack/slskd-config
+    soularr-config:
+      enabled: true
+      forceRename: soularr-config
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: soularr-config
+            template:
+              engineVersion: v2
+          dataFrom:
+            - extract:
+                key: arr-stack/soularr-config
+    qbittorrent-tunnel-monitor:
+      enabled: true
+      forceRename: qbittorrent-tunnel
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: ServiceMonitor
+        metadata:
+          labels:
+            app.kubernetes.io/name: qbittorrent-tunnel
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+              app.kubernetes.io/service: "{{ .Release.Name }}-qbittorrent"
+          endpoints:
+            - port: probe
+              path: /probe
+              interval: 60s
+              scrapeTimeout: 10s
+              params:
+                module:
+                  - icmp_tunnel
+                target:
+                  - 192.168.2.1
+              metricRelabelings:
+                - sourceLabels: [__name__]
+                  targetLabel: tunnel
+                  replacement: qbittorrent-wg
+    qbittorrent-tunnel-rule:
+      enabled: true
+      forceRename: qbittorrent-tunnel
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: PrometheusRule
+        spec:
+          groups:
+            - name: wireguard-tunnel
+              rules:
+                - alert: WireguardTunnelDown
+                  expr: probe_success{service="{{ .Release.Name }}-qbittorrent"} == 0
+                  for: 2m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: qBittorrent wireguard tunnel down
+                    description: >-
+                      ICMP probe to the wireguard peer 192.168.2.1 through gluetun has
+                      failed for over 2 minutes. The tunnel to free-oracle-arm-1 is
+                      likely down.
+                - alert: WireguardTunnelProbeMissing
+                  expr: absent(probe_success{service="{{ .Release.Name }}-qbittorrent"})
+                  for: 10m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: qBittorrent wireguard tunnel probe missing
+                    description: >-
+                      No probe_success metric from the qbittorrent tunnel monitor for
+                      over 10 minutes. The sidecar or ServiceMonitor may be broken.
+
 cnpg-cluster-jellystat:
   type: postgresql
   mode: standalone

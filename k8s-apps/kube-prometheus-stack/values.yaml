@@ -448,3 +448,61 @@ grafana-mcp-server:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: short-password
+    telegram-bot-token:
+      enabled: true
+      forceRename: telegram-bot-token
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: telegram-bot-token
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: monitoring/telegram-bot-token
+                conversionStrategy: Default
+                decodingStrategy: None
+                metadataPolicy: None
+                nullBytePolicy: Ignore
+    pocket-id-credentials:
+      enabled: true
+      forceRename: pocket-id-credentials
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: pocket-id-credentials
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: monitoring/pocket-id-credentials
+                conversionStrategy: Default
+                decodingStrategy: None
+                metadataPolicy: None
+                nullBytePolicy: Ignore
+    sablier:
+      enabled: true
+      forceRename: sablier
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: grafana
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: grafana

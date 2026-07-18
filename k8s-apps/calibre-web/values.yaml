@@ -299,3 +299,79 @@ app-template:
         argocd.argoproj.io/sync-options: Delete=false
       globalMounts:
         - path: /cwa-book-ingest
+
+  rawResources:
+    webdav-password:
+      enabled: true
+      forceRename: "{{ .Release.Name }}-webdav-password"
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: "{{ .Release.Name }}-webdav-password"
+            creationPolicy: Owner
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: short-password
+    sablier-cw:
+      enabled: true
+      forceRename: sablier-cw
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: calibre-web
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: calibre-web
+    sablier-cwd:
+      enabled: true
+      forceRename: sablier-cwd
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: calibre-web-downloader
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: calibre-web-downloader
+    sablier-cwwebdav:
+      enabled: true
+      forceRename: sablier-cwwebdav
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: calibre-web-webdav
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: calibre-web-webdav

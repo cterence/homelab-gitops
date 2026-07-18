@@ -701,3 +701,25 @@ gitea-mirror:
       size: 500Mi
       globalMounts:
         - path: /app/data
+
+  rawResources:
+    better-auth-secret:
+      enabled: true
+      forceRename: "{{ .Release.Name }}-better-auth-secret"
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: "{{ .Release.Name }}-better-auth-secret"
+            creationPolicy: Owner
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: password
