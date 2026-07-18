@@ -10,7 +10,6 @@ urls:
   - https://jf.terence.cloud/health
   - https://jstat.terence.cloud/auth/isconfigured
   - https://git.terence.cloud/api/healthz
-  - https://gitm.terence.cloud/api/health
   - https://lid.terence.cloud/ping
   - https://next.terence.cloud/status.php
   - https://niks3.terence.cloud/health

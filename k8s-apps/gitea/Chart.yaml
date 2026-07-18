@@ -14,7 +14,3 @@ dependencies:
   - name: valkey
     repository: https://valkey.io/valkey-helm/
     version: 0.10.0
-  - name: app-template
-    alias: gitea-mirror
-    repository: https://bjw-s-labs.github.io/helm-charts
-    version: 5.0.1
