@@ -18,7 +18,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/dundee/disk_usage_exporter/disk_usage_exporter-c4084307c537335c2ddb6f4b9b527422
-            tag: latest
+            tag: latest@sha256:b37a8bda5d19f2e12d7c0feec8a172cd7bd9bdfa0567479d89a53acb2a37d519
           args:
             - --config=/config/config.yaml
           env:
