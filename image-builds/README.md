@@ -22,7 +22,18 @@ rebuild.
 
 ## Consuming an image
 
-Reference it in any app: `registry.registry:5000/<image>:<tag>`.
+The registry is exposed externally at `registry.terence.cloud` (TLS via
+cert-manager/Letsencrypt, routed through traefik). Reference any built image
+from any app or node:
+
+```
+registry.terence.cloud/<image>:<tag>
+```
+
+Nodes resolve `registry.terence.cloud` via public DNS and trust the
+Letsencrypt certificate, so no insecure-registry containerd config is needed.
+Kaniko pushes in-cluster via `registry.registry:5000` (the service DNS
+resolves from within the cluster); pulls go through the external TLS ingress.
 
 ## Prerequisite: repository must be public
 
@@ -31,12 +42,9 @@ Builds rely on Kaniko performing an anonymous `git` clone of this repository
 public. If it is made private, a git credential secret must be mounted into the
 Kaniko Job.
 
-## Prerequisite: insecure registry for pulls
+## Prerequisite: insecure registry for pushes
 
-The registry is plain HTTP. Kaniko pushes with `--insecure`. For nodes to
-**pull** these images, each node's container runtime must treat
-`registry.registry:5000` as an insecure registry. Configure containerd's
-registry hosts (e.g. `/etc/containerd/certs.d/registry.registry:5000/hosts.toml`
-with `skip_verify = true` / `http`) or the equivalent for your runtime. If you
-prefer not to touch node config, switch the registry to TLS instead (out of
-scope for this iteration).
+The registry service is plain HTTP. Kaniko pushes with `--insecure` to the
+in-cluster service `registry.registry:5000`. Pulls go through the external
+TLS ingress (`registry.terence.cloud`), so nodes do not need any insecure
+registry configuration.
