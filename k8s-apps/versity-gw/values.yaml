@@ -296,3 +296,87 @@ app-template:
               sessionDuration: 10m
               ignoreUserAgent: curl
               group: "{{ .Release.Name }}"
+    versity-gw-credentials:
+      enabled: true
+      forceRename: versity-gw-credentials
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: versity-gw-credentials
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: versity-gw/versity-gw-credentials
+    webdav-password:
+      enabled: true
+      forceRename: "{{ .Release.Name }}-webdav-password"
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: "{{ .Release.Name }}-webdav-password"
+            creationPolicy: Owner
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: short-password
+    nfs-pv:
+      enabled: true
+      forceRename: mx500-homelab3
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 2Ti
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: nfs
+          mountOptions:
+            - hard
+            - nfsvers=4.1
+            - nosuid
+            - noexec
+            - timeo=600
+            - retrans=2
+          nfs:
+            path: /mx500-homelab3
+            server: 192.168.1.141
+    nfs-pvc:
+      enabled: true
+      forceRename: mx500-homelab3
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Ti
+          storageClassName: nfs
+          volumeName: mx500-homelab3

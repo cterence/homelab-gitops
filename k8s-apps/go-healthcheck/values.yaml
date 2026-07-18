@@ -136,3 +136,24 @@ app-template:
             - path: /etc/ssl/private/tls.key
               readOnly: true
               subPath: tls.key
+
+  rawResources:
+    client-auth-cert:
+      enabled: true
+      forceRename: client-auth-cert
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          dataFrom:
+            - extract:
+                key: client-auth
+                decodingStrategy: Auto
+          refreshInterval: 1h0m0s
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: k8s-cert-manager
+          target:
+            creationPolicy: Owner
+            deletionPolicy: Retain
+            name: client-auth-cert

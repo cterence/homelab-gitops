@@ -69,3 +69,23 @@ app-template:
         - secretName: tools-tls
           hosts:
             - *host
+
+  rawResources:
+    sablier:
+      enabled: true
+      forceRename: sablier
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: "{{ .Release.Name }}"
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: "{{ .Release.Name }}"

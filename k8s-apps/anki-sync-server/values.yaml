@@ -96,3 +96,27 @@ app-template:
               sessionDuration: 10m
               ignoreUserAgent: curl
               group: "{{ .Release.Name }}"
+    anki-sync-server-creds:
+      enabled: true
+      forceRename: anki-sync-server-creds
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: gitlab-secret-store
+          target:
+            name: anki-sync-server-creds
+            creationPolicy: Owner
+            template:
+              engineVersion: v2
+              data:
+                SYNC_USER1: '{{ "{{ .user }}:{{ .password }}" }}'
+          data:
+            - secretKey: user
+              remoteRef:
+                key: anki_sync_server_username
+            - secretKey: password
+              remoteRef:
+                key: anki_sync_server_password
