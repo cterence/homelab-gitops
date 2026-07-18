@@ -25,8 +25,6 @@ urls:
 cnpgClusters:
   - name: arr-stack-cnpg-cluster-jellystat
     namespace: arr-stack
-  - name: gitea-cnpg-cluster
-    namespace: gitea
   - name: home-assistant-cnpg-cluster
     namespace: home-assistant
   - name: immich-cnpg-cluster-blue
