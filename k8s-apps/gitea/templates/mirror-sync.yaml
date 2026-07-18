@@ -1,0 +1,70 @@
+{{- if .Values.mirrorSync.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-mirror-sync
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+data:
+  mirrors.yaml: |
+{{- toYaml (dict "mirrors" .Values.mirrorSync.mirrors) | nindent 4 }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-mirror-sync
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  schedule: {{ .Values.mirrorSync.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/managed-by: {{ .Release.Name }}-mirror-sync
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroupChangePolicy: OnRootMismatch
+          containers:
+            - name: sync
+              image: "{{ .Values.mirrorSync.image.registry }}/{{ .Values.mirrorSync.image.repository }}:{{ .Values.mirrorSync.image.tag }}"
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: GITEA_URL
+                  value: {{ .Values.mirrorSync.giteaURL | quote }}
+                - name: GITEA_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: gitea-admin-credentials
+                      key: username
+                - name: GITEA_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: gitea-admin-credentials
+                      key: password
+                - name: PRUNE
+                  value: {{ .Values.mirrorSync.prune | quote }}
+              volumeMounts:
+                - name: mirrors
+                  mountPath: /etc/mirrors
+                  readOnly: true
+          volumes:
+            - name: mirrors
+              configMap:
+                name: {{ .Release.Name }}-mirror-sync
+{{- end }}
