@@ -607,21 +607,22 @@ mirrorSync:
     tag: v2
   defaultOwner: terence
   mirrors:
-    - clone_addr: https://github.com/cterence/homelab-gitops.git
-    - clone_addr: https://github.com/cterence/nixos-config.git
-    - clone_addr: https://github.com/cterence/go-healthcheck.git
-    - clone_addr: https://github.com/cterence/rangemusique.git
-    - clone_addr: https://github.com/cterence/dead-drop.git
-    - clone_addr: https://github.com/cterence/lastfm-scrobble-deduplicator.git
-    - clone_addr: https://github.com/cterence/pkgx-bash.git
-    - clone_addr: https://github.com/cterence/cube.terence.cloud.git
-    - clone_addr: https://github.com/cterence/llm-agents.nix.git
-    - clone_addr: https://github.com/cterence/tts9000.git
-    - clone_addr: https://github.com/cterence/gbgo.git
-    - clone_addr: https://github.com/cterence/goarcade.git
-    - clone_addr: https://github.com/cterence/chip8-go.git
-    - clone_addr: https://github.com/cterence/twig.git
-    - clone_addr: https://github.com/cterence/cterence.git
-    - clone_addr: https://github.com/cterence/notion-site.git
-    - clone_addr: https://github.com/cterence/docker-apachewebdav.git
-    - clone_addr: https://github.com/cterence/1brc.git
+    - clone_addr: https://github.com/cterence/homelab-gitops
+    - clone_addr: https://github.com/cterence/nixos-config
+    - clone_addr: https://github.com/cterence/go-healthcheck
+    - clone_addr: https://github.com/cterence/rangemusique
+    - clone_addr: https://github.com/cterence/dead-drop
+    - clone_addr: https://github.com/cterence/lastfm-scrobble-deduplicator
+    - clone_addr: https://github.com/cterence/pkgx-bash
+    - clone_addr: https://github.com/cterence/cube.terence.cloud
+    - clone_addr: https://github.com/cterence/llm-agents.nix
+    - clone_addr: https://github.com/cterence/tts9000
+    - clone_addr: https://github.com/cterence/gbgo
+    - clone_addr: https://github.com/cterence/goarcade
+    - clone_addr: https://github.com/cterence/chip8-go
+    - clone_addr: https://github.com/cterence/twig
+    - clone_addr: https://github.com/cterence/cterence
+    - clone_addr: https://github.com/cterence/notion-site
+    - clone_addr: https://github.com/cterence/docker-apachewebdav
+    - clone_addr: https://github.com/cterence/1brc
+    - clone_addr: https://github.com/sm64pc/sm64ex
