@@ -192,28 +192,6 @@ external-secrets:
       kind: Role
       metadata:
         name: k8s-secret-store
-        namespace: attic
-      rules:
-        - apiGroups: [""]
-          resources: [secrets]
-          verbs: [get, list, watch]
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: k8s-secret-store
-        namespace: attic
-      subjects:
-        - kind: ServiceAccount
-          name: k8s-secret-store
-          namespace: external-secrets
-      roleRef:
-        kind: Role
-        name: k8s-secret-store
-        apiGroup: rbac.authorization.k8s.io
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: k8s-secret-store
         namespace: go-healthcheck
       rules:
         - apiGroups: [""]

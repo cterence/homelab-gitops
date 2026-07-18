@@ -54,13 +54,9 @@ app-template:
               enabled: true
               custom: true
               spec:
-                exec:
-                  command:
-                    - /bin/sh
-                    - -c
-                    - grep -q '<IsStartupWizardCompleted>true</IsStartupWizardCompleted>' /config/system.xml && exit 0 || exit 1
-          securityContext:
-            privileged: true
+                httpGet:
+                  port: http
+                  path: /health
 
     jellyseerr:
       type: deployment
@@ -95,8 +91,6 @@ app-template:
                 httpGet:
                   port: http
                   path: /api/v1/status
-          securityContext:
-            privileged: true
 
     jellystat:
       type: deployment
