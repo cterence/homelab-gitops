@@ -9,7 +9,10 @@ metadata:
     argocd.argoproj.io/sync-options: ServerSideApply=true
 data:
   mirrors.yaml: |
-{{- toYaml (dict "mirrors" .Values.mirrorSync.mirrors) | nindent 4 }}
+{{- $cfg := dict "mirrors" .Values.mirrorSync.mirrors -}}
+{{- if .Values.mirrorSync.defaultOwner -}}{{- $_ := set $cfg "defaultOwner" .Values.mirrorSync.defaultOwner -}}{{- end -}}
+{{- if .Values.mirrorSync.defaultMirrorInterval -}}{{- $_ := set $cfg "defaultMirrorInterval" .Values.mirrorSync.defaultMirrorInterval -}}{{- end -}}
+{{- toYaml $cfg | nindent 4 }}
 ---
 apiVersion: batch/v1
 kind: CronJob

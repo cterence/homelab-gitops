@@ -604,10 +604,37 @@ mirrorSync:
   image:
     registry: registry.terence.cloud
     repository: gitea-mirror-sync
-    tag: v1
+    tag: v2
+  # Declarative list of mirrors gitea should keep in sync. Only clone_addr is
+  # required; name is derived from the URL, owner falls back to defaultOwner,
+  # and mirror_interval defaults to 8h. Override any field per-entry as needed.
+  defaultOwner: terence
   mirrors:
-    - owner: terence
-      name: homelab-gitops
-      clone_addr: https://github.com/cterence/homelab-gitops.git
-      mirror_interval: 8h
-      private: false
+    - clone_addr: https://github.com/cterence/homelab-gitops.git
+    - clone_addr: https://github.com/cterence/nixos-config.git
+    - clone_addr: https://github.com/cterence/go-healthcheck.git
+    - clone_addr: https://github.com/cterence/rangemusique.git
+    - clone_addr: https://github.com/cterence/niks3.git
+    - clone_addr: https://github.com/cterence/nixpkgs.git
+    - clone_addr: https://github.com/cterence/dead-drop.git
+    - clone_addr: https://github.com/cterence/lastfm-scrobble-deduplicator.git
+    - clone_addr: https://github.com/cterence/pkgx-bash.git
+    - clone_addr: https://github.com/cterence/cube.terence.cloud.git
+    - clone_addr: https://github.com/cterence/llm-agents.nix.git
+    - clone_addr: https://github.com/cterence/tts9000.git
+    - clone_addr: https://github.com/cterence/gbgo.git
+    - clone_addr: https://github.com/cterence/goarcade.git
+    - clone_addr: https://github.com/cterence/chip8-go.git
+    - clone_addr: https://github.com/cterence/twig.git
+    - clone_addr: https://github.com/cterence/cterence.git
+    - clone_addr: https://github.com/cterence/nixpkgs-review-gha.git
+    - clone_addr: https://github.com/cterence/notion-site.git
+    - clone_addr: https://github.com/cterence/health-go.git
+    - clone_addr: https://github.com/cterence/Calibre-Web-Automated.git
+    - clone_addr: https://github.com/cterence/docker-apachewebdav.git
+    - clone_addr: https://github.com/cterence/k0s-nix.git
+    - clone_addr: https://github.com/cterence/satisfactory-server-prometheus-exporter.git
+    - clone_addr: https://github.com/cterence/minecraft-web-client.git
+    - clone_addr: https://github.com/cterence/1brc.git
+    - clone_addr: https://github.com/cterence/webvm.git
+    - clone_addr: https://github.com/cterence/burrito.git
