@@ -145,32 +145,289 @@ external-secrets:
       metadata:
         name: k8s-secret-store
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
+      kind: Role
       metadata:
         name: k8s-secret-store
+        namespace: cert-manager
       rules:
         - apiGroups: [""]
-          resources:
-            - secrets
-          verbs:
-            - get
-            - list
-            - watch
-        - apiGroups:
-            - authorization.k8s.io
-          resources:
-            - selfsubjectrulesreviews
-          verbs:
-            - create
+          resources: [secrets]
+          verbs: [get, list, watch]
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+      kind: RoleBinding
       metadata:
         name: k8s-secret-store
+        namespace: cert-manager
       subjects:
         - kind: ServiceAccount
           name: k8s-secret-store
           namespace: external-secrets
       roleRef:
-        kind: ClusterRole
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: versity-gw
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: versity-gw
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: attic
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: attic
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: go-healthcheck
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: go-healthcheck
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    # cnpg cluster namespaces (referenced by go-healthcheck cnpg-es range)
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: arr-stack
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: arr-stack
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: gitea
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: gitea
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: home-assistant
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: home-assistant
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: immich
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: immich
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: nextcloud
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: nextcloud
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: niks3
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: niks3
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: paperless-ngx
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: paperless-ngx
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: pocket-id
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: pocket-id
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: vaultwarden
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: vaultwarden
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
         name: k8s-secret-store
         apiGroup: rbac.authorization.k8s.io
