@@ -604,10 +604,10 @@ mirrorSync:
   image:
     registry: registry.terence.cloud
     repository: gitea-mirror-sync
-    tag: v1
+    tag: v2
+  # Declarative list of mirrors gitea should keep in sync. Only clone_addr is
+  # required; name is derived from the URL, owner falls back to defaultOwner,
+  # and mirror_interval defaults to 8h. Override any field per-entry as needed.
+  defaultOwner: terence
   mirrors:
-    - owner: terence
-      name: homelab-gitops
-      clone_addr: https://github.com/cterence/homelab-gitops.git
-      mirror_interval: 8h
-      private: false
+    - clone_addr: https://github.com/cterence/homelab-gitops.git

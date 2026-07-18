@@ -20,17 +20,21 @@ import (
 
 // Config is the YAML document mounted into the reconciler.
 type Config struct {
-	Mirrors []Mirror `yaml:"mirrors"`
+	DefaultOwner          string   `yaml:"defaultOwner"`
+	DefaultMirrorInterval string   `yaml:"defaultMirrorInterval"`
+	Mirrors               []Mirror `yaml:"mirrors"`
 }
 
-// Mirror is a single desired mirror entry.
+// Mirror is a single desired mirror entry. Only CloneAddr is required;
+// Owner, Name and the rest fall back to Config defaults or are derived
+// from the clone URL.
 type Mirror struct {
-	Owner          string `yaml:"owner"          json:"owner"`
-	Name           string `yaml:"name"           json:"name"`
-	CloneAddr      string `yaml:"clone_addr"     json:"clone_addr"`
+	Owner          string `yaml:"owner"           json:"owner"`
+	Name           string `yaml:"name"            json:"name"`
+	CloneAddr      string `yaml:"clone_addr"      json:"clone_addr"`
 	MirrorInterval string `yaml:"mirror_interval" json:"mirror_interval,omitempty"`
-	Private        bool   `yaml:"private"        json:"private"`
-	Wiki           bool   `yaml:"wiki"           json:"wiki"`
+	Private        bool   `yaml:"private"          json:"private"`
+	Wiki           bool   `yaml:"wiki"            json:"wiki"`
 }
 
 // repo is the subset of Gitea's repository response that we use.
@@ -202,6 +206,29 @@ func bodyText(resp *http.Response) string {
 	return resp.Status + ": " + string(b)
 }
 
+// repoNameFromURL derives a mirror name from a clone URL by taking the last
+// path segment and stripping a trailing ".git". For example
+// "https://github.com/cterence/homelab-gitops.git" -> "homelab-gitops".
+// It falls back to the raw host/path if the URL cannot be parsed.
+func repoNameFromURL(cloneAddr string) (string, error) {
+	u, err := url.Parse(cloneAddr)
+	if err != nil {
+		return "", fmt.Errorf("parse clone_addr %q: %w", cloneAddr, err)
+	}
+	p := strings.Trim(u.Path, "/")
+	p = strings.TrimSuffix(p, ".git")
+	p = strings.Trim(p, "/")
+	if p == "" {
+		return "", fmt.Errorf("could not derive repo name from %q", cloneAddr)
+	}
+	// A scp-like "host:owner/repo" shorthand has no scheme and parses as path;
+	// take the last segment either way.
+	if i := strings.LastIndex(p, "/"); i >= 0 {
+		p = p[i+1:]
+	}
+	return p, nil
+}
+
 func loadConfig(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -211,11 +238,30 @@ func loadConfig(path string) (*Config, error) {
 	if err := yaml.Unmarshal(b, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
+	if cfg.DefaultMirrorInterval == "" {
+		cfg.DefaultMirrorInterval = "8h"
+	}
 	seen := map[string]bool{}
 	for i := range cfg.Mirrors {
 		m := &cfg.Mirrors[i]
-		if m.Owner == "" || m.Name == "" || m.CloneAddr == "" {
-			return nil, fmt.Errorf("entry %d: owner, name and clone_addr are required", i)
+		if m.CloneAddr == "" {
+			return nil, fmt.Errorf("entry %d: clone_addr is required", i)
+		}
+		if m.Name == "" {
+			name, err := repoNameFromURL(m.CloneAddr)
+			if err != nil {
+				return nil, fmt.Errorf("entry %d: %w", i, err)
+			}
+			m.Name = name
+		}
+		if m.Owner == "" {
+			if cfg.DefaultOwner == "" {
+				return nil, fmt.Errorf("entry %d: owner is required (set defaultOwner or owner)", i)
+			}
+			m.Owner = cfg.DefaultOwner
+		}
+		if m.MirrorInterval == "" {
+			m.MirrorInterval = cfg.DefaultMirrorInterval
 		}
 		key := m.Owner + "/" + m.Name
 		if seen[key] {
