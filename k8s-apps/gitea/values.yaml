@@ -596,11 +596,8 @@ valkey:
       helm.sh/resource-policy: keep
       argocd.argoproj.io/sync-options: Delete=false
 
-
 mirrorSync:
   enabled: true
-  # Internal gitea HTTP service. With release name "gitea" the chart
-  # exposes <release>-http.<namespace>.svc:3000.
   giteaURL: http://gitea-http.gitea.svc.cluster.local:3000
   schedule: "0 */6 * * *"
   prune: "true"
@@ -608,9 +605,6 @@ mirrorSync:
     registry: registry.terence.cloud
     repository: gitea-mirror-sync
     tag: v1
-  # Declarative list of mirrors gitea should keep in sync. Add/remove entries
-  # here; the reconciler creates missing mirrors, updates settings on existing
-  # ones, and prunes mirrors in the same owner that are no longer listed.
   mirrors:
     - owner: terence
       name: homelab-gitops
