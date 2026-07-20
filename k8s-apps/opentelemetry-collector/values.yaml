@@ -37,10 +37,6 @@ opentelemetry-collector:
     create: true
   config:
     exporters:
-      debug:
-        verbosity: basic
-      debug/detailed:
-        verbosity: detailed
       otlphttp/loki:
         endpoint: http://loki-gateway.loki/otlp
       prometheus:
@@ -127,7 +123,6 @@ opentelemetry-collector:
       pipelines:
         logs:
           exporters:
-            - debug
             - otlphttp/loki
           processors:
             - filter
@@ -137,7 +132,6 @@ opentelemetry-collector:
             - otlp
         metrics:
           exporters:
-            - debug
             - prometheus
           processors:
             - memory_limiter
@@ -145,11 +139,3 @@ opentelemetry-collector:
           receivers:
             - otlp
             - prometheus
-        traces:
-          exporters:
-            - debug
-          processors:
-            - memory_limiter
-            - batch
-          receivers:
-            - otlp
