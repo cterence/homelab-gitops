@@ -339,6 +339,7 @@ grafana-mcp-server:
             tag: 0.17.2@sha256:d5b51db0c8eaafc6ed3fede5bfcc8d67b2384a40cf3d493086e378855ceba882
           args:
             - --allowed-hosts=*
+            - -t=streamable-http
           env:
             TZ: Europe/Paris
             GRAFANA_URL: http://kube-prometheus-stack-grafana
