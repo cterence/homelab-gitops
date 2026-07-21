@@ -39,6 +39,12 @@
       enabled: false,
     },
     {
+      matchPackageNames: [
+        'velero/velero-plugin-for-aws', // FIXME: https://github.com/velero-io/velero/issues/9951
+      ],
+      enabled: false,
+    },
+    {
       matchDatasources: [
         'helm',
       ],
