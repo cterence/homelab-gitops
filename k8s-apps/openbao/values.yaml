@@ -391,7 +391,7 @@ openbao:
 
     # Configure the Update Strategy Type for the StatefulSet
     # See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
-    updateStrategyType: "OnDelete"
+    updateStrategyType: "RollingUpdate"
 
     # Configure the pod management policy for the StatefulSet
     # See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
