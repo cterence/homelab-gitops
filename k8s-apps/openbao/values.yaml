@@ -87,7 +87,7 @@ openbao:
       # -- image repo to use for agent image
       repository: "openbao/openbao"
       # -- image tag to use for agent image - defaults to chart appVersion
-      tag: "2.6.0@sha256:900bb64d0671cd1d82b693c56206f7263b582445f3a3bb6ba6e5213f524a6653"
+      tag: "2.6.1@sha256:5b2486ab0fb90bbc788cc345b0a08616dfb375873ee8be5df3a2fd4d378a67e0"
       # -- image pull policy to use for agent image. if tag is "latest", set to "Always"
       pullPolicy: IfNotPresent
 
@@ -385,7 +385,7 @@ openbao:
       # -- image repo to use for server image
       repository: "openbao/openbao"
       # -- image tag to use for server image - defaults to chart appVersion
-      tag: "2.6.0@sha256:900bb64d0671cd1d82b693c56206f7263b582445f3a3bb6ba6e5213f524a6653"
+      tag: "2.6.1@sha256:5b2486ab0fb90bbc788cc345b0a08616dfb375873ee8be5df3a2fd4d378a67e0"
       # -- image pull policy to use for server image. if tag is "latest", set to "Always"
       pullPolicy: IfNotPresent
 
@@ -1323,7 +1323,7 @@ openbao:
         # -- image repo to use for agent image
         repository: "openbao/openbao"
         # -- image tag to use for agent image - defaults to chart appVersion
-        tag: "2.6.0@sha256:900bb64d0671cd1d82b693c56206f7263b582445f3a3bb6ba6e5213f524a6653"
+        tag: "2.6.1@sha256:5b2486ab0fb90bbc788cc345b0a08616dfb375873ee8be5df3a2fd4d378a67e0"
         # -- image pull policy to use for agent image. if tag is "latest", set to "Always"
         pullPolicy: IfNotPresent
 
