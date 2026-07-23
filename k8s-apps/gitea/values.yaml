@@ -521,6 +521,26 @@ gitea:
     - apiVersion: external-secrets.io/v1
       kind: ExternalSecret
       metadata:
+        name: cnpg-backup-s3-creds
+      spec:
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: openbao-secret-store
+        target:
+          name: cnpg-backup-s3-creds
+          creationPolicy: Owner
+        data:
+          - secretKey: ACCESS_KEY_ID
+            remoteRef:
+              key: versity-gw/versity-gw-credentials
+              property: ROOT_ACCESS_KEY
+          - secretKey: ACCESS_SECRET_KEY
+            remoteRef:
+              key: versity-gw/versity-gw-credentials
+              property: ROOT_SECRET_KEY
+    - apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      metadata:
         name: client-auth-ca
       spec:
         dataFrom:
@@ -584,6 +604,32 @@ cnpg-cluster:
     postgresql: {}
     initdb:
       database: gitea
+  backups:
+    enabled: true
+    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    destinationPath: s3://cnpg-backups/gitea
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /gitea
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 3 * * *"
+        backupOwnerReference: self
+        method: barmanObjectStore
+    retentionPolicy: "7d"
 
 valkey:
   deploymentStrategy: Recreate
