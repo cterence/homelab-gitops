@@ -162,6 +162,28 @@ app-template:
               readOnly: true
 
   rawResources:
+    cnpg-backup-s3-creds:
+      enabled: true
+      forceRename: cnpg-backup-s3-creds
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: cnpg-backup-s3-creds
+            creationPolicy: Owner
+          data:
+            - secretKey: ACCESS_KEY_ID
+              remoteRef:
+                key: versity-gw/versity-gw-credentials
+                property: ROOT_ACCESS_KEY
+            - secretKey: ACCESS_SECRET_KEY
+              remoteRef:
+                key: versity-gw/versity-gw-credentials
+                property: ROOT_SECRET_KEY
     api-token:
       enabled: true
       manifest:
@@ -238,3 +260,29 @@ cnpg-cluster:
     postgresql: {}
     initdb:
       database: niks3
+  backups:
+    enabled: true
+    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    destinationPath: s3://cnpg-backups/niks3
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /niks3
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 3 * * *"
+        backupOwnerReference: self
+        method: barmanObjectStore
+    retentionPolicy: "7d"

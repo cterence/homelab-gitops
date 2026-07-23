@@ -253,3 +253,29 @@ cnpg-cluster-blue:
         - CREATE EXTENSION IF NOT EXISTS "earthdistance";
         - CREATE EXTENSION IF NOT EXISTS "vector";
         - CREATE EXTENSION IF NOT EXISTS "vchord";
+  backups:
+    enabled: true
+    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    destinationPath: s3://cnpg-backups/immich
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /immich
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 3 * * *"
+        backupOwnerReference: self
+        method: barmanObjectStore
+    retentionPolicy: "7d"

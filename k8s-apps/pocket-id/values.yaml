@@ -324,3 +324,29 @@ cnpg-cluster:
           - CNPGClusterHAWarning
     initdb:
       database: pocket_id
+  backups:
+    enabled: true
+    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    destinationPath: s3://cnpg-backups/pocket-id
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /pocket-id
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 3 * * *"
+        backupOwnerReference: self
+        method: barmanObjectStore
+    retentionPolicy: "7d"
