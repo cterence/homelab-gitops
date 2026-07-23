@@ -389,6 +389,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/nix-cache" \
             "id:1000023,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
+          SecRule REQUEST_URI "@rx ^/api/ds/query" \
+            "id:1000024,phase:1,pass,nolog,ctl:ruleRemoveById=942100,ctl:ruleRemoveById=942151,ctl:ruleRemoveById=949110,ctl:ruleRemoveById=980170"
     ok-server-script:
       data:
         index.ts: |
