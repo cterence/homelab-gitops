@@ -392,6 +392,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/api/ds/query" \
             "id:1000024,phase:1,pass,nolog,ctl:ruleRemoveById=942100,ctl:ruleRemoveById=942151,ctl:ruleRemoveById=949110,ctl:ruleRemoveById=980170"
+
+          SecRule REQUEST_URI "@rx ^/obsidian/" \
+            "id:1000025,phase:1,pass,nolog,ctl:ruleEngine=Off"
     ok-server-script:
       data:
         index.ts: |
