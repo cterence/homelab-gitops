@@ -1,13 +1,12 @@
 kube-prometheus-stack:
   prometheus:
+    annotations:
+      reloader.stakater.com/auto: "false"
+
     # ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
     prometheusSpec:
       # ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
       scrapeInterval: 120s
-
-      podMetadata:
-        annotations:
-          secret.reloader.stakater.com/reload: "false"
 
       retention: 30d
 
@@ -84,6 +83,9 @@ kube-prometheus-stack:
   # ==============================================================================
 
   grafana:
+    annotations:
+      reloader.stakater.com/auto: "false"
+
     defaultDashboardsTimezone: Europe/Paris
 
     # Required as long as Grafana's persistent volume is ReadWriteOnce.
