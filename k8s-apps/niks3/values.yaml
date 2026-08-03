@@ -229,6 +229,19 @@ app-template:
           dataFrom:
             - extract:
                 key: niks3/versity-credentials
+    servicemonitor:
+      enabled: true
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: ServiceMonitor
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          endpoints:
+            - port: http
+              path: /metrics
+              interval: 30s
 
 cnpg-cluster:
   type: postgresql
