@@ -140,6 +140,19 @@ external-secrets:
             symbolCharacters: "!"
             symbols: 0
             noUpper: false
+    - apiVersion: generators.external-secrets.io/v1alpha1
+      kind: ClusterGenerator
+      metadata:
+        name: alphanumeric
+      spec:
+        kind: Password
+        generator:
+          passwordSpec:
+            length: 32
+            digits: 5
+            symbols: 0
+            noUpper: false
+            allowRepeat: true
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
