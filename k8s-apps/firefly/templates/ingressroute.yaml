@@ -1,0 +1,41 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: firefly-strip-import-prefix
+  annotations:
+    external-dns.alpha.kubernetes.io/target: home.terence.cloud
+spec:
+  stripPrefix:
+    prefixes:
+      - /import
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: firefly-main-ingress
+  annotations:
+    external-dns.alpha.kubernetes.io/target: home.terence.cloud
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ff.terence.cloud`) && PathPrefix(`/import`)
+      kind: Rule
+      middlewares:
+        - name: firefly-strip-import-prefix
+      services:
+        - name: firefly-data-importer
+          port: 8080
+    - match: Host(`ff.terence.cloud`)
+      kind: Rule
+      middlewares:
+        - name: modsecurity
+          namespace: traefik
+      services:
+        - name: firefly-main
+          port: 8080
+  tls:
+    secretName: firefly-tls
+    options:
+      name: client-auth
+      namespace: cert-manager

@@ -1,0 +1,344 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 33
+      runAsGroup: 33
+      fsGroup: 33
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  configMaps:
+    config:
+      data:
+        APP_ENV: production
+        APP_DEBUG: "false"
+        APP_NAME: FireflyIII
+        APP_URL: https://ff.terence.cloud
+        DEFAULT_LANGUAGE: en_US
+        DEFAULT_LOCALE: equal
+        TZ: Europe/Paris
+        TRUSTED_PROXIES: "**"
+        LOG_CHANNEL: stack
+        APP_LOG_LEVEL: notice
+        AUDIT_LOG_LEVEL: emergency
+        CACHE_DRIVER: file
+        SESSION_DRIVER: file
+        COOKIE_PATH: /
+        COOKIE_SECURE: "false"
+        COOKIE_SAMESITE: lax
+        MAIL_MAILER: log
+        AUTHENTICATION_GUARD: web
+        BROADCAST_DRIVER: log
+        QUEUE_DRIVER: sync
+        CACHE_PREFIX: firefly
+        FIREFLY_III_LAYOUT: v1
+        DB_CONNECTION: pgsql
+        DB_PORT: "5432"
+        PGSQL_SSL_MODE: prefer
+        PGSQL_SCHEMA: public
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: fireflyiii/core
+            tag: version-6.6.6
+          env:
+            DB_HOST:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-cnpg-cluster-app
+                  key: host
+            DB_DATABASE:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-cnpg-cluster-app
+                  key: dbname
+            DB_USERNAME:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-cnpg-cluster-app
+                  key: username
+            DB_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-cnpg-cluster-app
+                  key: password
+          envFrom:
+            - configMapRef:
+                identifier: config
+            - secretRef:
+                name: firefly-app-key
+            - secretRef:
+                name: firefly-cron-token
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+    data-importer:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: fireflyiii/data-importer
+            tag: version-2.3.4
+          env:
+            FIREFLY_III_URL: http://firefly-main.firefly.svc.cluster.local:8080
+            VANITY_URL: https://ff.terence.cloud/import
+            TRUSTED_PROXIES: "**"
+            TZ: Europe/Paris
+            FALLBACK_LOCALE: fr_FR
+            CAN_POST_AUTOIMPORT: "true"
+            CAN_POST_FILES: "true"
+            IMPORT_DIR_ALLOWLIST: /import
+            FALLBACK_IN_DIR: "true"
+            AUTO_IMPORT_SECRET:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-data-importer-secret
+                  key: auto-import-secret
+            FIREFLY_III_ACCESS_TOKEN:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-data-importer-token
+                  key: access-token
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+    cron:
+      type: cronjob
+      cronjob:
+        schedule: "0 3 * * *"
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+        concurrencyPolicy: Forbid
+        timeZone: Europe/Paris
+      containers:
+        main:
+          image:
+            repository: alpine
+            tag: "3.22"
+          command:
+            - wget
+            - -qO-
+            - http://firefly-main.firefly.svc.cluster.local:8080/api/v1/cron/$(STATIC_CRON_TOKEN)
+          env:
+            STATIC_CRON_TOKEN:
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-cron-token
+                  key: STATIC_CRON_TOKEN
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+    data-importer:
+      controller: data-importer
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
+  ingress:
+    main:
+      enabled: false
+
+  rawResources:
+    app-key:
+      enabled: true
+      forceRename: firefly-app-key
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: firefly-app-key
+            creationPolicy: Owner
+            template:
+              engineVersion: v2
+              data:
+                APP_KEY: '{{ printf "{{ .password }}" }}'
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: alphanumeric
+    cron-token:
+      enabled: true
+      forceRename: firefly-cron-token
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: firefly-cron-token
+            creationPolicy: Owner
+            template:
+              engineVersion: v2
+              data:
+                STATIC_CRON_TOKEN: '{{ printf "{{ .password }}" }}'
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: alphanumeric
+    data-importer-token:
+      enabled: true
+      forceRename: firefly-data-importer-token
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: firefly-data-importer-token
+            creationPolicy: Owner
+          data:
+            - secretKey: access-token
+              remoteRef:
+                key: firefly/data-importer-token
+                property: access-token
+    data-importer-secret:
+      enabled: true
+      forceRename: firefly-data-importer-secret
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: firefly-data-importer-secret
+            creationPolicy: Owner
+            template:
+              engineVersion: v2
+              data:
+                auto-import-secret: '{{ printf "{{ .password }}" }}'
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: alphanumeric
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "18"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 5Gi
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
+    postgresql: {}
+    initdb:
+      database: firefly
+  backups:
+    enabled: true
+    method: plugin
+    pluginConfiguration:
+      name: barman-cloud.cloudnative-pg.io
+    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    destinationPath: s3://cnpg-backups/firefly
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /firefly
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 3 * * *"
+        backupOwnerReference: self
+        method: plugin
+        pluginConfiguration:
+          name: barman-cloud.cloudnative-pg.io
+    retentionPolicy: "7d"

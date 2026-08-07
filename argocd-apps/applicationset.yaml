@@ -27,6 +27,7 @@ spec:
           - name: external-dns
           - name: external-secrets
             serverSideApply: true
+          - name: firefly
           - name: gitea
           - name: go-healthcheck
           - name: home-assistant
@@ -60,6 +61,7 @@ spec:
           - name: reloader
           - name: sablier
           - name: tailscale-operator
+          - name: temporal
           - name: traefik
           - name: tts9000
             scaleToZero: true

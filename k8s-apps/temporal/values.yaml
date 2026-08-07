@@ -1,0 +1,118 @@
+temporal:
+  server:
+    metrics:
+      serviceMonitor:
+        enabled: true
+    config:
+      persistence:
+        datastores:
+          default:
+            sql:
+              createDatabase: false
+              pluginName: postgres12_pgx
+              driverName: postgres12_pgx
+              databaseName: temporal
+              connectAddr: "temporal-cnpg-cluster-rw:5432"
+              connectProtocol: tcp
+              user: temporal
+              existingSecret: temporal-cnpg-cluster-app
+              secretKey: password
+          visibility:
+            sql:
+              createDatabase: false
+              pluginName: postgres12_pgx
+              driverName: postgres12_pgx
+              databaseName: temporal_visibility
+              connectAddr: "temporal-cnpg-cluster-rw:5432"
+              connectProtocol: tcp
+              user: temporal
+              existingSecret: temporal-cnpg-cluster-app
+              secretKey: password
+      namespaces:
+        create: true
+        namespace:
+          - name: default
+            retention: 30d
+  web:
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      hosts:
+        - temporal.terence.cloud
+      tls:
+        - secretName: temporal-web-tls
+          hosts:
+            - temporal.terence.cloud
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "18"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 5Gi
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
+    postgresql: {}
+    initdb:
+      database: temporal
+  databases:
+    - name: temporal
+      ensure: present
+      owner: temporal
+    - name: temporal_visibility
+      ensure: present
+      owner: temporal
+  backups:
+    enabled: true
+    method: plugin
+    pluginConfiguration:
+      name: barman-cloud.cloudnative-pg.io
+    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    destinationPath: s3://cnpg-backups/temporal
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /temporal
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 3 * * *"
+        backupOwnerReference: self
+        method: plugin
+        pluginConfiguration:
+          name: barman-cloud.cloudnative-pg.io
+    retentionPolicy: "7d"
