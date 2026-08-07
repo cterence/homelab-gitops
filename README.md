@@ -62,6 +62,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services | ✅ |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets | ✅ |
 | [falco](./scripts/../k8s-apps/falco) | Cloud Native Runtime Security | ❌ |
+| [firefly](./scripts/../k8s-apps/firefly) | A free and open source personal finance manager | ✅ |
 | [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go | ✅ |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks | ✅ |
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first | ✅ |
@@ -92,6 +93,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ❌ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
+| [temporal](./scripts/../k8s-apps/temporal) | Durable execution engine. | ✅ |
 | [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller | ✅ |
 | [tts9000](./scripts/../k8s-apps/tts9000) | Text-to-Speech service using Mistral's Voxtral TTS | ✅ |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
