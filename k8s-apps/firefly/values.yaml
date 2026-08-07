@@ -257,6 +257,9 @@ app-template:
               remoteRef:
                 key: firefly/data-importer-token
                 property: access-token
+                conversionStrategy: Default
+                decodingStrategy: None
+                metadataPolicy: None
     data-importer-secret:
       enabled: true
       forceRename: firefly-data-importer-secret
