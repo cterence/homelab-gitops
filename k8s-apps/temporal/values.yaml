@@ -33,6 +33,11 @@ temporal:
         namespace:
           - name: default
             retention: 30d
+    frontend:
+      service:
+        annotations:
+          tailscale.com/expose: "true"
+          tailscale.com/hostname: "temporal-frontend"
   web:
     ingress:
       enabled: true
