@@ -37,6 +37,28 @@ app-template:
             - --namespace=$(RESTORE_NAMESPACE)
 
   rawResources:
+    backup-secret:
+      enabled: true
+      forceRename: cnpg-backup-s3-creds
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: cnpg-backup-s3-creds
+            creationPolicy: Owner
+          data:
+            - secretKey: ACCESS_KEY_ID
+              remoteRef:
+                key: versity-gw/versity-gw-credentials
+                property: ROOT_ACCESS_KEY
+            - secretKey: ACCESS_SECRET_KEY
+              remoteRef:
+                key: versity-gw/versity-gw-credentials
+                property: ROOT_SECRET_KEY
     storage-class:
       enabled: true
       forceRename: cnpg-restore-test
@@ -65,18 +87,8 @@ app-template:
             resources: ["objectstores"]
             verbs: ["get", "list", "create", "delete"]
           - apiGroups: [""]
-            resources:
-              [
-                "pods",
-                "pods/exec",
-                "secrets",
-                "persistentvolumeclaims",
-                "namespaces",
-              ]
+            resources: ["namespaces"]
             verbs: ["get", "list", "create", "delete"]
-          - apiGroups: ["coordination.k8s.io"]
-            resources: ["leases"]
-            verbs: ["get", "create", "update", "delete"]
           - apiGroups: ["storage.k8s.io"]
             resources: ["storageclasses"]
             verbs: ["get"]
@@ -91,6 +103,39 @@ app-template:
         roleRef:
           apiGroup: rbac.authorization.k8s.io
           kind: ClusterRole
+          name: "{{ .Release.Name }}"
+        subjects:
+          - kind: ServiceAccount
+            name: "{{ .Release.Name }}"
+            namespace: "{{ .Release.Namespace }}"
+    namespace-role:
+      enabled: true
+      forceRename: "{{ .Release.Name }}"
+      manifest:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: Role
+        metadata:
+          name: "{{ .Release.Name }}"
+          namespace: cnpg-restore-test
+        rules:
+          - apiGroups: [""]
+            resources: ["pods", "pods/exec", "persistentvolumeclaims"]
+            verbs: ["get", "list", "create", "delete"]
+          - apiGroups: ["coordination.k8s.io"]
+            resources: ["leases"]
+            verbs: ["get", "create", "update", "delete"]
+    namespace-role-binding:
+      enabled: true
+      forceRename: "{{ .Release.Name }}"
+      manifest:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          name: "{{ .Release.Name }}"
+          namespace: cnpg-restore-test
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: Role
           name: "{{ .Release.Name }}"
         subjects:
           - kind: ServiceAccount

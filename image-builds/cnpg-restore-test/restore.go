@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"time"
 
-	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -20,34 +19,6 @@ type RestoreResult struct {
 	ObjectStoreName string
 	PodName         string
 	Error           error
-}
-
-// RestoreClusters creates ObjectStore + Cluster CRs for all clusters
-// concurrently (bounded by cfg.Concurrency) and waits for them to be Ready.
-func (c *Client) RestoreClusters(ctx context.Context, cfg Config, clusters []ClusterInfo) ([]RestoreResult, error) {
-	if err := c.ensureNamespace(ctx, cfg.Namespace); err != nil {
-		return nil, fmt.Errorf("ensuring namespace %s: %w", cfg.Namespace, err)
-	}
-
-	if err := c.copyBackupSecret(ctx, clusters[0].Namespace, cfg.Namespace); err != nil {
-		return nil, fmt.Errorf("copying backup secret: %w", err)
-	}
-
-	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(cfg.Concurrency)
-
-	results := make([]RestoreResult, len(clusters))
-	for i, ci := range clusters {
-		i, ci := i, ci
-		g.Go(func() error {
-			res, err := c.restoreOne(ctx, cfg.Namespace, ci)
-			results[i] = res
-			return err
-		})
-	}
-
-	_ = g.Wait()
-	return results, nil
 }
 
 func (c *Client) restoreOne(ctx context.Context, targetNS string, ci ClusterInfo) (RestoreResult, error) {
@@ -99,27 +70,6 @@ func (c *Client) ensureNamespace(ctx context.Context, name string) error {
 	}
 	_, err = c.core.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})
 	return err
-}
-
-func (c *Client) copyBackupSecret(ctx context.Context, sourceNS, targetNS string) error {
-	secret, err := c.core.CoreV1().Secrets(sourceNS).Get(ctx, "cnpg-backup-s3-creds", metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("getting secret from %s: %w", sourceNS, err)
-	}
-
-	newSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "cnpg-backup-s3-creds",
-			Namespace: targetNS,
-		},
-		Data: secret.Data,
-	}
-
-	_, err = c.core.CoreV1().Secrets(targetNS).Create(ctx, newSecret, metav1.CreateOptions{})
-	if err != nil {
-		slog.Debug("secret create result", "error", err)
-	}
-	return nil
 }
 
 func (c *Client) createRestoreObjectStore(ctx context.Context, targetNS string, ci ClusterInfo) error {

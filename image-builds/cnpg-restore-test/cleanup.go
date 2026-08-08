@@ -51,7 +51,7 @@ func (c *Client) cleanupOne(ctx context.Context, cfg Config, vr VerifyResult) []
 		storeName = vr.Info.ObjectStoreName
 	}
 	if err := c.dynamic.Resource(objectStoreGVR).Namespace(cfg.Namespace).Delete(ctx, storeName, metav1.DeleteOptions{}); err != nil {
-		slog.Warn("deleting ObjectStore", "name", storeName, "error", err)
+		slog.Debug("deleting ObjectStore", "name", storeName, "error", err)
 	}
 
 	slog.Info("cleanup complete", "cluster", clusterName)
@@ -98,14 +98,10 @@ func (c *Client) Cleanup(ctx context.Context, cfg Config, results []VerifyResult
 			storeName = vr.Info.ObjectStoreName
 		}
 		if err := c.dynamic.Resource(objectStoreGVR).Namespace(cfg.Namespace).Delete(ctx, storeName, metav1.DeleteOptions{}); err != nil {
-			slog.Warn("deleting ObjectStore", "name", storeName, "error", err)
+			slog.Debug("deleting ObjectStore", "name", storeName, "error", err)
 		}
 
 		slog.Info("cleanup complete", "cluster", clusterName)
-	}
-
-	if err := c.core.CoreV1().Secrets(cfg.Namespace).Delete(ctx, "cnpg-backup-s3-creds", metav1.DeleteOptions{}); err != nil {
-		slog.Warn("deleting shared secret", "error", err)
 	}
 
 	return errs

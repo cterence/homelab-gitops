@@ -115,6 +115,7 @@ func run() error {
 	}
 
 	// From here on we create resources — register cleanup for any leftovers
+	// (only runs if interrupted before per-cluster cleanup completes)
 	allResults := make([]RestoreResult, len(clusters))
 	cleanupRan := false
 	cleanup := func() {
@@ -122,7 +123,7 @@ func run() error {
 			return
 		}
 		cleanupRan = true
-		slog.Info("starting cleanup")
+		slog.Info("starting cleanup (leftover resources)")
 		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cleanupCancel()
 		vr := make([]VerifyResult, len(allResults))
@@ -136,12 +137,9 @@ func run() error {
 	}
 	defer cleanup()
 
-	// Ensure namespace + copy secret once
+	// Ensure namespace exists (secret is provisioned by the Helm chart)
 	if err := client.ensureNamespace(ctx, cfg.Namespace); err != nil {
 		return fmt.Errorf("ensuring namespace: %w", err)
-	}
-	if err := client.copyBackupSecret(ctx, clusters[0].Namespace, cfg.Namespace); err != nil {
-		return fmt.Errorf("copying backup secret: %w", err)
 	}
 
 	// Process each cluster: restore → verify → cleanup, with bounded concurrency
@@ -187,13 +185,6 @@ func run() error {
 	}
 
 	_ = g.Wait()
-
-	// Clean up shared resources (namespace secret)
-	defer func() {
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 2*time.Minute)
-		defer cleanupCancel()
-		_ = client.core.CoreV1().Secrets(cfg.Namespace).Delete(cleanupCtx, "cnpg-backup-s3-creds", metav1.DeleteOptions{})
-	}()
 
 	passed := 0
 	failed := 0
