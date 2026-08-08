@@ -54,6 +54,11 @@ kube-prometheus-stack:
         #   key: objstore.yml
         #   name: thanos-objstore-secret
 
+    service:
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: "prometheus"
+
     ingress:
       enabled: true
       ingressClassName: traefik
