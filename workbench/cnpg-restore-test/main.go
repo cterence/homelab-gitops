@@ -170,8 +170,6 @@ func run() error {
 	)
 
 	for i, ci := range clusters {
-		i, ci := i, ci
-
 		g.Go(func() error {
 			// Restore
 			rr, _ := client.restoreOne(ctx, cfg.Namespace, ci)

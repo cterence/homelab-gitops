@@ -46,6 +46,10 @@ When running `go build`, always delete the generated binary afterwards.
 Always run `golangci-lint run --fix ./...` before considering Go work done.
 Fix all reported issues. If a lint rule seems wrong, discuss with the user rather than disabling it.
 
+### Static analysis
+
+Always run `staticcheck ./...` after linting. Fix all reported issues.
+
 ### Code conventions
 
 - Flat `package main` layout — no subpackages, no `internal/` directory.
