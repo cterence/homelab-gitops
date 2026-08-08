@@ -12,7 +12,7 @@ app-template:
         main:
           image:
             repository: johngong/anki-sync-server
-            tag: 25.09.4@sha256:759f9b574e8947680e9d77839009efa5862c802c8ac6c3b1f3a72186d73299dd
+            tag: 26.08.1@sha256:7c6a89b5414a72d43c8e57f8079cd004e5c0f64ec071c7e02c1de7beefd60d1b
           env:
             TZ: Europe/Paris
           envFrom:
