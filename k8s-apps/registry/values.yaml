@@ -14,6 +14,8 @@ app-template:
           env:
             REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
             REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+            REGISTRY_LOG_LEVEL: "info"
+            REGISTRY_STORAGE_DELETE_ENABLED: "true"
           resources:
             requests:
               cpu: 50m
@@ -42,6 +44,54 @@ app-template:
                   port: 5000
                 initialDelaySeconds: 5
                 periodSeconds: 10
+
+    garbage-collect:
+      type: cronjob
+      annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
+      cronjob:
+        schedule: "0 4 * * *"
+        concurrencyPolicy: Forbid
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+        backoffLimit: 1
+        ttlSecondsAfterFinished: 86400
+      pod:
+        restartPolicy: Never
+        automountServiceAccountToken: false
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+      containers:
+        gc:
+          image:
+            repository: registry
+            tag: "3.1.1@sha256:1be55279f18a2fe1a74edf2664cac61c1bea305b7b4642dab412e7affdcb3e33"
+          args:
+            - garbage-collect
+            - --dry-run
+            - /etc/docker/registry/config.yml
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+
+  configMaps:
+    gc-config:
+      enabled: true
+      forceRename: gc-config
+      data:
+        config.yml: |
+          version: 0.1
+          storage:
+            filesystem:
+              rootdirectory: /var/lib/registry
+            delete:
+              enabled: true
 
   service:
     main:
@@ -81,3 +131,9 @@ app-template:
       size: 20Gi
       globalMounts:
         - path: /var/lib/registry
+    gc-config:
+      type: configMap
+      name: gc-config
+      globalMounts:
+        - path: /etc/docker/registry
+          readOnly: true
