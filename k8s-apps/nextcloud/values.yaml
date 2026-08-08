@@ -657,6 +657,9 @@ cnpg-cluster:
       database: nextcloud
   backups:
     enabled: true
+    method: plugin
+    pluginConfiguration:
+      name: barman-cloud.cloudnative-pg.io
     endpointURL: http://versity-gw-nfs.versity-gw:7070
     destinationPath: s3://cnpg-backups/nextcloud
     provider: s3
@@ -679,7 +682,9 @@ cnpg-cluster:
       - name: daily-backup
         schedule: "0 0 1 * * *"
         backupOwnerReference: self
-        method: barmanObjectStore
+        method: plugin
+        pluginConfiguration:
+          name: barman-cloud.cloudnative-pg.io
     retentionPolicy: "7d"
 
 valkey:
