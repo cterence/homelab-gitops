@@ -54,6 +54,7 @@ func (c *Client) DiscoverClusters(ctx context.Context, cfg Config) ([]ClusterInf
 	}
 
 	var infos []ClusterInfo
+
 	for _, cluster := range clusters.Items {
 		fullName := cluster.GetNamespace() + "/" + cluster.GetName()
 		if cfg.ClusterFilter != "" && !matchClusterFilter(cfg.ClusterFilter, fullName) {
@@ -66,13 +67,16 @@ func (c *Client) DiscoverClusters(ctx context.Context, cfg Config) ([]ClusterInf
 			slog.Warn("skipping cluster", "namespace", cluster.GetNamespace(), "name", cluster.GetName(), "error", err)
 			continue
 		}
+
 		if info == nil {
 			continue
 		}
+
 		infos = append(infos, *info)
 	}
 
 	slog.Info("discovered clusters", "count", len(infos), "filter", cfg.ClusterFilter)
+
 	return infos, nil
 }
 
@@ -85,15 +89,19 @@ func (c *Client) parseCluster(ctx context.Context, obj map[string]any) (*Cluster
 
 	// Find the barman-cloud plugin and its barmanObjectName
 	plugins, _ := spec["plugins"].([]any)
+
 	var objectStoreName string
+
 	for _, p := range plugins {
 		plugin, _ := p.(map[string]any)
 		if plugin["name"] != "barman-cloud.cloudnative-pg.io" {
 			continue
 		}
+
 		params, _ := plugin["parameters"].(map[string]any)
 		objectStoreName, _ = params["barmanObjectName"].(string)
 	}
+
 	if objectStoreName == "" {
 		slog.Info("skipping non-plugin cluster", "namespace", ns, "name", name)
 		return nil, nil
@@ -102,6 +110,7 @@ func (c *Client) parseCluster(ctx context.Context, obj map[string]any) (*Cluster
 	// Get storage size
 	storage, _ := spec["storage"].(map[string]any)
 	storageSize, _ := storage["size"].(string)
+
 	storageBytes, err := parseStorageBytes(storageSize)
 	if err != nil {
 		return nil, fmt.Errorf("parsing storage size: %w", err)
@@ -121,6 +130,7 @@ func (c *Client) parseCluster(ctx context.Context, obj map[string]any) (*Cluster
 	if err != nil {
 		return nil, fmt.Errorf("getting ObjectStore %s/%s: %w", ns, objectStoreName, err)
 	}
+
 	objStoreSpec, _ := objStore.UnstructuredContent()["spec"].(map[string]any)
 
 	// Verify at least one completed backup exists
@@ -129,6 +139,7 @@ func (c *Client) parseCluster(ctx context.Context, obj map[string]any) (*Cluster
 		slog.Warn("failed to list backups, proceeding anyway", "namespace", ns, "error", err)
 	} else {
 		hasCompleted := false
+
 		for _, b := range backups.Items {
 			status, _ := b.UnstructuredContent()["status"].(map[string]any)
 			if phase, _ := status["phase"].(string); phase == "completed" {
@@ -136,6 +147,7 @@ func (c *Client) parseCluster(ctx context.Context, obj map[string]any) (*Cluster
 				break
 			}
 		}
+
 		if !hasCompleted {
 			slog.Info("skipping cluster with no completed backup", "namespace", ns, "name", name)
 			return nil, nil
@@ -160,12 +172,14 @@ func parseStorageBytes(s string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return q.Value(), nil
 }
 
 // parseAllDBSizes parses newline-separated "dbname|size" output from psql.
 func parseAllDBSizes(output string) map[string]int64 {
 	sizes := map[string]int64{}
+
 	for _, line := range strings.Split(strings.TrimSpace(output), "\n") {
 		parts := strings.Split(line, "|")
 		if len(parts) == 2 {
@@ -175,6 +189,7 @@ func parseAllDBSizes(output string) map[string]int64 {
 			}
 		}
 	}
+
 	return sizes
 }
 
@@ -190,14 +205,17 @@ func matchClusterFilter(filter, fullName string) bool {
 		if pattern == "" {
 			continue
 		}
+
 		matched, err := path.Match(pattern, fullName)
 		if err != nil {
 			slog.Warn("invalid glob pattern", "pattern", pattern, "error", err)
 			continue
 		}
+
 		if matched {
 			return true
 		}
 	}
+
 	return false
 }

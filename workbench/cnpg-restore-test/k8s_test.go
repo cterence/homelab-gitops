@@ -24,6 +24,7 @@ func TestHomeDir(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("HOME", tt.home)
 			t.Setenv("USERPROFILE", tt.profile)
+
 			got := homeDir()
 			if got != tt.want {
 				t.Errorf("homeDir() = %q, want %q", got, tt.want)
@@ -83,6 +84,7 @@ func TestParseGVR(t *testing.T) {
 
 func TestDynamic_ReturnsNonNil(t *testing.T) {
 	t.Helper()
+
 	scheme := runtime.NewScheme()
 	dyn := fake.NewSimpleDynamicClient(scheme)
 	c := &Client{dynamic: dyn}
@@ -95,6 +97,7 @@ func TestDynamic_ReturnsNonNil(t *testing.T) {
 
 func TestNewClient_InvalidKubeconfigPath(t *testing.T) {
 	cfg := Config{KubeconfigPath: "/nonexistent/path/to/kubeconfig"}
+
 	_, err := NewClient(cfg)
 	if err == nil {
 		t.Fatal("expected error for invalid kubeconfig path")

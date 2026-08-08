@@ -34,6 +34,7 @@ func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
 	for i, c := range clusters {
 		sizes[i] = c.StorageBytes
 	}
+
 	slices.Sort(sizes)
 	slices.Reverse(sizes)
 
@@ -43,10 +44,12 @@ func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
 		if n > len(sizes) {
 			n = len(sizes)
 		}
+
 		var totalNeeded int64
 		for _, s := range sizes[:n] {
 			totalNeeded += s
 		}
+
 		totalNeeded = int64(float64(totalNeeded) * cfg.CapacityMargin)
 
 		slog.Info("capacity check",
@@ -65,8 +68,10 @@ func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
 				"available", humanBytes(avail),
 				"concurrency", n,
 			)
+
 			return 0, nil
 		}
+
 		return n, nil
 	}
 
@@ -77,6 +82,7 @@ func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
 		for _, s := range sizes[:n] {
 			totalNeeded += s
 		}
+
 		totalNeeded = int64(float64(totalNeeded) * cfg.CapacityMargin)
 
 		if totalNeeded <= avail {
@@ -89,6 +95,7 @@ func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
 				"concurrent_clusters", n,
 				"total_clusters", len(clusters),
 			)
+
 			return n, nil
 		}
 	}
@@ -99,6 +106,7 @@ func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
 		"needed", humanBytes(oneNeeded),
 		"available", humanBytes(avail),
 	)
+
 	return 0, nil
 }
 
@@ -108,11 +116,13 @@ func humanBytes(b int64) string {
 	if b < unit {
 		return fmt.Sprintf("%d B", b)
 	}
+
 	div, exp := int64(unit), 0
 	for n := b / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
 	}
+
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
@@ -122,6 +132,7 @@ func queryPrometheus(promURL, query string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	u.Path = "/api/v1/query"
 	q := u.Query()
 	q.Set("query", query)
@@ -141,6 +152,7 @@ func queryPrometheus(promURL, query string) (int64, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&pr); err != nil {
 		return 0, fmt.Errorf("decoding prometheus response: %w", err)
 	}
+
 	if pr.Status != "success" || len(pr.Data.Result) == 0 {
 		return 0, fmt.Errorf("prometheus query unsuccessful or empty: %s", pr.Status)
 	}
@@ -154,5 +166,6 @@ func queryPrometheus(promURL, query string) (int64, error) {
 	if _, err := fmt.Sscanf(valStr, "%d", &val); err != nil {
 		return 0, fmt.Errorf("parsing prometheus value %q: %w", valStr, err)
 	}
+
 	return val, nil
 }

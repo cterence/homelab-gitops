@@ -30,6 +30,7 @@ func pushMetrics(ctx context.Context, cfg Config, verifyResults []VerifyResult, 
 	total, success, failure, skipped := 0, 0, 0, 0
 	for _, vr := range verifyResults {
 		total++
+
 		if vr.Error != nil {
 			if vr.PodName == "" {
 				skipped++
@@ -62,12 +63,15 @@ func pushMetrics(ctx context.Context, cfg Config, verifyResults []VerifyResult, 
 		o.ObserveInt64(successGauge, int64(success))
 		o.ObserveInt64(failureGauge, int64(failure))
 		o.ObserveInt64(skippedGauge, int64(skipped))
+
 		if capacitySkipped {
 			o.ObserveInt64(capacitySkippedGauge, 1)
 		} else {
 			o.ObserveInt64(capacitySkippedGauge, 0)
 		}
+
 		o.ObserveInt64(durationGauge, int64(runDuration.Seconds()))
+
 		return nil
 	}, totalGauge, successGauge, failureGauge, skippedGauge, capacitySkippedGauge, durationGauge)
 
@@ -75,13 +79,16 @@ func pushMetrics(ctx context.Context, cfg Config, verifyResults []VerifyResult, 
 	// Use a fresh context — the caller's ctx may be cancelled (signal).
 	flushCtx, flushCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer flushCancel()
+
 	if err := provider.ForceFlush(flushCtx); err != nil {
 		slog.Warn("force flush failed", "error", err)
 	}
+
 	if err := provider.Shutdown(flushCtx); err != nil {
 		slog.Warn("provider shutdown failed", "error", err)
 	}
 
 	slog.Info("metrics pushed", "total", total, "success", success, "failure", failure, "skipped", skipped)
+
 	return nil
 }

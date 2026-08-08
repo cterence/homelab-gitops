@@ -8,7 +8,6 @@ import (
 func TestCheckCapacity_Logic(t *testing.T) {
 	// The capacity check uses the sum of the N largest cluster sizes
 	// (where N = concurrency), multiplied by the margin.
-
 	tests := []struct {
 		name        string
 		sizes       []string
@@ -75,8 +74,10 @@ func TestCheckCapacity_Logic(t *testing.T) {
 				if err != nil {
 					t.Fatalf("parseStorageBytes(%q): %v", s, err)
 				}
+
 				sizes[i] = b
 			}
+
 			slices.Sort(sizes)
 			slices.Reverse(sizes)
 
@@ -84,10 +85,12 @@ func TestCheckCapacity_Logic(t *testing.T) {
 			if n > len(sizes) {
 				n = len(sizes)
 			}
+
 			var totalNeeded int64
 			for _, s := range sizes[:n] {
 				totalNeeded += s
 			}
+
 			totalNeeded = int64(float64(totalNeeded) * tt.margin)
 
 			gotOK := totalNeeded <= tt.availBytes

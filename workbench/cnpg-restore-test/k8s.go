@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	coordinationv1 "k8s.io/api/coordination/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -41,8 +41,10 @@ type Client struct {
 
 // NewClient creates a Client from kubeconfig (local) or in-cluster config.
 func NewClient(cfg Config) (*Client, error) {
-	var config *rest.Config
-	var err error
+	var (
+		config *rest.Config
+		err    error
+	)
 
 	if cfg.KubeconfigPath != "" {
 		config, err = clientcmd.BuildConfigFromFlags("", cfg.KubeconfigPath)
@@ -55,6 +57,7 @@ func NewClient(cfg Config) (*Client, error) {
 			}
 		}
 	}
+
 	if err != nil {
 		return nil, fmt.Errorf("building kubeconfig: %w", err)
 	}
@@ -85,6 +88,7 @@ func (c *Client) Dynamic(resource, version, namespace string) dynamic.ResourceIn
 // version. The resource string may include a dotted group suffix.
 func parseGVR(resource, version string) schema.GroupVersionResource {
 	_, gr := schema.ParseResourceArg(resource)
+
 	return schema.GroupVersionResource{
 		Group:    gr.Group,
 		Version:  version,
@@ -96,6 +100,7 @@ func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
 		return h
 	}
+
 	return os.Getenv("USERPROFILE")
 }
 
@@ -147,8 +152,10 @@ func (c *Client) acquireLease(ctx context.Context, namespace, lockName, identity
 		if createErr == nil {
 			// Acquired!
 			slog.Info("acquired lease", "identity", identity, "lock", lockName)
+
 			done := make(chan struct{})
 			go c.renewLease(ctx, leaseClient, namespace, lockName, identity, renewDeadline, retryPeriod, done)
+
 			return func() {
 				close(done)
 				c.releaseLease(context.Background(), leaseClient, namespace, lockName, identity)
@@ -173,8 +180,10 @@ func (c *Client) acquireLease(ctx context.Context, namespace, lockName, identity
 				if time.Now().Before(expiry) {
 					slog.Info("lease held by another instance, waiting", "holder", *existing.Spec.HolderIdentity)
 					time.Sleep(retryPeriod)
+
 					continue
 				}
+
 				slog.Info("lease expired, attempting takeover", "holder", *existing.Spec.HolderIdentity)
 			}
 
@@ -182,16 +191,20 @@ func (c *Client) acquireLease(ctx context.Context, namespace, lockName, identity
 			existing.Spec.HolderIdentity = &holder
 			existing.Spec.AcquireTime = &now
 			existing.Spec.RenewTime = &now
+
 			_, updateErr := leaseClient.Update(ctx, existing, metav1.UpdateOptions{})
 			if updateErr == nil {
 				slog.Info("acquired lease (takeover)", "identity", identity, "lock", lockName)
+
 				done := make(chan struct{})
 				go c.renewLease(ctx, leaseClient, namespace, lockName, identity, renewDeadline, retryPeriod, done)
+
 				return func() {
 					close(done)
 					c.releaseLease(context.Background(), leaseClient, namespace, lockName, identity)
 				}, nil
 			}
+
 			time.Sleep(retryPeriod)
 		}
 	}
@@ -200,6 +213,7 @@ func (c *Client) acquireLease(ctx context.Context, namespace, lockName, identity
 func (c *Client) renewLease(ctx context.Context, leaseClient v1.LeaseInterface, namespace, lockName, identity string, renewDeadline, retryPeriod time.Duration, done <-chan struct{}) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-done:
@@ -208,15 +222,18 @@ func (c *Client) renewLease(ctx context.Context, leaseClient v1.LeaseInterface, 
 			return
 		case <-ticker.C:
 			now := metav1.NewMicroTime(time.Now())
+
 			lease, err := leaseClient.Get(ctx, lockName, metav1.GetOptions{})
 			if err != nil {
 				slog.Warn("failed to get lease for renewal", "error", err)
 				continue
 			}
+
 			if lease.Spec.HolderIdentity == nil || *lease.Spec.HolderIdentity != identity {
 				slog.Warn("lost lease", "identity", identity)
 				return
 			}
+
 			lease.Spec.RenewTime = &now
 			if _, err := leaseClient.Update(ctx, lease, metav1.UpdateOptions{}); err != nil {
 				slog.Warn("failed to renew lease", "error", err)
@@ -230,6 +247,7 @@ func (c *Client) releaseLease(ctx context.Context, leaseClient v1.LeaseInterface
 	if err != nil {
 		return
 	}
+
 	if lease.Spec.HolderIdentity != nil && *lease.Spec.HolderIdentity == identity {
 		_ = leaseClient.Delete(ctx, lockName, metav1.DeleteOptions{})
 		slog.Info("released lease", "identity", identity, "lock", lockName)

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -25,6 +26,7 @@ func (c *Client) VerifyClusters(ctx context.Context, cfg Config, results []Resto
 	for i, r := range results {
 		vr[i] = c.verifyOne(ctx, cfg, r)
 	}
+
 	return vr
 }
 
@@ -35,8 +37,9 @@ func (c *Client) verifyOne(ctx context.Context, cfg Config, r RestoreResult) Ver
 		vr.Error = r.Error
 		return vr
 	}
+
 	if r.PodName == "" {
-		vr.Error = fmt.Errorf("no pod name")
+		vr.Error = errors.New("no pod name")
 		return vr
 	}
 
@@ -45,29 +48,36 @@ func (c *Client) verifyOne(ctx context.Context, cfg Config, r RestoreResult) Ver
 		vr.Error = fmt.Errorf("querying restored DB sizes: %w", err)
 		return vr
 	}
+
 	vr.DBSizes = restoredSizes
 
 	sourcePod, err := c.findPrimaryPod(ctx, r.Info.Namespace, r.Info.Name)
 	if err != nil {
 		slog.Warn("could not find source pod, skipping size comparison", "cluster", r.Info.Name, "error", err)
+
 		vr.Passed = len(restoredSizes) > 0
 		for _, size := range restoredSizes {
 			if size == 0 {
 				vr.Passed = false
 			}
 		}
+
 		return vr
 	}
 
 	sourceSizes, err := c.getDatabaseSizes(ctx, r.Info.Namespace, sourcePod)
 	if err != nil {
 		slog.Warn("could not query source DB sizes", "cluster", r.Info.Name, "error", err)
+
 		vr.Passed = len(restoredSizes) > 0
+
 		return vr
 	}
+
 	vr.SourceDBSizes = sourceSizes
 
 	vr.Passed = compareDBSizes(sourceSizes, restoredSizes, 0.1)
+
 	return vr
 }
 
@@ -108,6 +118,7 @@ func (c *Client) execPSQL(ctx context.Context, ns, podName, query string) (strin
 	}
 
 	var stdout, stderr bytes.Buffer
+
 	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdout: &stdout,
 		Stderr: &stderr,
@@ -128,18 +139,23 @@ func compareDBSizes(source, restored map[string]int64, tolerance float64) bool {
 			slog.Warn("database missing in restored cluster", "database", db)
 			return false
 		}
+
 		if srcSize == 0 {
 			continue
 		}
+
 		ratio := float64(rstSize) / float64(srcSize)
+
 		diff := 1 - ratio
 		if diff < 0 {
 			diff = -diff
 		}
+
 		if diff > tolerance {
 			slog.Warn("database size mismatch", "database", db, "source", srcSize, "restored", rstSize, "ratio", ratio)
 			return false
 		}
 	}
+
 	return true
 }

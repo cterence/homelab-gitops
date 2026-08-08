@@ -66,40 +66,53 @@ func newClient(baseURL, user, pass string) *client {
 
 func (c *client) do(ctx context.Context, method, path string, body any) (*http.Response, error) {
 	var r io.Reader
+
 	if body != nil {
 		buf, err := json.Marshal(body)
 		if err != nil {
 			return nil, fmt.Errorf("marshal body: %w", err)
 		}
+
 		r = bytes.NewReader(buf)
 	}
+
 	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, r)
 	if err != nil {
 		return nil, err
 	}
+
 	req.SetBasicAuth(c.user, c.pass)
+
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+
 	req.Header.Set("Accept", "application/json")
+
 	return c.http.Do(req)
 }
 
 // getRepo returns the repo if it exists, nil on 404.
-func (c *client) getRepo(ctx context.Context, owner, name string) (*repo, error) {
+func (c *client) getRepo(ctx context.Context, owner, name string) (result *repo, err error) {
 	resp, err := c.do(ctx, http.MethodGet, fmt.Sprintf("/api/v1/repos/%s/%s", owner, name), nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	switch {
-	case resp.StatusCode == http.StatusNotFound:
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+
+	switch resp.StatusCode {
+	case http.StatusNotFound:
 		return nil, nil
-	case resp.StatusCode == http.StatusOK:
+	case http.StatusOK:
 		var r repo
 		if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 			return nil, fmt.Errorf("decode repo: %w", err)
 		}
+
 		return &r, nil
 	default:
 		return nil, fmt.Errorf("GET repo: %s", bodyText(resp))
@@ -107,7 +120,7 @@ func (c *client) getRepo(ctx context.Context, owner, name string) (*repo, error)
 }
 
 // migrate creates a new mirror via /repos/migrate.
-func (c *client) migrate(ctx context.Context, m Mirror) error {
+func (c *client) migrate(ctx context.Context, m Mirror) (err error) {
 	payload := map[string]any{
 		"clone_addr": m.CloneAddr,
 		"repo_owner": m.Owner,
@@ -119,85 +132,127 @@ func (c *client) migrate(ctx context.Context, m Mirror) error {
 	if m.MirrorInterval != "" {
 		payload["mirror_interval"] = m.MirrorInterval
 	}
+
 	resp, err := c.do(ctx, http.MethodPost, "/api/v1/repos/migrate", payload)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("migrate %s/%s: %s", m.Owner, m.Name, bodyText(resp))
 	}
+
 	return nil
 }
 
 // updateRepo patches mirror_interval / private on an existing mirror.
-func (c *client) updateRepo(ctx context.Context, r *repo, m Mirror) error {
+func (c *client) updateRepo(ctx context.Context, r *repo, m Mirror) (err error) {
 	payload := map[string]any{
 		"private": m.Private,
 	}
 	if m.MirrorInterval != "" {
 		payload["mirror_interval"] = m.MirrorInterval
 	}
+
 	resp, err := c.do(ctx, http.MethodPatch, fmt.Sprintf("/api/v1/repos/%s/%s", m.Owner, m.Name), payload)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("patch %s/%s: %s", m.Owner, m.Name, bodyText(resp))
 	}
+
 	return nil
+}
+
+// searchPage fetches a single page of repos from the search API.
+func (c *client) searchPage(ctx context.Context, owner string, page int) (repos []repo, hasMore bool, err error) {
+	path := fmt.Sprintf("/api/v1/repos/search?owner=%s&limit=50&page=%d", url.QueryEscape(owner), page)
+
+	resp, err := c.do(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, false, err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+
+	if resp.StatusCode >= 400 {
+		return nil, false, fmt.Errorf("search repos for %s: %s", owner, resp.Status)
+	}
+
+	var pageResp struct {
+		Data []repo `json:"data"`
+		Ok   bool   `json:"ok"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&pageResp); err != nil {
+		return nil, false, fmt.Errorf("decode search: %w", err)
+	}
+
+	return pageResp.Data, len(pageResp.Data) >= 50, nil
 }
 
 // listRepos returns all repos owned by owner that the token can see.
 func (c *client) listRepos(ctx context.Context, owner string) ([]repo, error) {
 	var out []repo
+
 	page := 1
 	for {
-		path := fmt.Sprintf("/api/v1/repos/search?owner=%s&limit=50&page=%d", url.QueryEscape(owner), page)
-		resp, err := c.do(ctx, http.MethodGet, path, nil)
+		repos, hasMore, err := c.searchPage(ctx, owner, page)
 		if err != nil {
 			return nil, err
 		}
-		if resp.StatusCode >= 400 {
-			resp.Body.Close()
-			return nil, fmt.Errorf("search repos for %s: %s", owner, resp.Status)
-		}
-		var pageResp struct {
-			Data []repo `json:"data"`
-			Ok   bool   `json:"ok"`
-		}
-		if err := json.NewDecoder(resp.Body).Decode(&pageResp); err != nil {
-			resp.Body.Close()
-			return nil, fmt.Errorf("decode search: %w", err)
-		}
-		resp.Body.Close()
-		out = append(out, pageResp.Data...)
-		if len(pageResp.Data) < 50 {
+
+		out = append(out, repos...)
+
+		if !hasMore {
 			break
 		}
+
 		page++
 	}
+
 	// /repos/search returns matches across all owners when owner filter is
 	// applied loosely; filter client-side to be safe.
 	var filtered []repo
+
 	for _, r := range out {
 		if r.Owner.Name == owner {
 			filtered = append(filtered, r)
 		}
 	}
+
 	return filtered, nil
 }
 
-func (c *client) deleteRepo(ctx context.Context, owner, name string) error {
+func (c *client) deleteRepo(ctx context.Context, owner, name string) (err error) {
 	resp, err := c.do(ctx, http.MethodDelete, fmt.Sprintf("/api/v1/repos/%s/%s", owner, name), nil)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+
 	if resp.StatusCode >= 400 && resp.StatusCode != http.StatusNotFound {
 		return fmt.Errorf("delete %s/%s: %s", owner, name, bodyText(resp))
 	}
+
 	return nil
 }
 
@@ -215,8 +270,10 @@ func repoNameFromURL(cloneAddr string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("parse clone_addr %q: %w", cloneAddr, err)
 	}
+
 	p := strings.Trim(u.Path, "/")
 	p = strings.TrimSuffix(p, ".git")
+
 	p = strings.Trim(p, "/")
 	if p == "" {
 		return "", fmt.Errorf("could not derive repo name from %q", cloneAddr)
@@ -226,6 +283,7 @@ func repoNameFromURL(cloneAddr string) (string, error) {
 	if i := strings.LastIndex(p, "/"); i >= 0 {
 		p = p[i+1:]
 	}
+
 	return p, nil
 }
 
@@ -234,41 +292,53 @@ func loadConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read config: %w", err)
 	}
+
 	var cfg Config
 	if err := yaml.Unmarshal(b, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
+
 	if cfg.DefaultMirrorInterval == "" {
 		cfg.DefaultMirrorInterval = "8h"
 	}
+
 	seen := map[string]bool{}
+
 	for i := range cfg.Mirrors {
 		m := &cfg.Mirrors[i]
 		if m.CloneAddr == "" {
 			return nil, fmt.Errorf("entry %d: clone_addr is required", i)
 		}
+
 		if m.Name == "" {
 			name, err := repoNameFromURL(m.CloneAddr)
 			if err != nil {
 				return nil, fmt.Errorf("entry %d: %w", i, err)
 			}
+
 			m.Name = name
 		}
+
 		if m.Owner == "" {
 			if cfg.DefaultOwner == "" {
 				return nil, fmt.Errorf("entry %d: owner is required (set defaultOwner or owner)", i)
 			}
+
 			m.Owner = cfg.DefaultOwner
 		}
+
 		if m.MirrorInterval == "" {
 			m.MirrorInterval = cfg.DefaultMirrorInterval
 		}
+
 		key := m.Owner + "/" + m.Name
 		if seen[key] {
 			return nil, fmt.Errorf("duplicate mirror %s", key)
 		}
+
 		seen[key] = true
 	}
+
 	return &cfg, nil
 }
 
@@ -276,6 +346,7 @@ func env(key, def string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
 	}
+
 	return def
 }
 
@@ -292,22 +363,26 @@ func run() error {
 
 	mirrorsFile := env("MIRRORS_FILE", "/etc/mirrors/mirrors.yaml")
 	dryRun := os.Getenv("DRY_RUN") == "true"
+
 	prune := os.Getenv("PRUNE")
 	if prune == "" {
 		prune = "true"
 	}
+
 	shouldPrune := prune == "true"
 
 	cfg, err := loadConfig(mirrorsFile)
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("loaded %d mirror(s) from %s\n", len(cfg.Mirrors), mirrorsFile)
 
 	c := newClient(env("GITEA_URL", ""), os.Getenv("GITEA_USER"), os.Getenv("GITEA_PASS"))
 
 	// Reconcile desired state.
 	desired := map[string]bool{}
+
 	for _, m := range cfg.Mirrors {
 		key := m.Owner + "/" + m.Name
 		desired[key] = true
@@ -316,9 +391,11 @@ func run() error {
 		if err != nil {
 			return fmt.Errorf("checking %s: %w", key, err)
 		}
+
 		switch {
 		case r == nil:
 			fmt.Printf("create mirror %s <- %s\n", key, m.CloneAddr)
+
 			if !dryRun {
 				if err := c.migrate(ctx, m); err != nil {
 					return err
@@ -330,6 +407,7 @@ func run() error {
 		default:
 			if m.MirrorInterval != "" || r.Private != m.Private {
 				fmt.Printf("update mirror %s (mirror_interval=%s private=%v)\n", key, m.MirrorInterval, m.Private)
+
 				if !dryRun {
 					if err := c.updateRepo(ctx, r, m); err != nil {
 						return err
@@ -346,24 +424,30 @@ func run() error {
 		fmt.Println("prune disabled; skipping cleanup")
 		return nil
 	}
+
 	owners := map[string]bool{}
 	for _, m := range cfg.Mirrors {
 		owners[m.Owner] = true
 	}
+
 	for owner := range owners {
 		repos, err := c.listRepos(ctx, owner)
 		if err != nil {
 			return fmt.Errorf("listing repos for %s: %w", owner, err)
 		}
+
 		for _, r := range repos {
 			key := r.Owner.Name + "/" + r.Name
 			if !r.Mirror {
 				continue // never touch non-mirror repos
 			}
+
 			if desired[key] {
 				continue
 			}
+
 			fmt.Printf("prune mirror %s\n", key)
+
 			if !dryRun {
 				if err := c.deleteRepo(ctx, r.Owner.Name, r.Name); err != nil {
 					return err
@@ -371,5 +455,6 @@ func run() error {
 			}
 		}
 	}
+
 	return nil
 }

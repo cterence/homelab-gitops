@@ -655,7 +655,7 @@ mirrorSync:
   image:
     registry: registry.terence.cloud
     repository: gitea-mirror-sync
-    tag: v2
+    tag: v3
   defaultOwner: terence
   mirrors:
     - clone_addr: https://github.com/cterence/homelab-gitops

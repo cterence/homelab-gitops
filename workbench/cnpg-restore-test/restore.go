@@ -54,9 +54,11 @@ func (c *Client) restoreOne(ctx context.Context, targetNS string, ci ClusterInfo
 		result.Error = fmt.Errorf("finding primary pod: %w", err)
 		return result, result.Error
 	}
+
 	result.PodName = podName
 
 	slog.Info("cluster restored", "namespace", targetNS, "cluster", restoreClusterName, "pod", podName)
+
 	return result, nil
 }
 
@@ -65,10 +67,12 @@ func (c *Client) ensureNamespace(ctx context.Context, name string) error {
 	if err == nil {
 		return nil
 	}
+
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}
 	_, err = c.core.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})
+
 	return err
 }
 
@@ -94,6 +98,7 @@ func (c *Client) createRestoreObjectStore(ctx context.Context, targetNS string, 
 	if err != nil {
 		// If it already exists from a previous run, delete and recreate
 		slog.Info("ObjectStore already exists, replacing", "namespace", targetNS, "name", storeName)
+
 		if delErr := c.dynamic.Resource(objectStoreGVR).Namespace(targetNS).Delete(ctx, storeName, metav1.DeleteOptions{}); delErr != nil {
 			return fmt.Errorf("deleting existing ObjectStore %s: %w", storeName, delErr)
 		}
@@ -102,13 +107,17 @@ func (c *Client) createRestoreObjectStore(ctx context.Context, targetNS string, 
 			_, err := c.dynamic.Resource(objectStoreGVR).Namespace(targetNS).Get(ctx, storeName, metav1.GetOptions{})
 			return err != nil, nil
 		})
+
 		obj.SetResourceVersion("")
+
 		_, err = c.dynamic.Resource(objectStoreGVR).Namespace(targetNS).Create(ctx, obj, metav1.CreateOptions{})
 		if err != nil {
 			return fmt.Errorf("creating ObjectStore %s: %w", storeName, err)
 		}
 	}
+
 	slog.Info("created ObjectStore", "namespace", targetNS, "name", storeName)
+
 	return nil
 }
 
@@ -121,7 +130,9 @@ func (c *Client) waitForObjectStore(ctx context.Context, ns, name string, timeou
 		if err != nil {
 			return false, nil
 		}
+
 		slog.Debug("objectstore ready", "name", name)
+
 		return true, nil
 	})
 }
@@ -139,8 +150,8 @@ func (c *Client) createRestoreCluster(ctx context.Context, targetNS string, ci C
 			},
 			"spec": map[string]any{
 				"instances":   1,
-				"postgresUID":  int64(26),
-				"postgresGID":  int64(26),
+				"postgresUID": int64(26),
+				"postgresGID": int64(26),
 				"imageCatalogRef": map[string]any{
 					"apiGroup": "postgresql.cnpg.io",
 					"kind":     "ClusterImageCatalog",
@@ -177,7 +188,9 @@ func (c *Client) createRestoreCluster(ctx context.Context, targetNS string, ci C
 	if err != nil {
 		return fmt.Errorf("creating Cluster %s: %w", restoreName, err)
 	}
+
 	slog.Info("created Cluster", "namespace", targetNS, "name", restoreName)
+
 	return nil
 }
 
@@ -187,35 +200,42 @@ func (c *Client) waitForClusterReady(ctx context.Context, ns, name string, timeo
 		if err != nil {
 			return false, nil
 		}
+
 		status, _ := obj.UnstructuredContent()["status"].(map[string]any)
 		if status == nil {
 			return false, nil
 		}
+
 		phase, _ := status["phase"].(string)
 		if phase == "Cluster in healthy state" {
 			return true, nil
 		}
+
 		slog.Debug("waiting for cluster", "name", name, "phase", phase)
+
 		return false, nil
 	})
 }
 
 func (c *Client) findPrimaryPod(ctx context.Context, ns, clusterName string) (string, error) {
 	pods, err := c.core.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("cnpg.io/cluster=%s", clusterName),
+		LabelSelector: "cnpg.io/cluster=" + clusterName,
 	})
 	if err != nil {
 		return "", err
 	}
+
 	for _, pod := range pods.Items {
 		role := pod.Labels["cnpg.io/instanceRole"]
 		if role == "primary" || role == "ready" {
 			return pod.Name, nil
 		}
 	}
+
 	if len(pods.Items) > 0 {
 		return pods.Items[0].Name, nil
 	}
+
 	return "", fmt.Errorf("no pods found for cluster %s", clusterName)
 }
 
@@ -224,5 +244,6 @@ func copyMap(m map[string]any) map[string]any {
 	for k, v := range m {
 		out[k] = v
 	}
+
 	return out
 }

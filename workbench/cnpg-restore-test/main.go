@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -14,8 +15,8 @@ import (
 	"syscall"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"golang.org/x/sync/errgroup"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func main() {
@@ -35,6 +36,7 @@ func run() error {
 	}
 
 	var concurrencyStr string
+
 	flag.BoolVar(&cfg.DryRun, "dry-run", true, "discover and capacity check only, no resource creation (use --dry-run=false to run full restore)")
 	flag.StringVar(&cfg.Namespace, "namespace", cfg.Namespace, "target namespace for restore clusters")
 	flag.StringVar(&concurrencyStr, "concurrency", "auto", "max concurrent cluster restores (\"auto\" to auto-detect from capacity)")
@@ -63,13 +65,16 @@ func run() error {
 
 	slog.Info("client initialized", "dry-run", cfg.DryRun, "namespace", cfg.Namespace, "concurrency", concurrencyStr)
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	signalCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+
+	ctx := signalCtx
 	runStart := time.Now()
 
 	// Acquire a lease so only one instance runs at a time (skip in dry-run)
 	if !cfg.DryRun {
 		identity := fmt.Sprintf("cnpg-restore-test-%d", time.Now().UnixNano())
+
 		releaseLease, err := client.acquireLease(ctx, cfg.Namespace, "cnpg-restore-test", identity)
 		if err != nil {
 			return fmt.Errorf("acquiring lease: %w", err)
@@ -82,15 +87,18 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("getting storage class cnpg-restore-test: %w", err)
 	}
+
 	if sc.ReclaimPolicy == nil || *sc.ReclaimPolicy != "Delete" {
 		return fmt.Errorf("storage class cnpg-restore-test has reclaimPolicy %v, expected Delete", sc.ReclaimPolicy)
 	}
+
 	slog.Info("storage class verified", "name", "cnpg-restore-test", "reclaimPolicy", sc.ReclaimPolicy)
 
 	clusters, err := client.DiscoverClusters(ctx, cfg)
 	if err != nil {
 		return err
 	}
+
 	if len(clusters) == 0 {
 		slog.Info("no clusters to test")
 		return nil
@@ -101,11 +109,15 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
 	if maxConc == 0 {
 		slog.Warn("capacity check failed, aborting run")
+
 		_ = pushMetrics(context.Background(), cfg, nil, time.Since(runStart), true)
-		return fmt.Errorf("insufficient disk space")
+
+		return errors.New("insufficient disk space")
 	}
+
 	cfg.Concurrency = maxConc
 	slog.Info("using concurrency", "concurrency", cfg.Concurrency)
 
@@ -118,18 +130,24 @@ func run() error {
 	// (only runs if interrupted before per-cluster cleanup completes)
 	allResults := make([]RestoreResult, len(clusters))
 	cleanupRan := false
+
 	cleanup := func() {
 		if cleanupRan {
 			return
 		}
+
 		cleanupRan = true
+
 		slog.Info("starting cleanup (leftover resources)")
+
 		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cleanupCancel()
+
 		vr := make([]VerifyResult, len(allResults))
 		for i, r := range allResults {
 			vr[i] = VerifyResult{RestoreResult: r}
 		}
+
 		cleanupErrs := client.Cleanup(cleanupCtx, cfg, vr)
 		for _, ce := range cleanupErrs {
 			slog.Error("cleanup error", "cluster", ce.ClusterName, "error", ce.Error)
@@ -146,11 +164,14 @@ func run() error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(cfg.Concurrency)
 
-	var mu sync.Mutex
-	var verifyResults []VerifyResult
+	var (
+		mu            sync.Mutex
+		verifyResults []VerifyResult
+	)
 
 	for i, ci := range clusters {
 		i, ci := i, ci
+
 		g.Go(func() error {
 			// Restore
 			rr, _ := client.restoreOne(ctx, cfg.Namespace, ci)
@@ -161,14 +182,18 @@ func run() error {
 				// Cleanup this cluster immediately
 				client.cleanupOne(ctx, cfg, VerifyResult{RestoreResult: rr})
 				mu.Lock()
+
 				verifyResults = append(verifyResults, VerifyResult{RestoreResult: rr, Error: rr.Error})
 				mu.Unlock()
+
 				return nil
 			}
 
 			// Verify
 			vr := client.verifyOne(ctx, cfg, rr)
+
 			mu.Lock()
+
 			verifyResults = append(verifyResults, vr)
 			mu.Unlock()
 
@@ -180,6 +205,7 @@ func run() error {
 
 			// Cleanup this cluster immediately
 			client.cleanupOne(ctx, cfg, vr)
+
 			return nil
 		})
 	}
@@ -187,14 +213,17 @@ func run() error {
 	_ = g.Wait()
 
 	// Per-cluster cleanup already ran in the pipeline. Skip the deferred
-	// safety-net cleanup unless the context was cancelled (interruption),
-	// in which case goroutines may not have fully cleaned up.
-	if ctx.Err() == nil {
+	// safety-net cleanup unless the run was interrupted, in which case
+	// goroutines may not have fully cleaned up. The errgroup cancels its
+	// derived context on Wait return regardless of success, so check the
+	// parent signal context instead.
+	if signalCtx.Err() == nil {
 		cleanupRan = true
 	}
 
 	passed := 0
 	failed := 0
+
 	for _, vr := range verifyResults {
 		if vr.Passed {
 			passed++
@@ -202,6 +231,7 @@ func run() error {
 			failed++
 		}
 	}
+
 	slog.Info("verification complete", "passed", passed, "failed", failed)
 
 	runDuration := time.Since(runStart)
@@ -212,5 +242,6 @@ func run() error {
 	if failed > 0 && passed == 0 {
 		return fmt.Errorf("all %d clusters failed verification", failed)
 	}
+
 	return nil
 }

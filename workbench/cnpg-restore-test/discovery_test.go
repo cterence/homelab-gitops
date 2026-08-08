@@ -25,6 +25,7 @@ func TestParseStorageBytes(t *testing.T) {
 				t.Errorf("parseStorageBytes(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 				return
 			}
+
 			if got != tt.want {
 				t.Errorf("parseStorageBytes(%q) = %d, want %d", tt.input, got, tt.want)
 			}
@@ -34,9 +35,9 @@ func TestParseStorageBytes(t *testing.T) {
 
 func TestParseAllDBSizes(t *testing.T) {
 	tests := []struct {
-		name   string
-		input  string
-		want   map[string]int64
+		name  string
+		input string
+		want  map[string]int64
 	}{
 		{
 			name:  "single db",
@@ -71,6 +72,7 @@ func TestParseAllDBSizes(t *testing.T) {
 			if len(got) != len(tt.want) {
 				t.Fatalf("parseAllDBSizes() got %d entries, want %d", len(got), len(tt.want))
 			}
+
 			for k, v := range tt.want {
 				if got[k] != v {
 					t.Errorf("parseAllDBSizes()[%q] = %d, want %d", k, got[k], v)

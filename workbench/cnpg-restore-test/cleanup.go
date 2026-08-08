@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -19,6 +18,7 @@ type CleanupError struct {
 // cleanupOne deletes a single cluster, its PVCs, and ObjectStore.
 func (c *Client) cleanupOne(ctx context.Context, cfg Config, vr VerifyResult) []CleanupError {
 	var errs []CleanupError
+
 	clusterName := vr.ClusterName
 	if clusterName == "" {
 		return errs
@@ -34,7 +34,7 @@ func (c *Client) cleanupOne(ctx context.Context, cfg Config, vr VerifyResult) []
 	})
 
 	pvcs, err := c.core.CoreV1().PersistentVolumeClaims(cfg.Namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("cnpg.io/cluster=%s", clusterName),
+		LabelSelector: "cnpg.io/cluster=" + clusterName,
 	})
 	if err != nil {
 		slog.Warn("listing PVCs", "cluster", clusterName, "error", err)
@@ -50,11 +50,13 @@ func (c *Client) cleanupOne(ctx context.Context, cfg Config, vr VerifyResult) []
 	if storeName == "" {
 		storeName = vr.Info.ObjectStoreName
 	}
+
 	if err := c.dynamic.Resource(objectStoreGVR).Namespace(cfg.Namespace).Delete(ctx, storeName, metav1.DeleteOptions{}); err != nil {
 		slog.Debug("deleting ObjectStore", "name", storeName, "error", err)
 	}
 
 	slog.Info("cleanup complete", "cluster", clusterName)
+
 	return errs
 }
 
@@ -81,7 +83,7 @@ func (c *Client) Cleanup(ctx context.Context, cfg Config, results []VerifyResult
 		// Also check for PVCs without the cluster label — they may exist
 		// even if the Cluster CR was never created (leftover from a crash)
 		pvcs, err := c.core.CoreV1().PersistentVolumeClaims(cfg.Namespace).List(ctx, metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("cnpg.io/cluster=%s", clusterName),
+			LabelSelector: "cnpg.io/cluster=" + clusterName,
 		})
 		if err != nil {
 			slog.Warn("listing PVCs", "cluster", clusterName, "error", err)
@@ -97,6 +99,7 @@ func (c *Client) Cleanup(ctx context.Context, cfg Config, results []VerifyResult
 		if storeName == "" {
 			storeName = vr.Info.ObjectStoreName
 		}
+
 		if err := c.dynamic.Resource(objectStoreGVR).Namespace(cfg.Namespace).Delete(ctx, storeName, metav1.DeleteOptions{}); err != nil {
 			slog.Debug("deleting ObjectStore", "name", storeName, "error", err)
 		}
