@@ -37,14 +37,6 @@ app-template:
             - --namespace=$(RESTORE_NAMESPACE)
 
   rawResources:
-    service-account:
-      enabled: true
-      forceRename: "{{ .Release.Name }}"
-      manifest:
-        apiVersion: v1
-        kind: ServiceAccount
-        metadata:
-          name: "{{ .Release.Name }}"
     storage-class:
       enabled: true
       forceRename: cnpg-restore-test
@@ -73,7 +65,14 @@ app-template:
             resources: ["objectstores"]
             verbs: ["get", "list", "create", "delete"]
           - apiGroups: [""]
-            resources: ["pods", "pods/exec", "secrets", "persistentvolumeclaims", "namespaces"]
+            resources:
+              [
+                "pods",
+                "pods/exec",
+                "secrets",
+                "persistentvolumeclaims",
+                "namespaces",
+              ]
             verbs: ["get", "list", "create", "delete"]
           - apiGroups: ["coordination.k8s.io"]
             resources: ["leases"]
@@ -104,7 +103,7 @@ app-template:
           groups:
             - name: cnpg-restore-test
               rules:
-                - alert: CnpgRestoreTestFailed
+                - alert: CNPGRestoreTestFailed
                   expr: cnpg_restore_test_failure > 0
                   for: 1m
                   labels:
@@ -113,7 +112,7 @@ app-template:
                     summary: CNPG restore test failed for one or more clusters
                     description: >-
                       At least one CNPG cluster failed restore verification in the daily test.
-                - alert: CnpgRestoreTestStale
+                - alert: CNPGRestoreTestStale
                   expr: cnpg_restore_test_total == 0 or (time() - cnpg_restore_test_run_duration_seconds) > 108000
                   for: 10m
                   labels:
