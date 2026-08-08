@@ -12,7 +12,7 @@ metadata:
     workbench/image: {{ .Values.image | quote }}
     workbench/tag: {{ .Values.tag | quote }}
   annotations:
-    argocd.argoproj.io/sync-options: Replace=true
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   backoffLimit: {{ .Values.backoffLimit }}
   ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
