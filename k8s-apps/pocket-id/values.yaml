@@ -346,7 +346,7 @@ cnpg-cluster:
       jobs: 2
     scheduledBackups:
       - name: daily-backup
-        schedule: "0 3 * * *"
+        schedule: "0 0 3 * * *"
         backupOwnerReference: self
         method: barmanObjectStore
     retentionPolicy: "7d"
