@@ -50,3 +50,19 @@ The registry service is plain HTTP. Kaniko pushes with `--insecure` to the
 in-cluster service `registry.registry:5000`. Pulls go through the external
 TLS ingress (`registry.terence.cloud`), so nodes do not need any insecure
 registry configuration.
+
+## Managing tags
+
+List and delete tags with `skopeo` (no Docker daemon required):
+
+```bash
+# List all tags for a repo
+skopeo list-tags docker://registry.terence.cloud/<image>
+
+# Delete a tag
+skopeo delete docker://registry.terence.cloud/<image>:<tag>
+```
+
+After deleting tags, run garbage collection to reclaim orphaned blobs. The GC
+CronJob runs daily at 4 AM (`--dry-run` by default — remove the flag in
+`k8s-apps/registry/values.yaml` to enable actual cleanup).
