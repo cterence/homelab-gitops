@@ -64,5 +64,16 @@ skopeo delete docker://registry.terence.cloud/<image>:<tag>
 ```
 
 After deleting tags, run garbage collection to reclaim orphaned blobs. The GC
-CronJob runs daily at 4 AM (`--dry-run` by default — remove the flag in
-`k8s-apps/registry/values.yaml` to enable actual cleanup).
+CronJob runs daily at 4 AM with `--delete-untagged`, which removes untagged
+manifests and their blobs (see `k8s-apps/registry/values.yaml`).
+
+## Deleting a repository
+
+The registry API does not support deleting a repository — only individual
+manifests and blobs. After removing all tags and running GC, the empty
+repository namespace remains. Delete it directly from the registry's PVC:
+
+```bash
+kubectl exec -n registry deploy/registry-main -- \
+  rm -rf /var/lib/registry/docker/registry/v2/repositories/<image>
+```

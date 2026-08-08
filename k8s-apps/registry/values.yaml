@@ -60,9 +60,8 @@ app-template:
         restartPolicy: Never
         automountServiceAccountToken: false
         securityContext:
-          runAsNonRoot: true
-          runAsUser: 1000
-          runAsGroup: 1000
+          runAsUser: 0
+          runAsGroup: 0
           fsGroupChangePolicy: OnRootMismatch
       containers:
         gc:
@@ -71,7 +70,7 @@ app-template:
             tag: "3.1.1@sha256:1be55279f18a2fe1a74edf2664cac61c1bea305b7b4642dab412e7affdcb3e33"
           args:
             - garbage-collect
-            - --dry-run
+            - --delete-untagged
             - /etc/docker/registry/config.yml
           resources:
             requests:
