@@ -30,3 +30,8 @@ data:
             - cinder
         action:
           type: skip
+      - conditions:
+          pvcLabels:
+            app.kubernetes.io/managed-by: cloudnative-pg
+        action:
+          type: skip
