@@ -1,4 +1,4 @@
-module github.com/cterence/homelab-gitops/image-builds/cnpg-restore-test
+module github.com/cterence/homelab-gitops/workbench/cnpg-restore-test
 
 go 1.26.0
 

@@ -32,12 +32,13 @@
 - Scale to zero using [Sablier](https://sablierapp.dev)
 - Any app you'd want to host: [Nextcloud](https://nextcloud.com/fr/), [Immich](https://immich.app/), [Paperless-ngx](https://docs.paperless-ngx.com/) and more (see below)
 
-## Image builds
+## Workbench
 
-Declarative in-cluster image builds live in [`image-builds/`](image-builds/).
-Drop a subdir with a `Dockerfile` and `build.yaml`, commit, and ArgoCD builds
-and pushes the image to the in-cluster registry. See
-[`image-builds/README.md`](image-builds/README.md).
+[`workbench/`](workbench/) is where self-hosted programs are developed. Each
+subdir holds source code, a `Dockerfile`, and a `build.yaml`. On commit, ArgoCD
+renders a Kaniko Job that builds the image and pushes it to the in-cluster
+registry — ready to deploy from [`k8s-apps/`](k8s-apps/). See
+[`workbench/README.md`](workbench/README.md).
 
 ## 💻 What's currently deployed in my cluster ?
 

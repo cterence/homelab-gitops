@@ -1,4 +1,6 @@
-# Declarative image builds
+# Workbench
+
+Develop programs and self-host them with declarative in-cluster image builds.
 
 Add a subdir here with a `Dockerfile`, your source, and a `build.yaml`. On
 commit, ArgoCD renders a Kaniko Job that builds it and pushes to the in-cluster

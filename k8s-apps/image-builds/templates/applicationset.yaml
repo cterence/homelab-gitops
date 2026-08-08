@@ -11,7 +11,7 @@ spec:
         repoURL: git@github.com:cterence/homelab-gitops.git
         revision: HEAD
         directories:
-          - path: image-builds/*
+          - path: workbench/*
   template:
     metadata:
       name: "build-{{ `{{ .path.basename }}` }}"

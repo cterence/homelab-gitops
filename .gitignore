@@ -6,3 +6,4 @@ Chart.lock
 **/*.tmp.yaml
 .worktrees/
 docs/superpowers/
+.DS_STORE

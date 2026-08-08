@@ -84,7 +84,7 @@ The Helm chart at `k8s-apps/cnpg-restore-test/` deploys:
 - RBAC (ServiceAccount, ClusterRole, ClusterRoleBinding)
 - PrometheusRule alerts (`CnpgRestoreTestFailed`, `CnpgRestoreTestStale`)
 
-The image is built via Kaniko from `image-builds/cnpg-restore-test/`.
+The image is built via Kaniko from `workbench/cnpg-restore-test/`.
 
 ## Concurrency and capacity
 
