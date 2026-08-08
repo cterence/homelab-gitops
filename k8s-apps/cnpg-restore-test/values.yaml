@@ -89,6 +89,9 @@ app-template:
           - apiGroups: [""]
             resources: ["namespaces"]
             verbs: ["get", "list", "create", "delete"]
+          - apiGroups: [""]
+            resources: ["pods", "pods/exec"]
+            verbs: ["get", "list", "create"]
           - apiGroups: ["storage.k8s.io"]
             resources: ["storageclasses"]
             verbs: ["get"]
@@ -119,8 +122,8 @@ app-template:
           namespace: cnpg-restore-test
         rules:
           - apiGroups: [""]
-            resources: ["pods", "pods/exec", "persistentvolumeclaims"]
-            verbs: ["get", "list", "create", "delete"]
+            resources: ["persistentvolumeclaims"]
+            verbs: ["get", "list", "delete"]
           - apiGroups: ["coordination.k8s.io"]
             resources: ["leases"]
             verbs: ["get", "create", "update", "delete"]
