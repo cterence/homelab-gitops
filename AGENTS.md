@@ -19,3 +19,9 @@ Never git add things in docs/superpowers forcefully.
 ## Golang
 
 When running go build, always delete the generated binary afterwards.
+
+## Versioning
+
+When modifying code under `workbench/<app>/`, bump both the build tag and the image tag:
+- `workbench/<app>/build.yaml` — increment `tag`
+- `k8s-apps/<app>/values.yaml` — update the image `tag` to match

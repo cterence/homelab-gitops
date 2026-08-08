@@ -186,6 +186,13 @@ func run() error {
 
 	_ = g.Wait()
 
+	// Per-cluster cleanup already ran in the pipeline. Skip the deferred
+	// safety-net cleanup unless the context was cancelled (interruption),
+	// in which case goroutines may not have fully cleaned up.
+	if ctx.Err() == nil {
+		cleanupRan = true
+	}
+
 	passed := 0
 	failed := 0
 	for _, vr := range verifyResults {

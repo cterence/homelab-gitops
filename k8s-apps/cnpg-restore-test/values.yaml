@@ -23,7 +23,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/cnpg-restore-test
-            tag: v3
+            tag: v4
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
