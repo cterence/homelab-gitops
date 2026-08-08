@@ -46,10 +46,14 @@ func NewClient(cfg Config) (*Client, error) {
 
 	if cfg.KubeconfigPath != "" {
 		config, err = clientcmd.BuildConfigFromFlags("", cfg.KubeconfigPath)
-	} else if home := homeDir(); home != "" {
-		config, err = clientcmd.BuildConfigFromFlags("", home+"/.kube/config")
 	} else {
+		// Try in-cluster config first, fall back to kubeconfig
 		config, err = rest.InClusterConfig()
+		if err != nil {
+			if home := homeDir(); home != "" {
+				config, err = clientcmd.BuildConfigFromFlags("", home+"/.kube/config")
+			}
+		}
 	}
 	if err != nil {
 		return nil, fmt.Errorf("building kubeconfig: %w", err)

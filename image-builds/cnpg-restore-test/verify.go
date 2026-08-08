@@ -92,9 +92,13 @@ func (c *Client) execPSQL(ctx context.Context, ns, podName, query string) (strin
 		Namespace(ns).
 		SubResource("exec").
 		Param("container", "postgres").
-		Param("command", "/bin/sh").
+		Param("command", "psql").
+		Param("command", "-U").
+		Param("command", "postgres").
+		Param("command", "-t").
+		Param("command", "-A").
 		Param("command", "-c").
-		Param("command", fmt.Sprintf("psql -U postgres -t -A -c \"%s\"", query)).
+		Param("command", query).
 		Param("stderr", "true").
 		Param("stdout", "true")
 

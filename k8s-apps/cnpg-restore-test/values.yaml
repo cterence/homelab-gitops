@@ -23,7 +23,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/cnpg-restore-test
-            tag: v1
+            tag: v2
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
@@ -77,6 +77,9 @@ app-template:
           - apiGroups: ["coordination.k8s.io"]
             resources: ["leases"]
             verbs: ["get", "create", "update", "delete"]
+          - apiGroups: ["storage.k8s.io"]
+            resources: ["storageclasses"]
+            verbs: ["get"]
     cluster-role-binding:
       enabled: true
       forceRename: "{{ .Release.Name }}"
