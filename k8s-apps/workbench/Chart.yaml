@@ -1,5 +1,5 @@
 apiVersion: v2
-name: image-builds
+name: workbench
 description: ApplicationSet that builds images from workbench/* subdirs
 type: application
 version: 0.1.0

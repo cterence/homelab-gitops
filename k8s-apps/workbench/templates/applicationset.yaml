@@ -1,7 +1,8 @@
+{{- if not .Values.image }}
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: image-builds
+  name: workbench
   namespace: argocd
 spec:
   goTemplate: true
@@ -20,7 +21,7 @@ spec:
       sources:
         - repoURL: git@github.com:cterence/homelab-gitops.git
           targetRevision: HEAD
-          path: charts/image-build
+          path: k8s-apps/workbench
           helm:
             valueFiles:
               - "$values/{{ `{{ .path.path }}` }}/build.yaml"
@@ -32,10 +33,11 @@ spec:
           ref: values
       destination:
         name: in-cluster
-        namespace: image-builds
+        namespace: workbench
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+{{- end }}

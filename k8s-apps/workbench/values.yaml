@@ -1,5 +1,5 @@
-# Provided by each subdir's build.yaml (via ApplicationSet valueFiles)
-# and by the ApplicationSet parameters (subPath).
+# Per-build values (provided by each subdir's build.yaml via ApplicationSet
+# valueFiles, and subPath via ApplicationSet parameters).
 image: ""            # required: repo path in the registry, e.g. "my-app"
 tag: ""              # required: image tag, e.g. "v1"; bump to trigger rebuild
 dockerfile: Dockerfile

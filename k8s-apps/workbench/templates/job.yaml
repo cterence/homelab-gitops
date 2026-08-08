@@ -1,4 +1,4 @@
-{{- if not .Values.image }}{{ fail "image is required in build.yaml" }}{{- end }}
+{{- if .Values.image }}
 {{- if not .Values.tag }}{{ fail "tag is required in build.yaml" }}{{- end }}
 {{- if not .Values.subPath }}{{ fail "subPath is required (set by the ApplicationSet)" }}{{- end }}
 {{- $name := printf "build-%s-%s" .Values.image .Values.tag | lower | replace "/" "-" | replace "_" "-" | trunc 63 | trimSuffix "-" }}
@@ -8,9 +8,9 @@ metadata:
   name: {{ $name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: image-build
-    image-build/image: {{ .Values.image | quote }}
-    image-build/tag: {{ .Values.tag | quote }}
+    app.kubernetes.io/managed-by: workbench
+    workbench/image: {{ .Values.image | quote }}
+    workbench/tag: {{ .Values.tag | quote }}
   annotations:
     argocd.argoproj.io/sync-options: Replace=true
 spec:
@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/managed-by: image-build
+        app.kubernetes.io/managed-by: workbench
     spec:
       restartPolicy: Never
       containers:
@@ -37,3 +37,4 @@ spec:
             {{- range $k, $v := .Values.buildArgs }}
             - --build-arg={{ $k }}={{ $v }}
             {{- end }}
+{{- end }}

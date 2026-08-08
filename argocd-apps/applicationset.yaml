@@ -34,7 +34,7 @@ spec:
           - name: home-assistant
           - name: httpbin
             scaleToZero: true
-          - name: image-builds
+          - name: workbench
           - name: immich
           - name: it-tools
             scaleToZero: true
