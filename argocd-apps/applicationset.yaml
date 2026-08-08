@@ -20,6 +20,7 @@ spec:
           - name: cloudnative-pg
             namespace: cnpg-system
             serverSideApply: true
+          - name: cnpg-restore-test
           - name: convertx
             scaleToZero: true
           - name: disk-usage-exporter

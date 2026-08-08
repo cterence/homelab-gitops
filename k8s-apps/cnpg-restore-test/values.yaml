@@ -1,0 +1,124 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: true
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: cronjob
+      cronjob:
+        schedule: "0 4 * * *"
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+        concurrencyPolicy: Forbid
+        timeZone: UTC
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: registry.terence.cloud/cnpg-restore-test
+            tag: v1
+            pullPolicy: IfNotPresent
+          env:
+            TZ: Europe/Paris
+            PROMETHEUS_URL: http://kube-prometheus-stack-prometheus.monitoring:9090
+            OTEL_ENDPOINT: opentelemetry-collector.opentelemetry-collector:4317
+            RESTORE_NAMESPACE: cnpg-restore-test
+          args:
+            - --dry-run=false
+            - --prometheus-endpoint=$(PROMETHEUS_URL)
+            - --otel-endpoint=$(OTEL_ENDPOINT)
+            - --namespace=$(RESTORE_NAMESPACE)
+
+  rawResources:
+    service-account:
+      enabled: true
+      forceRename: "{{ .Release.Name }}"
+      manifest:
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: "{{ .Release.Name }}"
+    storage-class:
+      enabled: true
+      forceRename: cnpg-restore-test
+      manifest:
+        apiVersion: storage.k8s.io/v1
+        kind: StorageClass
+        metadata:
+          name: cnpg-restore-test
+        provisioner: cluster.local/local-path-provisioner
+        reclaimPolicy: Delete
+        volumeBindingMode: WaitForFirstConsumer
+        allowVolumeExpansion: true
+    cluster-role:
+      enabled: true
+      forceRename: "{{ .Release.Name }}"
+      manifest:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: "{{ .Release.Name }}"
+        rules:
+          - apiGroups: ["postgresql.cnpg.io"]
+            resources: ["clusters", "backups", "scheduledbackups"]
+            verbs: ["get", "list", "watch", "create", "delete"]
+          - apiGroups: ["barmancloud.cnpg.io"]
+            resources: ["objectstores"]
+            verbs: ["get", "list", "create", "delete"]
+          - apiGroups: [""]
+            resources: ["pods", "pods/exec", "secrets", "persistentvolumeclaims", "namespaces"]
+            verbs: ["get", "list", "create", "delete"]
+          - apiGroups: ["coordination.k8s.io"]
+            resources: ["leases"]
+            verbs: ["get", "create", "update", "delete"]
+    cluster-role-binding:
+      enabled: true
+      forceRename: "{{ .Release.Name }}"
+      manifest:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: "{{ .Release.Name }}"
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: "{{ .Release.Name }}"
+        subjects:
+          - kind: ServiceAccount
+            name: "{{ .Release.Name }}"
+            namespace: "{{ .Release.Namespace }}"
+    prometheus-rule:
+      enabled: true
+      forceRename: cnpg-restore-test
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: PrometheusRule
+        spec:
+          groups:
+            - name: cnpg-restore-test
+              rules:
+                - alert: CnpgRestoreTestFailed
+                  expr: cnpg_restore_test_failure > 0
+                  for: 1m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: CNPG restore test failed for one or more clusters
+                    description: >-
+                      At least one CNPG cluster failed restore verification in the daily test.
+                - alert: CnpgRestoreTestStale
+                  expr: cnpg_restore_test_total == 0 or (time() - cnpg_restore_test_run_duration_seconds) > 108000
+                  for: 10m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: CNPG restore test has not run in over 30 hours
+                    description: >-
+                      The daily CNPG restore test CronJob has not produced metrics in over 30 hours.
