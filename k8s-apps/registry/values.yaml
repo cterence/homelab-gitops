@@ -95,6 +95,9 @@ app-template:
 
   service:
     main:
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: registry
       controller: main
       type: ClusterIP
       ports:
