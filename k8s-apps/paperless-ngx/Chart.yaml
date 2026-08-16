@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: app-template
     repository: https://bjw-s-labs.github.io/helm-charts
-    version: 5.0.1
+    version: 5.1.0
   - name: valkey
     repository: https://valkey.io/valkey-helm/
     version: 0.11.0
