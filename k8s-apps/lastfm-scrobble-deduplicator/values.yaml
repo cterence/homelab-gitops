@@ -18,7 +18,6 @@ app-template:
         failedJobsHistory: 1
         concurrencyPolicy: Forbid
         timeZone: Europe/Paris
-      strategy: RollingUpdate
       pod:
         securityContext:
           fsGroup: 1000
@@ -28,7 +27,7 @@ app-template:
         app:
           image:
             repository: ghcr.io/cterence/lastfm-scrobble-deduplicator
-            tag: latest@sha256:9060af6021a575cf8aa2e53aa9da446f5558a3104a3b94c6c3c888d195e56915 
+            tag: latest@sha256:9060af6021a575cf8aa2e53aa9da446f5558a3104a3b94c6c3c888d195e56915
           command:
             - /bin/bash
             - -c
