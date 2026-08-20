@@ -48,7 +48,7 @@ app-template:
         main:
           image:
             repository: fireflyiii/core
-            tag: version-6.6.6
+            tag: version-6.6.6@sha256:ae69fdd95cdef9038cd7a460a5aec731f14813973e4f096511d5a4ea9ff0e972
           env:
             DB_HOST:
               valueFrom:
@@ -105,7 +105,7 @@ app-template:
         main:
           image:
             repository: fireflyiii/data-importer
-            tag: version-2.3.4
+            tag: version-2.3.4@sha256:26459e1f014544f1ae56d1beed9c6a0ddf208b1eaa24cf11fa77ebd1f51422c8
           env:
             FIREFLY_III_URL: http://firefly-main.firefly.svc.cluster.local:8080
             VANITY_URL: https://ff.terence.cloud/import
