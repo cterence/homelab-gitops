@@ -395,6 +395,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/obsidian/" \
             "id:1000025,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
+          SecRule REQUEST_URI "@rx ^/edit/" \
+            "id:1000026,phase:1,pass,nolog,ctl:ruleRemoveById=932130,ctl:ruleRemoveById=932260,ctl:ruleRemoveById=942151"
     ok-server-script:
       data:
         index.ts: |
