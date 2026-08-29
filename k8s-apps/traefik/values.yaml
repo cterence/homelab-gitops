@@ -87,6 +87,11 @@ traefik:
           - 192.168.1.0/24
           - 10.0.0.0/8
         insecure: false
+      http:
+        middlewares:
+          - traefik-geoblock@kubernetescrd
+          - traefik-secure-headers@kubernetescrd
+          - traefik-jail@kubernetescrd
     websecure:
       port: 8443
       expose:
