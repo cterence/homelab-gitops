@@ -87,14 +87,14 @@ loki:
               rules:
                 - alert: TraefikJailBanned
                   expr: |
-                    sum by (ip) (count_over_time({k8s_container_name="traefik"} |= "traefik-jail: banned" | regexp "ip=(?P<ip>[0-9.]+)" [5m])) > 0
+                    sum by (ip, banCount, duration) (count_over_time({k8s_container_name="traefik"} |= "traefik-jail: banned" | regexp "ip=(?P<ip>[0-9.]+) banCount=(?P<banCount>[0-9]+) duration=(?P<duration>[0-9a-z]+)" [5m])) > 0
                   for: 0m
                   labels:
                     severity: info
                     context: traefik
                   annotations:
-                    summary: "IP {{ "{{ $labels.ip }}" }} banned by traefik-jail"
-                    description: "IP {{ "{{ $labels.ip }}" }} was banned after exceeding the 4xx error threshold."
+                    summary: "IP {{ "{{ $labels.ip }}" }} banned by traefik-jail (ban #{{ "{{ $labels.banCount }}" }}, {{ "{{ $labels.duration }}" }})"
+                    description: "IP {{ "{{ $labels.ip }}" }} was banned after exceeding the 4xx error threshold. This is ban #{{ "{{ $labels.banCount }}" }} with duration {{ "{{ $labels.duration }}" }}."
 
   ingester:
     replicas: 0
