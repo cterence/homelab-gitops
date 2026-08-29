@@ -4,8 +4,20 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
+)
+
+// Package-level singletons shared across all plugin instances.
+// Traefik creates one plugin instance per router, so without singletons
+// each instance would have its own Jailer (fragmenting error counts) and
+// its own stats goroutine (flooding logs).
+var (
+	singletonJailer *Jailer
+	singletonStats  *requestStats
+	jailerOnce      sync.Once
+	statsOnce       sync.Once
 )
 
 // Config holds the plugin configuration passed by Traefik.
@@ -47,13 +59,10 @@ type requestStats struct {
 	totalNs atomic.Int64
 	minNs   atomic.Int64
 	maxNs   atomic.Int64
-	stopCh  chan struct{}
 }
 
 func newRequestStats() *requestStats {
-	s := &requestStats{
-		stopCh: make(chan struct{}),
-	}
+	s := &requestStats{}
 	s.minNs.Store(1 << 62)
 
 	return s
@@ -112,37 +121,40 @@ func (s *requestStats) startLogger(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				s.logAndReset()
-			case <-s.stopCh:
-				ticker.Stop()
-				return
-			}
+		for range ticker.C {
+			s.logAndReset()
 		}
 	}()
 }
 
 // New creates a new plugin instance.
+// The Jailer and stats collector are package-level singletons so all
+// instances share state — Traefik creates one instance per router.
 func New(_ context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	p := &JailPlugin{
-		next: next,
-		name: name,
-		jailer: NewJailer(
+	jailerOnce.Do(func() {
+		singletonJailer = NewJailer(
 			config.Threshold,
 			time.Duration(config.Window)*time.Second,
 			time.Duration(config.BaseBan)*time.Second,
 			time.Duration(config.MaxBan)*time.Second,
 			time.Duration(config.ResetAfter)*time.Second,
-		),
+		)
+	})
+
+	p := &JailPlugin{
+		next:      next,
+		name:      name,
+		jailer:    singletonJailer,
 		allowList: config.AllowList,
 	}
 
 	if config.StatsInterval > 0 {
-		stats := newRequestStats()
-		stats.startLogger(time.Duration(config.StatsInterval) * time.Second)
-		p.stats = stats
+		statsOnce.Do(func() {
+			singletonStats = newRequestStats()
+			singletonStats.startLogger(time.Duration(config.StatsInterval) * time.Second)
+		})
+
+		p.stats = singletonStats
 	}
 
 	return p, nil

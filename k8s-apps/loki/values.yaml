@@ -87,7 +87,7 @@ loki:
               rules:
                 - alert: TraefikJailBanned
                   expr: |
-                    sum by (ip) (count_over_time({container="traefik"} |= "traefik-jail: banned" [5m])) > 0
+                    sum by (ip) (count_over_time({k8s_container_name="traefik"} |= "traefik-jail: banned" | regexp "ip=(?P<ip>[0-9.]+)" [5m])) > 0
                   for: 0m
                   labels:
                     severity: info
