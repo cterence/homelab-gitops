@@ -10,6 +10,7 @@ import (
 func TestPlugin_BannedIPGets403(t *testing.T) {
 	plugin := &JailPlugin{
 		jailer: NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:  newRequestStats(),
 	}
 
 	// First request with a 404 response — threshold is 1, so this triggers a ban
@@ -46,6 +47,7 @@ func TestPlugin_BannedIPGets403(t *testing.T) {
 func TestPlugin_NonBannedIPPassthrough(t *testing.T) {
 	plugin := &JailPlugin{
 		jailer: NewJailer(10, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:  newRequestStats(),
 	}
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -69,6 +71,7 @@ func TestPlugin_NonBannedIPPassthrough(t *testing.T) {
 func TestPlugin_5xxNotCounted(t *testing.T) {
 	plugin := &JailPlugin{
 		jailer: NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:  newRequestStats(),
 	}
 
 	// 500 should not trigger a ban (only 4xx)
@@ -104,6 +107,7 @@ func TestPlugin_5xxNotCounted(t *testing.T) {
 func TestPlugin_2xxNotCounted(t *testing.T) {
 	plugin := &JailPlugin{
 		jailer: NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:  newRequestStats(),
 	}
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -129,6 +133,7 @@ func TestPlugin_AllowedIPSkipsJail(t *testing.T) {
 	plugin := &JailPlugin{
 		jailer:    NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
 		allowList: []string{"10.0.0.0/8"},
+		stats:     newRequestStats(),
 	}
 
 	calls := 0

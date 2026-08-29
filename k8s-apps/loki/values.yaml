@@ -30,6 +30,12 @@ loki:
     querier:
       # Default is 4, if you have enough memory and CPU you can increase, reduce if OOMing
       max_concurrent: 2
+    rulerConfig:
+      storage:
+        type: local
+        local:
+          directory: /rules
+      alertmanager_url: http://kube-prometheus-stack-alertmanager.monitoring.svc:9093
   chunksCache:
     writebackSizeLimit: 100MB
   gateway:
@@ -55,12 +61,40 @@ loki:
         argocd.argoproj.io/sync-options: Delete=false
       size: 20Gi
 
+  sidecar:
+    rules:
+      folder: /rules/fake
+
   backend:
     replicas: 0
   read:
     replicas: 0
   write:
     replicas: 0
+
+  extraObjects:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: loki-rules-traefik-jail
+        namespace: '{{ .Release.Namespace }}'
+        labels:
+          loki_rule: ""
+      data:
+        traefik-jail.yaml: |
+          groups:
+            - name: traefik-jail
+              rules:
+                - alert: TraefikJailBanned
+                  expr: |
+                    sum by (ip) (count_over_time({container="traefik"} |= "traefik-jail: banned" [5m])) > 0
+                  for: 0m
+                  labels:
+                    severity: info
+                    context: traefik
+                  annotations:
+                    summary: "IP {{ "{{ $labels.ip }}" }} banned by traefik-jail"
+                    description: "IP {{ "{{ $labels.ip }}" }} was banned after exceeding the 4xx error threshold."
 
   ingester:
     replicas: 0

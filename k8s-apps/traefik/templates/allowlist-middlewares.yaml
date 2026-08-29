@@ -24,6 +24,7 @@ spec:
       baseBan: 60
       maxBan: 3600
       resetAfter: 3600
+      statsInterval: 300
       allowList:
         {{- range .Values.allowListIPs }}
         - {{ . }}

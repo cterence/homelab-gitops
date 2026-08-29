@@ -3,6 +3,7 @@ package traefikjail
 import (
 	"log"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -133,11 +134,36 @@ func (j *Jailer) banDuration(banCount int) time.Duration {
 	return d
 }
 
-// extractIP returns the client IP from X-Forwarded-For or X-Real-IP headers,
-// falling back to the remote address.
+// extractIPFromRequest returns the client IP from X-Forwarded-For or X-Real-IP headers,
+// falling back to the remote address. Reads headers directly without allocation.
+func extractIPFromRequest(req *http.Request) string {
+	xff := req.Header.Get("X-Forwarded-For")
+	if xff != "" {
+		for i := 0; i < len(xff); i++ {
+			if xff[i] == ',' {
+				return xff[:i]
+			}
+		}
+
+		return xff
+	}
+
+	xri := req.Header.Get("X-Real-Ip")
+	if xri != "" {
+		return xri
+	}
+
+	host, _, err := net.SplitHostPort(req.RemoteAddr)
+	if err != nil {
+		return req.RemoteAddr
+	}
+
+	return host
+}
+
+// extractIP returns the client IP from a header map, for testing.
 func extractIP(headers map[string]string, remoteAddr string) string {
 	if xff, ok := headers["X-Forwarded-For"]; ok && xff != "" {
-		// Take the first IP in the list
 		for i := 0; i < len(xff); i++ {
 			if xff[i] == ',' {
 				return xff[:i]

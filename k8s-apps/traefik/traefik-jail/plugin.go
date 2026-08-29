@@ -2,7 +2,9 @@ package traefikjail
 
 import (
 	"context"
+	"log"
 	"net/http"
+	"sync/atomic"
 	"time"
 )
 
@@ -10,12 +12,13 @@ import (
 // Duration fields are in seconds (int) because Yaegi's mapstructure decoder
 // cannot parse time.Duration strings like "1m" or "60s".
 type Config struct {
-	Threshold  int      `json:"threshold,omitempty"`
-	Window     int      `json:"window,omitempty"`     // seconds
-	BaseBan    int      `json:"baseBan,omitempty"`     // seconds
-	MaxBan     int      `json:"maxBan,omitempty"`     // seconds
-	ResetAfter int      `json:"resetAfter,omitempty"` // seconds
-	AllowList  []string `json:"allowList,omitempty"`  // CIDRs or single IPs to skip
+	Threshold     int      `json:"threshold,omitempty"`
+	Window        int      `json:"window,omitempty"`        // seconds
+	BaseBan       int      `json:"baseBan,omitempty"`       // seconds
+	MaxBan        int      `json:"maxBan,omitempty"`        // seconds
+	ResetAfter    int      `json:"resetAfter,omitempty"`    // seconds
+	AllowList     []string `json:"allowList,omitempty"`     // CIDRs or single IPs to skip
+	StatsInterval int      `json:"statsInterval,omitempty"` // seconds, 0 = disabled
 }
 
 // CreateConfig creates the default plugin configuration.
@@ -35,13 +38,97 @@ type JailPlugin struct {
 	name      string
 	jailer    *Jailer
 	allowList []string
+	stats     *requestStats
+}
+
+// requestStats tracks plugin processing time with atomic counters.
+type requestStats struct {
+	count   atomic.Int64
+	totalNs atomic.Int64
+	minNs   atomic.Int64
+	maxNs   atomic.Int64
+	stopCh  chan struct{}
+}
+
+func newRequestStats() *requestStats {
+	s := &requestStats{
+		stopCh: make(chan struct{}),
+	}
+	s.minNs.Store(1 << 62)
+
+	return s
+}
+
+func (s *requestStats) record(d time.Duration) {
+	ns := d.Nanoseconds()
+
+	s.count.Add(1)
+	s.totalNs.Add(ns)
+
+	for {
+		cur := s.minNs.Load()
+		if ns >= cur {
+			break
+		}
+
+		if s.minNs.CompareAndSwap(cur, ns) {
+			break
+		}
+	}
+
+	for {
+		cur := s.maxNs.Load()
+		if ns <= cur {
+			break
+		}
+
+		if s.maxNs.CompareAndSwap(cur, ns) {
+			break
+		}
+	}
+}
+
+func (s *requestStats) logAndReset() {
+	count := s.count.Swap(0)
+	if count == 0 {
+		return
+	}
+
+	total := s.totalNs.Swap(0)
+	minN := s.minNs.Swap(1 << 62)
+	maxN := s.maxNs.Swap(0)
+
+	avg := total / count
+
+	log.Printf("traefik-jail: stats count=%d avg=%s min=%s max=%s",
+		count,
+		time.Duration(avg),
+		time.Duration(minN),
+		time.Duration(maxN),
+	)
+}
+
+func (s *requestStats) startLogger(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				s.logAndReset()
+			case <-s.stopCh:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 // New creates a new plugin instance.
 func New(_ context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	return &JailPlugin{
-		next:   next,
-		name:   name,
+	p := &JailPlugin{
+		next: next,
+		name: name,
 		jailer: NewJailer(
 			config.Threshold,
 			time.Duration(config.Window)*time.Second,
@@ -50,22 +137,52 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 			time.Duration(config.ResetAfter)*time.Second,
 		),
 		allowList: config.AllowList,
-	}, nil
+	}
+
+	if config.StatsInterval > 0 {
+		stats := newRequestStats()
+		stats.startLogger(time.Duration(config.StatsInterval) * time.Second)
+		p.stats = stats
+	}
+
+	return p, nil
 }
 
 // ServeHTTP implements http.Handler.
 func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	ip := extractIP(map[string]string{
-		"X-Forwarded-For": req.Header.Get("X-Forwarded-For"),
-		"X-Real-Ip":       req.Header.Get("X-Real-Ip"),
-	}, req.RemoteAddr)
+	var start time.Time
+	if p.stats != nil {
+		start = time.Now()
+	}
 
-	if isAllowed(ip, p.allowList) {
-		p.next.ServeHTTP(rw, req)
+	// Allowlist bypass — earliest possible return, before any allocation.
+	if len(p.allowList) > 0 {
+		ip := extractIPFromRequest(req)
+		if isAllowed(ip, p.allowList) {
+			if p.stats != nil {
+				p.stats.record(time.Since(start))
+			}
+
+			p.next.ServeHTTP(rw, req)
+
+			return
+		}
+
+		p.serveJailed(rw, req, ip, start)
+
 		return
 	}
 
+	ip := extractIPFromRequest(req)
+	p.serveJailed(rw, req, ip, start)
+}
+
+func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip string, start time.Time) {
 	if p.jailer.IsJailed(ip, time.Now()) {
+		if p.stats != nil {
+			p.stats.record(time.Since(start))
+		}
+
 		rw.WriteHeader(http.StatusForbidden)
 		_, _ = rw.Write([]byte("403 Forbidden\n"))
 
@@ -77,6 +194,10 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if recorder.status >= 400 && recorder.status < 500 {
 		p.jailer.RecordError(ip, time.Now())
+	}
+
+	if p.stats != nil {
+		p.stats.record(time.Since(start))
 	}
 }
 
