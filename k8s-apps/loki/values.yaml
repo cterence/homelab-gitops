@@ -96,6 +96,8 @@ loki:
                     summary: "IP {{ "{{ $labels.ip }}" }} banned by traefik-jail (ban #{{ "{{ $labels.banCount }}" }}, {{ "{{ $labels.duration }}" }})"
                     description: "IP {{ "{{ $labels.ip }}" }} was banned after exceeding the 4xx error threshold. This is ban #{{ "{{ $labels.banCount }}" }} with duration {{ "{{ $labels.duration }}" }}."
 
+        velero.yaml: |
+          groups:
             - name: velero
               rules:
                 - alert: VeleroRepoMaintenanceFailed
@@ -107,7 +109,7 @@ loki:
                     context: velero
                   annotations:
                     summary: "Velero repo {{ "{{ $labels.repo }}" }} maintenance failed"
-                    description: "Velero backup repository {{ "{{ $labels.repo }}" }} failed pruning. Check for corrupted index blobs or storage connectivity issues."
+                    description: "Runbook (replace NS and BLOB): kubectl logs -n velero deploy/velero | grep 'error loading index blob' to find BLOB. aws s3 --endpoint-url https://s3.eu-central-003.backblazeb2.com rm s3://velero-backup-tch/v2/kopia/NS/BLOB (creds from: kubectl get secret -n velero backblaze-credentials -o jsonpath='{.data.config}' | base64 -d). kopia repo connect s3 --bucket=velero-backup-tch --prefix=v2/kopia/NS/ --endpoint=s3.eu-central-003.backblazeb2.com --password='$(kubectl get secret -n velero velero-repo-credentials -o jsonpath=\"{.data.repository-password}\" | base64 -d)'. kopia blob delete --dangerous-commands=enabled BLOB. kopia maintenance run --force. kopia repo disconnect. kubectl patch backuprepository -n velero REPO --type merge -p '{\"status\":{\"lastMaintenanceTime\":null}}'. Verify: kubectl get backuprepository -n velero REPO -o jsonpath='{.status.recentMaintenance}'."
 
   ingester:
     replicas: 0
