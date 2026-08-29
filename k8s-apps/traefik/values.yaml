@@ -407,6 +407,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/edit/" \
             "id:1000026,phase:1,pass,nolog,ctl:ruleRemoveById=932130,ctl:ruleRemoveById=932260,ctl:ruleRemoveById=942151"
+
+          SecRule REQUEST_URI "@rx ^/mcp" \
+            "id:1000027,phase:1,pass,nolog,ctl:ruleRemoveById=932235,ctl:ruleRemoveById=932260,ctl:ruleRemoveById=949110,ctl:ruleRemoveById=980170"
     ok-server-script:
       data:
         index.ts: |
