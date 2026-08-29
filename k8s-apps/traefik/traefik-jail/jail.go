@@ -3,6 +3,7 @@ package traefikjail
 import (
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -156,4 +157,36 @@ func extractIP(headers map[string]string, remoteAddr string) string {
 	}
 
 	return host
+}
+
+// isAllowed checks if an IP matches any CIDR or single IP in the allowList.
+func isAllowed(ipStr string, allowList []string) bool {
+	if len(allowList) == 0 {
+		return false
+	}
+
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+
+	for _, entry := range allowList {
+		if strings.Contains(entry, "/") {
+			_, cidr, err := net.ParseCIDR(entry)
+			if err != nil {
+				continue
+			}
+
+			if cidr.Contains(ip) {
+				return true
+			}
+		} else {
+			allowed := net.ParseIP(entry)
+			if allowed != nil && allowed.Equal(ip) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

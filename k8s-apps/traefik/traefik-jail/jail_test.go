@@ -207,3 +207,30 @@ func TestExtractIP(t *testing.T) {
 		})
 	}
 }
+
+func TestIsAllowed(t *testing.T) {
+	tests := []struct {
+		name      string
+		ip        string
+		allowList []string
+		want      bool
+	}{
+		{"empty list", "1.2.3.4", nil, false},
+		{"single IP match", "1.2.3.4", []string{"1.2.3.4"}, true},
+		{"single IP no match", "1.2.3.4", []string{"5.6.7.8"}, false},
+		{"CIDR match", "10.0.0.5", []string{"10.0.0.0/8"}, true},
+		{"CIDR no match", "11.0.0.5", []string{"10.0.0.0/8"}, false},
+		{"mixed list match CIDR", "192.168.1.50", []string{"10.0.0.0/8", "192.168.1.0/24"}, true},
+		{"mixed list match IP", "34.75.201.84", []string{"10.0.0.0/8", "34.75.201.84"}, true},
+		{"invalid IP", "not-an-ip", []string{"10.0.0.0/8"}, false},
+		{"invalid CIDR entry", "1.2.3.4", []string{"invalid"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isAllowed(tt.ip, tt.allowList); got != tt.want {
+				t.Errorf("isAllowed(%q, %v) = %v, want %v", tt.ip, tt.allowList, got, tt.want)
+			}
+		})
+	}
+}

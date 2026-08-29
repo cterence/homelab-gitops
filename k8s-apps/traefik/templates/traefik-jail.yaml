@@ -13,11 +13,13 @@ data:
     import: github.com/cterence/homelab-gitops/workbench/traefikjail
     summary: "Jails IPs that generate repeated 4xx errors with exponential backoff"
     testData:
-      threshold: 10
-      window: 60
+      threshold: 30
+      window: 120
       baseBan: 60
       maxBan: 3600
       resetAfter: 3600
+      allowList:
+        - 10.0.0.0/8
   go.mod: |
     {{- .Files.Get "traefik-jail/go.mod" | nindent 4 }}
   jail.go: |

@@ -10,11 +10,12 @@ import (
 // Duration fields are in seconds (int) because Yaegi's mapstructure decoder
 // cannot parse time.Duration strings like "1m" or "60s".
 type Config struct {
-	Threshold  int `json:"threshold,omitempty"`
-	Window     int `json:"window,omitempty"`     // seconds
-	BaseBan    int `json:"baseBan,omitempty"`     // seconds
-	MaxBan     int `json:"maxBan,omitempty"`     // seconds
-	ResetAfter int `json:"resetAfter,omitempty"` // seconds
+	Threshold  int      `json:"threshold,omitempty"`
+	Window     int      `json:"window,omitempty"`     // seconds
+	BaseBan    int      `json:"baseBan,omitempty"`     // seconds
+	MaxBan     int      `json:"maxBan,omitempty"`     // seconds
+	ResetAfter int      `json:"resetAfter,omitempty"` // seconds
+	AllowList  []string `json:"allowList,omitempty"`  // CIDRs or single IPs to skip
 }
 
 // CreateConfig creates the default plugin configuration.
@@ -30,9 +31,10 @@ func CreateConfig() *Config {
 
 // JailPlugin is the Traefik middleware plugin.
 type JailPlugin struct {
-	next   http.Handler
-	name   string
-	jailer *Jailer
+	next      http.Handler
+	name      string
+	jailer    *Jailer
+	allowList []string
 }
 
 // New creates a new plugin instance.
@@ -47,6 +49,7 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 			time.Duration(config.MaxBan)*time.Second,
 			time.Duration(config.ResetAfter)*time.Second,
 		),
+		allowList: config.AllowList,
 	}, nil
 }
 
@@ -56,6 +59,11 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		"X-Forwarded-For": req.Header.Get("X-Forwarded-For"),
 		"X-Real-Ip":       req.Header.Get("X-Real-Ip"),
 	}, req.RemoteAddr)
+
+	if isAllowed(ip, p.allowList) {
+		p.next.ServeHTTP(rw, req)
+		return
+	}
 
 	if p.jailer.IsJailed(ip, time.Now()) {
 		rw.WriteHeader(http.StatusForbidden)

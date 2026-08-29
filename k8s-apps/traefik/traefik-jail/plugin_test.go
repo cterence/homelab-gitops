@@ -125,6 +125,39 @@ func TestPlugin_2xxNotCounted(t *testing.T) {
 	}
 }
 
+func TestPlugin_AllowedIPSkipsJail(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:    NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		allowList: []string{"10.0.0.0/8"},
+	}
+
+	calls := 0
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	// Even with threshold=1 and 404 responses, allowed IP should never be jailed
+	for range 20 {
+		req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
+		req.Header.Set("X-Forwarded-For", "10.0.0.5")
+
+		rec := httptest.NewRecorder()
+		plugin.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("allowed IP should pass through, got %d", rec.Code)
+		}
+	}
+
+	if calls != 20 {
+		t.Fatalf("expected 20 passthroughs, got %d", calls)
+	}
+}
+
 func TestNew_ValidConfig(t *testing.T) {
 	cfg := &Config{
 		Threshold:  5,
