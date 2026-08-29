@@ -162,34 +162,30 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 
 // ServeHTTP implements http.Handler.
 func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	var start time.Time
-	if p.stats != nil {
-		start = time.Now()
-	}
-
 	// Allowlist bypass — earliest possible return, before any allocation.
 	if len(p.allowList) > 0 {
 		ip := extractIPFromRequest(req)
 		if isAllowed(ip, p.allowList) {
-			if p.stats != nil {
-				p.stats.record(time.Since(start))
-			}
-
-			p.next.ServeHTTP(rw, req)
+			p.serveJailed(rw, req, ip, true)
 
 			return
 		}
 
-		p.serveJailed(rw, req, ip, start)
+		p.serveJailed(rw, req, ip, false)
 
 		return
 	}
 
 	ip := extractIPFromRequest(req)
-	p.serveJailed(rw, req, ip, start)
+	p.serveJailed(rw, req, ip, false)
 }
 
-func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip string, start time.Time) {
+func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip string, allowed bool) {
+	var start time.Time
+	if p.stats != nil {
+		start = time.Now()
+	}
+
 	if p.jailer.IsJailed(ip, time.Now()) {
 		if p.stats != nil {
 			p.stats.record(time.Since(start))
@@ -201,15 +197,23 @@ func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip s
 		return
 	}
 
+	if allowed {
+		p.next.ServeHTTP(rw, req)
+
+		return
+	}
+
 	recorder := &statusRecorder{ResponseWriter: rw, status: http.StatusOK}
+
+	// Stop timing before the upstream call to measure only plugin overhead.
+	if p.stats != nil {
+		p.stats.record(time.Since(start))
+	}
+
 	p.next.ServeHTTP(recorder, req)
 
 	if recorder.status >= 400 && recorder.status < 500 {
 		p.jailer.RecordError(ip, time.Now())
-	}
-
-	if p.stats != nil {
-		p.stats.record(time.Since(start))
 	}
 }
 
