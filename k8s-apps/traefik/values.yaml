@@ -37,9 +37,9 @@ traefik:
         version: v1.10.1
     localPlugins:
       traefik-jail:
-        moduleName: github.com/cterence/homelab-gitops/workbench/traefik-jail
+        moduleName: github.com/cterence/homelab-gitops/workbench/traefikjail
         type: localPath
-        mountPath: /plugins-local/src/github.com/cterence/homelab-gitops/workbench/traefik-jail
+        mountPath: /plugins-local/src/github.com/cterence/homelab-gitops/workbench/traefikjail
         volumeName: traefik-jail-plugin
     otlpLogs: false
     knative: false

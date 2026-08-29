@@ -10,7 +10,7 @@ data:
   .traefik.yml: |
     displayName: Traefik Jail
     type: middleware
-    import: github.com/cterence/homelab-gitops/workbench/traefik-jail
+    import: github.com/cterence/homelab-gitops/workbench/traefikjail
     summary: "Jails IPs that generate repeated 4xx errors with exponential backoff"
     testData:
       threshold: 10
