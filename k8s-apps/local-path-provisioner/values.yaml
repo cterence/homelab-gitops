@@ -49,7 +49,11 @@ local-path-provisioner:
     volumeBindingMode: WaitForFirstConsumer
 
     ## allowedTopologies field controls on which nodes the volumes can be dynamically provisioned, an empty value means no topology constraints
-    allowedTopologies: []
+    allowedTopologies:
+      - matchLabelExpressions:
+          - key: storage-type
+            values:
+              - ssd
 
     ## annotations to add to the StorageClass
     annotations: {}
