@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-jail-plugin
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "traefik.labels" . | nindent 4 }}
+data:
+  .traefik.yml: |
+    displayName: Traefik Jail
+    type: middleware
+    import: github.com/cterence/homelab-gitops/workbench/traefik-jail
+    summary: "Jails IPs that generate repeated 4xx errors with exponential backoff"
+    testData:
+      threshold: 10
+      window: 60s
+      baseBan: 1m
+      maxBan: 1h
+      resetAfter: 1h
+  go.mod: |
+    {{- .Files.Get "traefik-jail/go.mod" | nindent 4 }}
+  jail.go: |
+    {{- .Files.Get "traefik-jail/jail.go" | nindent 4 }}
+  plugin.go: |
+    {{- .Files.Get "traefik-jail/plugin.go" | nindent 4 }}

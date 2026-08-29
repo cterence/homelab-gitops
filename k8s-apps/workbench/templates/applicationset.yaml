@@ -11,11 +11,11 @@ spec:
     - git:
         repoURL: git@github.com:cterence/homelab-gitops.git
         revision: HEAD
-        directories:
-          - path: workbench/*
+        files:
+          - path: workbench/*/build.yaml
   template:
     metadata:
-      name: "build-{{ `{{ .path.basename }}` }}"
+      name: "build-{{ `{{ .path.path | dir | base }}` }}"
     spec:
       project: default
       sources:
@@ -24,10 +24,10 @@ spec:
           path: k8s-apps/workbench
           helm:
             valueFiles:
-              - "$values/{{ `{{ .path.path }}` }}/build.yaml"
+              - "$values/{{ `{{ .path.path }}` }}"
             parameters:
               - name: subPath
-                value: "{{ `{{ .path.path }}` }}"
+                value: "{{ `{{ .path.path | dir }}` }}"
         - repoURL: git@github.com:cterence/homelab-gitops.git
           targetRevision: HEAD
           ref: values

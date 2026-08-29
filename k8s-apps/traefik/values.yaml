@@ -2,7 +2,10 @@ traefik:
   deployment:
     enabled: true
     replicas: 1
-    additionalVolumes: []
+    additionalVolumes:
+      - name: traefik-jail-plugin
+        configMap:
+          name: traefik-jail-plugin
     initContainers:
       - name: wait-for-modsecurity
         image: alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
@@ -32,7 +35,12 @@ traefik:
       sablier:
         moduleName: github.com/sablierapp/sablier
         version: v1.10.1
-    localPlugins: {}
+    localPlugins:
+      traefik-jail:
+        moduleName: github.com/cterence/homelab-gitops/workbench/traefik-jail
+        type: localPath
+        mountPath: /plugins-local/src/github.com/cterence/homelab-gitops/workbench/traefik-jail
+        volumeName: traefik-jail-plugin
     otlpLogs: false
     knative: false
 
@@ -99,6 +107,7 @@ traefik:
         middlewares:
           - traefik-geoblock@kubernetescrd
           - traefik-secure-headers@kubernetescrd
+          - traefik-jail@kubernetescrd
     metrics:
       port: 9100
       expose:
@@ -214,6 +223,19 @@ traefik:
             jailTimeDurationSecs: 600
             badRequestsThresholdCount: 5
             badRequestsThresholdPeriodSecs: 60
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: traefik-jail
+        namespace: traefik
+      spec:
+        plugin:
+          traefik-jail:
+            threshold: 10
+            window: 60s
+            baseBan: 1m
+            maxBan: 1h
+            resetAfter: 1h
 
   ingressClass:
     enabled: true
