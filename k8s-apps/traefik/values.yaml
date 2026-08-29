@@ -107,7 +107,6 @@ traefik:
         middlewares:
           - traefik-geoblock@kubernetescrd
           - traefik-secure-headers@kubernetescrd
-          - traefik-jail@kubernetescrd
     metrics:
       port: 9100
       expose:
