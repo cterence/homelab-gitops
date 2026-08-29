@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,6 +33,7 @@ type Config struct {
 	ResetAfter    int      `json:"resetAfter,omitempty"`    // seconds
 	AllowList     []string `json:"allowList,omitempty"`     // CIDRs or single IPs to skip
 	StatsInterval int      `json:"statsInterval,omitempty"` // seconds, 0 = disabled
+	ErrorCodes    string   `json:"errorCodes,omitempty"`    // comma-separated codes/ranges, e.g. "400-499" or "404,403"
 }
 
 // CreateConfig creates the default plugin configuration.
@@ -46,11 +49,12 @@ func CreateConfig() *Config {
 
 // JailPlugin is the Traefik middleware plugin.
 type JailPlugin struct {
-	next      http.Handler
-	name      string
-	jailer    *Jailer
-	allowList []string
-	stats     *requestStats
+	next       http.Handler
+	name       string
+	jailer     *Jailer
+	allowList  []string
+	stats      *requestStats
+	errorCodes codeMatcher
 }
 
 // requestStats tracks plugin processing time with atomic counters.
@@ -127,6 +131,58 @@ func (s *requestStats) startLogger(interval time.Duration) {
 	}()
 }
 
+// codeMatcher checks if an HTTP status code matches any of the configured codes or ranges.
+type codeMatcher struct {
+	codes  map[int]struct{}
+	ranges [][2]int
+}
+
+func parseErrorCodes(s string) codeMatcher {
+	m := codeMatcher{codes: make(map[int]struct{})}
+	if s == "" {
+		return m
+	}
+
+	for _, part := range strings.Split(s, ",") {
+		part = strings.TrimSpace(part)
+
+		if strings.Contains(part, "-") {
+			bounds := strings.SplitN(part, "-", 2)
+			lo, err1 := strconv.Atoi(strings.TrimSpace(bounds[0]))
+
+			hi, err2 := strconv.Atoi(strings.TrimSpace(bounds[1]))
+			if err1 != nil || err2 != nil {
+				continue
+			}
+
+			m.ranges = append(m.ranges, [2]int{lo, hi})
+		} else {
+			code, err := strconv.Atoi(part)
+			if err != nil {
+				continue
+			}
+
+			m.codes[code] = struct{}{}
+		}
+	}
+
+	return m
+}
+
+func (m codeMatcher) matches(status int) bool {
+	if _, ok := m.codes[status]; ok {
+		return true
+	}
+
+	for _, r := range m.ranges {
+		if status >= r[0] && status <= r[1] {
+			return true
+		}
+	}
+
+	return false
+}
+
 // New creates a new plugin instance.
 // The Jailer and stats collector are package-level singletons so all
 // instances share state — Traefik creates one instance per router.
@@ -142,10 +198,11 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 	})
 
 	p := &JailPlugin{
-		next:      next,
-		name:      name,
-		jailer:    singletonJailer,
-		allowList: config.AllowList,
+		next:       next,
+		name:       name,
+		jailer:     singletonJailer,
+		allowList:  config.AllowList,
+		errorCodes: parseErrorCodes(config.ErrorCodes),
 	}
 
 	if config.StatsInterval > 0 {
@@ -212,7 +269,7 @@ func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip s
 
 	p.next.ServeHTTP(recorder, req)
 
-	if recorder.status >= 400 && recorder.status < 500 {
+	if p.errorCodes.matches(recorder.status) {
 		p.jailer.RecordError(ip, time.Now())
 	}
 }

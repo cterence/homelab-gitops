@@ -9,8 +9,9 @@ import (
 
 func TestPlugin_BannedIPGets403(t *testing.T) {
 	plugin := &JailPlugin{
-		jailer: NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
-		stats:  newRequestStats(),
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
 	}
 
 	// First request with a 404 response — threshold is 1, so this triggers a ban
@@ -46,8 +47,9 @@ func TestPlugin_BannedIPGets403(t *testing.T) {
 
 func TestPlugin_NonBannedIPPassthrough(t *testing.T) {
 	plugin := &JailPlugin{
-		jailer: NewJailer(10, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
-		stats:  newRequestStats(),
+		jailer:     NewJailer(10, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
 	}
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -70,8 +72,9 @@ func TestPlugin_NonBannedIPPassthrough(t *testing.T) {
 
 func TestPlugin_5xxNotCounted(t *testing.T) {
 	plugin := &JailPlugin{
-		jailer: NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
-		stats:  newRequestStats(),
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
 	}
 
 	// 500 should not trigger a ban (only 4xx)
@@ -106,8 +109,9 @@ func TestPlugin_5xxNotCounted(t *testing.T) {
 
 func TestPlugin_2xxNotCounted(t *testing.T) {
 	plugin := &JailPlugin{
-		jailer: NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
-		stats:  newRequestStats(),
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
 	}
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -131,9 +135,10 @@ func TestPlugin_2xxNotCounted(t *testing.T) {
 
 func TestPlugin_AllowedIPSkipsJail(t *testing.T) {
 	plugin := &JailPlugin{
-		jailer:    NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
-		allowList: []string{"10.0.0.0/8"},
-		stats:     newRequestStats(),
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		allowList:  []string{"10.0.0.0/8"},
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
 	}
 
 	calls := 0
@@ -205,5 +210,96 @@ func TestCreateConfig_Defaults(t *testing.T) {
 
 	if cfg.ResetAfter != 3600 {
 		t.Errorf("ResetAfter = %d, want 3600", cfg.ResetAfter)
+	}
+}
+
+func TestCodeMatcher(t *testing.T) {
+	tests := []struct {
+		name   string
+		config string
+		status int
+		want   bool
+	}{
+		{"range match", "400-499", 404, true},
+		{"range no match", "400-499", 500, false},
+		{"single match", "404", 404, true},
+		{"single no match", "404", 403, false},
+		{"mixed range and single match range", "404,500-503", 502, true},
+		{"mixed range and single match single", "404,500-503", 404, true},
+		{"mixed no match", "404,500-503", 403, false},
+		{"empty config no match", "", 404, false},
+		{"invalid code ignored", "404,abc,500", 500, true},
+		{"whitespace trimmed", " 404 , 500-503 ", 404, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := parseErrorCodes(tt.config)
+			if m.matches(tt.status) != tt.want {
+				t.Errorf("parseErrorCodes(%q).matches(%d) = %v, want %v",
+					tt.config, tt.status, m.matches(tt.status), tt.want)
+			}
+		})
+	}
+}
+
+func TestPlugin_CustomErrorCodes_5xxCounted(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("500-503"),
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	plugin.next = next
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-Forwarded-For", "7.7.7.7")
+
+	rec := httptest.NewRecorder()
+	plugin.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500 passthrough, got %d", rec.Code)
+	}
+
+	// Should be banned now (500 matches custom config)
+	req2 := httptest.NewRequest(http.MethodGet, "/", nil)
+	req2.Header.Set("X-Forwarded-For", "7.7.7.7")
+
+	rec2 := httptest.NewRecorder()
+	plugin.ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 (banned), got %d", rec2.Code)
+	}
+}
+
+func TestPlugin_CustomErrorCodes_4xxNotCounted(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("500-503"),
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	for range 5 {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req.Header.Set("X-Forwarded-For", "6.6.6.6")
+
+		rec := httptest.NewRecorder()
+		plugin.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("expected 404 passthrough, got %d", rec.Code)
+		}
 	}
 }
