@@ -128,10 +128,10 @@ func TestPlugin_2xxNotCounted(t *testing.T) {
 func TestNew_ValidConfig(t *testing.T) {
 	cfg := &Config{
 		Threshold:  5,
-		Window:     30 * 1_000_000_000,
-		BaseBan:    2 * 60 * 1_000_000_000,
-		MaxBan:     2 * 3600 * 1_000_000_000,
-		ResetAfter: 30 * 60 * 1_000_000_000,
+		Window:     30,
+		BaseBan:    120,
+		MaxBan:     7200,
+		ResetAfter: 1800,
 	}
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {})
@@ -153,19 +153,19 @@ func TestCreateConfig_Defaults(t *testing.T) {
 		t.Errorf("Threshold = %d, want 10", cfg.Threshold)
 	}
 
-	if cfg.Window != 60*1_000_000_000 {
-		t.Errorf("Window = %d, want 60s", cfg.Window)
+	if cfg.Window != 60 {
+		t.Errorf("Window = %d, want 60", cfg.Window)
 	}
 
-	if cfg.BaseBan != 60*1_000_000_000 {
-		t.Errorf("BaseBan = %d, want 1m", cfg.BaseBan)
+	if cfg.BaseBan != 60 {
+		t.Errorf("BaseBan = %d, want 60", cfg.BaseBan)
 	}
 
-	if cfg.MaxBan != 3600*1_000_000_000 {
-		t.Errorf("MaxBan = %d, want 1h", cfg.MaxBan)
+	if cfg.MaxBan != 3600 {
+		t.Errorf("MaxBan = %d, want 3600", cfg.MaxBan)
 	}
 
-	if cfg.ResetAfter != 3600*1_000_000_000 {
-		t.Errorf("ResetAfter = %d, want 1h", cfg.ResetAfter)
+	if cfg.ResetAfter != 3600 {
+		t.Errorf("ResetAfter = %d, want 3600", cfg.ResetAfter)
 	}
 }

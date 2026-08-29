@@ -7,22 +7,24 @@ import (
 )
 
 // Config holds the plugin configuration passed by Traefik.
+// Duration fields are in seconds (int) because Yaegi's mapstructure decoder
+// cannot parse time.Duration strings like "1m" or "60s".
 type Config struct {
-	Threshold  int           `json:"threshold,omitempty"`
-	Window     time.Duration `json:"window,omitempty"`
-	BaseBan    time.Duration `json:"baseBan,omitempty"`
-	MaxBan     time.Duration `json:"maxBan,omitempty"`
-	ResetAfter time.Duration `json:"resetAfter,omitempty"`
+	Threshold  int `json:"threshold,omitempty"`
+	Window     int `json:"window,omitempty"`     // seconds
+	BaseBan    int `json:"baseBan,omitempty"`     // seconds
+	MaxBan     int `json:"maxBan,omitempty"`     // seconds
+	ResetAfter int `json:"resetAfter,omitempty"` // seconds
 }
 
 // CreateConfig creates the default plugin configuration.
 func CreateConfig() *Config {
 	return &Config{
 		Threshold:  10,
-		Window:     60 * time.Second,
-		BaseBan:    1 * time.Minute,
-		MaxBan:     1 * time.Hour,
-		ResetAfter: 1 * time.Hour,
+		Window:     60,
+		BaseBan:    60,
+		MaxBan:     3600,
+		ResetAfter: 3600,
 	}
 }
 
@@ -38,7 +40,13 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 	return &JailPlugin{
 		next:   next,
 		name:   name,
-		jailer: NewJailer(config.Threshold, config.Window, config.BaseBan, config.MaxBan, config.ResetAfter),
+		jailer: NewJailer(
+			config.Threshold,
+			time.Duration(config.Window)*time.Second,
+			time.Duration(config.BaseBan)*time.Second,
+			time.Duration(config.MaxBan)*time.Second,
+			time.Duration(config.ResetAfter)*time.Second,
+		),
 	}, nil
 }
 

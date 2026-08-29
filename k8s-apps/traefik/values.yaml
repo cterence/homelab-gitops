@@ -107,6 +107,7 @@ traefik:
         middlewares:
           - traefik-geoblock@kubernetescrd
           - traefik-secure-headers@kubernetescrd
+          - traefik-jail@kubernetescrd
     metrics:
       port: 9100
       expose:
@@ -225,16 +226,16 @@ traefik:
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
       metadata:
-        name: traefik-jail
+        name: jail
         namespace: traefik
       spec:
         plugin:
           traefik-jail:
             threshold: 10
-            window: 60s
-            baseBan: 1m
-            maxBan: 1h
-            resetAfter: 1h
+            window: 60
+            baseBan: 60
+            maxBan: 3600
+            resetAfter: 3600
 
   ingressClass:
     enabled: true

@@ -14,10 +14,10 @@ data:
     summary: "Jails IPs that generate repeated 4xx errors with exponential backoff"
     testData:
       threshold: 10
-      window: 60s
-      baseBan: 1m
-      maxBan: 1h
-      resetAfter: 1h
+      window: 60
+      baseBan: 60
+      maxBan: 3600
+      resetAfter: 3600
   go.mod: |
     {{- .Files.Get "traefik-jail/go.mod" | nindent 4 }}
   jail.go: |
