@@ -71,6 +71,11 @@ app-template:
         reclaimPolicy: Delete
         volumeBindingMode: WaitForFirstConsumer
         allowVolumeExpansion: true
+        allowedTopologies:
+          - matchLabelExpressions:
+              - key: storage-type
+                values:
+                  - ssd
     cluster-role:
       enabled: true
       forceRename: "{{ .Release.Name }}"
