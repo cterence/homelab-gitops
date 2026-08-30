@@ -320,6 +320,8 @@ app-template:
       annotations:
         helm.sh/resource-policy: keep
         argocd.argoproj.io/sync-options: Delete=false
+      labels:
+        velero.io/exclude-from-backup: "true"
       storageClass: local-path-storage-pool
       accessMode: ReadWriteOnce
       size: 1000Gi
