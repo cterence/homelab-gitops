@@ -180,6 +180,52 @@ app-template:
                   port: http
                   path: /health
 
+    storage-pool:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      labels:
+        velero.io/exclude-from-backup: "true"
+      pod:
+        labels:
+          velero.io/exclude-from-backup: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/versity/versitygw
+            tag: v1.7.0@sha256:c4cbd9d9cb8dedbb055ac788dbd02635651b9b1cebac95b095b3217231aa87ad
+          args:
+            - posix
+            - /buckets
+            - --chuid
+            - --chgid
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - configMapRef:
+                identifier: versity
+            - secretRef:
+                name: versity-gw-credentials
+          ports:
+            - name: http
+              containerPort: 7070
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
   service:
     main:
       controller: main
@@ -193,6 +239,15 @@ app-template:
       annotations:
         tailscale.com/expose: "true"
         tailscale.com/hostname: "versity-gw-nfs"
+      ports:
+        http:
+          port: 7070
+    storage-pool:
+      controller: storage-pool
+      type: ClusterIP
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: "versity-gw-storage-pool"
       ports:
         http:
           port: 7070
@@ -259,6 +314,19 @@ app-template:
           webdav:
             - path: /var/lib/dav/data
               subPath: obsidian/Kindle
+
+    storage-pool:
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      storageClass: local-path-storage-pool
+      accessMode: ReadWriteOnce
+      size: 1000Gi
+      advancedMounts:
+        storage-pool:
+          main:
+            - path: /buckets
 
     nfs:
       type: persistentVolumeClaim

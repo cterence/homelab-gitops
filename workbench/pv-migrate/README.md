@@ -51,28 +51,28 @@ go run . --source-pv pvc-abc123 --dest-pvc my-pvc --dest-namespace my-ns \
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
-| `--source-pv` | Name of the source PersistentVolume (required) |
-| `--dest-pvc` | Name of the destination PVC (required, must exist) |
-| `--dest-namespace` | Namespace of the destination PVC (required) |
-| `--temp-namespace` | Namespace for the temp PVC (default: source PV's old claimRef namespace) |
-| `--kubeconfig` | Path to kubeconfig (default: in-cluster or ~/.kube/config) |
-| `--source-node` | Pin the source-side pod (sshd) to this node via nodeSelector |
-| `--dest-node` | Pin the dest-side pod (rsync) to this node via nodeSelector |
-| `--strategies` | Comma-separated pv-migrate strategies (default: mount,clusterip,loadbalancer) |
-| `--allow-delete-reclaim` | Allow migrating from a PV with Delete reclaim policy |
-| `--allow-dest-mismatch` | Skip the check that dest PVC name matches source PV's previous consumer |
-| `--delete-extraneous-files` | Pass --dest-delete-extraneous-files to pv-migrate (rsync --delete) |
-| `--ignore-mounted` | Do not fail if the source or destination PVC is mounted |
-| `--non-root` | Run migration containers as non-root |
-| `--no-chown` | Omit chown during rsync |
-| `--source-mount-read-write` | Mount the source PVC read-write during migration |
-| `--no-compress` | Disable rsync compression |
-| `--helm-timeout` | Helm install/uninstall timeout (e.g. 2m) |
-| `--log-level` | pv-migrate log level: DEBUG, INFO, WARN, ERROR |
-| `--bind-timeout` | How long to wait for the temp PVC to bind (default 5m) |
-| `--dry-run` | Print the plan and exit without creating anything |
+| Flag                        | Description                                                                   |
+|-----------------------------|-------------------------------------------------------------------------------|
+| `--source-pv`               | Name of the source PersistentVolume (required)                                |
+| `--dest-pvc`                | Name of the destination PVC (required, must exist)                            |
+| `--dest-namespace`          | Namespace of the destination PVC (required)                                   |
+| `--temp-namespace`          | Namespace for the temp PVC (default: source PV's old claimRef namespace)      |
+| `--kubeconfig`              | Path to kubeconfig (default: in-cluster or ~/.kube/config)                    |
+| `--source-node`             | Pin the source-side pod (sshd) to this node via nodeSelector                  |
+| `--dest-node`               | Pin the dest-side pod (rsync) to this node via nodeSelector                   |
+| `--strategies`              | Comma-separated pv-migrate strategies (default: mount,clusterip,loadbalancer) |
+| `--allow-delete-reclaim`    | Allow migrating from a PV with Delete reclaim policy                          |
+| `--allow-dest-mismatch`     | Skip the check that dest PVC name matches source PV's previous consumer       |
+| `--delete-extraneous-files` | Pass --dest-delete-extraneous-files to pv-migrate (rsync --delete)            |
+| `--ignore-mounted`          | Do not fail if the source or destination PVC is mounted                       |
+| `--non-root`                | Run migration containers as non-root                                          |
+| `--no-chown`                | Omit chown during rsync                                                       |
+| `--source-mount-read-write` | Mount the source PVC read-write during migration                              |
+| `--no-compress`             | Disable rsync compression                                                     |
+| `--helm-timeout`            | Helm install/uninstall timeout (e.g. 2m)                                      |
+| `--log-level`               | pv-migrate log level: DEBUG, INFO, WARN, ERROR                                |
+| `--bind-timeout`            | How long to wait for the temp PVC to bind (default 5m)                        |
+| `--dry-run`                 | Print the plan and exit without creating anything                             |
 
 ### Node scheduling
 
@@ -181,15 +181,11 @@ kubectl cnpg hibernate off -n <ns> <cluster>
 kubectl get cluster -n <ns> <cluster>
 kubectl get pods -n <ns> -l cnpg.io/cluster=<cluster>
 
-# 8. Re-enable autosync on the ApplicationSet
-kubectl patch appset -n argocd applications --type=merge -p \
-  '{"spec":{"template":{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}}}'
-
-# 9. Re-enable autosync on the app-of-apps
+# 8. Re-enable autosync on the app-of-apps
 kubectl patch application -n argocd app-of-apps --type=merge -p \
   '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
 
-# 10. Verify, then delete the old PV
+# 9. Verify, then delete the old PV
 kubectl get pv <old-pv-name>  # should be Released
 kubectl delete pv <old-pv-name>
 ```
