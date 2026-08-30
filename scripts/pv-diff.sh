@@ -44,7 +44,7 @@ echo
 
 echo "=== [$HOST] Orphaned PVs (PV exists, directory missing) ==="
 if [ -n "$ORPHAN_PVS" ]; then
-    echo "$ORPHAN_PVS" | sed "s/^/  [$HOST] /"
+    echo "$ORPHAN_PVS" | sed "s/^/  /"
 else
     echo "  (none)"
 fi
@@ -52,7 +52,7 @@ echo
 
 echo "=== [$HOST] Orphaned directories (directory exists, no PV) ==="
 if [ -n "$ORPHAN_DIRS" ]; then
-    echo "$ORPHAN_DIRS" | sed "s|^|  [$HOST] $BASE_PATH/|"
+    echo "$ORPHAN_DIRS" | sed "s|^|  $BASE_PATH/|"
 else
     echo "  (none)"
 fi

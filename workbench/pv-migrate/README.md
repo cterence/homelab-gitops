@@ -120,6 +120,7 @@ kubectl scale sts -n <ns> <sts> --replicas=0
 kubectl cnpg hibernate on -n <ns> <cluster>
 
 # 4. For each PVC, note the name and PV name, then delete it
+#    (for STS with whenScaled:Delete, scaling down already deleted the PVC)
 kubectl get pvc -n <ns>
 kubectl delete pvc -n <ns> <pvc-name>
 
@@ -127,6 +128,9 @@ kubectl delete pvc -n <ns> <pvc-name>
 #    - Regular app: sync only that resource in ArgoCD
 #      (a full app sync would scale the workload back up)
 argocd app sync <app> --resource :PersistentVolumeClaim:<pvc-name>
+#    - StatefulSet with whenScaled:Delete: create manually with the STS
+#      naming convention (<volumeClaimTemplate>-<sts>-<ordinal>), e.g. storage-loki-0
+#      (see "StatefulSet PVC creation" below)
 #    - CNPG cluster: apply manually WITH owner reference and labels
 #      (see "CNPG PVC creation" below)
 CLUSTER_UID=$(kubectl get cluster -n <ns> <cluster> -o jsonpath='{.metadata.uid}')
@@ -170,6 +174,8 @@ go run . --source-pv <old-pv-name> --dest-pvc <pvc-name> --dest-namespace <ns> \
 # 7. Restart the workload:
 #    - Regular app: scale back up
 kubectl scale deploy -n <ns> <app> --replicas=1
+#    - StatefulSet: scale back up (STS finds the existing PVC and uses it)
+kubectl scale sts -n <ns> <sts> --replicas=1
 #    - CNPG cluster: bring back from hibernation, then verify
 kubectl cnpg hibernate off -n <ns> <cluster>
 kubectl get cluster -n <ns> <cluster>
@@ -187,6 +193,38 @@ kubectl patch application -n argocd app-of-apps --type=merge -p \
 kubectl get pv <old-pv-name>  # should be Released
 kubectl delete pv <old-pv-name>
 ```
+
+### StatefulSet PVC creation
+
+StatefulSets with `whenScaled: Delete` destroy PVCs on scale-down, so you
+can't scale up to recreate the PVC (the pod would start on an empty volume
+before the migration runs). Instead, create the PVC manually with the STS
+naming convention: `<volumeClaimTemplate.name>-<sts.name>-<ordinal>`.
+
+```bash
+# Find the PVC template name and size
+kubectl get sts -n <ns> <sts> -o jsonpath='{.spec.volumeClaimTemplates[0].metadata.name}{"\n"}'
+kubectl get sts -n <ns> <sts> -o jsonpath='{.spec.volumeClaimTemplates[0].spec.resources.requests.storage}{"\n"}'
+
+# Create the PVC with the STS naming convention
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: <template-name>-<sts>-<ordinal>  # e.g. storage-loki-0
+  namespace: <ns>
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: <size>  # match the template
+  storageClassName: local-path
+EOF
+```
+
+When you scale the STS back up (step 7), the STS controller finds the PVC
+already exists and uses it instead of creating a new one. No owner
+references needed — the STS controller checks by name only.
 
 ### Why CNPG needs the owner reference
 
