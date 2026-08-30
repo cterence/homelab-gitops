@@ -1496,6 +1496,7 @@ app-template:
             database: "/home/filebrowser/data/database/database.db"
             sources:
               - path: /data
+              - path: /data-pool
               - path: /music
           auth:
             methods:
