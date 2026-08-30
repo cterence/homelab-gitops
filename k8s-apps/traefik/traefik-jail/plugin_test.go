@@ -303,3 +303,116 @@ func TestPlugin_CustomErrorCodes_4xxNotCounted(t *testing.T) {
 		}
 	}
 }
+
+func TestPlugin_ExcludeURLs_SkipsJail(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:      NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes:  parseErrorCodes("400-499"),
+		excludeURLs: []string{"niks3.terence.cloud/*.narinfo", "niks3.terence.cloud/api/*"},
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	// Threshold is 1 — any 404 should ban. But excluded URLs bypass the jail entirely.
+	excludedPaths := []string{
+		"/abc123.narinfo",
+		"/api/cache-config",
+		"/api/pending_closures",
+	}
+
+	for _, p := range excludedPaths {
+		req := httptest.NewRequest(http.MethodGet, p, nil)
+		req.Host = "niks3.terence.cloud"
+		req.Header.Set("X-Forwarded-For", "1.2.3.4")
+
+		rec := httptest.NewRecorder()
+		plugin.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("excluded URL %s: expected 404 passthrough, got %d", p, rec.Code)
+		}
+	}
+
+	// Verify the IP was never banned: a non-excluded request should still pass.
+	req := httptest.NewRequest(http.MethodGet, "/other", nil)
+	req.Host = "niks3.terence.cloud"
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+
+	rec := httptest.NewRecorder()
+	plugin.ServeHTTP(rec, req)
+
+	if rec.Code == http.StatusForbidden {
+		t.Fatal("IP should not be banned — excluded URLs must not count toward threshold")
+	}
+}
+
+func TestPlugin_ExcludeURLs_PathOnly(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:      NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes:  parseErrorCodes("400-499"),
+		excludeURLs: []string{"/*.narinfo"},
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	// Path-only pattern matches regardless of host.
+	req := httptest.NewRequest(http.MethodGet, "/abc.narinfo", nil)
+	req.Host = "anything.terence.cloud"
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+
+	rec := httptest.NewRecorder()
+	plugin.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("path-only exclude: expected 404 passthrough, got %d", rec.Code)
+	}
+}
+
+func TestPlugin_ExcludeURLs_NonExcludedStillJailed(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:      NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes:  parseErrorCodes("400-499"),
+		excludeURLs: []string{"niks3.terence.cloud/*.narinfo"},
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	// Non-excluded path on the same host triggers a ban.
+	req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
+	req.Host = "niks3.terence.cloud"
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+
+	rec := httptest.NewRecorder()
+	plugin.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("first request: expected 404, got %d", rec.Code)
+	}
+
+	// Second request — banned now.
+	req2 := httptest.NewRequest(http.MethodGet, "/other", nil)
+	req2.Host = "niks3.terence.cloud"
+	req2.Header.Set("X-Forwarded-For", "1.2.3.4")
+
+	rec2 := httptest.NewRecorder()
+	plugin.ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 (banned from non-excluded path), got %d", rec2.Code)
+	}
+}

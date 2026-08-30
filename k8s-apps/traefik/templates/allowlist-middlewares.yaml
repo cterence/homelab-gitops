@@ -26,6 +26,9 @@ spec:
       resetAfter: 3600
       statsInterval: 300
       errorCodes: "400-499"
+      excludeURLs:
+        - niks3.terence.cloud/*.narinfo
+        - niks3.terence.cloud/api/*
       allowList:
         {{- range .Values.allowListIPs }}
         - {{ . }}

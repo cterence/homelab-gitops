@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,6 +35,7 @@ type Config struct {
 	AllowList     []string `json:"allowList,omitempty"`     // CIDRs or single IPs to skip
 	StatsInterval int      `json:"statsInterval,omitempty"` // seconds, 0 = disabled
 	ErrorCodes    string   `json:"errorCodes,omitempty"`    // comma-separated codes/ranges, e.g. "400-499" or "404,403"
+	ExcludeURLs   []string `json:"excludeURLs,omitempty"`   // glob patterns skipping jail entirely; path-only if starting with /, else host+path
 }
 
 // CreateConfig creates the default plugin configuration.
@@ -55,6 +57,7 @@ type JailPlugin struct {
 	allowList  []string
 	stats      *requestStats
 	errorCodes codeMatcher
+	excludeURLs []string
 }
 
 // requestStats tracks plugin processing time with atomic counters.
@@ -198,11 +201,12 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 	})
 
 	p := &JailPlugin{
-		next:       next,
-		name:       name,
-		jailer:     singletonJailer,
-		allowList:  config.AllowList,
-		errorCodes: parseErrorCodes(config.ErrorCodes),
+		next:        next,
+		name:        name,
+		jailer:      singletonJailer,
+		allowList:   config.AllowList,
+		errorCodes:  parseErrorCodes(config.ErrorCodes),
+		excludeURLs: config.ExcludeURLs,
 	}
 
 	if config.StatsInterval > 0 {
@@ -219,6 +223,15 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 
 // ServeHTTP implements http.Handler.
 func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// URL exclusion bypass — earliest possible return, before any allocation.
+	// Patterns starting with / match against the path only; all others match
+	// against the full host+path so exclusions can be scoped to a specific vhost.
+	if len(p.excludeURLs) > 0 && p.isExcluded(req) {
+		p.next.ServeHTTP(rw, req)
+
+		return
+	}
+
 	// Allowlist bypass — earliest possible return, before any allocation.
 	if len(p.allowList) > 0 {
 		ip := extractIPFromRequest(req)
@@ -235,6 +248,25 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	ip := extractIPFromRequest(req)
 	p.serveJailed(rw, req, ip, false)
+}
+
+// isExcluded reports whether the request URL matches any excludeURLs glob pattern.
+func (p *JailPlugin) isExcluded(req *http.Request) bool {
+	for _, pattern := range p.excludeURLs {
+		var target string
+		if strings.HasPrefix(pattern, "/") {
+			target = req.URL.Path
+		} else {
+			target = req.Host + req.URL.Path
+		}
+
+		matched, err := path.Match(pattern, target)
+		if err == nil && matched {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip string, allowed bool) {
