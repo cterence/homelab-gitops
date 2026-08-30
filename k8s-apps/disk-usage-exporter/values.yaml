@@ -64,10 +64,11 @@ app-template:
       enabled: true
       data:
         config.yaml: |
-          # Scan the local-path-provisioner root; dir-level 1 exposes one
+          # Scan both local-path-provisioner roots; dir-level 1 exposes one
           # metric per PVC directory (pvc-<uuid>).
-          analyzed-path: /data
-          dir-level: 1
+          multi-paths:
+            /data: 1
+            /storage-pool: 1
           mode: http
           bind-address: 0.0.0.0:9995
           ignore-dirs:
@@ -91,6 +92,15 @@ app-template:
       hostPathType: Directory
       globalMounts:
         - path: /data
+          readOnly: true
+    # Read-only view of the storage-pool (mergerfs) local-path volume directories.
+    storage-pool:
+      enabled: true
+      type: hostPath
+      hostPath: /mnt/storage-pool/local-path-provisioner
+      hostPathType: DirectoryOrCreate
+      globalMounts:
+        - path: /storage-pool
           readOnly: true
 
   rawResources:
