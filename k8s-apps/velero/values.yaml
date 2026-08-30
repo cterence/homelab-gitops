@@ -131,7 +131,7 @@ velero:
         config:
           region: us-east-1
           s3ForcePathStyle: true
-          s3Url: http://versity-gw-nfs.versity-gw:7070
+          s3Url: http://versity-gw-storage-pool.versity-gw:7070
           checksumAlgorithm: ""
     volumeSnapshotLocation:
       # name is the name of the volume snapshot location where snapshots are being taken. Required.

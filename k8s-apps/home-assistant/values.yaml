@@ -244,7 +244,7 @@ cnpg-cluster:
     method: plugin
     pluginConfiguration:
       name: barman-cloud.cloudnative-pg.io
-    endpointURL: http://versity-gw-nfs.versity-gw:7070
+    endpointURL: http://versity-gw-storage-pool.versity-gw:7070
     destinationPath: s3://cnpg-backups/home-assistant
     provider: s3
     s3:
