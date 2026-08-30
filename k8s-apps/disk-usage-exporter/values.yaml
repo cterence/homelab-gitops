@@ -69,6 +69,7 @@ app-template:
           multi-paths:
             /data: 1
             /storage-pool: 1
+            /arr-stack: 2
           mode: http
           bind-address: 0.0.0.0:9995
           ignore-dirs:
@@ -94,13 +95,21 @@ app-template:
         - path: /data
           readOnly: true
     # Read-only view of the storage-pool (mergerfs) local-path volume directories.
-    storage-pool:
+    storage-pool-local-path:
       enabled: true
       type: hostPath
       hostPath: /mnt/storage-pool/local-path-provisioner
       hostPathType: DirectoryOrCreate
       globalMounts:
         - path: /storage-pool
+          readOnly: true
+    storage-pool-arr-stack:
+      enabled: true
+      type: hostPath
+      hostPath: /mnt/storage-pool/arr-stack
+      hostPathType: DirectoryOrCreate
+      globalMounts:
+        - path: /arr-stack
           readOnly: true
 
   rawResources:
