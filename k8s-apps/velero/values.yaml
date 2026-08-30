@@ -106,7 +106,7 @@ velero:
         bucket: velero-backup-tch
         caCert:
         prefix: v2
-        default: true
+        default: false
         validationFrequency: 24h
         accessMode: ReadWrite
         credential:
@@ -123,6 +123,22 @@ velero:
         caCert:
         prefix: v2
         default: false
+        validationFrequency: 24h
+        accessMode: ReadWrite
+        credential:
+          name: versity-gw-credentials
+          key: config
+        config:
+          region: us-east-1
+          s3ForcePathStyle: true
+          s3Url: http://versity-gw-nfs.versity-gw:7070
+          checksumAlgorithm: ""
+      - name: versity-gw-storage-pool
+        provider: aws
+        bucket: velero
+        caCert:
+        prefix: v1
+        default: true
         validationFrequency: 24h
         accessMode: ReadWrite
         credential:
