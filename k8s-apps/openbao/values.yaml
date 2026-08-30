@@ -1504,6 +1504,8 @@ openbao:
           spec:
             template:
               spec:
+                nodeSelector:
+                  kubernetes.io/hostname: homelab2
                 restartPolicy: OnFailure
                 volumes:
                   - name: local-node-keys
