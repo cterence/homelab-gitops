@@ -90,17 +90,37 @@ local-path-provisioner:
   # Each storage class must have a unique name, and contains the same fields as shown above for
   # a single storage class setup, EXCEPT for the provisionerName, which is the same for all
   # storage classes, and name, which is the key of the map.
-  # storageClassConfigs: {}
-  #   my-storage-class:
-  #     storageClass:
-  #       create: true
-  #       defaultClass: false
-  #       defaultVolumeType: hostPath
-  #       reclaimPolicy: Delete
-  #     sharedFileSystemPath: ""
-  #     ## OR
-  #     # See above
-  #     nodePathMap: []
+  storageClassConfigs:
+    local-path:
+      storageClass:
+        create: true
+        defaultClass: true
+        defaultVolumeType: local
+        reclaimPolicy: Retain
+        volumeBindingMode: WaitForFirstConsumer
+        allowedTopologies:
+          - matchLabelExpressions:
+              - key: storage-type
+                values: [ssd]
+      nodePathMap:
+        - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+          paths: [/opt/local-path-provisioner]
+    local-path-storage-pool:
+      storageClass:
+        create: true
+        defaultClass: false
+        defaultVolumeType: local
+        reclaimPolicy: Retain
+        volumeBindingMode: WaitForFirstConsumer
+        allowedTopologies:
+          - matchLabelExpressions:
+              - key: kubernetes.io/hostname
+                values: [homelab3]
+      nodePathMap:
+        - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+          paths: []
+        - node: homelab3
+          paths: [/mnt/storage-pool/local-path-provisioner]
 
   podAnnotations: {}
 
