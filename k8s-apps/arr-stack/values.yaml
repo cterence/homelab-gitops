@@ -1127,22 +1127,27 @@ app-template:
         jellyfin:
           jellyfin:
             - path: /data-pool/media
-              subPath: media
+              subPath: arr-stack/media
         sonarr:
           sonarr:
             - path: /data-pool
+              subPath: arr-stack
         radarr:
           radarr:
             - path: /data-pool
+              subPath: arr-stack
         lidarr:
           lidarr:
             - path: /data-pool
+              subPath: arr-stack
         bazarr:
           bazarr:
             - path: /data-pool
+              subPath: arr-stack
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /data-pool
+              subPath: arr-stack
 
     music:
       enabled: true
