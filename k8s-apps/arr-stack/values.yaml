@@ -16,7 +16,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -164,7 +164,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -210,7 +210,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -256,7 +256,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -338,7 +338,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -602,7 +602,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -647,7 +647,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -715,7 +715,7 @@ app-template:
       type: cronjob
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
       cronjob:
         schedule: "*/5 * * * *"
         successfulJobsHistory: 1
@@ -1119,6 +1119,31 @@ app-template:
             - path: /in
               subPath: download/slskd/complete
 
+    data-storage-pool:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: storage-pool
+      advancedMounts:
+        jellyfin:
+          jellyfin:
+            - path: /data-pool/media
+              subPath: media
+        sonarr:
+          sonarr:
+            - path: /data-pool
+        radarr:
+          radarr:
+            - path: /data-pool
+        lidarr:
+          lidarr:
+            - path: /data-pool
+        bazarr:
+          bazarr:
+            - path: /data-pool
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /data-pool
+
     music:
       enabled: true
       type: persistentVolumeClaim
@@ -1509,6 +1534,54 @@ app-template:
           fi
 
   rawResources:
+    storage-pool-pv:
+      enabled: true
+      forceRename: storage-pool
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 8Ti
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: nfs
+          mountOptions:
+            - hard
+            - nfsvers=4.1
+            - nosuid
+            - noexec
+            - timeo=600
+            - retrans=2
+          nfs:
+            path: /storage-pool
+            server: 192.168.1.141
+    storage-pool-pvc:
+      enabled: true
+      forceRename: storage-pool
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 8Ti
+          storageClassName: nfs
+          volumeName: storage-pool
     cnpg-backup-s3-creds:
       enabled: true
       forceRename: cnpg-backup-s3-creds
