@@ -23,6 +23,14 @@ argo-cd:
             annotations:
               summary: ArgoCD application unhealthy (instance {{ $labels.instance }})
               description: "Application {{ $labels.name }} run by argo is currently not healthy - Value = {{ $value }}"
+          - alert: ArgoCDAppOfAppsAutosyncDisabled
+            expr: argocd_app_info{name="app-of-apps",namespace="argocd",autosync_enabled="false"} != 0
+            for: 8h
+            labels:
+              severity: warning
+            annotations:
+              summary: ArgoCD app-of-apps autosync disabled for too long
+              description: "The root app-of-apps has had autosync disabled for over 8 hours. Reenable it if it's unexpected."
 
   dex:
     metrics:
