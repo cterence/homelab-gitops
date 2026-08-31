@@ -7,6 +7,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -186,7 +187,29 @@ func (c *Client) createRestoreCluster(ctx context.Context, targetNS string, ci C
 
 	_, err := c.dynamic.Resource(clusterGVR).Namespace(targetNS).Create(ctx, obj, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("creating Cluster %s: %w", restoreName, err)
+		if !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("creating Cluster %s: %w", restoreName, err)
+		}
+
+		// If it already exists from a previous run, delete and recreate
+		slog.Info("Cluster already exists, replacing", "namespace", targetNS, "name", restoreName)
+
+		if delErr := c.dynamic.Resource(clusterGVR).Namespace(targetNS).Delete(ctx, restoreName, metav1.DeleteOptions{}); delErr != nil {
+			return fmt.Errorf("deleting existing Cluster %s: %w", restoreName, delErr)
+		}
+
+		// Wait for deletion
+		_ = wait.PollUntilContextTimeout(ctx, 2*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+			_, err := c.dynamic.Resource(clusterGVR).Namespace(targetNS).Get(ctx, restoreName, metav1.GetOptions{})
+			return err != nil, nil
+		})
+
+		obj.SetResourceVersion("")
+
+		_, err = c.dynamic.Resource(clusterGVR).Namespace(targetNS).Create(ctx, obj, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("creating Cluster %s: %w", restoreName, err)
+		}
 	}
 
 	slog.Info("created Cluster", "namespace", targetNS, "name", restoreName)

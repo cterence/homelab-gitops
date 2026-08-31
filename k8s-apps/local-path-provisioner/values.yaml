@@ -121,6 +121,15 @@ local-path-provisioner:
           paths: []
         - node: homelab3
           paths: [/mnt/storage-pool/local-path-provisioner]
+    # cnpg-restore-test StorageClass is created by the cnpg-restore-test chart
+    # (reclaimPolicy: Delete, allowedTopologies: storage-type=ssd).
+    # Only the nodePathMap is needed here so the provisioner accepts the class.
+    cnpg-restore-test:
+      storageClass:
+        create: false
+      nodePathMap:
+        - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+          paths: [/opt/local-path-provisioner]
 
   podAnnotations: {}
 
