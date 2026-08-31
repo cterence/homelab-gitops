@@ -14,7 +14,8 @@ type promResponse struct {
 	Status string `json:"status"`
 	Data   struct {
 		Result []struct {
-			Value [2]any `json:"value"`
+			Metric map[string]string `json:"metric"`
+			Value  [2]any             `json:"value"`
 		} `json:"result"`
 	} `json:"data"`
 }
@@ -24,7 +25,7 @@ type promResponse struct {
 // If fixed concurrency is set (cfg.Concurrency > 0), returns that value
 // or 0 if it doesn't fit.
 func computeMaxConcurrency(cfg Config, clusters []ClusterInfo) (int, error) {
-	avail, err := queryPrometheus(cfg.PrometheusURL, `node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"}`)
+	avail, err := queryPrometheusMin(cfg.PrometheusURL, cfg.CapacityMountpointRegex)
 	if err != nil {
 		return 0, fmt.Errorf("querying prometheus for disk space: %w", err)
 	}
@@ -126,8 +127,16 @@ func humanBytes(b int64) string {
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-// queryPrometheus runs an instant query and returns the first scalar value.
-func queryPrometheus(promURL, query string) (int64, error) {
+// queryPrometheusMin queries Prometheus for available disk space across all
+// nodes matching the mountpoint regex and returns the minimum. This ensures
+// the capacity check passes only if all concurrent restores could fit on a
+// single node, accounting for worst-case scheduling.
+func queryPrometheusMin(promURL, mountpointRegex string) (int64, error) {
+	query := fmt.Sprintf(
+		`node_filesystem_avail_bytes{mountpoint=~%q,fstype!~"tmpfs|overlay"}`,
+		mountpointRegex,
+	)
+
 	u, err := url.Parse(promURL)
 	if err != nil {
 		return 0, err
@@ -157,15 +166,33 @@ func queryPrometheus(promURL, query string) (int64, error) {
 		return 0, fmt.Errorf("prometheus query unsuccessful or empty: %s", pr.Status)
 	}
 
-	valStr, ok := pr.Data.Result[0].Value[1].(string)
-	if !ok {
-		return 0, fmt.Errorf("unexpected prometheus value type: %T", pr.Data.Result[0].Value[1])
+	var min int64
+
+	for i, r := range pr.Data.Result {
+		valStr, ok := r.Value[1].(string)
+		if !ok {
+			return 0, fmt.Errorf("unexpected prometheus value type: %T", r.Value[1])
+		}
+
+		var val int64
+		if _, err := fmt.Sscanf(valStr, "%d", &val); err != nil {
+			return 0, fmt.Errorf("parsing prometheus value %q: %w", valStr, err)
+		}
+
+		node := r.Metric["instance"]
+		mount := r.Metric["mountpoint"]
+		slog.Info("node capacity", "node", node, "mountpoint", mount, "available_bytes", val, "available_human_readable", humanBytes(val))
+
+		if i == 0 || val < min {
+			min = val
+		}
 	}
 
-	var val int64
-	if _, err := fmt.Sscanf(valStr, "%d", &val); err != nil {
-		return 0, fmt.Errorf("parsing prometheus value %q: %w", valStr, err)
-	}
+	slog.Info("capacity check using min across nodes",
+		"min_available_bytes", min,
+		"min_available_human_readable", humanBytes(min),
+		"nodes_matched", len(pr.Data.Result),
+	)
 
-	return val, nil
+	return min, nil
 }

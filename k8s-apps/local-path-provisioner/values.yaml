@@ -124,12 +124,17 @@ local-path-provisioner:
     # cnpg-restore-test StorageClass is created by the cnpg-restore-test chart
     # (reclaimPolicy: Delete, allowedTopologies: storage-type=ssd).
     # Only the nodePathMap is needed here so the provisioner accepts the class.
+    # Use explicit per-node paths to the 2TB MX500 SSDs (not the /opt symlink).
     cnpg-restore-test:
       storageClass:
         create: false
       nodePathMap:
         - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
-          paths: [/opt/local-path-provisioner]
+          paths: []
+        - node: homelab2
+          paths: [/mnt/mx500-01/local-path-provisioner]
+        - node: homelab3
+          paths: [/mnt/mx500-02/local-path-provisioner]
 
   podAnnotations: {}
 

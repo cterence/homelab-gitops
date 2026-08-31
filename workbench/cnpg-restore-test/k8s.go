@@ -21,14 +21,15 @@ import (
 
 // Config holds all CLI configuration.
 type Config struct {
-	DryRun         bool
-	Namespace      string
-	Concurrency    int
-	CapacityMargin float64
-	PrometheusURL  string
-	OTeleEndpoint  string
-	KubeconfigPath string
-	ClusterFilter  string
+	DryRun                bool
+	Namespace             string
+	Concurrency           int
+	CapacityMargin        float64
+	CapacityMountpointRegex string
+	PrometheusURL         string
+	OTeleEndpoint         string
+	KubeconfigPath        string
+	ClusterFilter         string
 }
 
 // Client wraps the Kubernetes dynamic client, corev1 clientset, and rest

@@ -28,11 +28,12 @@ func main() {
 
 func run() error {
 	cfg := Config{
-		Namespace:      "cnpg-restore-test",
-		Concurrency:    0, // 0 = auto-detect
-		CapacityMargin: 1.5,
-		PrometheusURL:  "http://prometheus:9090",
-		OTeleEndpoint:  "opentelemetry-collector:4317",
+		Namespace:               "cnpg-restore-test",
+		Concurrency:             0, // 0 = auto-detect
+		CapacityMargin:          1.5,
+		CapacityMountpointRegex: "/mnt/mx500-0.",
+		PrometheusURL:           "http://prometheus:9090",
+		OTeleEndpoint:           "opentelemetry-collector:4317",
 	}
 
 	var concurrencyStr string
@@ -41,6 +42,7 @@ func run() error {
 	flag.StringVar(&cfg.Namespace, "namespace", cfg.Namespace, "target namespace for restore clusters")
 	flag.StringVar(&concurrencyStr, "concurrency", "auto", "max concurrent cluster restores (\"auto\" to auto-detect from capacity)")
 	flag.Float64Var(&cfg.CapacityMargin, "capacity-margin", cfg.CapacityMargin, "safety multiplier for disk capacity check")
+	flag.StringVar(&cfg.CapacityMountpointRegex, "capacity-mountpoint-regex", cfg.CapacityMountpointRegex, "Prometheus mountpoint regex for capacity check (min across matching nodes)")
 	flag.StringVar(&cfg.PrometheusURL, "prometheus-endpoint", cfg.PrometheusURL, "Prometheus API URL for capacity queries")
 	flag.StringVar(&cfg.OTeleEndpoint, "otel-endpoint", cfg.OTeleEndpoint, "OTLP gRPC endpoint for pushing metrics")
 	flag.StringVar(&cfg.KubeconfigPath, "kubeconfig", "", "path to kubeconfig (defaults to ~/.kube/config or in-cluster)")
