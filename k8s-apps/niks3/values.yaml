@@ -35,7 +35,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/mic92/niks3
-            tag: v1.9.0@sha256:f216edf9b47c4906fe29bbc36a95a289ce2db7c63c851ff4d5ebe70a13368b05
+            tag: v1.10.1@sha256:fb6b4f89ce79089965ab4104ddeb925848f23504fc00feeeb5e5987cfd958a55
           envFrom:
             - secretRef:
                 name: versity-credentials
@@ -92,7 +92,7 @@ app-template:
             ]
           image:
             repository: ghcr.io/mic92/niks3
-            tag: v1.9.0@sha256:f216edf9b47c4906fe29bbc36a95a289ce2db7c63c851ff4d5ebe70a13368b05
+            tag: v1.10.1@sha256:fb6b4f89ce79089965ab4104ddeb925848f23504fc00feeeb5e5987cfd958a55
           envFrom:
             - secretRef:
                 name: versity-credentials
