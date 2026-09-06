@@ -348,7 +348,7 @@ velero:
           name: volume-policy
     versity-gw-storage-pool:
       disabled: false
-      schedule: "0 */4 * * *"
+      schedule: "0 */8 * * *"
       useOwnerReferencesInBackup: false
       paused: false
       template:
