@@ -2,6 +2,8 @@ package traefikjail
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -165,6 +167,79 @@ func TestPlugin_AllowedIPSkipsJail(t *testing.T) {
 
 	if calls != 20 {
 		t.Fatalf("expected 20 passthroughs, got %d", calls)
+	}
+}
+
+func TestPlugin_VerifiedClientCertSkipsJail(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
+	}
+
+	calls := 0
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	// A verified client certificate (mTLS) bypasses the jail entirely —
+	// even with threshold=1 and 404 responses.
+	for range 20 {
+		req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
+		req.Header.Set("X-Forwarded-For", "92.92.127.221")
+		req.TLS = &tls.ConnectionState{VerifiedChains: [][]*x509.Certificate{{}}}
+
+		rec := httptest.NewRecorder()
+		plugin.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("verified client: expected 404 passthrough, got %d", rec.Code)
+		}
+	}
+
+	if calls != 20 {
+		t.Fatalf("expected 20 passthroughs, got %d", calls)
+	}
+}
+
+func TestPlugin_UnverifiedClientCertStillJailed(t *testing.T) {
+	plugin := &JailPlugin{
+		jailer:     NewJailer(1, 60*1000_000_000, 60*1000_000_000, 3600*1000_000_000, 3600*1000_000_000),
+		stats:      newRequestStats(),
+		errorCodes: parseErrorCodes("400-499"),
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	plugin.next = next
+
+	// A presented-but-unverified certificate must NOT bypass the jail.
+	req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
+	req.Header.Set("X-Forwarded-For", "92.92.127.221")
+	req.TLS = &tls.ConnectionState{PeerCertificates: []*x509.Certificate{{}}}
+
+	rec := httptest.NewRecorder()
+	plugin.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("first request: expected 404, got %d", rec.Code)
+	}
+
+	req2 := httptest.NewRequest(http.MethodGet, "/anything", nil)
+	req2.Header.Set("X-Forwarded-For", "92.92.127.221")
+	req2.TLS = &tls.ConnectionState{PeerCertificates: []*x509.Certificate{{}}}
+
+	rec2 := httptest.NewRecorder()
+	plugin.ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusForbidden {
+		t.Fatalf("unverified cert: expected 403 (banned), got %d", rec2.Code)
 	}
 }
 

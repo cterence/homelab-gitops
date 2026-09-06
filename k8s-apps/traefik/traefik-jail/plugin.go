@@ -232,6 +232,16 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// mTLS bypass — a client whose certificate chain was verified against the
+	// router's CA (RequireAndVerifyClientCert) is already authenticated. The
+	// TLS handshake runs before any middleware, so non-empty VerifiedChains
+	// proves the client passed mTLS on this connection.
+	if req.TLS != nil && len(req.TLS.VerifiedChains) > 0 {
+		p.next.ServeHTTP(rw, req)
+
+		return
+	}
+
 	// Allowlist bypass — earliest possible return, before any allocation.
 	if len(p.allowList) > 0 {
 		ip := extractIPFromRequest(req)

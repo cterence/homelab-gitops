@@ -25,7 +25,7 @@ spec:
       maxBan: 3600
       resetAfter: 3600
       statsInterval: 300
-      errorCodes: "400-499"
+      errorCodes: "400-498"
       excludeURLs:
         - niks3.terence.cloud/*.narinfo
         - niks3.terence.cloud/api/*
