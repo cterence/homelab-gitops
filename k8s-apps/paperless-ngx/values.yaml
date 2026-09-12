@@ -24,7 +24,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.20.15@sha256:6c86cad803970ea782683a8e80e7403444c5bf3cf70de63b4d3c8e87500db92f
+            tag: 3.1.3@sha256:aa810a36942c63d4ee70d00eda7236cd3d6acfb7eb3f7987fb568ed14df8817a
           ports:
             - name: http
               containerPort: 8000
@@ -57,6 +57,11 @@ app-template:
               valueFrom:
                 secretKeyRef:
                   name: "{{ .Release.Name }}-cnpg-cluster-app"
+                  key: password
+            PAPERLESS_SECRET_KEY:
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secret-key"
                   key: password
           probes:
             liveness:
@@ -147,6 +152,26 @@ app-template:
       size: 4Gi
 
   rawResources:
+    secret-key:
+      enabled: true
+      forceRename: "{{ .Release.Name }}-secret-key"
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshInterval: "0"
+          target:
+            name: "{{ .Release.Name }}-secret-key"
+            creationPolicy: Owner
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: password
     cnpg-backup-s3-creds:
       enabled: true
       forceRename: cnpg-backup-s3-creds
