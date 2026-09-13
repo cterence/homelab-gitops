@@ -27,6 +27,11 @@ immich:
           maxDistance: 0.03
       ffmpeg:
         accel: "vaapi"
+        # AV1 is accepted as-is: the node iGPU cannot hardware-decode AV1,
+        # so transcoding AV1 -> h264 burns ~1 CPU core per video.
+        acceptedVideoCodecs:
+          - h264
+          - av1
       server:
         externalDomain: https://immich.terence.cloud
       # trash:

@@ -355,12 +355,14 @@ velero:
         storageLocation: versity-gw-storage-pool
         includedNamespaces:
           - arr-stack
-          - calibre-web
+          - audiobookshelf
           - changedetection
           - gitea
           - home-assistant
           - immich
+          - mosquitto
           - nextcloud
+          - openbao
           - paperless-ngx
           - pocket-id
           - vaultwarden
