@@ -9,7 +9,7 @@ dependencies:
     version: 5.1.0
   - name: valkey
     repository: https://valkey.io/valkey-helm/
-    version: 0.11.0
+    version: 0.12.0
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
