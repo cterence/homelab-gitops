@@ -352,7 +352,7 @@ modsecurity:
             "id:1000007,phase:1,pass,nolog,ctl:ruleEngine=Off"
 
           SecRule REQUEST_URI "@rx ^/api/documents/" \
-            "id:1000008,phase:1,pass,nolog,ctl:ruleRemoveById=942290"
+            "id:1000008,phase:1,pass,nolog,ctl:ruleRemoveById=942290,ctl:ruleRemoveById=911100,ctl:ruleRemoveById=932125"
 
           SecRule REQUEST_URI "@rx ^/socket.io/" \
             "id:1000009,phase:1,pass,nolog,ctl:ruleRemoveById=980170,ctl:ruleRemoveById=920420"
@@ -400,7 +400,7 @@ modsecurity:
             "id:1000023,phase:1,pass,nolog,ctl:ruleEngine=Off"
 
           SecRule REQUEST_URI "@rx ^/api/ds/query" \
-            "id:1000024,phase:1,pass,nolog,ctl:ruleRemoveById=942100,ctl:ruleRemoveById=942151,ctl:ruleRemoveById=949110,ctl:ruleRemoveById=980170"
+            "id:1000024,phase:1,pass,nolog,ctl:ruleRemoveById=942100,ctl:ruleRemoveById=942151,ctl:ruleRemoveById=932125,ctl:ruleRemoveById=949110,ctl:ruleRemoveById=980170"
 
           SecRule REQUEST_URI "@rx ^/obsidian/" \
             "id:1000025,phase:1,pass,nolog,ctl:ruleEngine=Off"
