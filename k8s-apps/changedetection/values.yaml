@@ -5,7 +5,7 @@ changedetection-io:
     # -- image repository
     repository: ghcr.io/dgtlmoon/changedetection.io
     # -- image tag
-    tag: "0.55.8@sha256:5438423d5e906eff4e8f7886823482ad23f472bf7b8530ccaca89fb48c337882"
+    tag: "0.60.6@sha256:eb4a9f718801004e006ffef0ce35171f42ec8d45c9b5d20da572bc5febe107ff"
     # -- image pull policy
     pullPolicy: IfNotPresent
 
