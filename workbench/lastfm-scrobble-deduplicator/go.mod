@@ -7,7 +7,7 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc
 	github.com/chromedp/chromedp v0.16.0
-	github.com/go-telegram/bot v1.22.0
+	github.com/go-telegram/bot v1.27.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/michiwend/gomusicbrainz v0.0.0-20181012083520-6c07e13dd396
 	github.com/redis/go-redis/v9 v9.21.0
