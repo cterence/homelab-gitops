@@ -59,9 +59,9 @@ app-template:
       containers:
         main:
           image:
-            repository: ghcr.io/cterence/go-healthcheck
-            tag: latest@sha256:d4e021b4a57b8cb2d545d8673762044d19fa70715079496b5530bc6657441699
-            pullPolicy: Always
+            repository: registry.terence.cloud/go-healthcheck
+            tag: v1
+            pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
           ports:
