@@ -117,22 +117,6 @@ velero:
           s3ForcePathStyle: true
           s3Url: https://s3.eu-central-003.backblazeb2.com
           checksumAlgorithm: ""
-      - name: versity-gw-v2
-        provider: aws
-        bucket: velero
-        caCert:
-        prefix: v2
-        default: false
-        validationFrequency: 24h
-        accessMode: ReadWrite
-        credential:
-          name: versity-gw-credentials
-          key: config
-        config:
-          region: us-east-1
-          s3ForcePathStyle: true
-          s3Url: http://versity-gw-nfs.versity-gw:7070
-          checksumAlgorithm: ""
       - name: versity-gw-storage-pool
         provider: aws
         bucket: velero
@@ -310,38 +294,6 @@ velero:
           - sa
           - secret
         ttl: 720h
-        resourcePolicy:
-          apiGroup: ""
-          kind: ConfigMap
-          name: volume-policy
-    versity-gw-v2:
-      disabled: false
-      schedule: "0 */4 * * *"
-      useOwnerReferencesInBackup: false
-      paused: true
-      template:
-        storageLocation: versity-gw-v2
-        includedNamespaces:
-          - arr-stack
-          - calibre-web
-          - changedetection
-          - gitea
-          - home-assistant
-          - immich
-          - nextcloud
-          - paperless-ngx
-          - pocket-id
-          - vaultwarden
-          - versity-gw
-          - zigbee2mqtt
-        includedResources:
-          - po
-          - pv
-          - pvc
-          - cm
-          - sa
-          - secret
-        ttl: 168h
         resourcePolicy:
           apiGroup: ""
           kind: ConfigMap
