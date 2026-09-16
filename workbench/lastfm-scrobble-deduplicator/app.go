@@ -395,7 +395,9 @@ func getTrackDuration(ctx context.Context, c *Config, userTrackDurations duratio
 		// Convert to duration with 4m0s format
 		trackDuration, err := time.ParseDuration(userTrackDurations[s.artist][s.track])
 		if err != nil {
-			slog.Error("Failed to parse user duration", "artist", s.artist, "track", s.track, "error", err)
+			// A malformed entry would silently produce a zero duration and disable
+			// duplicate detection for the track, so skip the scrobble instead.
+			return fmt.Errorf("invalid duration %q in track durations for %s - %s: %w", userTrackDurations[s.artist][s.track], s.artist, s.track, err)
 		}
 
 		s.trackDuration = trackDuration

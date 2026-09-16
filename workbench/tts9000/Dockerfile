@@ -18,7 +18,7 @@ WORKDIR /app
 
 RUN apk add --no-cache ffmpeg
 
-COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY main.py .
 
 ENTRYPOINT ["python", "main.py"]

@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/hellofresh/health-go/v5"
 )
@@ -47,10 +53,25 @@ func main() {
 
 	r := newRouter(h)
 
-	fmt.Printf("Listening on port %s\n", config.Port)
+	srv := &http.Server{Addr: ":" + config.Port, Handler: r}
 
-	err = http.ListenAndServe(":"+config.Port, r)
-	if err != nil {
-		log.Fatalf("failed to listen on port %s: %v", config.Port, err)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		fmt.Printf("Listening on port %s\n", config.Port)
+
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("failed to listen on port %s: %v", config.Port, err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("failed to shutdown gracefully: %v", err)
 	}
 }

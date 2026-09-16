@@ -62,7 +62,8 @@ func newRouter(h *health.Health) *chi.Mux {
 
 		_, err = w.Write(data)
 		if err != nil {
-			log.Fatalf("failed to write response: %v", err)
+			// A failing client connection must not take the whole service down.
+			log.Printf("failed to write response: %v", err)
 		}
 	})
 

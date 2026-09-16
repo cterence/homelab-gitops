@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,6 +12,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/h2non/filetype"
@@ -195,6 +197,12 @@ func sanitizeTag(tag string) string {
 	return tag
 }
 
+// albumKey uniquely identifies an album: two different artists can release
+// identically titled albums, so the title alone is not enough.
+func albumKey(artist, title string) string {
+	return artist + " - " + title
+}
+
 func buildAlbums(trackFilePaths, coverImagePaths []string) (map[string]album, error) {
 	albums := map[string]album{}
 
@@ -240,8 +248,9 @@ func buildAlbums(trackFilePaths, coverImagePaths []string) (map[string]album, er
 		}
 
 		currentAlbum := album{}
+		key := albumKey(albumArtist, albumTitle)
 
-		if existing, ok := albums[albumTitle]; ok {
+		if existing, ok := albums[key]; ok {
 			currentAlbum = existing
 		} else {
 			currentAlbum.title = albumTitle
@@ -266,7 +275,7 @@ func buildAlbums(trackFilePaths, coverImagePaths []string) (map[string]album, er
 
 		currentAlbum.tracks = append(currentAlbum.tracks, track)
 
-		albums[albumTitle] = currentAlbum
+		albums[key] = currentAlbum
 	}
 
 	return albums, nil
@@ -325,7 +334,7 @@ func copyFile(src, dst string) error {
 func moveFile(src, dst string) error {
 	err := os.Rename(src, dst)
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid cross-device link") {
+		if errors.Is(err, syscall.EXDEV) {
 			return moveCrossDevice(src, dst)
 		}
 
@@ -428,7 +437,7 @@ func refreshJellyfinLibrary(ctx context.Context, jellyfinURL, jellyfinAPIKey str
 	return nil
 }
 
-func rescanLidarrFolders(lidarrAPIKey, lidarrURL string) error {
+func rescanLidarrFolders(lidarrURL, lidarrAPIKey string) error {
 	c := starr.New(lidarrURL, lidarrAPIKey, 5*time.Second)
 	l := lidarr.New(c)
 

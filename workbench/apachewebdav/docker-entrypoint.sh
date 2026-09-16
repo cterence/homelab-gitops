@@ -64,7 +64,8 @@ if [ ! -e "/user.passwd" ]; then
             HASH="`printf '%s' "$USERNAME:$REALM:$PASSWORD" | md5sum | awk '{print $1}'`"
             printf '%s\n' "$USERNAME:$REALM:$HASH" > /user.passwd
         else
-            htpasswd -B -b -c "/user.passwd" $USERNAME $PASSWORD
+            # Read the password from stdin so it does not appear in the process list.
+            printf '%s\n' "$PASSWORD" | htpasswd -B -i -c "/user.passwd" "$USERNAME"
         fi
     fi
 fi

@@ -7,3 +7,5 @@ Chart.lock
 .worktrees/
 docs/superpowers/
 .DS_STORE
+.direnv/
+.pre-commit-config.yaml

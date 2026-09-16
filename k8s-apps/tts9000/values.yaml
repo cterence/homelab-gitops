@@ -22,7 +22,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/tts9000
-            tag: v1
+            tag: v2
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris

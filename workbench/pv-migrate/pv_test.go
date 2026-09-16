@@ -104,11 +104,11 @@ func TestValidateDestName(t *testing.T) {
 			wantErr:  errDestNameMismatch,
 		},
 		{
-			name:     "mismatch allowed",
-			claimRef: &corev1.ObjectReference{Name: "registry"},
-			destPVC:  "other-pvc",
+			name:          "mismatch allowed",
+			claimRef:      &corev1.ObjectReference{Name: "registry"},
+			destPVC:       "other-pvc",
 			allowMismatch: true,
-			wantErr:  nil,
+			wantErr:       nil,
 		},
 		{
 			name:     "nil claimRef, no check",
@@ -353,21 +353,21 @@ func TestPvmigrateArgs(t *testing.T) {
 		wantAbsent []string
 	}{
 		{
-			name:    "minimal",
-			srcPVC:  "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			name:   "minimal",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
 			opts:     migrationOpts{},
 			wantSubs: []string{"--source=src", "--source-namespace=s-ns", "--dest=dst", "--dest-namespace=d-ns"},
 		},
 		{
-			name:       "with kubeconfig",
-			srcPVC:     "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			name:   "with kubeconfig",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
 			kubeconfig: "/home/u/.kube/config",
 			opts:       migrationOpts{},
 			wantSubs:   []string{"--source-kubeconfig=/home/u/.kube/config", "--dest-kubeconfig=/home/u/.kube/config"},
 		},
 		{
-			name:    "all bool flags on",
-			srcPVC:  "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			name:   "all bool flags on",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
 			opts: migrationOpts{
 				deleteExtraneous:     true,
 				ignoreMounted:        true,
@@ -382,8 +382,8 @@ func TestPvmigrateArgs(t *testing.T) {
 			},
 		},
 		{
-			name:    "strategies and durations",
-			srcPVC:  "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			name:   "strategies and durations",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
 			opts: migrationOpts{
 				strategies:  []string{"mount", "clusterip"},
 				helmTimeout: "2m",
@@ -392,25 +392,25 @@ func TestPvmigrateArgs(t *testing.T) {
 			wantSubs: []string{"--strategies=mount,clusterip", "--helm-timeout=2m", "--log-level=DEBUG"},
 		},
 		{
-			name:    "source and dest node pins",
-			srcPVC:  "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts:     migrationOpts{sourceNode: "homelab2", destNode: "homelab3"},
+			name:   "source and dest node pins",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			opts: migrationOpts{sourceNode: "homelab2", destNode: "homelab3"},
 			wantSubs: []string{
 				"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname=homelab2",
 				"--helm-set=rsync.nodeSelector.kubernetes\\.io/hostname=homelab3",
 			},
 		},
 		{
-			name:    "source node only",
-			srcPVC:  "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			name:   "source node only",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
 			opts:       migrationOpts{sourceNode: "homelab2"},
 			wantSubs:   []string{"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname=homelab2"},
 			wantAbsent: []string{"--helm-set=rsync.nodeSelector"},
 		},
 		{
-			name:    "bool flags off must not appear",
-			srcPVC:  "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts:       migrationOpts{},
+			name:   "bool flags off must not appear",
+			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
+			opts: migrationOpts{},
 			wantAbsent: []string{
 				"--non-root", "--no-chown", "--no-compress",
 				"--helm-set=rsync.nodeSelector", "--helm-set=sshd.nodeSelector",

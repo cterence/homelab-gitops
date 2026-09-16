@@ -10,7 +10,12 @@ dependencies = [
     "ftfy>=6.3.1",
     "langdetect>=1.0.9",
     "mistralai>=2.4.4",
-    "pylint>=4.0.5",
     "python-telegram-bot>=22.7",
     "requests>=2.33.1",
+]
+
+[dependency-groups]
+dev = [
+    "pylint>=4.0.5",
+    "pytest>=8.0.0",
 ]

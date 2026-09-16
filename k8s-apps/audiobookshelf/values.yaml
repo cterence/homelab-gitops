@@ -123,12 +123,12 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/apachewebdav
-            tag: v1
+            tag: v2
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
-            UID: "1000"
-            GID: "100"
+            PUID: "1000"
+            PGID: "1000"
             USERNAME: kindle
             NO_CHOWN_DATA: "true"
             PASSWORD:

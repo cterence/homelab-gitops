@@ -59,7 +59,6 @@ func main() {
 		logLevel           string
 		duplicateThreshold int
 		completeThreshold  int
-		processingMode     string
 		dataDir            string
 		telegramBotToken   string
 		telegramChatID     string
@@ -137,13 +136,6 @@ func main() {
 				Usage:       "Day at which the program should end deduplicating scrobbles (dd-mm-yyyy, or \"yesterday\"/\"today\")",
 				Sources:     cli.NewValueSourceChain(cli.EnvVar("TO"), yaml.YAML("to", altsrc.NewStringPtrSourcer(&configFilePath))),
 				Destination: &toStr,
-			},
-			&cli.StringFlag{
-				Name:        "processing-mode",
-				Usage:       "Mode for processing the scrobbles (sequential, parallel)",
-				Value:       "sequential",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("PROCESSING_MODE"), yaml.YAML("processingMode", altsrc.NewStringPtrSourcer(&configFilePath))),
-				Destination: &processingMode,
 			},
 			&cli.StringFlag{
 				Name:        "cache-type",
@@ -225,7 +217,6 @@ func main() {
 				LogLevel:           logLevel,
 				DuplicateThreshold: duplicateThreshold,
 				CompleteThreshold:  completeThreshold,
-				ProcessingMode:     processingMode,
 				DataDir:            dataDir,
 				TelegramBotToken:   telegramBotToken,
 				TelegramChatID:     telegramChatID,

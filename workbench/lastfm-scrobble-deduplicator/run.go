@@ -48,14 +48,9 @@ func Run(ctx context.Context, c *Config) error {
 
 	c.unknownTrackDurations = make(durationByTrackByArtist, 0)
 
-	switch c.ProcessingMode {
-	case "sequential":
-		endPage := 1
-		if err := processScrobblesFromStartToEndPage(c.taskCtx, c, startPage, endPage, userTrackDurations); err != nil {
-			return fmt.Errorf("error when processing scrobbles: %w", err)
-		}
-	default:
-		return fmt.Errorf("unknown processing mode: %s", c.ProcessingMode)
+	endPage := 1
+	if err := processScrobblesFromStartToEndPage(c.taskCtx, c, startPage, endPage, userTrackDurations); err != nil {
+		return fmt.Errorf("error when processing scrobbles: %w", err)
 	}
 
 	slog.Info("Processing complete!")

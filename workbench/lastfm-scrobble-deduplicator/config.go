@@ -29,7 +29,6 @@ type Config struct {
 	LogLevel           string
 	DuplicateThreshold int
 	CompleteThreshold  int
-	ProcessingMode     string
 	DataDir            string
 	TelegramBotToken   string
 	TelegramChatID     string

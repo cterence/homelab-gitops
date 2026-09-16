@@ -1,10 +1,12 @@
 """TTS9000 - Telegram bot for article to audio conversion."""
 
+import asyncio
 import base64
 import hashlib
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
@@ -140,7 +142,7 @@ def get_cache_filename(url):
 
 
 
-def process_url(url, api_key):
+def process_url(url, api_key, raw_text):
     """Process URL and return audio data."""
     cache_dir = Path("generated")
     cache_dir.mkdir(exist_ok=True)
@@ -150,10 +152,6 @@ def process_url(url, api_key):
         logger.info("Using cached file: %s", cache_file)
         return cache_file.read_bytes()
 
-    try:
-        raw_text = extract_article_text(url)
-    except TextExtractionError as e:
-        raise TextExtractionError(f"Text extraction failed: {str(e)}") from e
     try:
         clean_text = clean_text_with_mistral(raw_text, api_key)
     except Exception as e:
@@ -171,6 +169,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# httpx logs every request URL at INFO, which would leak the bot token into logs.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 
 async def start(update: Update, _):
     """Handle /start command."""
@@ -179,10 +180,9 @@ async def start(update: Update, _):
     )
 
 
-def get_article_title(url, api_key):
-    """Extract article title from URL."""
+def get_article_title(raw_text, api_key):
+    """Extract article title from article text."""
     try:
-        raw_text = extract_article_text(url)
         client = Mistral(api_key=api_key, timeout_ms=300000)
         system_prompt = os.getenv("SYSTEM_PROMPT_TITLE", DEFAULT_SYSTEM_PROMPT_TITLE)
         prompt = f"{system_prompt}\n\n{raw_text[:2000]}"
@@ -196,6 +196,36 @@ def get_article_title(url, api_key):
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.warning("Title extraction failed: %s", str(e))
         return "article"
+
+
+def fix_audio_header(temp_file, cache_file):
+    """Remux the audio to fix its MP3 header and return its duration."""
+    (
+        ffmpeg
+        .input(temp_file)
+        .output(cache_file, acodec='copy')
+        .run(
+            overwrite_output=True,
+            capture_stdout=True,
+            capture_stderr=True
+        )
+    )
+    return int(float(ffmpeg.probe(cache_file)['format']['duration']))
+
+
+def prune_cache(cache_dir, max_age_days):
+    """Delete cached audio files older than max_age_days."""
+    if not cache_dir.exists():
+        return
+
+    cutoff = time.time() - max_age_days * 86400
+    for file in cache_dir.glob("*.mp3"):
+        try:
+            if file.stat().st_mtime < cutoff:
+                file.unlink()
+                logger.info("Pruned cache file: %s", file)
+        except OSError as e:
+            logger.warning("Failed to prune cache file %s: %s", file, e)
 
 
 async def handle_url(update: Update, _):
@@ -223,31 +253,24 @@ async def handle_url(update: Update, _):
 
     try:
         msg = await update.message.reply_text("🔍 Extracting text from webpage...")
-        article_title = get_article_title(url, api_key)
+        # Blocking calls (requests, Mistral, ffmpeg) run in a thread so the bot
+        # stays responsive; the article is extracted once and reused throughout.
+        raw_text = await asyncio.to_thread(extract_article_text, url)
+        article_title = await asyncio.to_thread(get_article_title, raw_text, api_key)
         await msg.edit_text(f"🧹 Cleaning text for {article_title}...")
-        audio_data = process_url(url, api_key)
+        audio_data = await asyncio.to_thread(process_url, url, api_key, raw_text)
         await msg.edit_text("🎤 Generating TTS...")
         cache_file = get_cache_filename(url)
         temp_file = cache_file + ".temp"
-        Path(temp_file).write_bytes(audio_data)
+        await asyncio.to_thread(Path(temp_file).write_bytes, audio_data)
         await msg.edit_text("🔧 Fixing audio header...")
         try:
-            (
-                ffmpeg
-                .input(temp_file)
-                .output(cache_file, acodec='copy')
-                .run(
-                    overwrite_output=True,
-                    capture_stdout=True,
-                    capture_stderr=True
-                )
-            )
+            duration = await asyncio.to_thread(fix_audio_header, temp_file, cache_file)
         except ffmpeg.Error as e:
             logger.error("ffmpeg error: %s", e.stderr.decode())
             raise
-        duration = int(float(ffmpeg.probe(cache_file)['format']['duration']))
         logger.info("Audio duration: %ss", duration)
-        Path(temp_file).unlink()
+        await asyncio.to_thread(Path(temp_file).unlink)
         await msg.delete()
         await update.message.reply_audio(
             audio=Path(cache_file).read_bytes(),
@@ -271,6 +294,9 @@ def run_telegram_bot():
     if not token:
         print("TELEGRAM_BOT_TOKEN environment variable not set")
         sys.exit(1)
+
+    max_age_days = int(os.getenv("CACHE_MAX_AGE_DAYS", "30"))
+    prune_cache(Path("generated"), max_age_days)
 
     application = Application.builder().token(token).build()
     application.add_handler(CommandHandler("start", start))
