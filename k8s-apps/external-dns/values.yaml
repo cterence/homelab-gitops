@@ -1,4 +1,5 @@
 external-dns:
+  policy: upsert-only
   provider:
     name: cloudflare
   env:
