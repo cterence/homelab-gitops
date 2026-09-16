@@ -104,52 +104,6 @@ app-template:
                   port: http
                   path: /health
 
-    nfs:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      labels:
-        velero.io/exclude-from-backup: "true"
-      pod:
-        labels:
-          velero.io/exclude-from-backup: "true"
-      containers:
-        main:
-          image:
-            repository: ghcr.io/versity/versitygw
-            tag: v1.8.0@sha256:30292fc2eeacc67a36993b01f7a7a5e3361a19cced0e80c1d71cfa2a4b0a2499
-          args:
-            - posix
-            - --sidecar
-            - /tmp/sidecar
-            - /buckets
-          env:
-            TZ: Europe/Paris
-          envFrom:
-            - configMapRef:
-                identifier: versity
-            - secretRef:
-                name: versity-gw-credentials
-          ports:
-            - name: http
-              containerPort: 7070
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-
     storage-pool:
       type: deployment
       strategy: Recreate
@@ -200,15 +154,6 @@ app-template:
     main:
       controller: main
       type: ClusterIP
-      ports:
-        http:
-          port: 7070
-    nfs:
-      controller: nfs
-      type: ClusterIP
-      annotations:
-        tailscale.com/expose: "true"
-        tailscale.com/hostname: "versity-gw-nfs"
       ports:
         http:
           port: 7070
@@ -300,23 +245,6 @@ app-template:
           main:
             - path: /buckets
 
-    nfs:
-      type: persistentVolumeClaim
-      existingClaim: mx500-homelab3
-      advancedMounts:
-        nfs:
-          main:
-            - path: /buckets
-              subPath: versity-gw
-
-    nfs-xattrs:
-      enabled: true
-      type: emptyDir
-      advancedMounts:
-        nfs:
-          main:
-            - path: /tmp/sidecar
-
   rawResources:
     sablier:
       enabled: true
@@ -401,22 +329,3 @@ app-template:
           nfs:
             path: /mx500-homelab3
             server: 192.168.1.141
-    nfs-pvc:
-      enabled: true
-      forceRename: mx500-homelab3
-      manifest:
-        apiVersion: v1
-        kind: PersistentVolumeClaim
-        metadata:
-          annotations:
-            helm.sh/resource-policy: keep
-          labels:
-            velero.io/exclude-from-backup: "true"
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 2Ti
-          storageClassName: nfs
-          volumeName: mx500-homelab3
