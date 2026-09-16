@@ -48,15 +48,21 @@
       # (gofmt, golangci-lint, govet). Each app is its own Go module, so the
       # tools run from the app directory. Staticcheck checks are enforced via
       # golangci-lint, which enables the staticcheck linter in .golangci.yaml.
+      # Entries are absolute store paths so the hooks also work when invoked
+      # from environments without the dev shell on PATH (e.g. VS Code git).
       goAppHooks =
         pkgs: app:
         let
-          inApp = tool: "sh -c 'cd workbench/${app} && exec ${tool}'";
+          runInApp = pkgs.writeShellScript "precommit-${app}" ''
+            export PATH="${pkgs.go}/bin:${pkgs.golangci-lint}/bin:$PATH"
+            cd workbench/${app}
+            exec "$@"
+          '';
         in
         {
           "${app}-golangci-lint" = {
             enable = true;
-            entry = inApp "golangci-lint run";
+            entry = "${runInApp} golangci-lint run";
             files = "^workbench/${app}/";
             pass_filenames = false;
             extraPackages = with pkgs; [
@@ -66,7 +72,7 @@
           };
           "${app}-govet" = {
             enable = true;
-            entry = inApp "go vet ./...";
+            entry = "${runInApp} go vet ./...";
             files = "^workbench/${app}/";
             pass_filenames = false;
             extraPackages = [ pkgs.go ];
@@ -77,9 +83,10 @@
         pkgs:
         {
           # Secret detection, replacing the previous .pre-commit-config.yaml.
+          # Absolute store path so the hook also works outside the dev shell.
           gitleaks = {
             enable = true;
-            entry = "gitleaks protect --staged --redact --verbose";
+            entry = "${pkgs.gitleaks}/bin/gitleaks protect --staged --redact --verbose";
             pass_filenames = false;
             extraPackages = [ pkgs.gitleaks ];
           };
