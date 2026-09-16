@@ -8,6 +8,17 @@ If using git worktrees:
 - use the appropriate "using-git-worktrees" skill and place them in the .worktrees directory.
 - create a PR using gh CLI when finished.
 
+## Development environment
+
+The root `flake.nix` provides the tool shell and pre-commit checks for the workbench apps.
+
+- `nix develop` — tool shell (go 1.26, golangci-lint, gotools, gitleaks, uv). Entering it installs the prek hooks into `.git/hooks/pre-commit`.
+- Hooks run at commit time: gitleaks (secrets), gofmt (all `workbench/**.go`), and per-app `golangci-lint run` + `go vet ./...` for each Go module under `workbench/`. Hook entries are absolute nix store paths, so they also work from environments without the dev shell on PATH (e.g. VS Code git).
+- `nix flake check` — runs the full hook set over the repo; run it before pushing.
+- After changing hooks in `flake.nix`, re-enter `nix develop` once to refresh the installed config.
+- Staticcheck runs through golangci-lint's `staticcheck` linter (the standalone package is gone from nixpkgs).
+- The Go hooks need network access to download modules; they work on macOS (relaxed sandbox) and at commit time, but would fail on a strictly-sandboxed Linux CI.
+
 ## Repo layout
 
 ```
