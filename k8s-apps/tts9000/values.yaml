@@ -21,8 +21,9 @@ app-template:
       containers:
         main:
           image:
-            repository: ghcr.io/cterence/tts9000
-            tag: latest@sha256:e735da5fe7446962711b2d352eaf898589c38c6a2be6964af75e80c6f112ad7e
+            repository: registry.terence.cloud/tts9000
+            tag: v1
+            pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
             SYSTEM_PROMPT_CLEAN: |

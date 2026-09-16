@@ -122,8 +122,9 @@ app-template:
       containers:
         main:
           image:
-            repository: ghcr.io/cterence/apachewebdav
-            tag: 2.4.65-bookworm@sha256:0aa4a0b399a5711005fcb38e8a6776f5518b18aa514f44f0da8e6fdb46333e77
+            repository: registry.terence.cloud/apachewebdav
+            tag: v1
+            pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
             UID: "1000"
