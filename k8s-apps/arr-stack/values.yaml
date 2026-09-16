@@ -399,22 +399,26 @@ app-template:
         schedule: "4/5 * * * *"
         successfulJobsHistory: 1
         failedJobsHistory: 1
+      pod:
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
       containers:
         rangemusique:
           image:
-            repository: ghcr.io/cterence/rangemusique
-            tag: latest@sha256:2803ba5a6671e8ea20d13b035d5786a04ec994becae324a3b3cb6e3c45e2195a
+            repository: registry.terence.cloud/rangemusique
+            tag: v1
+            pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
             INPUT_DIR: /in
             OUTPUT_DIR: /out
+            LOCK_FILE: /out/.soularr.lock
             JELLYFIN_URL: http://arr-stack-jellyfin:8096
             LIDARR_URL: http://arr-stack-lidarr:8686
           envFrom:
             - secretRef:
                 name: rangemusique-api-keys
-          command: /bin/bash
-          args: ["/run-rangemusique.sh"]
 
     flaresolverr:
       type: deployment
@@ -1426,16 +1430,6 @@ app-template:
             - path: /run-soularr.sh
               subPath: run-soularr.sh
 
-    rangemusique-script:
-      type: configMap
-      identifier: rangemusique-script
-      defaultMode: 0664
-      advancedMounts:
-        rangemusique:
-          rangemusique:
-            - path: /run-rangemusique.sh
-              subPath: run-rangemusique.sh
-
   configMaps:
     tunnel-monitor-config:
       data:
@@ -1525,19 +1519,6 @@ app-template:
           echo "soularr done"
           rm $FILE
           echo "removed lockfile at $FILE"
-
-    rangemusique-script:
-      data:
-        run-rangemusique.sh: |
-          #!/bin/bash
-
-          FILE=/out/.soularr.lock
-          if [ -f $FILE ]; then
-            echo "soularr lockfile detected, not running rangemusique"
-          else
-            echo "soularr lockfile not detected, running rangemusique"
-            /app/main
-          fi
 
   rawResources:
     storage-pool-pv:

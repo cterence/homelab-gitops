@@ -20,18 +20,20 @@ app-template:
         timeZone: Europe/Paris
       pod:
         securityContext:
+          runAsUser: 999
+          runAsGroup: 999
           fsGroup: 1000
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
         app:
           image:
-            repository: ghcr.io/cterence/lastfm-scrobble-deduplicator
-            tag: latest@sha256:9060af6021a575cf8aa2e53aa9da446f5558a3104a3b94c6c3c888d195e56915
-          command:
-            - /bin/bash
-            - -c
-            - /app/main --from $(date -d "yesterday" +"%d-%m-%Y")
+            repository: registry.terence.cloud/lastfm-scrobble-deduplicator
+            tag: v1
+            pullPolicy: IfNotPresent
+          args:
+            - --from
+            - yesterday
           envFrom:
             - configMapRef:
                 identifier: config
