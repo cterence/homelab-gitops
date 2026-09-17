@@ -2,6 +2,8 @@ external-dns:
   policy: upsert-only
   provider:
     name: cloudflare
+  sources:
+    - ingress
   env:
     - name: CF_API_TOKEN
       valueFrom:
