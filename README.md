@@ -93,8 +93,9 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity | ✅ |
 | [satisfactory-server](./scripts/../k8s-apps/satisfactory-server) | Satisfactory server | ❌ |
 | [snapshot-controller](./scripts/../k8s-apps/snapshot-controller) | Implements the control loop for CSI snapshot functionality | ❌ |
+| [steam-headless](./scripts/../k8s-apps/steam-headless) | Headless Steam with Sunshine for Moonlight game streaming | ✅ |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale | ✅ |
-| [temporal](./scripts/../k8s-apps/temporal) | Durable execution engine. | ✅ |
+| [temporal](./scripts/../k8s-apps/temporal) | Durable execution engine. | ❌ |
 | [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller | ✅ |
 | [tts9000](./scripts/../k8s-apps/tts9000) | Text-to-Speech service using Mistral's Voxtral TTS | ✅ |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust | ✅ |
