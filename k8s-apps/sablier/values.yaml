@@ -1,4 +1,10 @@
 sablier:
+  rbac:
+    # -- Grant Sablier the ClusterRole rights to list/watch/patch
+    # postgresql.cnpg.io clusters, otherwise it spams "forbidden" errors
+    # trying to watch CNPG clusters at cluster scope.
+    cnpg: true
+
   # -- Annotations for all deployed Deployments
   deploymentAnnotations: {}
 
