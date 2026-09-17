@@ -1,0 +1,146 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: docker.io/josh5/steam-headless
+            tag: latest@sha256:4ddcb764f18916e8d40e809df3bbafd0936b876a77885bcc05062540ed856807
+          env:
+            TZ: Europe/Paris
+            PUID: "1000"
+            PGID: "1000"
+            ENABLE_STEAM: "true"
+            ENABLE_SUNSHINE: "true"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 1
+              memory: 4Gi
+            limits:
+              memory: 12Gi
+          ports:
+            - name: web-ui
+              containerPort: 8083
+            - name: sun-https
+              containerPort: 47984
+            - name: sun-http
+              containerPort: 47989
+            - name: sun-ui
+              containerPort: 47990
+            - name: sun-rtsp
+              containerPort: 48010
+            - name: sun-video
+              containerPort: 47998
+              protocol: UDP
+            - name: sun-control
+              containerPort: 47999
+              protocol: UDP
+            - name: sun-audio
+              containerPort: 48000
+              protocol: UDP
+            - name: sun-extra1
+              containerPort: 48002
+              protocol: UDP
+            - name: sun-extra2
+              containerPort: 48010
+              protocol: UDP
+          probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 47989
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                timeoutSeconds: 5
+                failureThreshold: 60
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 47989
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                tcpSocket:
+                  port: 47989
+
+  service:
+    main:
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: steam-headless
+      controller: main
+      type: ClusterIP
+      ports:
+        web-ui:
+          port: 8083
+        sun-https:
+          port: 47984
+        sun-http:
+          port: 47989
+        sun-ui:
+          port: 47990
+        sun-rtsp:
+          port: 48010
+        sun-video:
+          port: 47998
+          protocol: UDP
+        sun-control:
+          port: 47999
+          protocol: UDP
+        sun-audio:
+          port: 48000
+          protocol: UDP
+        sun-extra1:
+          port: 48002
+          protocol: UDP
+        sun-extra2:
+          port: 48010
+          protocol: UDP
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 20Gi
+      globalMounts:
+        - path: /home/default
+    games:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 200Gi
+      globalMounts:
+        - path: /mnt/games
+    shm:
+      enabled: true
+      type: emptyDir
+      medium: Memory
+      sizeLimit: 8Gi
+      globalMounts:
+        - path: /dev/shm

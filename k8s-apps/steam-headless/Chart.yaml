@@ -1,0 +1,9 @@
+apiVersion: v2
+name: steam-headless
+description: Headless Steam with Sunshine for Moonlight game streaming
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.1.0
