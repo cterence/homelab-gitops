@@ -391,9 +391,7 @@ grafana-mcp-server:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares:
-          "traefik-modsecurity@kubernet\
-          escrd,monitoring-grafana-mcp-auth@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "monitoring-grafana-mcp-auth@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host gmcp.terence.cloud
