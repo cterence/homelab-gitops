@@ -30,11 +30,6 @@ falco:
       enabled: true
     prometheusRules:
       enabled: true
-    # The falco chart already provisions the Falco Grafana dashboard
-    # (ConfigMap key falco-dashboard.json, folder Falco). Enabling it
-    # here too creates a second ConfigMap with the same key/folder, which
-    # makes Grafana's file provider fail with "unexpected number of
-    # dashboards for id ... found: 2. desired: 1" every sync.
     grafana:
       dashboards:
         enabled: false
