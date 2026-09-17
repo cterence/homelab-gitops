@@ -1,4 +1,7 @@
 sablier:
+  rbac:
+    cnpg: true
+
   # -- Annotations for all deployed Deployments
   deploymentAnnotations: {}
 

@@ -32,10 +32,7 @@ falco:
       enabled: true
     grafana:
       dashboards:
-        enabled: true
-        configMaps:
-          falcosidekick:
-            folder: Falco
+        enabled: false
     config:
       loki:
         hostport: http://loki-headless.monitoring.svc.cluster.local:3100
