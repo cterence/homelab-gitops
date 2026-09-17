@@ -1,0 +1,14 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: cloudflare-api-token
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: openbao-secret-store
+  target:
+    name: cloudflare-api-token
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: external-dns/cloudflare-credentials

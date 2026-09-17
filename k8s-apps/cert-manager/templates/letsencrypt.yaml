@@ -9,11 +9,8 @@ spec:
     privateKeySecretRef:
       name: letsencrypt
     solvers:
-      - http01:
-          ingress:
-            ingressClassName: traefik
-            ingressTemplate:
-              metadata:
-                annotations:
-                  external-dns.alpha.kubernetes.io/target: home.terence.cloud
-                  external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: cloudflare_api_token
