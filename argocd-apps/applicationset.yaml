@@ -44,6 +44,7 @@ spec:
           - name: lastfm-scrobble-deduplicator
           - name: local-path-provisioner
           - name: loki
+          - name: mcp-telegram
           - name: metallb
           - name: microbin
             scaleToZero: true

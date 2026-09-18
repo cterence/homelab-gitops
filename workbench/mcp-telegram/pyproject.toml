@@ -1,0 +1,14 @@
+[project]
+name = "mcp-telegram"
+version = "0.1.0"
+description = "Minimal Telegram notification MCP server"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "mcp>=2.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
