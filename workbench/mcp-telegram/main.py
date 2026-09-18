@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from mcp.server import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -72,7 +73,24 @@ async def lifespan(_app: Starlette):
         yield
 
 
-mcp_app = mcp.streamable_http_app()
+mcp_app = mcp.streamable_http_app(
+    # Without this the SDK arms DNS-rebinding protection and only accepts
+    # localhost Host headers, rejecting every request behind the real
+    # hostname with 421 Misdirected Request.
+    transport_security=TransportSecuritySettings(
+        allowed_hosts=[
+            "localhost",
+            "localhost:*",
+            "127.0.0.1",
+            "127.0.0.1:*",
+            "[::1]:*",
+            "tmcp.terence.cloud",
+            "tmcp.terence.cloud:*",
+            "telegram-mcp.snow-delta.ts.net",
+            "telegram-mcp.snow-delta.ts.net:*",
+        ],
+    ),
+)
 
 app = Starlette(
     routes=[
