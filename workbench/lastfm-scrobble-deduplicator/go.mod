@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/antchfx/htmlquery v1.3.6
-	github.com/cenkalti/backoff/v5 v5.0.3
+	github.com/cenkalti/backoff/v7 v7.0.0
 	github.com/cenkalti/backoff/v7 v7.0.0
 	github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc
 	github.com/chromedp/chromedp v0.16.0
