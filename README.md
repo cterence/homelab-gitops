@@ -77,6 +77,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [local-path-provisioner](./scripts/../k8s-apps/local-path-provisioner) | Utilize the local storage in each node | ✅ |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs | ✅ |
 | [longhorn](./scripts/../k8s-apps/longhorn) | Cloud-Native distributed storage built on and for Kubernetes | ❌ |
+| [mcp-telegram](./scripts/../k8s-apps/mcp-telegram) | Minimal Telegram notification MCP server | ✅ |
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols | ✅ |
 | [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app | ✅ |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker | ✅ |
