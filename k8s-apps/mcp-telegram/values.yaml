@@ -52,13 +52,16 @@ app-template:
       ports:
         http:
           port: 8000
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: telegram-mcp
 
   ingress:
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "mcp-telegram-mcp-auth@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "mcp-telegram-mcp-auth@kubernetescrd,traefik-mistral-ip-allowlist@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host tmcp.terence.cloud
