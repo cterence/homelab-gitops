@@ -290,7 +290,7 @@ app-template:
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/target: home.terence.cloud
         traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,{{ .Release.Namespace }}-sablier@kubernetescrd
       className: "traefik"
       hosts:

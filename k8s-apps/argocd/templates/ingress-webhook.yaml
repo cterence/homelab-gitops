@@ -3,8 +3,8 @@ kind: Ingress
 metadata:
   name: argocd-webhook-ingress
   annotations:
-    external-dns.alpha.kubernetes.io/target: home.terence.cloud
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false" # 403 on the github actions runner
+    external-dns.kubernetes.io/target: home.terence.cloud
+    external-dns.kubernetes.io/cloudflare-proxied: "false" # 403 on the github actions runner
     traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
 spec:
   ingressClassName: traefik

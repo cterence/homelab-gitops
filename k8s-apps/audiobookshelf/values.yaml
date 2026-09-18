@@ -179,10 +179,10 @@ app-template:
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/target: home.terence.cloud
         # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-main@kubernetescrd,traefik-modsecurity@kubernetescrd,audiobookshelf-strip-dav-prefix@kubernetescrd"
-        # external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        # external-dns.kubernetes.io/cloudflare-proxied: "false"
       className: "traefik"
       hosts:
         - host: &host1 abs.terence.cloud
@@ -205,8 +205,8 @@ app-template:
     shelfmark:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+        external-dns.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-shelfmark@kubernetescrd"
       className: "traefik"

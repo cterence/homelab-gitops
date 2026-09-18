@@ -12,4 +12,4 @@ external-dns:
           key: cloudflare_api_token
   serviceMonitor:
     enabled: true
-  annotationFilter: external-dns.alpha.kubernetes.io/exclude notin (true)
+  annotationFilter: external-dns.kubernetes.io/exclude notin (true)
