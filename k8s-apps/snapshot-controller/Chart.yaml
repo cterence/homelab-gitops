@@ -7,5 +7,5 @@ sources:
   - https://github.com/kubernetes-csi/external-snapshotter
 dependencies:
   - name: snapshot-controller
-    version: 5.2.0
+    version: 5.3.0
     repository: https://piraeus.io/helm-charts
