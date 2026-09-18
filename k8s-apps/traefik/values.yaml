@@ -147,6 +147,18 @@ traefik:
           secretNames:
             - client-auth-ca
           clientAuthType: RequireAndVerifyClientCert
+    # Mistral IP allowlist middleware
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: mistral-ip-allowlist
+        namespace: traefik
+      spec:
+        ipAllowList:
+          sourceRange:
+            - 4.223.142.177/32
+            - 4.225.216.254/32
+            - 20.240.139.18/32
     # Middleware and catch-all ingress route to allow HTTP-01 challenges to succeed by allowing them use of port 80
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware

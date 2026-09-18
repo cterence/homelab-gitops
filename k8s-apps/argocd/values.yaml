@@ -412,13 +412,16 @@ argocd-mcp-server:
       ports:
         http:
           port: 3000
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: argocd-mcp
 
   ingress:
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "argocd-argocd-mcp-auth@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "argocd-argocd-mcp-auth@kubernetescrd,traefik-mistral-ip-allowlist@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host amcp.terence.cloud
