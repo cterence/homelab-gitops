@@ -1,7 +1,7 @@
 # Build stage: Kaniko clones the repo into a scratch context and runs this
 # Dockerfile, so the source tree is available. Dependencies are compiled and
 # installed into site-packages, then copied into the runtime image.
-FROM python:3.14-alpine@sha256:c6ead215bfd31f1e433d968853b7a769989117115b728874824e6c0a27cb96fc AS builder
+FROM python:3.14-alpine@sha256:016508ba505da24f7139765bc4bb669df4e88eb2f12eeadd571bf2f88d7533df AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN apk add --no-cache ffmpeg && \
     uv pip compile pyproject.toml -o requirements.txt && \
     uv pip install --system -r requirements.txt
 
-FROM python:3.14-alpine@sha256:c6ead215bfd31f1e433d968853b7a769989117115b728874824e6c0a27cb96fc
+FROM python:3.14-alpine@sha256:016508ba505da24f7139765bc4bb669df4e88eb2f12eeadd571bf2f88d7533df
 
 WORKDIR /app
 
