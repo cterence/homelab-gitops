@@ -9,8 +9,7 @@ concurrency:
   group: workbench-ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   changes:
@@ -110,15 +109,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.WORKBUMP_APP_ID }}
+          private-key: ${{ secrets.WORKBUMP_PRIVATE_KEY }}
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
       - name: Bump
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "homelab-workbench-bump[bot]"
+          git config user.email "${{ secrets.WORKBUMP_APP_ID }}+homelab-workbench-bump[bot]@users.noreply.github.com"
           bash scripts/workbench-tag-bump.sh "origin/${{ github.base_ref }}"
       - name: Push bump commits
         run: |
