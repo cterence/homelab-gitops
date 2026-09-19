@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"path"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -55,13 +55,13 @@ func CreateConfig() *Config {
 
 // JailPlugin is the Traefik middleware plugin.
 type JailPlugin struct {
-	next       http.Handler
-	name       string
-	jailer     *Jailer
-	allowList  []string
-	stats      *requestStats
-	errorCodes codeMatcher
-	excludeURLs []string
+	next          http.Handler
+	name          string
+	jailer        *Jailer
+	allowList     []string
+	stats         *requestStats
+	errorCodes    codeMatcher
+	excludeURLs   []string
 	patterns      *patternList
 	patternWeight int
 }
