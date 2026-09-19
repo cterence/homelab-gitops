@@ -32,8 +32,10 @@ terraform/     Infrastructure provisioning (secrets, external-secrets)
 
 ## Deployed apps
 
-Always check `./argocd-apps/applicationset.yaml` for the list of currently deployed apps.
-Each entry maps to `k8s-apps/<name>/` as a Helm chart source.
+An app is deployed if and only if `k8s-apps/<name>/appset.yaml` exists (the
+ApplicationSet git generator matches `k8s-apps/*/appset.yaml`). That file also
+carries per-app flags: `namespace`, `serverSideApply`, `serverSideDiff`,
+`scaleToZero`. Undeployed charts live in `k8s-apps/archive/`.
 
 Tool/API documentation for workbench apps lives in each app's `README.md` — update it whenever an app's interface (tool arguments, endpoints, env vars) changes.
 

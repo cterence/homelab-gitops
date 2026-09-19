@@ -17,7 +17,7 @@
 
 - Kubernetes cluster deployed with [k0s](https://k0sproject.io/)
 - GitOps deployment with [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) and [Helm](https://helm.sh/)
-- Simple flat directory structure: [argocd-apps](/argocd-apps/) contains ArgoCD applications deploying umbrella Helm charts in [k8s-apps](/k8s-apps/)
+- Simple flat directory structure: an [ApplicationSet](argocd-apps/applicationset.yaml) git generator deploys every umbrella Helm chart in [k8s-apps](/k8s-apps/) — an app is deployed by adding an (optionally empty) `appset.yaml` to its chart directory, undeployed by moving the directory to [k8s-apps/archive](/k8s-apps/archive/)
 - Fully automated HTTPS exposition using [cert-manager](https://cert-manager.io/), [external-dns](https://kubernetes-sigs.github.io/external-dns) and [traefik](https://doc.traefik.io/traefik/)
 - Authentication of sensitive apps with [PocketID](https://pocket-id.org/) as a passkey-only OIDC provider
 - WAF using [ModSecurity plugin](https://plugins.traefik.io/plugins/644d9a72ebafd55c9c740848/mx-m-owasp-crs-modsecurity-plugin) and some [hacks](https://github.com/cterence/homelab-gitops/blob/a3fc90f9bab0287c901fd8f3cbab295a695b7658/k8s-apps/traefik/values.yaml#L78)
@@ -42,7 +42,7 @@ registry — ready to deploy from [`k8s-apps/`](k8s-apps/). See
 
 ## 💻 What's currently deployed in my cluster ?
 
-This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) list of the apps I have configured and/or deployed. Click on an app to check its Helm configuration.
+This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) list of the apps deployed in my cluster. Click on an app to check its Helm configuration.
 
 <!-- BEGIN deployed-apps -->
 | App | Description |

@@ -6,76 +6,15 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-    - list:
-        elements:
-          - name: anubis
-          - name: argocd
-            serverSideApply: true
-          - name: audiobookshelf
-            scaleToZero: true
-          - name: arr-stack
-            scaleToZero: true
-          - name: cert-manager
-          - name: changedetection
-          - name: cloudnative-pg
-            namespace: cnpg-system
-            serverSideApply: true
-          - name: cnpg-restore-test
-          - name: convertx
-            scaleToZero: true
-          - name: disk-usage-exporter
-            namespace: monitoring
-          - name: external-dns
-          - name: external-secrets
-            serverSideApply: true
-          - name: firefly
-          - name: gitea
-          - name: go-healthcheck
-          - name: home-assistant
-          - name: httpbin
-            scaleToZero: true
-          - name: workbench
-          - name: immich
-          - name: it-tools
-            scaleToZero: true
-          - name: kube-prometheus-stack
-            namespace: monitoring
-            serverSideApply: true
-          - name: lastfm-scrobble-deduplicator
-          - name: local-path-provisioner
-          - name: loki
-          - name: mcp-telegram
-          - name: metallb
-          - name: microbin
-            scaleToZero: true
-          - name: mosquitto
-          - name: nextcloud
-            serverSideApply: true
-          - name: niks3
-          - name: openbao
-          - name: opentelemetry-collector
-          - name: opentelemetry-operator
-          - name: paperless-ngx
-          - name: pocket-id
-            serverSideApply: true
-            serverSideDiff: true
-          - name: registry
-          - name: reloader
-          - name: sablier
-          - name: steam-headless
-          - name: tailscale-operator
-          - name: traefik
-          - name: tts9000
-            scaleToZero: true
-          - name: vaultwarden
-          - name: velero
-          - name: versity-gw
-            scaleToZero: true
-          - name: zigbee2mqtt
+    - git:
+        repoURL: git@github.com:cterence/homelab-gitops.git
+        revision: HEAD
+        files:
+          - path: "k8s-apps/*/appset.yaml"
 
   template:
     metadata:
-      name: "{{ .name }}"
+      name: "{{ .path.basename }}"
       annotations:
         argocd.argoproj.io/manifest-generate-paths: "."
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
@@ -87,10 +26,10 @@ spec:
       source:
         repoURL: git@github.com:cterence/homelab-gitops.git
         targetRevision: HEAD
-        path: "k8s-apps/{{ .name }}"
+        path: "{{ .path.path }}"
       destination:
         name: in-cluster
-        namespace: '{{ default .name (dig "namespace" "" .) }}'
+        namespace: '{{ default .path.basename (dig "namespace" "" .) }}'
       ignoreDifferences:
         - group: apiextensions.k8s.io
           kind: CustomResourceDefinition

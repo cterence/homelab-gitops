@@ -13,19 +13,23 @@ done)
 EXCLUDED_APPS="${EXCLUDED_APPS} 0_template archive"
 # Remove excluded apps from the list of configured apps
 CONFIGURED_APPS=$(echo ${CONFIGURED_APPS} ${EXCLUDED_APPS} | tr ' ' '\n' | sort | uniq -u | xargs)
-DEPLOYED_APPS=$(yq -r '.spec.generators[0].list.elements[].name' ${DIR}/../argocd-apps/applicationset.yaml | xargs)
+DEPLOYED_APPS=$(ls ${DIR}/../k8s-apps/*/appset.yaml | xargs -n1 dirname | xargs -n1 basename | xargs)
 
-# Fail on drift between k8s-apps directories and applicationset entries
+# Fail on charts without an appset.yaml (they would not be deployed)
+# or on unknown keys in an appset.yaml (a typo silently disables its flag)
 DRIFT=0
+ALLOWED_KEYS=$(yq -r '.properties | keys | .[]' ${DIR}/../scripts/appset.schema.json | xargs)
+for f in ${DIR}/../k8s-apps/*/appset.yaml; do
+  for key in $(yq -r 'to_entries | .[] | .key' "$f" | xargs); do
+    if [[ ! " ${ALLOWED_KEYS} " =~ " ${key} " ]]; then
+      echo "unknown key '${key}' in ${f} (allowed: ${ALLOWED_KEYS})" >&2
+      DRIFT=1
+    fi
+  done
+done
 for app in ${CONFIGURED_APPS}; do
   if [[ ! " ${DEPLOYED_APPS} " =~ " ${app} " ]]; then
-    echo "k8s-apps/${app} has no applicationset entry" >&2
-    DRIFT=1
-  fi
-done
-for app in ${DEPLOYED_APPS}; do
-  if [[ ! " ${CONFIGURED_APPS} " =~ " ${app} " ]]; then
-    echo "applicationset entry ${app} has no k8s-apps directory" >&2
+    echo "k8s-apps/${app} has no appset.yaml — deploy it (add appset.yaml) or archive it (move to k8s-apps/archive/)" >&2
     DRIFT=1
   fi
 done

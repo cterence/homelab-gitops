@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ApplicationSet per-app config",
+  "description": "Contents of k8s-apps/<app>/appset.yaml. Keys are flattened into the ApplicationSet git file generator template params. All keys are optional.",
+  "type": ["object", "null"],
+  "properties": {
+    "namespace": {
+      "type": "string",
+      "description": "Destination namespace override (defaults to the app directory name)"
+    },
+    "serverSideApply": {
+      "type": "boolean",
+      "description": "Enables the ServerSideApply=true sync option"
+    },
+    "serverSideDiff": {
+      "type": "boolean",
+      "description": "Enables the ServerSideDiff=true compare option"
+    },
+    "scaleToZero": {
+      "type": "boolean",
+      "description": "Ignores .spec.replicas so the app can be scaled to zero without self-heal reverting it"
+    }
+  },
+  "additionalProperties": false
+}
