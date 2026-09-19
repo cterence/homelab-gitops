@@ -1748,7 +1748,8 @@ app-template:
                 target:
                   - 192.168.2.1
               metricRelabelings:
-                - sourceLabels: [__name__]
+                - action: replace
+                  sourceLabels: [__name__]
                   targetLabel: tunnel
                   replacement: qbittorrent-wg
     qbittorrent-tunnel-rule:
