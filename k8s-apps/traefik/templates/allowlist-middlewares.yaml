@@ -26,6 +26,8 @@ spec:
       resetAfter: 3600
       statsInterval: 300
       errorCodes: "400-498"
+      patternsFile: /plugins-local/src/github.com/cterence/homelab-gitops/workbench/traefikjail/patterns.txt
+      patternWeight: 5
       excludeURLs:
         - niks3.terence.cloud/*.narinfo
         - niks3.terence.cloud/api/*
@@ -33,3 +35,4 @@ spec:
         {{- range .Values.allowListIPs }}
         - {{ . }}
         {{- end }}
+?

@@ -20,9 +20,41 @@ data:
       resetAfter: 3600
       allowList:
         - 10.0.0.0/8
+  patterns.txt: |
+    # Regex patterns, one per line, matched against the request path.
+    # A match counts patternWeight errors toward the jail threshold,
+    # regardless of the response status code.
+    (?i)^/\.env
+    (?i)^/api/\.env
+    (?i)^/\.ssh/
+    (?i)^/\.git/
+    (?i)^/\.svn/
+    (?i)^/\.aws/
+    (?i)^/\.bash_history
+    (?i)^/\.npmrc
+    (?i)^/\.vscode/sftp\.json
+    (?i)^/_vti_pvt/
+    (?i)^/wp-config\.php
+    (?i)^/wp-admin/setup-config\.php
+    (?i)^/phpinfo\.php
+    (?i)/(wordpress|wp|blog)/wp/v2/users
+    (?i)^/(backup|dump|database|database_backup)\.sql
+    (?i)\.sql$
+    (?i)^/secrets?\.json
+    (?i)^/server\.key
+    (?i)^/docker-compose\.yml
+    (?i)^/(firebase-key|firebase-adminsdk|keyfile|key|google-key)\.json
+    (?i)^/\.config/gcloud/
+    (?i)^/phpmyadmin/
+    (?i)^/pma/
+    (?i)^/dbadmin/
+    (?i)^/storage/logs/laravel\.log
+    (?i)^/user_secrets\.yml
+    (?i)^/zzcanary-
   go.mod: |
     {{- .Files.Get "traefik-jail/go.mod" | nindent 4 }}
   jail.go: |
     {{- .Files.Get "traefik-jail/jail.go" | nindent 4 }}
   plugin.go: |
     {{- .Files.Get "traefik-jail/plugin.go" | nindent 4 }}
+?
