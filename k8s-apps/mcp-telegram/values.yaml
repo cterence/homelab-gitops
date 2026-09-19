@@ -19,7 +19,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/mcp-telegram
-            tag: v3
+            tag: v2
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
@@ -72,8 +72,7 @@ app-template:
                 identifier: main
                 port: http
       tls:
-        - secretN
-ame: tmcp-tls
+        - secretName: tmcp-tls
           hosts:
             - *host
 
