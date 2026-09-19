@@ -24,6 +24,8 @@ data:
     # Regex patterns, one per line, matched against the request path.
     # A match counts patternWeight errors toward the jail threshold,
     # regardless of the response status code.
+    # Regenerate the fail2ban-derived section with
+    # scripts/extract-jail-patterns.sh and review the diff.
     (?i)^/\.env
     (?i)^/api/\.env
     (?i)^/\.ssh/
@@ -45,12 +47,22 @@ data:
     (?i)^/docker-compose\.yml
     (?i)^/(firebase-key|firebase-adminsdk|keyfile|key|google-key)\.json
     (?i)^/\.config/gcloud/
-    (?i)^/phpmyadmin/
-    (?i)^/pma/
     (?i)^/dbadmin/
     (?i)^/storage/logs/laravel\.log
     (?i)^/user_secrets\.yml
     (?i)^/zzcanary-
+
+    # --- fail2ban-derived: https://github.com/fail2ban/fail2ban
+    # --- pinned to 7212404e8f937762a80325ba28b402a1f55535b0, from config/filter.d/botsearch-common.conf
+    # --- regenerate with scripts/extract-jail-patterns.sh and review the diff
+    (?i)^/roundcube(?:/|[-._0-9]|$)
+    (?i)^/(ext)?mail(?:/|[-._0-9]|$)
+    (?i)^/horde(?:/|[-._0-9]|$)
+    (?i)^/(v-?)?webmail(?:/|[-._0-9]|$)
+    (?i)^/(typo3/|xampp/|admin/|)(pma|(php)?[Mm]y[Aa]dmin)(?:/|[-._0-9]|$)
+    (?i)^/wp-(login|signup|admin)\.php(?:/|[-._0-9]|$)
+    (?i)^/cgi-bin(?:/|[-._0-9]|$)
+    (?i)^/mysqladmin(?:/|[-._0-9]|$)
   go.mod: |
     {{- .Files.Get "traefik-jail/go.mod" | nindent 4 }}
   jail.go: |

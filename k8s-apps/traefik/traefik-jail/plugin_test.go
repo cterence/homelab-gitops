@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -520,6 +522,152 @@ func TestNew_PatternDefaults(t *testing.T) {
 
 	if !p.patterns.matches("/.env") {
 		t.Error("loaded pattern should match")
+	}
+}
+
+// loadProductionPatterns extracts the patterns.txt block from the Helm
+// template that ships the plugin ConfigMap, so the shipped list itself is
+// what gets validated.
+func loadProductionPatterns(t testing.TB) []*regexp.Regexp {
+	t.Helper()
+
+	data, err := os.ReadFile(filepath.Join("..", "templates", "traefik-jail.yaml"))
+	if err != nil {
+		t.Fatalf("reading template: %v", err)
+	}
+
+	lines := strings.Split(string(data), "\n")
+
+	start, end := -1, -1
+
+	for i, line := range lines {
+		switch {
+		case strings.TrimSpace(line) == "patterns.txt: |":
+			start = i + 1
+		case start >= 0 && line != "" && !strings.HasPrefix(line, "    ") && end == -1:
+			end = i
+		}
+	}
+
+	if start < 0 || end < 0 {
+		t.Fatal("patterns.txt block not found in template")
+	}
+
+	regexes := make([]*regexp.Regexp, 0, 64)
+
+	for _, line := range lines[start:end] {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		re, err := regexp.Compile(line)
+		if err != nil {
+			t.Errorf("production pattern %q does not compile: %v", line, err)
+			continue
+		}
+
+		regexes = append(regexes, re)
+	}
+
+	if len(regexes) == 0 {
+		t.Fatal("no production patterns found")
+	}
+
+	return regexes
+}
+
+func TestProductionPatterns_MatchProbes(t *testing.T) {
+	regexes := loadProductionPatterns(t)
+
+	probes := []string{
+		// curated
+		"/.env", "/.env.production", "/api/.env",
+		"/.ssh/id_rsa", "/.git/config", "/.aws/credentials",
+		"/.config/gcloud/credentials.db",
+		"/wp-config.php", "/wp-admin/setup-config.php", "/phpinfo.php",
+		"/blog/wp/v2/users",
+		"/backup.sql", "/dump.sql",
+		"/secrets.json", "/server.key", "/docker-compose.yml",
+		"/dbadmin/",
+		"/storage/logs/laravel.log", "/user_secrets.yml",
+		"/zzcanary-abc123",
+		// fail2ban-derived (botsearch)
+		"/roundcube/", "/mail", "/webmail", "/v-webmail", "/horde",
+		"/pma", "/pma/", "/phpmyadmin", "/phpMyAdmin-4.2.5",
+		"/typo3/phpmyadmin/", "/admin/pma",
+		"/wp-login.php", "/wp-signup.php", "/wp-admin.php",
+		"/cgi-bin/test.cgi", "/mysqladmin/",
+	}
+
+	for _, probe := range probes {
+		matched := false
+
+		for _, re := range regexes {
+			if re.MatchString(probe) {
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			t.Errorf("probe %q matches no pattern", probe)
+		}
+	}
+}
+
+func TestProductionPatterns_NoFalsePositives(t *testing.T) {
+	regexes := loadProductionPatterns(t)
+
+	legit := []string{
+		"/", "/health", "/healthz", "/ready",
+		"/api/users", "/api/v1/things",
+		"/wp-content/uploads/a.png",
+		"/keynote.pdf", "/secrets-guide",
+		"/mailman", "/email", "/mailbox/feed",
+		"/pmarticles",
+		"/admin/panel",
+		"/sitemap.xml", "/blog/post-1",
+		"/docker-compose.yaml",
+	}
+
+	for _, path := range legit {
+		for _, re := range regexes {
+			if re.MatchString(path) {
+				t.Errorf("legit path %q falsely matches %q", path, re.String())
+			}
+		}
+	}
+}
+
+// BenchmarkPatternList_Matches measures the per-request cost of the pattern
+// scan through the production patternList path (mutex, stat throttle and
+// regex scan included). matches() runs on every non-bypassed request, so the
+// no-match cases are the ones that matter for overall proxy overhead.
+func BenchmarkPatternList_Matches(b *testing.B) {
+	p := &patternList{path: "/nonexistent", regexes: loadProductionPatterns(b)}
+
+	// Prime the stat throttle so the benchmark measures steady state.
+	_ = p.matches("/.env")
+
+	benchmarks := []struct {
+		name string
+		path string
+	}{
+		{"no-match-long", "/api/v1/some/deeply/nested/resource/with/many/segments"},
+		{"no-match-short", "/"},
+		{"match-first-pattern", "/.env"},
+		{"match-last-pattern", "/mysqladmin/"},
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			b.ReportAllocs()
+
+			for b.Loop() {
+				_ = p.matches(bm.path)
+			}
+		})
 	}
 }
 
