@@ -34,6 +34,7 @@
             pkgs = import nixpkgs {
               inherit system;
               overlays = [ self.overlays.default ];
+              config.allowUnfree = true;
             };
           }
         );
@@ -129,6 +130,7 @@
               gotools
               golangci-lint
               uv
+              vault
               self.checks.${pkgs.stdenv.hostPlatform.system}.pre-commit-check.enabledPackages
             ];
           };
