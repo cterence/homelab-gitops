@@ -19,7 +19,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/mcp-telegram
-            tag: v3
+            tag: v4
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
