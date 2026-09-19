@@ -1,6 +1,6 @@
 # appset.yaml marks the app as deployed (ApplicationSet git file generator
 # matches k8s-apps/*/appset.yaml). Leave it empty for defaults, or set any of:
 #   namespace: <destination namespace override>
-#   serverSideApply: true
+#   serverSideApply: false    (server-side apply is on by default)
 #   serverSideDiff: true
 #   scaleToZero: true

@@ -10,7 +10,8 @@
     },
     "serverSideApply": {
       "type": "boolean",
-      "description": "Enables the ServerSideApply=true sync option"
+      "default": true,
+      "description": "Set to false to disable server-side apply (enabled by default)"
     },
     "serverSideDiff": {
       "type": "boolean",

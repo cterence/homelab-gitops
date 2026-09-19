@@ -52,4 +52,4 @@ spec:
           - CreateNamespace=true
           - RespectIgnoreDifferences=true
           - '{{ printf "%s=%s" "ServerSideApply" (dig "serverSideApply"
-            "false" . | toString) }}'
+            "true" . | toString) }}'
