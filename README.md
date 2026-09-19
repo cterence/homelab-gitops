@@ -94,3 +94,5 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [workbench](./scripts/../k8s-apps/workbench) | ApplicationSet that builds images from workbench/* subdirs |
 | [zigbee2mqtt](./scripts/../k8s-apps/zigbee2mqtt) | Zigbee to MQTT bridge |
 <!-- END deployed-apps -->
+
+<!-- e2e 4 -->
