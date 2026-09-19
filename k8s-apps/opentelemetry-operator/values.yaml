@@ -5,7 +5,7 @@ opentelemetry-operator:
     serviceMonitor:
       enabled: true
     prometheusRule:
-      enabled: true
+      enabled: false
     createRbacPermissions: true
     extraArgs:
       - --enable-go-instrumentation
