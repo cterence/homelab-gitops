@@ -83,12 +83,13 @@ func TestJailer_WindowReset(t *testing.T) {
 	j.RecordError("1.2.3.4", now)
 	j.RecordError("1.2.3.4", now.Add(10*time.Second))
 
-	// After the window elapses, count should reset
+	// After the window elapses the count halves instead of resetting:
+	// 2 errors decay to 1, plus this one = 2, still below the threshold of 3.
 	later := now.Add(61 * time.Second)
 
 	d := j.RecordError("1.2.3.4", later)
 	if d != 0 {
-		t.Fatalf("expected no ban after window reset, got %s", d)
+		t.Fatalf("expected no ban after window decay, got %s", d)
 	}
 }
 
@@ -120,6 +121,149 @@ func TestJailer_BanCounterReset(t *testing.T) {
 	afterBan := afterReset.Add(1 * time.Minute)
 	if j.IsJailed("1.2.3.4", afterBan) {
 		t.Fatal("expected 1m ban (reset counter)")
+	}
+}
+
+func TestJailer_RecordErrorsWeight(t *testing.T) {
+	j := NewJailer(10, 60*time.Second, 1*time.Minute, 1*time.Hour, 1*time.Hour)
+
+	now := time.Date(2026, 8, 29, 9, 0, 0, 0, time.UTC)
+
+	// Two weighted errors of 5 reach the threshold of 10
+	if d := j.RecordErrors("1.2.3.4", 5, now); d != 0 {
+		t.Fatalf("expected no ban, got %s", d)
+	}
+
+	if d := j.RecordErrors("1.2.3.4", 5, now); d != 1*time.Minute {
+		t.Fatalf("expected 1m ban, got %s", d)
+	}
+
+	// Weight 0 must never accumulate
+	afterBan := now.Add(1 * time.Minute)
+
+	for range 10 {
+		if d := j.RecordErrors("5.6.7.8", 0, afterBan); d != 0 {
+			t.Fatalf("expected no ban with weight 0, got %s", d)
+		}
+	}
+
+	if j.IsJailed("5.6.7.8", afterBan) {
+		t.Fatal("weight 0 must never jail")
+	}
+}
+
+func TestJailer_DecayWindow(t *testing.T) {
+	j := NewJailer(100, 60*time.Second, 1*time.Minute, 1*time.Hour, 1*time.Hour)
+
+	now := time.Date(2026, 8, 29, 9, 0, 0, 0, time.UTC)
+
+	// 80 errors in the first window
+	j.RecordErrors("1.2.3.4", 80, now)
+
+	s := j.ips["1.2.3.4"]
+	if s.errorCount != 80 {
+		t.Fatalf("initial count = %d, want 80", s.errorCount)
+	}
+
+	// One window later: 80 halves to 40, plus this error = 41
+	j.RecordError("1.2.3.4", now.Add(61*time.Second))
+
+	if s.errorCount != 41 {
+		t.Errorf("count after 1 halving = %d, want 41", s.errorCount)
+	}
+
+	if !s.windowStart.Equal(now.Add(60 * time.Second)) {
+		t.Errorf("windowStart = %s, want %s (advanced by one window)", s.windowStart, now.Add(60*time.Second))
+	}
+
+	// Two more windows later: 41 halves twice (10), plus this error = 11
+	j.RecordError("1.2.3.4", now.Add(181*time.Second))
+
+	if s.errorCount != 11 {
+		t.Errorf("count after 2 more halvings = %d, want 11", s.errorCount)
+	}
+
+	if !s.windowStart.Equal(now.Add(180 * time.Second)) {
+		t.Errorf("windowStart = %s, want %s", s.windowStart, now.Add(180*time.Second))
+	}
+
+	// Far in the future: the count decays to 0 and the window restarts at now
+	much := now.Add(600 * time.Second)
+	j.RecordError("1.2.3.4", much)
+
+	if s.errorCount != 1 {
+		t.Errorf("count after full decay = %d, want 1", s.errorCount)
+	}
+
+	if !s.windowStart.Equal(much) {
+		t.Errorf("windowStart = %s, want %s (reset to now)", s.windowStart, much)
+	}
+}
+
+func TestJailer_DecayHalvingClamp(t *testing.T) {
+	// Threshold above the recorded count so no ban fires mid-test
+	j := NewJailer(1<<40, 60*time.Second, 1*time.Minute, 1*time.Hour, 1*time.Hour)
+
+	now := time.Date(2026, 8, 29, 9, 0, 0, 0, time.UTC)
+
+	// A huge count 1000 windows later: halvings are clamped at 31,
+	// so 1<<35 decays to 1<<4 = 16, plus this error = 17.
+	j.RecordErrors("1.2.3.4", 1<<35, now)
+	j.RecordError("1.2.3.4", now.Add(1000*60*time.Second))
+
+	s := j.ips["1.2.3.4"]
+	if s.errorCount != 17 {
+		t.Errorf("count = %d, want 17 (31-halving clamp)", s.errorCount)
+	}
+}
+
+func TestJailer_SlowBurnScannerEventuallyBanned(t *testing.T) {
+	// The headline scenario: 25 errors per 2-minute window stays below the
+	// threshold of 30 forever with a tumbling window, but the decaying
+	// window accumulates and bans within a few windows.
+	j := NewJailer(30, 2*time.Minute, 1*time.Minute, 1*time.Hour, 1*time.Hour)
+
+	now := time.Date(2026, 8, 29, 9, 0, 0, 0, time.UTC)
+
+	bannedAt := -1
+
+	for w := range 10 {
+		ts := now.Add(time.Duration(w) * 2 * time.Minute)
+
+		for range 25 {
+			if d := j.RecordError("45.148.10.5", ts); d > 0 {
+				bannedAt = w
+			}
+		}
+
+		if bannedAt >= 0 {
+			break
+		}
+	}
+
+	if bannedAt != 1 {
+		t.Fatalf("expected ban in window 1 (12 decayed + 25 = 37 >= 30), bannedAt = %d", bannedAt)
+	}
+}
+
+func TestJailer_LegitBurstDecaysAway(t *testing.T) {
+	// A one-off burst of 20 errors followed by a trickle of 1 per window
+	// must never cross the threshold of 30.
+	j := NewJailer(30, 60*time.Second, 1*time.Minute, 1*time.Hour, 1*time.Hour)
+
+	now := time.Date(2026, 8, 29, 9, 0, 0, 0, time.UTC)
+
+	for w := range 10 {
+		weight := 1
+		if w == 0 {
+			weight = 20
+		}
+
+		j.RecordErrors("93.184.216.34", weight, now.Add(time.Duration(w)*60*time.Second))
+	}
+
+	if j.IsJailed("93.184.216.34", now.Add(10*60*time.Second)) {
+		t.Fatal("legitimate burst should decay away without a ban")
 	}
 }
 

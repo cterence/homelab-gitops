@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -36,6 +38,8 @@ type Config struct {
 	StatsInterval int      `json:"statsInterval,omitempty"` // seconds, 0 = disabled
 	ErrorCodes    string   `json:"errorCodes,omitempty"`    // comma-separated codes/ranges, e.g. "400-499" or "404,403"
 	ExcludeURLs   []string `json:"excludeURLs,omitempty"`   // glob patterns skipping jail entirely; path-only if starting with /, else host+path
+	PatternsFile  string   `json:"patternsFile,omitempty"`  // path to a newline-separated regex file; a match counts patternWeight errors regardless of status
+	PatternWeight int      `json:"patternWeight,omitempty"` // errors recorded per pattern match (default 3)
 }
 
 // CreateConfig creates the default plugin configuration.
@@ -51,13 +55,15 @@ func CreateConfig() *Config {
 
 // JailPlugin is the Traefik middleware plugin.
 type JailPlugin struct {
-	next       http.Handler
-	name       string
-	jailer     *Jailer
-	allowList  []string
-	stats      *requestStats
-	errorCodes codeMatcher
-	excludeURLs []string
+	next          http.Handler
+	name          string
+	jailer        *Jailer
+	allowList     []string
+	stats         *requestStats
+	errorCodes    codeMatcher
+	excludeURLs   []string
+	patterns      *patternList
+	patternWeight int
 }
 
 // requestStats tracks plugin processing time with atomic counters.
@@ -134,6 +140,90 @@ func (s *requestStats) startLogger(interval time.Duration) {
 	}()
 }
 
+// patternList holds regex patterns loaded from a file (one per line,
+// '#' comments allowed). The file is re-read when its modification time
+// changes, so the list can be updated via ConfigMap rollout without
+// restarting Traefik.
+type patternList struct {
+	mu        sync.RWMutex
+	path      string
+	regexes   []*regexp.Regexp
+	modTime   time.Time
+	lastCheck int64 // unix nanoseconds of the last stat, accessed atomically
+}
+
+func newPatternList(path string) *patternList {
+	p := &patternList{path: path}
+	p.reload()
+
+	return p
+}
+
+func (p *patternList) reload() {
+	info, err := os.Stat(p.path)
+	if err != nil {
+		return
+	}
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !info.ModTime().After(p.modTime) {
+		return
+	}
+
+	data, err := os.ReadFile(p.path)
+	if err != nil {
+		return
+	}
+
+	regexes := make([]*regexp.Regexp, 0, 32)
+
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if re, err := regexp.Compile(line); err == nil {
+			regexes = append(regexes, re)
+		} else {
+			log.Printf("traefik-jail: invalid pattern %q: %v", line, err)
+		}
+	}
+
+	p.regexes = regexes
+	p.modTime = info.ModTime()
+}
+
+// matches reports whether the URL path matches any pattern, re-checking
+// the file for changes at most once every 30 seconds.
+func (p *patternList) matches(urlPath string) bool {
+	now := time.Now().UnixNano()
+
+	for {
+		last := atomic.LoadInt64(&p.lastCheck)
+		if now-last < int64(30*time.Second) {
+			break
+		}
+
+		if atomic.CompareAndSwapInt64(&p.lastCheck, last, now) {
+			p.reload()
+		}
+	}
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	for _, re := range p.regexes {
+		if re.MatchString(urlPath) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // codeMatcher checks if an HTTP status code matches any of the configured codes or ranges.
 type codeMatcher struct {
 	codes  map[int]struct{}
@@ -200,13 +290,23 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 		)
 	})
 
+	patternWeight := config.PatternWeight
+	if patternWeight <= 0 {
+		patternWeight = 3
+	}
+
 	p := &JailPlugin{
-		next:        next,
-		name:        name,
-		jailer:      singletonJailer,
-		allowList:   config.AllowList,
-		errorCodes:  parseErrorCodes(config.ErrorCodes),
-		excludeURLs: config.ExcludeURLs,
+		next:          next,
+		name:          name,
+		jailer:        singletonJailer,
+		allowList:     config.AllowList,
+		errorCodes:    parseErrorCodes(config.ErrorCodes),
+		excludeURLs:   config.ExcludeURLs,
+		patternWeight: patternWeight,
+	}
+
+	if config.PatternsFile != "" {
+		p.patterns = newPatternList(config.PatternsFile)
 	}
 
 	if config.StatsInterval > 0 {
@@ -311,7 +411,12 @@ func (p *JailPlugin) serveJailed(rw http.ResponseWriter, req *http.Request, ip s
 
 	p.next.ServeHTTP(recorder, req)
 
-	if p.errorCodes.matches(recorder.status) {
+	// Pattern matches count regardless of status code: scanners probing
+	// secret paths often get 200s (health-style backends) and would never
+	// accumulate errors otherwise.
+	if p.patterns != nil && p.patterns.matches(req.URL.Path) {
+		p.jailer.RecordErrors(ip, p.patternWeight, time.Now())
+	} else if p.errorCodes.matches(recorder.status) {
 		p.jailer.RecordError(ip, time.Now())
 	}
 }

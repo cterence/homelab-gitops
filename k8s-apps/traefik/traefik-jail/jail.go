@@ -68,9 +68,9 @@ func (j *Jailer) IsJailed(ip string, now time.Time) bool {
 	return false
 }
 
-// RecordError increments the error count for the given IP and jails it if the threshold is exceeded.
+// RecordErrors increments the error count for the given IP by weight and jails it if the threshold is exceeded.
 // Returns the ban duration if the IP was newly jailed, or zero if not.
-func (j *Jailer) RecordError(ip string, now time.Time) time.Duration {
+func (j *Jailer) RecordErrors(ip string, weight int, now time.Time) time.Duration {
 	j.mu.Lock()
 	defer j.mu.Unlock()
 
@@ -88,17 +88,30 @@ func (j *Jailer) RecordError(ip string, now time.Time) time.Duration {
 		return 0
 	}
 
-	// Reset window if it has elapsed
-	if now.Sub(s.windowStart) >= j.window {
-		s.errorCount = 0
-		s.windowStart = now
+	// Decay the error count instead of resetting it to zero: halve the count
+	// for every elapsed window so slow-burn scanners (below threshold per
+	// window, but persistent over hours) eventually cross it, while a single
+	// burst from a legitimate client decays away quickly.
+	if elapsed := now.Sub(s.windowStart); elapsed >= j.window {
+		halvings := int(elapsed / j.window)
+		if halvings > 31 {
+			halvings = 31
+		}
+
+		s.errorCount >>= uint(halvings)
+
+		if s.errorCount == 0 {
+			s.windowStart = now
+		} else {
+			s.windowStart = s.windowStart.Add(time.Duration(halvings) * j.window)
+		}
 	}
 
 	if s.windowStart.IsZero() {
 		s.windowStart = now
 	}
 
-	s.errorCount++
+	s.errorCount += weight
 
 	if s.errorCount < j.threshold {
 		return 0
@@ -114,6 +127,12 @@ func (j *Jailer) RecordError(ip string, now time.Time) time.Duration {
 	log.Printf("traefik-jail: banned ip=%s banCount=%d duration=%s", ip, s.banCount, banDuration)
 
 	return banDuration
+}
+
+// RecordError increments the error count by one. Kept for compatibility
+// with existing callers and tests.
+func (j *Jailer) RecordError(ip string, now time.Time) time.Duration {
+	return j.RecordErrors(ip, 1, now)
 }
 
 // banDuration calculates the ban duration with exponential backoff: baseBan * 2^(banCount-1),
