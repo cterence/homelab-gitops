@@ -1,0 +1,129 @@
+name: Workbench CI
+
+on:
+  pull_request:
+    paths:
+      - workbench/**
+
+concurrency:
+  group: workbench-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  changes:
+    name: Detect changed workbench apps
+    runs-on: ubuntu-latest
+    outputs:
+      go-apps: ${{ steps.apps.outputs.go }}
+      python-apps: ${{ steps.apps.outputs.python }}
+      docker-apps: ${{ steps.apps.outputs.docker }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Classify changed apps
+        id: apps
+        run: |
+          base="origin/${{ github.base_ref }}"
+          mb=$(git merge-base "$base" HEAD)
+          apps=$(git diff --name-only "$mb" HEAD -- workbench/ | cut -d/ -f2 | sort -u)
+          go="[]"; python="[]"; docker="[]"
+          for app in $apps; do
+            [ -f "workbench/$app/go.mod" ] && go=$(jq -c --arg a "$app" '. + [$a]' <<<"$go")
+            [ -f "workbench/$app/pyproject.toml" ] && python=$(jq -c --arg a "$app" '. + [$a]' <<<"$python")
+            [ -f "workbench/$app/Dockerfile" ] && docker=$(jq -c --arg a "$app" '. + [$a]' <<<"$docker")
+          done
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+          echo "python=$python" >> "$GITHUB_OUTPUT"
+          echo "docker=$docker" >> "$GITHUB_OUTPUT"
+
+  test-go:
+    name: Test Go (${{ matrix.app }})
+    needs: changes
+    if: needs.changes.outputs.go-apps != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.go-apps) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: workbench/${{ matrix.app }}/go.mod
+          cache-dependency-path: workbench/${{ matrix.app }}/go.sum
+      - name: Vet
+        run: go vet ./...
+        working-directory: workbench/${{ matrix.app }}
+      - name: Test
+        run: go test ./...
+        working-directory: workbench/${{ matrix.app }}
+      - name: Lint
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
+        with:
+          working-directory: workbench/${{ matrix.app }}
+
+  test-python:
+    name: Test Python (${{ matrix.app }})
+    needs: changes
+    if: needs.changes.outputs.python-apps != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.python-apps) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: Test
+        run: |
+          uv sync --group dev
+          uv run --group dev pytest
+        working-directory: workbench/${{ matrix.app }}
+
+  build-image:
+    name: Build image (${{ matrix.app }})
+    needs: changes
+    if: needs.changes.outputs.docker-apps != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.docker-apps) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build (no push, mirrors Kaniko context-sub-path)
+        run: docker build -t ci/${{ matrix.app }}:pr .
+        working-directory: workbench/${{ matrix.app }}
+
+  tag-bump:
+    name: Bump image tags for changed apps
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          bash scripts/workbench-tag-bump.sh "origin/${{ github.base_ref }}"
+      - name: Push bump commits
+        run: |
+          if [ "$(git rev-parse HEAD)" != "${{ github.event.pull_request.head.sha }}" ]; then
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          else
+            echo "no bumps needed"
+          fi
