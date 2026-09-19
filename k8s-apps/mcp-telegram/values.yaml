@@ -15,11 +15,11 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
 
-      containers:
+    containers:
         main:
           image:
-            repository: registry.terence.cloud/mcp-telegram
-            tag: v2
+              repository: registry.terence.cloud/mcp-telegram
+            tag: v3
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
@@ -47,20 +47,20 @@ app-template:
 
   service:
     main:
-      controller: main
+    controller: main
       type: ClusterIP
       ports:
-        http:
+          http:
           port: 8000
       annotations:
-        tailscale.com/expose: "true"
+          tailscale.com/expose: "true"
         tailscale.com/hostname: telegram-mcp
 
   ingress:
     main:
       annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
+          cert-manager.io/cluster-issuer: letsencrypt
+          external-dns.kubernetes.io/target: home.terence.cloud
         traefik.ingress.kubernetes.io/router.middlewares: "mcp-telegram-mcp-auth@kubernetescrd,traefik-mistral-ip-allowlist@kubernetescrd"
       className: "traefik"
       hosts:
@@ -71,16 +71,16 @@ app-template:
               service:
                 identifier: main
                 port: http
-      tls:
+        tls:
         - secretName: tmcp-tls
-          hosts:
+           hosts:
             - *host
 
   rawResources:
     credentials:
       enabled: true
       forceRename: "credentials"
-      manifest:
+    manifest:
         apiVersion: external-secrets.io/v1
         kind: ExternalSecret
         metadata:
@@ -88,12 +88,12 @@ app-template:
             argocd.argoproj.io/sync-options: ServerSideApply=true
         spec:
           secretStoreRef:
-            kind: ClusterSecretStore
+             kind: ClusterSecretStore
             name: openbao-secret-store
-          target:
-            name: "credentials"
+           target:
+              name: "credentials"
             creationPolicy: Owner
-          dataFrom:
+           dataFrom:
             - extract:
                 key: mcp-telegram/credentials
                 conversionStrategy: Default
@@ -101,11 +101,11 @@ app-template:
                 metadataPolicy: None
                 nullBytePolicy: Ignore
     mcp-auth-middleware:
-      enabled: true
+        enabled: true
       forceRename: mcp-auth
       manifest:
         apiVersion: traefik.io/v1alpha1
-        kind: Middleware
+         kind: Middleware
         spec:
           basicAuth:
             secret: mcp-telegram-auth
@@ -114,9 +114,8 @@ app-template:
       forceRename: mcp-telegram-auth
       manifest:
         apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
         spec:
-          refreshInterval: "0"
+         refreshInterval: "0"
           target:
             name: mcp-telegram-auth
             creationPolicy: Owner
@@ -132,3 +131,4 @@ app-template:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: short-password
+ÿÿ
