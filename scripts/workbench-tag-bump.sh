@@ -44,7 +44,9 @@ for app in $APPS; do
 
   echo "bumped $app: $old -> $new"
   if [ "$DRY_RUN" != "--dry-run" ]; then
-    git add "$build_yaml" "$values"
+    add_files=("$build_yaml")
+    if [ -f "$values" ]; then add_files+=("$values"); fi
+    git add "${add_files[@]}"
     git commit -q -m "$app: bump image tag to $new"
   fi
 done
