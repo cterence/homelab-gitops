@@ -48,6 +48,12 @@
       enabled: false,
     },
     {
+      matchPackageNames: [
+        '/^registry\\.terence\\.cloud\\//',
+      ],
+      enabled: false,
+    },
+    {
       matchDatasources: [
         'helm',
       ],
