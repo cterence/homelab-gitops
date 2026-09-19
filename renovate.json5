@@ -11,6 +11,9 @@
     ':automergeDigest',
     ':skipStatusChecks',
   ],
+  gomod: {
+    postUpdateOptions: ['gomodTidy'],
+  },
   dependencyDashboardTitle: '🤖 Renovate Dashboard',
   commitMessageTopic: '{{depName}}',
   commitMessageExtra: 'to {{newVersion}}',
