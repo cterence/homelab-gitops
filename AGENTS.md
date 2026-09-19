@@ -35,6 +35,8 @@ terraform/     Infrastructure provisioning (secrets, external-secrets)
 Always check `./argocd-apps/applicationset.yaml` for the list of currently deployed apps.
 Each entry maps to `k8s-apps/<name>/` as a Helm chart source.
 
+Tool/API documentation for workbench apps lives in each app's `README.md` — update it whenever an app's interface (tool arguments, endpoints, env vars) changes.
+
 ## Superpowers
 
 Never git add things in docs/superpowers forcefully.
@@ -45,6 +47,21 @@ When modifying code under `workbench/<app>/`, bump both the build tag and the im
 
 - `workbench/<app>/build.yaml` — increment `tag`
 - `k8s-apps/<app>/values.yaml` — update the image `tag` to match
+
+Both bumps must land in the same commit/PR. The pipeline is:
+
+1. On merge, the `build-<app>` ArgoCD application runs a Kaniko build in-cluster.
+2. Kaniko pushes `registry.terence.cloud/<app>:<tag>` to the in-cluster registry.
+3. ArgoCD syncs `k8s-apps/<app>` to the new tag and rolls the Deployment.
+
+Caveats:
+
+- Never reuse an old tag for new code — `pullPolicy: IfNotPresent` means nodes
+  will keep serving the cached image. Always increment.
+- After merging, check the `build-<app>` application in ArgoCD: if the Kaniko
+  build fails, the app deployment will be stuck in ImagePullBackOff.
+- `Chart.yaml` version stays `0.1.0` (never bumped) — the image tag is the
+  release mechanism.
 
 ## Golang
 
