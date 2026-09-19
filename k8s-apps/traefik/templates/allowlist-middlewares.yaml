@@ -35,4 +35,3 @@ spec:
         {{- range .Values.allowListIPs }}
         - {{ . }}
         {{- end }}
-?

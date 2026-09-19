@@ -278,7 +278,7 @@ func (m codeMatcher) matches(status int) bool {
 
 // New creates a new plugin instance.
 // The Jailer and stats collector are package-level singletons so all
-// instances share state â Traefik creates one instance per router.
+// instances share state — Traefik creates one instance per router.
 func New(_ context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	jailerOnce.Do(func() {
 		singletonJailer = NewJailer(
@@ -323,7 +323,7 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 
 // ServeHTTP implements http.Handler.
 func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// URL exclusion bypass â earliest possible return, before any allocation.
+	// URL exclusion bypass — earliest possible return, before any allocation.
 	// Patterns starting with / match against the path only; all others match
 	// against the full host+path so exclusions can be scoped to a specific vhost.
 	if len(p.excludeURLs) > 0 && p.isExcluded(req) {
@@ -332,7 +332,7 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// mTLS bypass â a client whose certificate chain was verified against the
+	// mTLS bypass — a client whose certificate chain was verified against the
 	// router's CA (RequireAndVerifyClientCert) is already authenticated. The
 	// TLS handshake runs before any middleware, so non-empty VerifiedChains
 	// proves the client passed mTLS on this connection.
@@ -342,7 +342,7 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Allowlist bypass â earliest possible return, before any allocation.
+	// Allowlist bypass — earliest possible return, before any allocation.
 	if len(p.allowList) > 0 {
 		ip := extractIPFromRequest(req)
 		if isAllowed(ip, p.allowList) {

@@ -57,4 +57,3 @@ data:
     {{- .Files.Get "traefik-jail/jail.go" | nindent 4 }}
   plugin.go: |
     {{- .Files.Get "traefik-jail/plugin.go" | nindent 4 }}
-?

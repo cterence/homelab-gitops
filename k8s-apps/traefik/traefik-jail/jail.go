@@ -59,7 +59,7 @@ func (j *Jailer) IsJailed(ip string, now time.Time) bool {
 		return true
 	}
 
-	// Ban has expired â check if we should reset the ban counter
+	// Ban has expired — check if we should reset the ban counter
 	if !s.banUntil.IsZero() && now.Sub(s.banUntil) >= j.resetAfter {
 		s.banCount = 0
 		s.banUntil = time.Time{}
@@ -117,7 +117,7 @@ func (j *Jailer) RecordErrors(ip string, weight int, now time.Time) time.Duratio
 		return 0
 	}
 
-	// Threshold exceeded â jail with exponential backoff
+	// Threshold exceeded — jail with exponential backoff
 	s.banCount++
 	banDuration := j.banDuration(s.banCount)
 	s.banUntil = now.Add(banDuration)
