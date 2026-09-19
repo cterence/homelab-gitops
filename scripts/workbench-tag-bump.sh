@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Bumps workbench/<app>/build.yaml image tags (and the matching tag in
-# k8s-apps/<app>/values.yaml) when a PR modifies an app without bumping its
-# tag. Runs on every push to a PR; idempotent because the check is a diff
-# against the merge base with the base branch: once a PR contains a tag
-# change, later runs and commits never bump again.
+# Bumps workbench/<app>/build.yaml image tags — and the matching image tag in
+# every k8s-apps values file that references the app's image — when a PR
+# modifies an app without bumping its tag. References are found by scanning
+# k8s-apps/*/values.yaml for the app's repository line, either as
+# "repository: registry.terence.cloud/<app>" (app-template) or as a bare
+# "repository: <app>" with a separate registry key (e.g. gitea mirrorSync),
+# so images consumed as sidecars by other apps are updated too.
+# Idempotent per PR: the check is a diff against the merge base, so once a
+# PR contains a tag change, later runs and commits never bump again.
 #
 # Usage: workbench-tag-bump.sh <base-ref> [--dry-run]
 # Commits per app as "<app>: bump image tag to <new>"; push is left to CI.
@@ -32,20 +36,30 @@ for app in $APPS; do
   awk -v new="tag: $new" '/^tag:/{print new; next} {print}' "$build_yaml" > "$build_yaml.tmp"
   mv "$build_yaml.tmp" "$build_yaml"
 
-  values="k8s-apps/$app/values.yaml"
-  if [ -f "$values" ]; then
-    awk -v repo="registry.terence.cloud/$app" -v old="$old" -v new="$new" '
-      $0 ~ "repository: " repo { inblock=1; print; next }
-      inblock && $0 ~ ("^[[:space:]]*tag: " old "$") { sub(old, new); inblock=0 }
+  echo "bumped $app: $old -> $new"
+
+  add_files=("$build_yaml")
+  while IFS= read -r values; do
+    awk -v app="$app" -v old="$old" -v new="$new" '
+      /^[[:space:]]*repository:/ {
+        inblock = ($0 ~ ("^[[:space:]]*repository: (registry\\.terence\\.cloud/)?" app "[[:space:]]*$"))
+        print
+        next
+      }
+      inblock && $0 ~ ("^[[:space:]]*tag: " old "[[:space:]]*$") { sub(old, new); inblock=0 }
       { print }
     ' "$values" > "$values.tmp"
-    mv "$values.tmp" "$values"
-  fi
+    if cmp -s "$values" "$values.tmp"; then
+      rm "$values.tmp"
+      echo "  WARNING: $values references $app but its tag is not \"$old\" — update manually" >&2
+    else
+      mv "$values.tmp" "$values"
+      add_files+=("$values")
+      echo "  tag updated in $values"
+    fi
+  done < <(grep -lE "^[[:space:]]*repository: (registry\.terence\.cloud/)?$app[[:space:]]*$" k8s-apps/*/values.yaml 2>/dev/null || true)
 
-  echo "bumped $app: $old -> $new"
   if [ "$DRY_RUN" != "--dry-run" ]; then
-    add_files=("$build_yaml")
-    if [ -f "$values" ]; then add_files+=("$values"); fi
     git add "${add_files[@]}"
     git commit -q -m "$app: bump image tag to $new"
   fi

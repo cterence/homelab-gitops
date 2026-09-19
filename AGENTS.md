@@ -48,7 +48,10 @@ Never git add things in docs/superpowers forcefully.
 When modifying code under `workbench/<app>/`, bump both the build tag and the image tag:
 
 - `workbench/<app>/build.yaml` — increment `tag`
-- `k8s-apps/<app>/values.yaml` — update the image `tag` to match
+- `k8s-apps/<app>/values.yaml` — update the image `tag` to match. For images
+  consumed as sidecars by other apps (rangemusique, apachewebdav,
+  gitea-mirror-sync), update the tag in the consuming app's values.yaml
+  instead — CI's tag-bump finds all references automatically.
 
 Both bumps must land in the same commit/PR. The pipeline is:
 
