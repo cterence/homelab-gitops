@@ -5,23 +5,21 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httplog/v2"
+	"github.com/go-chi/httplog/v3"
 	"github.com/hellofresh/health-go/v5"
 )
 
 func newRouter(h *health.Health) *chi.Mux {
 	r := chi.NewRouter()
 
-	logger := httplog.NewLogger("go-healthcheck", httplog.Options{
-		LogLevel:        slog.LevelInfo,
-		Concise:         true,
-		RequestHeaders:  true,
-		TimeFieldFormat: time.RFC3339,
-	})
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: httplog.SchemaECS.ReplaceAttr,
+	})).With(slog.String("service", "go-healthcheck"))
 
 	r.Use(middleware.Heartbeat("/health"))
 	r.Use(middleware.Recoverer)

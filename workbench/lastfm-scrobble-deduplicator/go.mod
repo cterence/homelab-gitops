@@ -4,7 +4,6 @@ go 1.26
 
 require (
 	github.com/antchfx/htmlquery v1.3.6
-	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/cenkalti/backoff/v7 v7.0.0
 	github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc
 	github.com/chromedp/chromedp v0.16.0
@@ -20,7 +19,6 @@ require (
 	github.com/antchfx/xpath v1.3.6 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect

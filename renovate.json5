@@ -12,7 +12,7 @@
     ':skipStatusChecks',
   ],
   gomod: {
-    postUpdateOptions: ['gomodTidy'],
+    postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],
   },
   dependencyDashboardTitle: '🤖 Renovate Dashboard',
   commitMessageTopic: '{{depName}}',
@@ -32,6 +32,14 @@
     },
   ],
   packageRules: [
+    {
+      // Go majors change the module path, so imports must be rewritten
+      // (gomodUpdateImportPaths) and API breakage fixed by hand: require
+      // explicit approval on the dashboard before a PR is opened.
+      matchManagers: ['gomod'],
+      matchUpdateTypes: ['major'],
+      dependencyDashboardApproval: true,
+    },
     {
       matchManagers: [
         'helmv3',

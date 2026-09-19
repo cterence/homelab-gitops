@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/antchfx/htmlquery"
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/chromedp/chromedp"
 	"github.com/go-telegram/bot"
 	"github.com/michiwend/gomusicbrainz"
