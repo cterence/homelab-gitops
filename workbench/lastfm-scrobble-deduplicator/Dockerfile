@@ -1,7 +1,7 @@
 # Build stage: Kaniko clones the repo into a scratch context and runs this
 # Dockerfile, so the source tree is available. We compile the Go binary with
 # CGO disabled for a static distroless-friendly binary.
-FROM golang:1.27-alpine@sha256:4cb7ac979db5fcc41cae44b2227ba5ab8a51e8807f40d9ba4dee20a0ad960b5b AS build
+FROM golang:1.27-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
