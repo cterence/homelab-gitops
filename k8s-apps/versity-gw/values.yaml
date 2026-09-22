@@ -300,32 +300,3 @@ app-template:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: short-password
-    nfs-pv:
-      enabled: true
-      forceRename: mx500-homelab3
-      manifest:
-        apiVersion: v1
-        kind: PersistentVolume
-        metadata:
-          annotations:
-            helm.sh/resource-policy: keep
-          labels:
-            velero.io/exclude-from-backup: "true"
-        spec:
-          capacity:
-            storage: 2Ti
-          volumeMode: Filesystem
-          accessModes:
-            - ReadWriteOnce
-          persistentVolumeReclaimPolicy: Retain
-          storageClassName: nfs
-          mountOptions:
-            - hard
-            - nfsvers=4.1
-            - nosuid
-            - noexec
-            - timeo=600
-            - retrans=2
-          nfs:
-            path: /mx500-homelab3
-            server: 192.168.1.141
