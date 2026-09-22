@@ -14,7 +14,7 @@ changedetection-io:
   env:
     # -- Set the container timezone
     TZ: UTC
-    # -- Minimum log level (default DEBUG floods Loki with browser-capability spam)
+    # -- Minimum log level
     LOGGER_LEVEL: INFO
     # WEBDRIVER_URL: http://changedetection-chrome:4444/wd/hub
     PLAYWRIGHT_DRIVER_URL: ws://sockpuppet-chrome:3000
