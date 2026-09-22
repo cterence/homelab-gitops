@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -34,6 +35,7 @@ type telegramClient struct {
 	apiBase    string
 	botToken   string
 	chatID     string
+	logger     *slog.Logger
 }
 
 func newTelegramClient(httpClient *http.Client, apiBase, botToken, chatID string) *telegramClient {
@@ -42,7 +44,13 @@ func newTelegramClient(httpClient *http.Client, apiBase, botToken, chatID string
 		apiBase:    apiBase,
 		botToken:   botToken,
 		chatID:     chatID,
+		logger:     slog.Default(),
 	}
+}
+
+func (c *telegramClient) withLogger(logger *slog.Logger) *telegramClient {
+	c.logger = logger
+	return c
 }
 
 // clampText caps text at maxTextLength runes, so multi-byte characters are
@@ -78,6 +86,7 @@ func (c *telegramClient) deliver(ctx context.Context, text, parseMode string) (s
 	response, err := c.post(ctx, text, parseMode)
 	if err != nil {
 		if parseMode != "" && isBadRequest(err) {
+			c.logger.Info("retrying as plain text after 400", "chat_id", c.chatID)
 			return c.post(ctx, text, "")
 		}
 

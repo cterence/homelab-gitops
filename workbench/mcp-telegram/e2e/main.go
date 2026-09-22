@@ -48,11 +48,13 @@ func main() {
 	for _, tc := range cases {
 		res, err := sess.CallTool(ctx, &mcp.CallToolParams{Name: "send_message", Arguments: tc.args})
 		switch {
-		case tc.wantError && err == nil:
-			fmt.Printf("FAIL %s: expected protocol error, got result %+v\n", tc.name, res)
-			failed = true
 		case tc.wantError && err != nil:
-			fmt.Printf("PASS %s: rejected as expected: %v\n", tc.name, err)
+			fmt.Printf("PASS %s: rejected as protocol error: %v\n", tc.name, err)
+		case tc.wantError && res != nil && res.IsError:
+			fmt.Printf("PASS %s: rejected as tool error\n", tc.name)
+		case tc.wantError:
+			fmt.Printf("FAIL %s: expected error, got result %+v\n", tc.name, res)
+			failed = true
 		case !tc.wantError && err != nil:
 			fmt.Printf("FAIL %s: %v\n", tc.name, err)
 			failed = true

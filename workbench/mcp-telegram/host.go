@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -36,10 +37,12 @@ func hostAllowed(host string) bool {
 // hostGuard rejects requests whose Host header is outside the allowlist with
 // 421 Misdirected Request, mirroring the DNS-rebinding protection the Python
 // MCP SDK applied via TransportSecuritySettings.
-func hostGuard(next http.Handler) http.Handler {
+func hostGuard(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !hostAllowed(r.Host) {
+			logger.Warn("rejected host", "host", r.Host, "path", r.URL.Path)
 			http.Error(w, "misdirected request", http.StatusMisdirectedRequest)
+
 			return
 		}
 

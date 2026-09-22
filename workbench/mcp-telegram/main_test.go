@@ -11,7 +11,7 @@ import (
 
 func TestSendMessageToolDeliversToLockedChat(t *testing.T) {
 	ft := newFakeTelegram(t)
-	handler := newSendMessageHandler(testClient(ft.server.URL))
+	handler := newSendMessageHandler(discardLogger(), testClient(ft.server.URL))
 
 	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, sendMessageInput{Text: "hello world"})
 	if err != nil {
@@ -33,7 +33,7 @@ func TestSendMessageToolDeliversToLockedChat(t *testing.T) {
 
 func TestSendMessageToolAcceptsParseMode(t *testing.T) {
 	ft := newFakeTelegram(t)
-	handler := newSendMessageHandler(testClient(ft.server.URL))
+	handler := newSendMessageHandler(discardLogger(), testClient(ft.server.URL))
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, sendMessageInput{Text: "<b>bold</b>", ParseMode: "HTML"})
 	if err != nil {
@@ -51,7 +51,7 @@ func TestSendMessageToolAcceptsParseMode(t *testing.T) {
 
 func TestSendMessageToolRejectsUnknownParseMode(t *testing.T) {
 	ft := newFakeTelegram(t)
-	handler := newSendMessageHandler(testClient(ft.server.URL))
+	handler := newSendMessageHandler(discardLogger(), testClient(ft.server.URL))
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, sendMessageInput{Text: "hello", ParseMode: "RichText"})
 	if err == nil {
@@ -69,7 +69,7 @@ func TestSendMessageToolRejectsUnknownParseMode(t *testing.T) {
 
 func TestSendMessageToolSurfacesDeliveryFailure(t *testing.T) {
 	ft := newFakeTelegram(t, http.StatusForbidden)
-	handler := newSendMessageHandler(testClient(ft.server.URL))
+	handler := newSendMessageHandler(discardLogger(), testClient(ft.server.URL))
 
 	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, sendMessageInput{Text: "hello", ParseMode: "HTML"})
 	if err == nil {

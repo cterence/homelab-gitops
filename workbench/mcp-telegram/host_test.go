@@ -37,7 +37,7 @@ func TestHostAllowed(t *testing.T) {
 }
 
 func TestHostGuardMiddleware(t *testing.T) {
-	handler := hostGuard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := hostGuard(discardLogger(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 

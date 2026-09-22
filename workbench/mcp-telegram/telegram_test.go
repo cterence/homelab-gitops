@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -92,7 +94,10 @@ func newFakeTelegram(t *testing.T, statuses ...int) *fakeTelegram {
 }
 
 func testClient(apiBase string) *telegramClient {
-	return newTelegramClient(&http.Client{Timeout: telegramTimeout}, apiBase, "123:test-token", "-1001234")
+	// Tests silence the client logger by default; logging behavior is
+	// covered by logging_test.go.
+	return newTelegramClient(&http.Client{Timeout: telegramTimeout}, apiBase, "123:test-token", "-1001234").
+		withLogger(slog.New(slog.NewTextHandler(io.Discard, nil)))
 }
 
 func TestDeliverTargetsLockedChat(t *testing.T) {

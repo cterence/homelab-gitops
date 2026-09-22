@@ -52,16 +52,25 @@ type sendMessageInput struct {
 	ParseMode string `json:"parse_mode,omitempty" jsonschema:"optional Telegram formatting: empty (plain text, default), HTML (recommended), or MarkdownV2"`
 }
 
-func newSendMessageHandler(client *telegramClient) func(context.Context, *mcp.CallToolRequest, sendMessageInput) (*mcp.CallToolResult, any, error) {
+func newSendMessageHandler(logger *slog.Logger, client *telegramClient) func(context.Context, *mcp.CallToolRequest, sendMessageInput) (*mcp.CallToolResult, any, error) {
 	return func(ctx context.Context, _ *mcp.CallToolRequest, input sendMessageInput) (*mcp.CallToolResult, any, error) {
+		logger.Info("send_message tool called",
+			"text_length", len([]rune(input.Text)),
+			"parse_mode", input.ParseMode,
+		)
+
 		if !validParseMode(input.ParseMode) {
+			logger.Warn("rejecting invalid parse_mode", "parse_mode", input.ParseMode)
 			return nil, nil, fmt.Errorf("parse_mode must be one of %q, got %q", parseModes, input.ParseMode)
 		}
 
 		response, err := client.deliver(ctx, input.Text, input.ParseMode)
 		if err != nil {
+			logger.Error("delivery failed", "err", err)
 			return nil, nil, err
 		}
+
+		logger.Info("message delivered", "parse_mode", input.ParseMode)
 
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{&mcp.TextContent{Text: response}},
@@ -88,7 +97,7 @@ func run(ctx context.Context) error {
 			"\"HTML\" (recommended: <b>, <i>, <code>, <pre>), or \"MarkdownV2\". " +
 			"Escape user content before wrapping it in tags. If Telegram rejects " +
 			"the formatted message, it is retried as plain text.",
-	}, newSendMessageHandler(client))
+	}, newSendMessageHandler(logger, client))
 
 	mcpHandler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, nil)
 
@@ -97,13 +106,13 @@ func run(ctx context.Context) error {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	mux.Handle("/mcp", hostGuard(mcpHandler))
+	mux.Handle("/mcp", hostGuard(logger, mcpHandler))
 
 	// WriteTimeout is left unset: streamable-HTTP responses can be SSE
 	// streams that stay open longer than any fixed write deadline.
 	srv := &http.Server{
 		Addr:              listenAddr,
-		Handler:           mux,
+		Handler:           requestLog(logger, mux),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       120 * time.Second,
