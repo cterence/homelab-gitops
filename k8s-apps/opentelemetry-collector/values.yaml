@@ -92,6 +92,11 @@ opentelemetry-collector:
           - IsMatch(resource.attributes["k8s.namespace.name"], "argocd|loki") and log.severity_number < SEVERITY_NUMBER_WARN
           - IsMatch(log.body, "Client .* closed its connection") and resource.attributes["k8s.container.name"] == "mosquitto"
           - IsMatch(log.body, "New connection from .* on port .*") and resource.attributes["k8s.container.name"] == "mosquitto"
+          - IsMatch(log.body, "Determined server count|received DATA|write to remote") and resource.attributes["k8s.container.name"] == "konnectivity-agent"
+          - IsMatch(resource.attributes["k8s.namespace.name"], "traefik|nextcloud") and IsMatch(log.body, "\" (2|3)[0-9][0-9] ")
+          - resource.attributes["k8s.namespace.name"] == "versity-gw" and IsMatch(log.body, "\\| 200 \\|")
+          - resource.attributes["k8s.namespace.name"] == "velero" and IsMatch(log.body, "Start to delete old maintenance jobs\\. 0 jobs will be kept\\.")
+          - IsMatch(resource.attributes["k8s.container.name"], "grafana-sc-.+") and IsMatch(log.body, "Loading incluster config")
     receivers:
       otlp:
         protocols:
