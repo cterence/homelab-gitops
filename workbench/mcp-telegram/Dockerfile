@@ -1,23 +1,16 @@
 # Build stage: Kaniko clones the repo into a scratch context and runs this
-# Dockerfile, so the source tree is available. Dependencies are compiled and
-# installed into site-packages, then copied into the runtime image.
-FROM python:3.14-alpine@sha256:9e9fde4d32eedce0b661d9ab91e826b62dddf28e928c230ec55f1866cac66b01 AS builder
+# Dockerfile, so the source tree is available. We compile the Go binary with
+# CGO disabled for a static distroless-friendly binary.
+FROM golang:1.26-alpine@sha256:8ac98ca534ac3f51e1f420a1dd2c15e74c75cfa0f23f3ad27eb5d7236c349a0c AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/mcp-telegram .
 
-WORKDIR /app
-
-COPY pyproject.toml .
-
-RUN pip install uv && \
-    uv pip compile pyproject.toml -o requirements.txt && \
-    uv pip install --system -r requirements.txt
-
-FROM python:3.14-alpine@sha256:9e9fde4d32eedce0b661d9ab91e826b62dddf28e928c230ec55f1866cac66b01
-
-WORKDIR /app
-
-COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
-COPY main.py .
-
-ENTRYPOINT ["python", "main.py"]
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
+COPY --from=build /out/mcp-telegram /usr/local/bin/mcp-telegram
+EXPOSE 8000
+ENTRYPOINT ["/usr/local/bin/mcp-telegram"]
 
 LABEL org.opencontainers.container.app="mcp-telegram"
