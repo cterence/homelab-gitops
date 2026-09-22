@@ -61,9 +61,7 @@ app-template:
   persistence:
     generated:
       enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 1Gi
+      type: emptyDir
       advancedMounts:
         main:
           main:
