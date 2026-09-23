@@ -1,0 +1,20 @@
+apiVersion: v2
+name: kagent
+description: Kubernetes-native framework for building and running AI agents (Solo.io kagent)
+type: application
+version: 0.1.0
+dependencies:
+  - name: kagent
+    repository: oci://ghcr.io/kagent-dev/kagent/helm
+    version: 0.10.2
+  - name: kagent-crds
+    repository: oci://ghcr.io/kagent-dev/kagent/helm
+    version: 0.10.2
+  - name: cluster
+    alias: cnpg-cluster
+    repository: https://cloudnative-pg.github.io/charts
+    version: 0.8.1
+  - name: app-template
+    alias: mistral-adapter
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.2.1

@@ -1,0 +1,180 @@
+kagent:
+  ui:
+    service:
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: kagent
+
+  controller:
+    volumes:
+      - name: kagent-db-url
+        secret:
+          secretName: kagent-cnpg-cluster-app
+          items:
+            - key: fqdn-uri
+              path: url
+    volumeMounts:
+      - name: kagent-db-url
+        mountPath: /var/run/kagent-db
+        readOnly: true
+
+  database:
+    postgres:
+      urlFile: /var/run/kagent-db/url
+      bundled:
+        enabled: false
+
+  providers:
+    default: openAI
+    openAI:
+      provider: OpenAI
+      model: zai-glm-5-3
+      apiKeySecretRef: kagent-mistral
+      apiKeySecretKey: MISTRAL_API_KEY
+      config:
+        # Routed through the mistral-adapter sidecar app in this umbrella:
+        # Mistral serves GLM reasoning models with a non-standard typed
+        # content array that breaks OpenAI-compatible clients
+        # (mistralai/mistral-vibe#1119). The adapter flattens it back into a
+        # plain string content.
+        baseUrl: http://kagent-mistral-adapter:8080/v1
+
+  grafana-mcp:
+    enabled: false
+
+  # Disable bundled agents for components this cluster does not run:
+  # CNI is kube-router (no cilium), no istio, no kgateway, no argo-rollouts,
+  # and no in-cluster Helm releases (everything is ArgoCD-managed).
+  argo-rollouts-agent:
+    enabled: false
+  cilium-debug-agent:
+    enabled: false
+  cilium-manager-agent:
+    enabled: false
+  cilium-policy-agent:
+    enabled: false
+  helm-agent:
+    enabled: false
+  istio-agent:
+    enabled: false
+  kgateway-agent:
+    enabled: false
+
+cnpg-cluster:
+  type: postgresql
+  mode: standalone
+  version:
+    postgresql: "18"
+  cluster:
+    instances: 1
+    imageCatalogRef:
+      kind: ClusterImageCatalog
+      name: postgresql
+    storage:
+      size: 1Gi
+    primaryUpdateMethod: switchover
+    primaryUpdateStrategy: unsupervised
+    logLevel: "info"
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+      prometheusRule:
+        excludeRules:
+          - CNPGClusterLogicalReplicationErrorsCritical
+          - CNPGClusterLogicalReplicationErrors
+          - CNPGClusterLogicalReplicationStoppedCritical
+          - CNPGClusterLogicalReplicationStopped
+          - CNPGClusterHACritical
+          - CNPGClusterHAWarning
+    postgresql: {}
+    initdb:
+      database: kagent
+  backups:
+    enabled: true
+    method: plugin
+    pluginConfiguration:
+      name: barman-cloud.cloudnative-pg.io
+    endpointURL: http://versity-gw-storage-pool.versity-gw:7070
+    destinationPath: s3://cnpg-backups/kagent
+    provider: s3
+    s3:
+      region: us-east-1
+      bucket: cnpg-backups
+      path: /kagent
+    secret:
+      create: false
+      name: cnpg-backup-s3-creds
+    wal:
+      compression: gzip
+      encryption: ""
+      maxParallel: 1
+    data:
+      compression: gzip
+      encryption: ""
+      jobs: 2
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 0 1 * * *"
+        backupOwnerReference: self
+        method: plugin
+        pluginConfiguration:
+          name: barman-cloud.cloudnative-pg.io
+
+mistral-adapter:
+  global:
+    fullnameOverride: kagent-mistral-adapter
+
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      labels:
+        sablier.enable: "false"
+        sablier.group: "{{ .Release.Name }}"
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        main:
+          image:
+            repository: registry.terence.cloud/mistral-adapter
+            tag: v1
+            pullPolicy: IfNotPresent
+          env:
+            TZ: Europe/Paris
+            UPSTREAM_BASE_URL: https://api.mistral.ai
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /healthz
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /healthz
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
