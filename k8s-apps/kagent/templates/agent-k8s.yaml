@@ -5,6 +5,8 @@ apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: k8s-agent
+  annotations:
+    argocd.argoproj.io/sync-options: PrunePropagationPolicy=background
 spec:
   description: A Kubernetes expert agent for operations and troubleshooting on this homelab cluster.
   type: Declarative
