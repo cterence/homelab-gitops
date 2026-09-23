@@ -676,17 +676,27 @@ openbao:
 
     # extraEnvironmentVars is a list of extra environment variables to set with the stateful set. These could be
     # used to include variables required for auto-unseal.
-    extraEnvironmentVars: {}
-      # GOOGLE_REGION: global
-      # GOOGLE_PROJECT: myproject
-      # GOOGLE_APPLICATION_CREDENTIALS: /openbao/userconfig/myproject/myproject-creds.json
+    extraEnvironmentVars:
+      PGDATABASE: openbao
+      PGSSLMODE: require
 
     # extraSecretEnvironmentVars is a list of extra environment variables to set with the stateful set.
     # These variables take value from existing Secret objects.
-    extraSecretEnvironmentVars: []
-      # - envName: AWS_SECRET_ACCESS_KEY
-      #   secretName: openbao
-      #   secretKey: AWS_SECRET_ACCESS_KEY
+    extraSecretEnvironmentVars:
+      # PostgreSQL storage connection for openbao-cnpg-cluster (the -app
+      # secret is created by CNPG with the app user's credentials).
+      - envName: PGHOST
+        secretName: openbao-cnpg-cluster-app
+        secretKey: host
+      - envName: PGPORT
+        secretName: openbao-cnpg-cluster-app
+        secretKey: port
+      - envName: PGUSER
+        secretName: openbao-cnpg-cluster-app
+        secretKey: user
+      - envName: PGPASSWORD
+        secretName: openbao-cnpg-cluster-app
+        secretKey: password
 
     # Deprecated: please use 'volumes' instead.
     # extraVolumes is a list of extra volumes to mount. These will be exposed
@@ -979,9 +989,12 @@ openbao:
             unauthenticated_metrics_access = "true"
           }
         }
-        storage "file" {
-          path = "/openbao/data"
-        }
+        # PostgreSQL storage on the openbao-cnpg-cluster CNPG cluster in this
+        # chart. The connection is configured through the standard PG*
+        # environment variables (see extraEnvironmentVars and
+        # extraSecretEnvironmentVars below); the file backend was removed in
+        # OpenBao 2.7.0 and the data migrated via `bao operator migrate`.
+        storage "postgresql" {}
 
         # Example configuration for using auto-unseal, using Google Cloud KMS. The
         # GKMS keys must already exist, and the cluster must have a service account
