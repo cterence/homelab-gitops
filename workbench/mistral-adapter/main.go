@@ -38,7 +38,7 @@ func run() error {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok\n"))
 	})
-	mux.Handle("/", proxy)
+	mux.Handle("/", withRequestLog(logger, proxy))
 
 	// No WriteTimeout: chat completions stream for minutes.
 	srv := &http.Server{

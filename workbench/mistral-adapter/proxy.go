@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,6 +12,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // newProxy builds a reverse proxy to upstream that rewrites GLM reasoning
@@ -109,4 +111,71 @@ func (r *sseTransformReader) Read(p []byte) (int, error) {
 
 func (r *sseTransformReader) Close() error {
 	return r.closer.Close()
+}
+
+// requestMeta extracts request metadata from a chat completions body.
+// Message content is never logged; only the model name and stream flag.
+func requestMeta(body []byte) (model string, stream bool) {
+	var req struct {
+		Model  string `json:"model"`
+		Stream bool   `json:"stream"`
+	}
+	if err := json.Unmarshal(body, &req); err != nil {
+		return "", false
+	}
+
+	return req.Model, req.Stream
+}
+
+// statusRecorder captures the response status code for logging while
+// passing Flush through so SSE streaming keeps working.
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func (r *statusRecorder) Flush() {
+	if f, ok := r.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// withRequestLog logs one line per proxied request: method, path, status,
+// duration, and the requested model and stream flag. The request body is
+// buffered only to extract metadata; its content is never logged.
+func withRequestLog(logger *slog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		var (
+			model  string
+			stream bool
+		)
+
+		if r.Body != nil && r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/chat/completions") {
+			body, err := io.ReadAll(r.Body)
+
+			closeErr := r.Body.Close()
+			if err == nil && closeErr == nil {
+				r.Body = io.NopCloser(bytes.NewReader(body))
+				model, stream = requestMeta(body)
+			}
+		}
+
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		logger.Info("request",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", rec.status,
+			"dur", time.Since(start),
+			"model", model,
+			"stream", stream,
+		)
+	})
 }
