@@ -4,9 +4,9 @@ description: S3-backed Nix binary cache with garbage collection
 type: application
 version: 0.1.0
 dependencies:
-  - name: app-template
-    repository: https://bjw-s-labs.github.io/helm-charts
-    version: 5.2.1
+  - name: niks3
+    repository: oci://ghcr.io/mic92/charts
+    version: 1.13.0
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts

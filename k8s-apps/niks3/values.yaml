@@ -1,247 +1,72 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
-app-template:
-  defaultPodOptions:
-    automountServiceAccountToken: false
-    securityContext:
-      runAsUser: 568
-      runAsGroup: 568
-      fsGroup: 568
-      fsGroupChangePolicy: "OnRootMismatch"
+niks3:
+  image:
+    repository: ghcr.io/mic92/niks3
+    tag: v1.13.0@sha256:8bf6792c10d1f3a1a97cd3c502bf2cc7bd970615da5c6c3a5383f7f5a72a307a
+  deploymentAnnotations:
+    reloader.stakater.com/auto: "true"
+  extraEnv:
+    - name: TZ
+      value: Europe/Paris
 
-  configMaps:
-    config:
-      data:
-        oidc.json: |
-          {
-            "providers": {
-              "github": {
-                "issuer": "https://token.actions.githubusercontent.com",
-                "audience": "https://niks3.terence.cloud",
-                "bound_claims": {
-                  "repository_owner": ["cterence"]
-                },
-                "bound_subject": ["repo:cterence/nixos-config:*"]
-              }
-            }
-          }
+  database:
+    existingSecret: niks3-cnpg-cluster-app
+    secretKey: fqdn-uri
 
-  controllers:
-    main:
-      type: deployment
-      strategy: RollingUpdate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      containers:
-        main:
-          image:
-            repository: ghcr.io/mic92/niks3
-            tag: v1.12.0@sha256:8dadc50e7153eb47d56f56d9052d9b6db310ef8c6c11947f0b4127a1313fb63f
-          envFrom:
-            - secretRef:
-                name: versity-credentials
-            - secretRef:
-                name: api-token
-          env:
-            TZ: Europe/Paris
-            NIKS3_DB:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
-                  key: fqdn-uri
-            NIKS3_S3_ENDPOINT: versity.terence.cloud
-            NIKS3_S3_BUCKET: nix-cache
-            NIKS3_S3_REGION: us-east-1
-            NIKS3_SIGN_KEY_PATHS: /secrets/signing-key
-            NIKS3_ENABLE_READ_PROXY: "true"
-            NIKS3_CACHE_URL: https://niks3.terence.cloud
-          args:
-            - --oidc-config
-            - /config/oidc.json
-          ports:
-            - name: http
-              containerPort: 5751
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-    gc:
-      type: cronjob
-      annotations:
-        reloader.stakater.com/auto: "true"
-      cronjob:
-        schedule: "0 0 * * *"
-        successfulJobsHistory: 1
-        failedJobsHistory: 1
-      containers:
-        main:
-          command: ["/bin/sh", "-c"]
-          args: [
-              "/bin/niks3 gc --older-than 168h --auth-token-path
-              /secrets/auth-token-file/NIKS3_API_TOKEN",
-            ]
-          image:
-            repository: ghcr.io/mic92/niks3
-            tag: v1.12.0@sha256:8dadc50e7153eb47d56f56d9052d9b6db310ef8c6c11947f0b4127a1313fb63f
-          envFrom:
-            - secretRef:
-                name: versity-credentials
-          env:
-            TZ: Europe/Paris
-            NIKS3_SERVER_URL: "http://niks3:5751"
+  s3:
+    endpoint: versity.terence.cloud
+    bucket: nix-cache
+    region: us-east-1
+    useSSL: true
+    existingSecret: versity-credentials
+
+  auth:
+    existingSecret: api-token
+    oidcProviders:
+      github:
+        issuer: https://token.actions.githubusercontent.com
+        audience: https://niks3.terence.cloud
+        bound_claims:
+          repository_owner: ["cterence"]
+        bound_subject: ["repo:cterence/nixos-config:*"]
+
+  signing:
+    existingSecret: signing-key
+    keys: [signing-key]
+
+  cacheURL: https://niks3.terence.cloud
+  readProxy:
+    enabled: true
+
+  gc:
+    schedule: "0 0 * * *"
+    olderThan: 168h
 
   service:
-    main:
-      controller: main
-      type: ClusterIP
-      ports:
-        http:
-          port: 5751
+    port: 5751
 
   ingress:
-    main:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        # traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        # traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernetescrd"
-        external-dns.kubernetes.io/cloudflare-proxied: "false"
-      className: "traefik"
-      hosts:
-        - host: &host niks3.terence.cloud
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: main
-                port: http
-      tls:
-        - secretName: niks3-tls
-          hosts:
-            - *host
+    enabled: true
+    className: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.kubernetes.io/target: home.terence.cloud
+      external-dns.kubernetes.io/cloudflare-proxied: "false"
+    hosts:
+      - host: niks3.terence.cloud
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: niks3-tls
+        hosts: [niks3.terence.cloud]
 
-  persistence:
-    signing-key:
-      type: secret
-      name: signing-key
-      advancedMounts:
-        main:
-          main:
-            - path: /secrets/signing-key
-              subPath: signing-key
-              readOnly: true
+  metrics:
+    serviceMonitor:
+      enabled: true
+      interval: 30s
 
-    auth-token-file:
-      type: secret
-      name: api-token
-      advancedMounts:
-        gc:
-          main:
-            - path: /secrets/auth-token-file/NIKS3_API_TOKEN
-              subPath: NIKS3_API_TOKEN
-              readOnly: true
-
-    oidc:
-      type: configMap
-      identifier: config
-      advancedMounts:
-        main:
-          main:
-            - path: /config/oidc.json
-              subPath: oidc.json
-              readOnly: true
-
-  rawResources:
-    cnpg-backup-s3-creds:
-      enabled: true
-      forceRename: cnpg-backup-s3-creds
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: cnpg-backup-s3-creds
-            creationPolicy: Owner
-          data:
-            - secretKey: ACCESS_KEY_ID
-              remoteRef:
-                key: versity-gw/versity-gw-credentials
-                property: ROOT_ACCESS_KEY
-            - secretKey: ACCESS_SECRET_KEY
-              remoteRef:
-                key: versity-gw/versity-gw-credentials
-                property: ROOT_SECRET_KEY
-    api-token:
-      enabled: true
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: api-token
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: niks3/api-token
-    signing-key:
-      enabled: true
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: signing-key
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: niks3/signing-key
-    versity:
-      enabled: true
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: versity-credentials
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: niks3/versity-credentials
-    servicemonitor:
-      enabled: true
-      manifest:
-        apiVersion: monitoring.coreos.com/v1
-        kind: ServiceMonitor
-        spec:
-          selector:
-            matchLabels:
-              app.kubernetes.io/instance: "{{ .Release.Name }}"
-          endpoints:
-            - port: http
-              path: /metrics
-              interval: 30s
+  grafanaDashboard:
+    enabled: true
 
 cnpg-cluster:
   type: postgresql
