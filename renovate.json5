@@ -97,14 +97,6 @@
       ],
     },
     {
-      // OpenBao 2.7.0 removed the file storage backend (GH-3879), which this
-      // deployment uses. Pin to 2.6.x until storage is migrated to a
-      // supported backend (raft or postgres via `bao operator migrate`).
-      matchDatasources: ['docker'],
-      matchPackageNames: ['quay.io/openbao/openbao'],
-      allowedVersions: '2.6',
-    },
-    {
       matchPackageNames: [
         'garage',
       ],
