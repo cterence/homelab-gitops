@@ -42,9 +42,6 @@ kagent:
   grafana-mcp:
     enabled: false
 
-  # Disable bundled agents for components this cluster does not run:
-  # CNI is kube-router (no cilium), no istio, no kgateway, no argo-rollouts,
-  # and no in-cluster Helm releases (everything is ArgoCD-managed).
   argo-rollouts-agent:
     enabled: false
   cilium-debug-agent:
@@ -58,6 +55,12 @@ kagent:
   istio-agent:
     enabled: false
   kgateway-agent:
+    enabled: false
+  k8s-agent:
+    enabled: false
+  observability-agent:
+    enabled: false
+  promql-agent:
     enabled: false
 
 cnpg-cluster:
