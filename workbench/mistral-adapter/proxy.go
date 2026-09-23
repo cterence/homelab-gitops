@@ -173,7 +173,7 @@ func withRequestLog(logger *slog.Logger, next http.Handler) http.Handler {
 			"method", r.Method,
 			"path", r.URL.Path,
 			"status", rec.status,
-			"dur", time.Since(start),
+			"dur", time.Since(start).Round(time.Millisecond).String(),
 			"model", model,
 			"stream", stream,
 		)

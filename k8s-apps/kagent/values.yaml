@@ -147,7 +147,7 @@ mistral-adapter:
         main:
           image:
             repository: registry.terence.cloud/mistral-adapter
-            tag: v2
+            tag: v3
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
