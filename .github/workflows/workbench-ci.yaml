@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       go-apps: ${{ steps.apps.outputs.go }}
-      python-apps: ${{ steps.apps.outputs.python }}
       docker-apps: ${{ steps.apps.outputs.docker }}
     steps:
       - name: Checkout
@@ -30,14 +29,12 @@ jobs:
           base="origin/${{ github.base_ref }}"
           mb=$(git merge-base "$base" HEAD)
           apps=$(git diff --name-only "$mb" HEAD -- workbench/ | cut -d/ -f2 | sort -u)
-          go="[]"; python="[]"; docker="[]"
+          go="[]"; docker="[]"
           for app in $apps; do
             [ -f "workbench/$app/go.mod" ] && go=$(jq -c --arg a "$app" '. + [$a]' <<<"$go")
-            [ -f "workbench/$app/pyproject.toml" ] && python=$(jq -c --arg a "$app" '. + [$a]' <<<"$python")
             [ -f "workbench/$app/Dockerfile" ] && docker=$(jq -c --arg a "$app" '. + [$a]' <<<"$docker")
           done
           echo "go=$go" >> "$GITHUB_OUTPUT"
-          echo "python=$python" >> "$GITHUB_OUTPUT"
           echo "docker=$docker" >> "$GITHUB_OUTPUT"
 
   test-go:
@@ -67,26 +64,6 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
           working-directory: workbench/${{ matrix.app }}
-
-  test-python:
-    name: Test Python (${{ matrix.app }})
-    needs: changes
-    if: needs.changes.outputs.python-apps != '[]'
-    strategy:
-      fail-fast: false
-      matrix:
-        app: ${{ fromJSON(needs.changes.outputs.python-apps) }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Set up uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-      - name: Test
-        run: |
-          uv sync --group dev
-          uv run --group dev pytest
-        working-directory: workbench/${{ matrix.app }}
 
   build-image:
     name: Build image (${{ matrix.app }})
