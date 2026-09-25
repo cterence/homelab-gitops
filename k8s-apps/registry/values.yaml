@@ -10,7 +10,7 @@ app-template:
         main:
           image:
             repository: registry
-            tag: "3.1.1@sha256:325b4b29b041e82803abeb703e201655e4e23ab83264ec1a7c9ddb0a5b14a6e0"
+            tag: "3.1.2@sha256:c87f33837722a100572e95d7dc4bf539fc42cf68202b13c3bc03c0ff54c3a649"
           env:
             REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
             REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
@@ -67,7 +67,7 @@ app-template:
         gc:
           image:
             repository: registry
-            tag: "3.1.1@sha256:325b4b29b041e82803abeb703e201655e4e23ab83264ec1a7c9ddb0a5b14a6e0"
+            tag: "3.1.2@sha256:c87f33837722a100572e95d7dc4bf539fc42cf68202b13c3bc03c0ff54c3a649"
           args:
             - garbage-collect
             - --delete-untagged
