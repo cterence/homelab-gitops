@@ -33,9 +33,9 @@ jobs:
       - name: Determine changed apps
         id: apps
         run: |
-          # Apps managed by the ApplicationSet.
-          deployed=$(yq eval '.spec.generators[0].list.elements[].name' \
-            argocd-apps/applicationset.yaml | sort -u)
+          # Apps managed by the ApplicationSet (dirs with an appset.yaml).
+          deployed=$(ls k8s-apps/*/appset.yaml 2>/dev/null \
+            | awk -F/ '{print $2}' | sort -u)
 
           # Apps touched by this PR (second path segment under k8s-apps/).
           changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
