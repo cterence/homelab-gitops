@@ -11,8 +11,7 @@ app-template:
   controllers:
     main:
       type: statefulset
-      statefulset:
-        replicas: 1
+      replicas: 1
       labels:
         sablier.enable: "false"
         sablier.group: "{{ .Release.Name }}"
