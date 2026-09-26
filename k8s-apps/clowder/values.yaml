@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 100
+      runAsGroup: 101
+      fsGroup: 101
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: statefulset
+      statefulset:
+        replicas: 1
+      labels:
+        sablier.enable: "false"
+        sablier.group: "{{ .Release.Name }}"
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: registry.terence.cloud/clowder
+            tag: v0.1
+            pullPolicy: IfNotPresent
+          env:
+            TZ: Europe/Paris
+            CLOWDER_NAME: storer
+            CLOWDER_STORER: dropbox
+            CLOWDER_MAX: 100G
+            CLOWDER_HEALTH_ADDR: ":8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /healthz
+                  port: http
+                periodSeconds: 5
+                failureThreshold: 60
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /healthz
+                  port: http
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /healthz
+                  port: http
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 110Gi
+      globalMounts:
+        - path: /config
