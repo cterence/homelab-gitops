@@ -27,7 +27,11 @@ niks3:
         audience: https://niks3.terence.cloud
         bound_claims:
           repository_owner: ["cterence"]
-        bound_subject: ["repo:cterence/nixos-config:*", "repo:cterence/clowder:*"]
+        bound_subject:
+          - "repo:cterence/nixos-config:*"
+          - "repo:cterence/clowder:*"
+          - "repo:cterence@25285508/nixos-config@1175564420:*"
+          - "repo:cterence@25285508/clowder@1388222425:*"
 
   signing:
     existingSecret: signing-key
