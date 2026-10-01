@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 10.9.4
+    version: 10.9.5
   - name: app-template
     alias: argocd-mcp-server
     repository: https://bjw-s-labs.github.io/helm-charts
