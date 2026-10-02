@@ -315,6 +315,15 @@ traefik:
             annotations:
               summary: "Traefik Down"
               description: "{{ $labels.pod }} on {{ $labels.nodename }} is down"
+          - alert: TraefikHigh5xxRate
+            expr: (sum by (service) (rate(traefik_service_requests_total{code=~"5.."}[10m])) / sum by (service) (rate(traefik_service_requests_total[10m]))) > 0.05 and sum by (service) (rate(traefik_service_requests_total{code=~"5.."}[10m])) > 0.01
+            for: 10m
+            labels:
+              context: traefik
+              severity: warning
+            annotations:
+              summary: "Elevated 5xx rate on {{ $labels.service }}"
+              description: "{{ $labels.service }} is returning 5xx on more than 5% of requests for 10m"
 
   accessLog:
     enabled: true
