@@ -347,7 +347,7 @@ grafana-mcp-server:
         main:
           image:
             repository: grafana/mcp-grafana
-            tag: 1.6.2@sha256:7101042adc027c59bd26eb52bd59bc5e8f76c049fd1c20722f16186806f9d859
+            tag: 1.6.3@sha256:0479c026fd40a95e6a176855b8570e06845790f8a45de2f9c1ec8ba3ba06a8bf
           args:
             - --allowed-hosts=*
             - -t=streamable-http
