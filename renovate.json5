@@ -8,7 +8,6 @@
     ':automergePr',
     ':automergeStableNonMajor',
     ':automergeDigest',
-    ':skipStatusChecks',
   ],
   gomod: {
     postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],
@@ -37,6 +36,14 @@
       // explicit approval on the dashboard before a PR is opened.
       matchManagers: ['gomod'],
       matchUpdateTypes: ['major'],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Temporary: cdproto's new v0.157.x tags are API-incompatible with
+      // chromedp v0.16.0 (which needs a newer master snapshot). Hold until
+      // chromedp releases against the tagged line, then delete this rule.
+      matchPackageNames: ['github.com/chromedp/cdproto'],
+      matchManagers: ['gomod'],
       dependencyDashboardApproval: true,
     },
     {
