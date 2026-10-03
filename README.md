@@ -54,6 +54,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes |
 | [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance |
+| [clowder](./scripts/../k8s-apps/clowder) | Clowder storer-only (dropbox) mesh node |
 | [cnpg-restore-test](./scripts/../k8s-apps/cnpg-restore-test) | Daily CNPG backup restore verification |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter |
 | [disk-usage-exporter](./scripts/../k8s-apps/disk-usage-exporter) | Per-directory disk usage Prometheus exporter for local-path volumes |
@@ -66,6 +67,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON |
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution |
 | [it-tools](./scripts/../k8s-apps/it-tools) | Collection of handy online tools for developers |
+| [kagent](./scripts/../k8s-apps/kagent) | Kubernetes-native framework for building and running AI agents (Solo.io kagent) |
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator |
 | [lastfm-scrobble-deduplicator](./scripts/../k8s-apps/lastfm-scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles |
 | [local-path-provisioner](./scripts/../k8s-apps/local-path-provisioner) | Utilize the local storage in each node |
