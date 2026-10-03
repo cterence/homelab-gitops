@@ -104,37 +104,16 @@ func (b *bot) processArticle(ctx context.Context, msg *tgbotapi.Message, pageURL
 	b.logger.Info("article title extracted", "url", pageURL, "title", articleTitle)
 	b.edit(progress, fmt.Sprintf("Cleaning text for %s...", articleTitle))
 
-	audioData, err := b.processURL(ctx, pageURL, rawText)
+	cacheFile, err := b.processURL(ctx, pageURL, rawText)
 	if err != nil {
 		return err
 	}
 
 	b.edit(progress, "Generating TTS...")
 
-	cacheFile := getCacheFilename(pageURL)
-
-	tempFile := cacheFile + ".temp"
-	if err := os.WriteFile(tempFile, audioData, 0o600); err != nil {
-		return fmt.Errorf("writing temp audio: %w", err)
-	}
-
-	b.edit(progress, "Fixing audio header...")
-
-	if err := fixAudioHeader(ctx, tempFile, cacheFile); err != nil {
-		_ = os.Remove(tempFile)
-		return err
-	}
-
 	duration, err := audioDuration(ctx, cacheFile)
 	if err != nil {
-		_ = os.Remove(tempFile)
 		return err
-	}
-
-	b.logger.Info("audio remuxed", "url", pageURL, "file", cacheFile, "bytes", len(audioData), "seconds", duration)
-
-	if err := os.Remove(tempFile); err != nil {
-		b.logger.Warn("removing temp audio", "err", err)
 	}
 
 	b.delete(progress)
@@ -150,40 +129,52 @@ func (b *bot) processArticle(ctx context.Context, msg *tgbotapi.Message, pageURL
 	return nil
 }
 
-// processURL returns the audio for a URL, using the cache when available
-// and generating (then caching) otherwise.
-func (b *bot) processURL(ctx context.Context, pageURL, rawText string) ([]byte, error) {
+// processURL returns the path of the cached audio for a URL, generating and
+// remuxing it on a miss. Cached files are already remuxed.
+func (b *bot) processURL(ctx context.Context, pageURL, rawText string) (string, error) {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
-		return nil, fmt.Errorf("creating cache dir: %w", err)
+		return "", fmt.Errorf("creating cache dir: %w", err)
 	}
 
 	cacheFile := getCacheFilename(pageURL)
-	if data, err := os.ReadFile(cacheFile); err == nil {
+	if _, err := os.ReadFile(cacheFile); err == nil {
 		b.logger.Info("cache hit", "url", pageURL, "file", cacheFile)
-		return data, nil
+		return cacheFile, nil
 	}
 
 	b.logger.Info("cache miss, generating audio", "url", pageURL)
 
 	cleanText, err := b.mistral.cleanText(ctx, rawText)
 	if err != nil {
-		return nil, fmt.Errorf("cleaning text: %w", err)
+		return "", fmt.Errorf("cleaning text: %w", err)
 	}
 
 	b.logger.Info("text cleaned", "url", pageURL, "chars", len([]rune(cleanText)))
 
 	audio, err := b.mistral.generateTTS(ctx, cleanText)
 	if err != nil {
-		return nil, fmt.Errorf("generating TTS: %w", err)
+		return "", fmt.Errorf("generating TTS: %w", err)
 	}
 
 	b.logger.Info("tts generated", "url", pageURL, "bytes", len(audio))
 
-	if err := os.WriteFile(cacheFile, audio, 0o600); err != nil {
-		return nil, fmt.Errorf("writing cache file %s: %w", cacheFile, err)
+	tempFile := cacheFile + ".temp"
+	if err := os.WriteFile(tempFile, audio, 0o600); err != nil {
+		return "", fmt.Errorf("writing temp audio: %w", err)
 	}
 
-	return audio, nil
+	if err := fixAudioHeader(ctx, tempFile, cacheFile); err != nil {
+		_ = os.Remove(tempFile)
+		return "", err
+	}
+
+	b.logger.Info("audio remuxed", "url", pageURL, "file", cacheFile, "bytes", len(audio))
+
+	if err := os.Remove(tempFile); err != nil {
+		b.logger.Warn("removing temp audio", "err", err)
+	}
+
+	return cacheFile, nil
 }
 
 // friendlyError maps processing errors to user-facing replies.
