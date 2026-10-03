@@ -15,7 +15,6 @@ import (
 
 type Config struct {
 	// Inputs
-	FilePath           string
 	CacheType          string
 	LastFMUsername     string
 	LastFMPassword     string
@@ -24,7 +23,6 @@ type Config struct {
 	From               time.Time
 	To                 time.Time
 	BrowserHeadful     bool
-	RedisURL           string
 	BrowserURL         string
 	LogLevel           string
 	DuplicateThreshold int
@@ -63,10 +61,6 @@ type stats struct {
 
 func (c *Config) checkConfig() error {
 	slog.Debug("Validating config")
-
-	if c.CacheType == "redis" && c.RedisURL == "" {
-		return errors.New("must set redis-url if cache-type is redis")
-	}
 
 	if c.StartPage != 0 && (!c.From.IsZero() || !c.To.IsZero()) {
 		return errors.New(`start-page and "from" / "to" dates must not be set at the same time`)

@@ -9,9 +9,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type Cache interface {
@@ -25,20 +22,10 @@ type InMemory struct {
 	cache map[string]string
 }
 
-type Redis struct {
-	client *redis.Client
-}
-
 type File struct {
 	mu   sync.Mutex
-	file *os.File
 	path string
 	data map[string]string
-
-	flushCh  chan struct{}
-	stopCh   chan struct{}
-	interval time.Duration
-	wg       sync.WaitGroup
 }
 
 var ErrCacheMiss = errors.New("cache miss")
@@ -70,65 +57,17 @@ func (c *InMemory) Delete(_ context.Context, key string) error {
 
 func (c *InMemory) Close() {}
 
-func NewRedis(redisClient *redis.Client) Cache {
-	return &Redis{
-		client: redisClient,
-	}
-}
-
-func (c *Redis) Get(ctx context.Context, key string) (string, error) {
-	val, err := c.client.Get(ctx, key).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return "", ErrCacheMiss
-		}
-
-		return "", err
-	}
-
-	return val, nil
-}
-
-func (c *Redis) Set(ctx context.Context, key string, value string) error {
-	return c.client.Set(ctx, key, value, 0).Err()
-}
-
-func (c *Redis) Close() {
-	if err := c.client.Close(); err != nil {
-		slog.Error("Failed to close redis client", "error", err)
-	}
-}
-
-func (c *Redis) Delete(ctx context.Context, key string) error {
-	return c.client.Del(ctx, key).Err()
-}
-
 const cacheFileName = "cache.db"
 
-func NewFile(path string, flushInterval time.Duration) (Cache, error) {
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-
+func NewFile(path string) (Cache, error) {
 	cache := &File{
-		file:     f,
-		path:     path,
-		data:     make(map[string]string),
-		flushCh:  make(chan struct{}, 1),
-		stopCh:   make(chan struct{}),
-		interval: flushInterval,
+		path: path,
+		data: make(map[string]string),
 	}
 
 	if err := cache.load(); err != nil {
-		if err := f.Close(); err != nil {
-			return nil, err
-		}
-
 		return nil, err
 	}
-
-	cache.startFlusher()
 
 	return cache, nil
 }
@@ -138,6 +77,10 @@ func (c *File) load() error {
 
 	f, err := os.Open(c.path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
 		return err
 	}
 	defer CloseFile(f)
@@ -182,10 +125,6 @@ func (c *File) Close() {
 	if err := c.Flush(); err != nil {
 		slog.Error("failed to flush file cache", "error", err)
 	}
-
-	if err := c.file.Close(); err != nil {
-		slog.Error("failed to close file cache", "error", err)
-	}
 }
 
 func (c *File) Delete(ctx context.Context, key string) error {
@@ -193,9 +132,7 @@ func (c *File) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
-const fileCacheFlushTicker = 30 * time.Second
-
-// Flush compacts the append-only log by rewriting only latest values
+// Flush rewrites the cache file with only latest values
 func (c *File) Flush() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -236,41 +173,7 @@ func (c *File) Flush() error {
 		return err
 	}
 
-	// reopen file for future operations (not strictly needed now)
-	f, err := os.OpenFile(c.path, os.O_RDWR, 0666)
-	if err != nil {
-		return err
-	}
-
-	err = c.file.Close()
-	if err != nil {
-		return err
-	}
-
-	c.file = f
-
 	slog.Debug("Flushed data to cache file")
 
 	return nil
-}
-
-func (c *File) startFlusher() {
-	c.wg.Add(1)
-	go func() {
-		defer c.wg.Done()
-
-		ticker := time.NewTicker(c.interval)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ticker.C:
-				if err := c.Flush(); err != nil {
-					slog.Error("periodic flush failed", "error", err)
-				}
-			case <-c.stopCh:
-				return
-			}
-		}
-	}()
 }

@@ -26,24 +26,12 @@ Runs can optionally report statistics via Telegram.
 
 ## Configuration
 
-All flags can be set via environment variables or a YAML config file
-(`--config`, default `config.yaml`):
-
-```yaml
-cacheType: file          # inmemory | file | redis
-lastfm:
-  username: your_username
-  password: your_password
-delete: false            # set true to actually delete scrobbles
-duplicateThreshold: 90   # percent of track duration
-from: yesterday          # dd-mm-yyyy, or yesterday/today
-dataDir: ./data
-```
+All flags can be set via environment variables:
 
 Environment variables map to flags: `LASTFM_USERNAME`, `LASTFM_PASSWORD`,
 `DELETE`, `DUPLICATE_THRESHOLD`, `COMPLETE_THRESHOLD`, `START_PAGE`,
-`FROM`, `TO`, `CACHE_TYPE`, `BROWSER_URL`, `REDIS_URL`, `DATA_DIR`,
-`LOG_LEVEL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+`FROM`, `TO`, `CACHE_TYPE`, `BROWSER_URL`, `DATA_DIR`, `LOG_LEVEL`,
+`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 
 ## Browser
 
