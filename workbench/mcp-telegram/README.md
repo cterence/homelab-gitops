@@ -30,12 +30,6 @@ Both variables are required and fail fast at startup:
 - `TELEGRAM_BOT_TOKEN` — dedicated bot token
 - `TELEGRAM_CHAT_ID` — hard-locked recipient chat
 
-Optional:
-
-- `TELEGRAM_API_BASE` — override the Telegram API endpoint (defaults to
-  `https://api.telegram.org`); useful for local end-to-end testing against a
-  fake API.
-
 ## Deployment notes
 
 - Serves MCP on `:8000/mcp` and a health probe on `:8000/health`.

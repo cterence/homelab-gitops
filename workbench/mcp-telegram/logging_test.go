@@ -102,9 +102,13 @@ func TestSendMessageHandlerLogsDeliveryFailure(t *testing.T) {
 func TestDeliverLogsPlainTextInputRetry(t *testing.T) {
 	ft := newFakeTelegram(t, http.StatusBadRequest, http.StatusOK)
 	logger, buf := testLogger()
-	client := testClient(ft.server.URL).withLogger(logger)
 
-	if _, err := client.deliver(context.Background(), "<b>broken</i>", "HTML"); err != nil {
+	prev := slog.Default()
+
+	slog.SetDefault(logger)
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	if _, err := testClient(ft.server.URL).deliver(context.Background(), "<b>broken</i>", "HTML"); err != nil {
 		t.Fatalf("deliver() error = %v", err)
 	}
 
