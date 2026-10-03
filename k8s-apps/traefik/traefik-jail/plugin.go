@@ -66,68 +66,58 @@ type JailPlugin struct {
 	patternWeight int
 }
 
-// requestStats tracks plugin processing time with atomic counters.
+// requestStats tracks plugin processing time.
 type requestStats struct {
-	count   atomic.Int64
-	totalNs atomic.Int64
-	minNs   atomic.Int64
-	maxNs   atomic.Int64
+	mu      sync.Mutex
+	count   int64
+	totalNs int64
+	minNs   int64
+	maxNs   int64
 }
 
 func newRequestStats() *requestStats {
-	s := &requestStats{}
-	s.minNs.Store(1 << 62)
-
-	return s
+	return &requestStats{minNs: 1 << 62}
 }
 
 func (s *requestStats) record(d time.Duration) {
 	ns := d.Nanoseconds()
 
-	s.count.Add(1)
-	s.totalNs.Add(ns)
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	for {
-		cur := s.minNs.Load()
-		if ns >= cur {
-			break
-		}
+	s.count++
+	s.totalNs += ns
 
-		if s.minNs.CompareAndSwap(cur, ns) {
-			break
-		}
+	if ns < s.minNs {
+		s.minNs = ns
 	}
 
-	for {
-		cur := s.maxNs.Load()
-		if ns <= cur {
-			break
-		}
-
-		if s.maxNs.CompareAndSwap(cur, ns) {
-			break
-		}
+	if ns > s.maxNs {
+		s.maxNs = ns
 	}
 }
 
 func (s *requestStats) logAndReset() {
-	count := s.count.Swap(0)
-	if count == 0 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.count == 0 {
 		return
 	}
 
-	total := s.totalNs.Swap(0)
-	minN := s.minNs.Swap(1 << 62)
-	maxN := s.maxNs.Swap(0)
-
-	avg := total / count
+	avg := s.totalNs / s.count
 
 	log.Printf("traefik-jail: stats count=%d avg=%s min=%s max=%s",
-		count,
+		s.count,
 		time.Duration(avg),
-		time.Duration(minN),
-		time.Duration(maxN),
+		time.Duration(s.minNs),
+		time.Duration(s.maxNs),
 	)
+
+	s.count = 0
+	s.totalNs = 0
+	s.minNs = 1 << 62
+	s.maxNs = 0
 }
 
 func (s *requestStats) startLogger(interval time.Duration) {
@@ -342,22 +332,9 @@ func (p *JailPlugin) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Allowlist bypass — earliest possible return, before any allocation.
-	if len(p.allowList) > 0 {
-		ip := extractIPFromRequest(req)
-		if isAllowed(ip, p.allowList) {
-			p.serveJailed(rw, req, ip, true)
-
-			return
-		}
-
-		p.serveJailed(rw, req, ip, false)
-
-		return
-	}
-
+	// Allowlist bypass — a matching IP is served without error counting.
 	ip := extractIPFromRequest(req)
-	p.serveJailed(rw, req, ip, false)
+	p.serveJailed(rw, req, ip, len(p.allowList) > 0 && isAllowed(ip, p.allowList))
 }
 
 // isExcluded reports whether the request URL matches any excludeURLs glob pattern.
@@ -436,13 +413,4 @@ func (r *statusRecorder) WriteHeader(code int) {
 	r.status = code
 	r.wroteHeader = true
 	r.ResponseWriter.WriteHeader(code)
-}
-
-func (r *statusRecorder) Write(b []byte) (int, error) {
-	if !r.wroteHeader {
-		r.status = http.StatusOK
-		r.wroteHeader = true
-	}
-
-	return r.ResponseWriter.Write(b)
 }
