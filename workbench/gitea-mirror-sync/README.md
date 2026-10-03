@@ -36,8 +36,8 @@ go run .
 # Full run
 DRY_RUN=false GITEA_URL=https://gitea.example.com GITEA_USER=user GITEA_PASS=token go run .
 
-# Custom config path, prune disabled
-MIRRORS_FILE=./mirrors.yaml PRUNE=false DRY_RUN=false go run .
+# Prune disabled
+PRUNE=false DRY_RUN=false go run .
 ```
 
 ## Environment variables
@@ -47,7 +47,6 @@ MIRRORS_FILE=./mirrors.yaml PRUNE=false DRY_RUN=false go run .
 | `GITEA_URL` | (empty) | Gitea base URL (e.g. `https://gitea.example.com`). |
 | `GITEA_USER` | (empty) | Gitea username for basic auth. |
 | `GITEA_PASS` | (empty) | Gitea token / password for basic auth. |
-| `MIRRORS_FILE` | `/etc/mirrors/mirrors.yaml` | Path to the mirrors config file. |
 | `DRY_RUN` | `true` | Log planned changes without applying them. Set `false` to apply. |
 | `PRUNE` | `true` | Delete mirrors not present in the config. |
 
