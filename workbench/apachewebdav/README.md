@@ -25,7 +25,6 @@ environment variables and then `exec`s httpd:
 - `SSL_CERT` — `selfsigned` generates a cert for `/cert.pem`+`/privkey.pem`
 - `PUID` / `PGID` / `PUMASK` — uid/gid/umask httpd runs as (default 1000)
 - `NO_CHOWN_DATA` — skip chowning `/var/lib/dav/data`
-- `READONLY` — read-only DAV
 
 WebDAV content lives in `/var/lib/dav/data`; the lock database is
 `/var/lib/dav/DavLock`.
