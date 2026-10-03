@@ -9,7 +9,7 @@ require (
 	github.com/go-telegram/bot v1.27.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/michiwend/gomusicbrainz v0.0.0-20181012083520-6c07e13dd396
-	github.com/urfave/cli/v3 v3.13.0
+	github.com/urfave/cli/v3 v3.14.0
 )
 
 require (
