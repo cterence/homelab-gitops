@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -22,7 +23,7 @@ type RestoreResult struct {
 	Error           error
 }
 
-func (c *Client) restoreOne(ctx context.Context, targetNS string, ci ClusterInfo) (RestoreResult, error) {
+func (c *Client) restoreOne(ctx context.Context, targetNS string, ci ClusterInfo) RestoreResult {
 	restoreClusterName := ci.Name + "-restore"
 	result := RestoreResult{
 		Info:            ci,
@@ -32,35 +33,35 @@ func (c *Client) restoreOne(ctx context.Context, targetNS string, ci ClusterInfo
 
 	if err := c.createRestoreObjectStore(ctx, targetNS, ci); err != nil {
 		result.Error = fmt.Errorf("creating ObjectStore: %w", err)
-		return result, result.Error
+		return result
 	}
 
 	if err := c.waitForObjectStore(ctx, targetNS, ci.ObjectStoreName, 2*time.Minute); err != nil {
 		result.Error = fmt.Errorf("waiting for ObjectStore: %w", err)
-		return result, result.Error
+		return result
 	}
 
 	if err := c.createRestoreCluster(ctx, targetNS, ci); err != nil {
 		result.Error = fmt.Errorf("creating Cluster: %w", err)
-		return result, result.Error
+		return result
 	}
 
 	if err := c.waitForClusterReady(ctx, targetNS, restoreClusterName, 10*time.Minute); err != nil {
 		result.Error = fmt.Errorf("waiting for Cluster Ready: %w", err)
-		return result, result.Error
+		return result
 	}
 
 	podName, err := c.findPrimaryPod(ctx, targetNS, restoreClusterName)
 	if err != nil {
 		result.Error = fmt.Errorf("finding primary pod: %w", err)
-		return result, result.Error
+		return result
 	}
 
 	result.PodName = podName
 
 	slog.Info("cluster restored", "namespace", targetNS, "cluster", restoreClusterName, "pod", podName)
 
-	return result, nil
+	return result
 }
 
 func (c *Client) ensureNamespace(ctx context.Context, name string) error {
@@ -80,7 +81,7 @@ func (c *Client) ensureNamespace(ctx context.Context, name string) error {
 func (c *Client) createRestoreObjectStore(ctx context.Context, targetNS string, ci ClusterInfo) error {
 	storeName := ci.ObjectStoreName
 
-	spec := copyMap(ci.ObjectStoreSpec)
+	spec := maps.Clone(ci.ObjectStoreSpec)
 	delete(spec, "retentionPolicy")
 
 	obj := &unstructured.Unstructured{
@@ -260,13 +261,4 @@ func (c *Client) findPrimaryPod(ctx context.Context, ns, clusterName string) (st
 	}
 
 	return "", fmt.Errorf("no pods found for cluster %s", clusterName)
-}
-
-func copyMap(m map[string]any) map[string]any {
-	out := make(map[string]any, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-
-	return out
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 )
 
 // promResponse is the subset of Prometheus API response we need.
@@ -174,8 +175,8 @@ func queryPrometheusMin(promURL, mountpointRegex string) (int64, error) {
 			return 0, fmt.Errorf("unexpected prometheus value type: %T", r.Value[1])
 		}
 
-		var val int64
-		if _, err := fmt.Sscanf(valStr, "%d", &val); err != nil {
+		val, err := strconv.ParseInt(valStr, 10, 64)
+		if err != nil {
 			return 0, fmt.Errorf("parsing prometheus value %q: %w", valStr, err)
 		}
 
