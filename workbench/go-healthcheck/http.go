@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -107,7 +106,7 @@ func newHTTPCustomCheck(config httpCustomConfig) func(ctx context.Context) error
 		if err != nil {
 			return fmt.Errorf("making the request for the health check failed: %w", err)
 		}
-		defer bodyCloser(res.Body)
+		defer func() { _ = res.Body.Close() }()
 
 		threshold := config.HTTPStatusCodeErrorThreshold
 		if threshold == 0 {
@@ -119,12 +118,5 @@ func newHTTPCustomCheck(config httpCustomConfig) func(ctx context.Context) error
 		}
 
 		return nil
-	}
-}
-
-func bodyCloser(body io.ReadCloser) {
-	err := body.Close()
-	if err != nil {
-		fmt.Printf("failed to close response body: %v", err)
 	}
 }

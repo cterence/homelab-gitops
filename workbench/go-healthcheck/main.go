@@ -30,24 +30,23 @@ func main() {
 		log.Fatalf("failed to create health check container: %v", err)
 	}
 
-	for _, endpoint := range config.Targets.HTTP {
-		t := &HTTP{}
-		if err := Register(t, endpoint, h, config); err != nil {
-			log.Fatalf("failed to register http target: %v", err)
-		}
+	targetTypes := []struct {
+		name      string
+		endpoints []string
+		new       func() Target
+	}{
+		{"http", config.Targets.HTTP, func() Target { return &HTTP{} }},
+		{"postgresql", config.Targets.PostgreSQL, func() Target { return &PostgreSQL{} }},
 	}
 
-	for _, endpoint := range config.Targets.PostgreSQL {
-		t := &PostgreSQL{}
-		if err := Register(t, endpoint, h, config); err != nil {
-			log.Fatalf("failed to register postgresql target: %v", err)
-		}
-	}
+	for _, tt := range targetTypes {
+		for _, endpoint := range tt.endpoints {
+			t := tt.new()
+			if err := Register(t, endpoint, h, config); err != nil {
+				log.Fatalf("failed to register %s target: %v", tt.name, err)
+			}
 
-	for _, endpoint := range config.Targets.Redis {
-		t := &Redis{}
-		if err := Register(t, endpoint, h, config); err != nil {
-			log.Fatalf("failed to register redis target: %v", err)
+			fmt.Printf("Registered %s target: %s\n", tt.name, t)
 		}
 	}
 
