@@ -96,9 +96,3 @@ before the next batch starts.
 
 With `--concurrency N`, the tool uses exactly N. If N clusters don't fit,
 the run is aborted.
-
-## Lease
-
-A Kubernetes Lease (`coordination.k8s.io/v1`) ensures only one instance runs
-at a time. The lease is acquired before any resources are created and released
-on exit (including signals). Dry runs skip the lease.

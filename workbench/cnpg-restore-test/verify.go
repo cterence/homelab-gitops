@@ -19,17 +19,6 @@ type VerifyResult struct {
 	Error         error
 }
 
-// VerifyClusters execs into each restored pod and compares database sizes
-// against the source cluster.
-func (c *Client) VerifyClusters(ctx context.Context, cfg Config, results []RestoreResult) []VerifyResult {
-	vr := make([]VerifyResult, len(results))
-	for i, r := range results {
-		vr[i] = c.verifyOne(ctx, cfg, r)
-	}
-
-	return vr
-}
-
 // verifyOne verifies a single restored cluster.
 func (c *Client) verifyOne(ctx context.Context, cfg Config, r RestoreResult) VerifyResult {
 	vr := VerifyResult{RestoreResult: r}

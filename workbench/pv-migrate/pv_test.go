@@ -195,7 +195,7 @@ func TestBuildTempPVC(t *testing.T) {
 		t.Fatalf("storage request = %s, want %s", got.String(), cap.String())
 	}
 
-	if !contains(claim.Spec.AccessModes, corev1.ReadWriteOnce) {
+	if !slices.Contains(claim.Spec.AccessModes, corev1.ReadWriteOnce) {
 		t.Fatalf("accessModes = %v, want [ReadWriteOnce]", claim.Spec.AccessModes)
 	}
 
@@ -345,30 +345,31 @@ func TestPvmigrateArgs(t *testing.T) {
 		name       string
 		srcPVC     string
 		srcNS      string
-		destPVC    string
-		destNS     string
-		kubeconfig string
-		opts       migrationOpts
+		cfg        config
+		strategies []string
 		wantSubs   []string
 		wantAbsent []string
 	}{
 		{
 			name:   "minimal",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts:     migrationOpts{},
-			wantSubs: []string{"--source=src", "--source-namespace=s-ns", "--dest=dst", "--dest-namespace=d-ns"},
+			srcPVC: "src", srcNS: "s-ns",
+			cfg:        config{destPVC: "dst", destNamespace: "d-ns"},
+			wantSubs:   []string{"--source=src", "--source-namespace=s-ns", "--dest=dst", "--dest-namespace=d-ns"},
+			wantAbsent: []string{"--source-kubeconfig", "--dest-kubeconfig"},
 		},
 		{
 			name:   "with kubeconfig",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			kubeconfig: "/home/u/.kube/config",
-			opts:       migrationOpts{},
+			srcPVC: "src", srcNS: "s-ns",
+			cfg:        config{destPVC: "dst", destNamespace: "d-ns", kubeconfig: "/home/u/.kube/config"},
 			wantSubs:   []string{"--source-kubeconfig=/home/u/.kube/config", "--dest-kubeconfig=/home/u/.kube/config"},
+			wantAbsent: []string{"--dest-delete-extraneous-files"},
 		},
 		{
 			name:   "all bool flags on",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts: migrationOpts{
+			srcPVC: "src", srcNS: "s-ns",
+			cfg: config{
+				destPVC:              "dst",
+				destNamespace:        "d-ns",
 				deleteExtraneous:     true,
 				ignoreMounted:        true,
 				nonRoot:              true,
@@ -383,18 +384,15 @@ func TestPvmigrateArgs(t *testing.T) {
 		},
 		{
 			name:   "strategies and durations",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts: migrationOpts{
-				strategies:  []string{"mount", "clusterip"},
-				helmTimeout: "2m",
-				logLevel:    "DEBUG",
-			},
-			wantSubs: []string{"--strategies=mount,clusterip", "--helm-timeout=2m", "--log-level=DEBUG"},
+			srcPVC: "src", srcNS: "s-ns",
+			cfg:        config{destPVC: "dst", destNamespace: "d-ns", helmTimeout: "2m", logLevel: "DEBUG"},
+			strategies: []string{"mount", "clusterip"},
+			wantSubs:   []string{"--strategies=mount,clusterip", "--helm-timeout=2m", "--log-level=DEBUG"},
 		},
 		{
 			name:   "source and dest node pins",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts: migrationOpts{sourceNode: "homelab2", destNode: "homelab3"},
+			srcPVC: "src", srcNS: "s-ns",
+			cfg: config{destPVC: "dst", destNamespace: "d-ns", sourceNode: "homelab2", destNode: "homelab3"},
 			wantSubs: []string{
 				"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname=homelab2",
 				"--helm-set=rsync.nodeSelector.kubernetes\\.io/hostname=homelab3",
@@ -402,15 +400,17 @@ func TestPvmigrateArgs(t *testing.T) {
 		},
 		{
 			name:   "source node only",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts:       migrationOpts{sourceNode: "homelab2"},
-			wantSubs:   []string{"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname=homelab2"},
+			srcPVC: "src", srcNS: "s-ns",
+			cfg: config{destPVC: "dst", destNamespace: "d-ns", sourceNode: "homelab2"},
+			wantSubs: []string{
+				"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname=homelab2",
+			},
 			wantAbsent: []string{"--helm-set=rsync.nodeSelector"},
 		},
 		{
 			name:   "bool flags off must not appear",
-			srcPVC: "src", srcNS: "s-ns", destPVC: "dst", destNS: "d-ns",
-			opts: migrationOpts{},
+			srcPVC: "src", srcNS: "s-ns",
+			cfg: config{destPVC: "dst", destNamespace: "d-ns"},
 			wantAbsent: []string{
 				"--non-root", "--no-chown", "--no-compress",
 				"--helm-set=rsync.nodeSelector", "--helm-set=sshd.nodeSelector",
@@ -420,7 +420,7 @@ func TestPvmigrateArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			args := pvmigrateArgs(tt.srcPVC, tt.srcNS, tt.destPVC, tt.destNS, tt.kubeconfig, tt.opts)
+			args := pvmigrateArgs(tt.srcPVC, tt.srcNS, tt.cfg, tt.strategies)
 			joined := strings.Join(args, "\x00")
 
 			for _, s := range tt.wantSubs {
@@ -439,15 +439,5 @@ func TestPvmigrateArgs(t *testing.T) {
 }
 
 // helpers
-
-func contains(modes []corev1.PersistentVolumeAccessMode, want corev1.PersistentVolumeAccessMode) bool {
-	for _, m := range modes {
-		if m == want {
-			return true
-		}
-	}
-
-	return false
-}
 
 func ptrVolumeMode(m corev1.PersistentVolumeMode) *corev1.PersistentVolumeMode { return &m }

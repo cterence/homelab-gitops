@@ -29,13 +29,6 @@ const (
 	titleMaxRunes = 2000
 )
 
-type languageCode string
-
-const (
-	langEnglish languageCode = "en"
-	langFrench  languageCode = "fr"
-)
-
 // mistralClient calls the Mistral REST API.
 type mistralClient struct {
 	httpClient        *http.Client
@@ -133,13 +126,18 @@ type ttsResponse struct {
 	AudioData string `json:"audio_data"`
 }
 
-// generateTTS converts text to MP3 audio, picking the voice from the
-// detected language.
+// generateTTS converts text to MP3 audio, picking the English voice for
+// English text and the French voice otherwise.
 func (m *mistralClient) generateTTS(ctx context.Context, text string) ([]byte, error) {
+	voice := voiceFrench
+	if isEnglish(text) {
+		voice = voiceEnglish
+	}
+
 	reqBody, err := json.Marshal(ttsRequest{
 		Model:          ttsModel,
 		Input:          text,
-		VoiceID:        selectVoice(detectLanguage(text)),
+		VoiceID:        voice,
 		ResponseFormat: "mp3",
 	})
 	if err != nil {
@@ -194,28 +192,9 @@ func (m *mistralClient) postJSON(ctx context.Context, url string, body []byte) (
 	return content, nil
 }
 
-// detectLanguage returns the ISO-ish code for the text's language,
-// defaulting to English when detection is inconclusive.
-func detectLanguage(text string) languageCode {
-	info := whatlanggo.Detect(text)
-	switch info.Lang {
-	case whatlanggo.Eng:
-		return langEnglish
-	case whatlanggo.Fra:
-		return langFrench
-	default:
-		return languageCode(strings.ToLower(info.Lang.String()))
-	}
-}
-
-// selectVoice maps the detected language to a TTS voice: English gets Jane,
-// everything else gets Marie.
-func selectVoice(lang languageCode) string {
-	if lang == langEnglish {
-		return voiceEnglish
-	}
-
-	return voiceFrench
+// isEnglish reports whether the text is detected as English.
+func isEnglish(text string) bool {
+	return whatlanggo.Detect(text).Lang == whatlanggo.Eng
 }
 
 // truncateRunes caps a string at n runes without splitting a multi-byte

@@ -8,24 +8,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httplog/v3"
 	"github.com/hellofresh/health-go/v5"
 )
 
-func newRouter(h *health.Health) *chi.Mux {
-	r := chi.NewRouter()
+func newRouter(h *health.Health) http.Handler {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil)).With(slog.String("service", "go-healthcheck"))
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		ReplaceAttr: httplog.SchemaECS.ReplaceAttr,
-	})).With(slog.String("service", "go-healthcheck"))
-
-	r.Use(middleware.Heartbeat("/health"))
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(time.Second * 10))
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		type CheckWithFailures struct {
 			health.Check
 			Failures map[string]string `json:"failures"` // Overrides Check.Failures which is normally omitempty
@@ -65,5 +58,5 @@ func newRouter(h *health.Health) *chi.Mux {
 		}
 	})
 
-	return r
+	return http.TimeoutHandler(mux, 10*time.Second, "request timed out")
 }

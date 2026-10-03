@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func newMistralTestClient(t *testing.T, handler http.HandlerFunc) (*mistralClient, *httptest.Server) {
+func newMistralTestClient(t *testing.T, handler http.HandlerFunc) *mistralClient {
 	t.Helper()
 
 	server := httptest.NewServer(handler)
@@ -23,7 +23,7 @@ func newMistralTestClient(t *testing.T, handler http.HandlerFunc) (*mistralClien
 		apiBase:           server.URL,
 		systemPromptClean: defaultCleanPrompt,
 		systemPromptTitle: defaultTitlePrompt,
-	}, server
+	}
 }
 
 func decodeJSON(t *testing.T, r io.Reader) map[string]any {
@@ -38,7 +38,7 @@ func decodeJSON(t *testing.T, r io.Reader) map[string]any {
 }
 
 func TestCleanTextSendsPromptToChatModel(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v1/chat/completions" {
 			t.Errorf("path = %q, want /v1/chat/completions", r.URL.Path)
 		}
@@ -72,7 +72,7 @@ func TestCleanTextSendsPromptToChatModel(t *testing.T) {
 }
 
 func TestCleanTextIncludesArticleInPrompt(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body := decodeJSON(t, r.Body)
 		messages := body["messages"].([]any)
 
@@ -92,7 +92,7 @@ func TestCleanTextIncludesArticleInPrompt(t *testing.T) {
 }
 
 func TestArticleTitle(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body := decodeJSON(t, r.Body)
 		if body["model"] != "mistral-small-latest" {
 			t.Errorf("model = %v, want mistral-small-latest", body["model"])
@@ -117,7 +117,7 @@ func TestArticleTitle(t *testing.T) {
 }
 
 func TestArticleTitleTruncatesLongText(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body := decodeJSON(t, r.Body)
 		messages := body["messages"].([]any)
 
@@ -135,7 +135,7 @@ func TestArticleTitleTruncatesLongText(t *testing.T) {
 }
 
 func TestArticleTitleFallsBackOnError(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
 
@@ -145,7 +145,7 @@ func TestArticleTitleFallsBackOnError(t *testing.T) {
 }
 
 func TestArticleTitleFallsBackOnEmptyResult(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"choices": []map[string]any{{"message": map[string]any{"content": "   "}}},
 		})
@@ -157,7 +157,7 @@ func TestArticleTitleFallsBackOnEmptyResult(t *testing.T) {
 }
 
 func TestGenerateTTS(t *testing.T) {
-	client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v1/audio/speech" {
 			t.Errorf("path = %q, want /v1/audio/speech", r.URL.Path)
 		}
@@ -203,7 +203,7 @@ func TestGenerateTTSVoiceByLanguage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client, _ := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+			client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 				body := decodeJSON(t, r.Body)
 				if body["voice_id"] != tt.want {
 					t.Errorf("voice_id = %v, want %q", body["voice_id"], tt.want)
@@ -221,40 +221,20 @@ func TestGenerateTTSVoiceByLanguage(t *testing.T) {
 	}
 }
 
-func TestSelectVoice(t *testing.T) {
-	tests := []struct {
-		name string
-		lang languageCode
-		want string
-	}{
-		{"english", langEnglish, voiceEnglish},
-		{"french", langFrench, voiceFrench},
-		{"unknown defaults to french voice", languageCode("de"), voiceFrench},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := selectVoice(tt.lang); got != tt.want {
-				t.Errorf("selectVoice(%q) = %q, want %q", tt.lang, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestDetectLanguage(t *testing.T) {
+func TestIsEnglish(t *testing.T) {
 	tests := []struct {
 		name string
 		text string
-		want languageCode
+		want bool
 	}{
-		{"english", "This is a fairly long English sentence about everyday things and places.", langEnglish},
-		{"french", "Voici une phrase assez longue en français qui parle de choses quotidiennes.", langFrench},
+		{"english", "This is a fairly long English sentence about everyday things and places.", true},
+		{"french", "Voici une phrase assez longue en français qui parle de choses quotidiennes.", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := detectLanguage(tt.text); got != tt.want {
-				t.Errorf("detectLanguage() = %q, want %q", got, tt.want)
+			if got := isEnglish(tt.text); got != tt.want {
+				t.Errorf("isEnglish(%q) = %v, want %v", tt.text, got, tt.want)
 			}
 		})
 	}

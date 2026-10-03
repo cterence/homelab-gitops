@@ -10,7 +10,6 @@ import (
 type Targets struct {
 	HTTP       []string `yaml:"http"`
 	PostgreSQL []string `yaml:"postgresql"`
-	Redis      []string `yaml:"redis"`
 }
 
 type Config struct {

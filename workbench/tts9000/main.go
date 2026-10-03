@@ -32,7 +32,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	if err := pruneCache(cacheDir, cfg.cacheMaxAgeDays); err != nil {
+	if err := pruneCache(cacheDir, defaultCacheMaxAgeDays); err != nil {
 		logger.Warn("pruning cache", "err", err)
 	}
 
@@ -41,14 +41,12 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("connecting to Telegram: %w", err)
 	}
 
-	api.Debug = false
-
 	mistral := newMistralClient(
 		&http.Client{Timeout: mistralTimeout},
 		cfg.mistralAPIKey,
-		cfg.mistralAPIBase,
+		mistralAPIBase,
 		cfg.systemPromptClean,
-		cfg.systemPromptTitle,
+		defaultTitlePrompt,
 	)
 	b := &bot{
 		api:        api,

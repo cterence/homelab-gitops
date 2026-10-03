@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -16,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antchfx/htmlquery"
 	"github.com/cenkalti/backoff/v7"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
@@ -27,12 +27,11 @@ import (
 )
 
 type scrobble struct {
-	artist          string
-	track           string
-	timestamp       time.Time
-	timestampString string
-	trackDuration   time.Duration
-	url             string
+	artist        string
+	track         string
+	timestamp     time.Time
+	trackDuration time.Duration
+	url           string
 }
 
 type durationByTrackByArtist map[string]map[string]string
@@ -98,6 +97,23 @@ func clickConsentBanner(ctx context.Context) error {
 	return nil
 }
 
+func libraryURL(c *Config, page int) string {
+	u, _ := url.Parse(fmt.Sprintf("https://www.last.fm/user/%s/library?page=%d", c.LastFMUsername, page))
+
+	q := u.Query()
+	if !c.From.IsZero() {
+		q.Add("from", c.From.Format(lastFMQueryDayFormat))
+	}
+
+	if !c.To.IsZero() {
+		q.Add("to", c.To.Format(lastFMQueryDayFormat))
+	}
+
+	u.RawQuery = q.Encode()
+
+	return u.String()
+}
+
 func getStartPage(c *Config) (int, error) {
 	timeoutCtx, cancel := context.WithTimeout(c.taskCtx, browserOperationsTimeout)
 	defer cancel()
@@ -123,28 +139,7 @@ func getStartPage(c *Config) (int, error) {
 				}
 			}
 
-			query := fmt.Sprintf("https://www.last.fm/user/%s/library", c.LastFMUsername)
-
-			url, err := url.Parse(query)
-			if err != nil {
-				return fmt.Errorf("failed to parse library query URL: %w", err)
-			}
-
-			if !c.From.IsZero() {
-				fromExpr := c.From.Format(lastFMQueryDayFormat)
-				q := url.Query()
-				q.Add("from", fromExpr)
-				url.RawQuery = q.Encode()
-			}
-
-			if !c.To.IsZero() {
-				toExpr := c.To.Format(lastFMQueryDayFormat)
-				q := url.Query()
-				q.Add("to", toExpr)
-				url.RawQuery = q.Encode()
-			}
-
-			err = chromedp.Navigate(url.String()).Do(ctx)
+			err = chromedp.Navigate(libraryURL(c, 1)).Do(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to navigate to user library with from / to dates: %w", err)
 			}
@@ -258,31 +253,10 @@ func getScrobbles(c *Config, currentPage int) ([]scrobble, error) {
 	timeoutCtx, timeoutCancel := context.WithTimeout(c.taskCtx, browserOperationsTimeout)
 	defer timeoutCancel()
 
-	query := fmt.Sprintf("https://www.last.fm/user/%s/library?page=%s", c.LastFMUsername, strconv.Itoa(currentPage))
+	slog.Debug("get scrobble library page", "page", currentPage)
 
-	url, err := url.Parse(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse library query URL: %w", err)
-	}
-
-	if !c.From.IsZero() {
-		fromExpr := c.From.Format(lastFMQueryDayFormat)
-		q := url.Query()
-		q.Add("from", fromExpr)
-		url.RawQuery = q.Encode()
-	}
-
-	if !c.To.IsZero() {
-		toExpr := c.To.Format(lastFMQueryDayFormat)
-		q := url.Query()
-		q.Add("to", toExpr)
-		url.RawQuery = q.Encode()
-	}
-
-	slog.Debug("get scrobble library page", "query", query)
-
-	err = chromedp.Run(timeoutCtx,
-		chromedp.Navigate(url.String()),
+	err := chromedp.Run(timeoutCtx,
+		chromedp.Navigate(libraryURL(c, currentPage)),
 		chromedp.WaitVisible(`.top-bar`, chromedp.ByQuery),
 		// Remove the top bar to avoid clicking on it by accident when deleting scrobbles
 		chromedp.Evaluate("let node1 = document.querySelector('.top-bar'); node1.parentNode.removeChild(node1)", nil),
@@ -295,7 +269,12 @@ func getScrobbles(c *Config, currentPage int) ([]scrobble, error) {
 	var scrobbleRows []string
 
 	err = chromedp.Run(timeoutCtx,
-		chromedp.Evaluate(`[...document.querySelectorAll('.chartlist-row')].map((e) => e.outerHTML)`, &scrobbleRows),
+		chromedp.Evaluate(`[...document.querySelectorAll('.chartlist-row')].map((e) => JSON.stringify({
+			artist: e.querySelector("input[name='artist_name']")?.value,
+			track: e.querySelector("input[name='track_name']")?.value,
+			timestamp: e.querySelector("input[name='timestamp']")?.value,
+			url: e.querySelector("td.chartlist-name a")?.href
+		}))`, &scrobbleRows),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve scrobble rows: %w", err)
@@ -321,69 +300,45 @@ func getScrobbles(c *Config, currentPage int) ([]scrobble, error) {
 	return scrobbles, nil
 }
 
-func generateScrobble(row string) (scrobble, error) {
-	// Execute xpath on the row
-	var (
-		artist       string
-		track        string
-		timestamp    time.Time
-		timestampStr string
-		scrobbleURL  string
-	)
+type scrobbleRow struct {
+	Artist    string `json:"artist"`
+	Track     string `json:"track"`
+	Timestamp string `json:"timestamp"`
+	URL       string `json:"url"`
+}
 
-	doc, err := htmlquery.Parse(strings.NewReader("<table><tbody>" + row + "</tbody></table>"))
-	if err != nil {
-		return scrobble{}, fmt.Errorf("failed to parse row HTML: %w", err)
+func generateScrobble(row string) (scrobble, error) {
+	var r scrobbleRow
+	if err := json.Unmarshal([]byte(row), &r); err != nil {
+		return scrobble{}, fmt.Errorf("failed to parse row: %w", err)
 	}
 
-	artistNode := htmlquery.FindOne(doc, `.//input[@name='artist_name']`)
-	if artistNode != nil {
-		artist = strings.TrimSpace(htmlquery.SelectAttr(artistNode, "value"))
-	} else {
+	r.Artist = strings.TrimSpace(r.Artist)
+	r.Track = strings.TrimSpace(r.Track)
+
+	if r.Artist == "" {
 		return scrobble{}, fmt.Errorf("artist not found in row: %s", row)
 	}
 
-	trackNode := htmlquery.FindOne(doc, `.//input[@name='track_name']`)
-	if trackNode != nil {
-		track = strings.TrimSpace(htmlquery.SelectAttr(trackNode, "value"))
-	} else {
+	if r.Track == "" {
 		return scrobble{}, fmt.Errorf("track not found in row: %s", row)
 	}
 
-	timestampNode := htmlquery.FindOne(doc, `.//input[@name='timestamp']`)
-	if timestampNode != nil {
-		timestampStr = strings.TrimSpace(htmlquery.SelectAttr(timestampNode, "value"))
-		// Timestamp is 1754948517
-		timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
-		if err != nil {
-			return scrobble{}, fmt.Errorf("failed to parse timestamp: %w", err)
-		}
-
-		timestamp = time.Unix(timestampInt, 0)
-	} else {
-		return scrobble{}, fmt.Errorf("timestamp not found in row: %s", row)
+	// Timestamp is 1754948517
+	timestampInt, err := strconv.ParseInt(strings.TrimSpace(r.Timestamp), 10, 64)
+	if err != nil {
+		return scrobble{}, fmt.Errorf("failed to parse timestamp: %w", err)
 	}
 
-	urlNode := htmlquery.FindOne(doc, `.//td[contains(@class,'chartlist-name')]/a`)
-	if urlNode != nil {
-		scrobblePath := strings.TrimSpace(htmlquery.SelectAttr(urlNode, "href"))
-
-		scrobbleParsedURL, err := url.Parse("https://www.last.fm" + scrobblePath)
-		if err != nil {
-			return scrobble{}, fmt.Errorf("failed to parse scrobble url: %w", err)
-		}
-
-		scrobbleURL = scrobbleParsedURL.String()
-	} else {
+	if r.URL == "" {
 		return scrobble{}, errors.New("url not found in row")
 	}
 
 	return scrobble{
-		artist:          artist,
-		track:           track,
-		timestamp:       timestamp,
-		timestampString: timestampStr,
-		url:             scrobbleURL,
+		artist:    r.Artist,
+		track:     r.Track,
+		timestamp: time.Unix(timestampInt, 0),
+		url:       r.URL,
 	}, nil
 }
 
@@ -601,16 +556,16 @@ func processPreviousAndCurrentScrobbles(ctx context.Context, c *Config, previous
 	slog.Debug("Track duration found", "artist", currentScrobble.artist, "track", currentScrobble.track, "duration", currentScrobble.trackDuration)
 
 	if previousScrobble != nil {
-		isDuplicate, err := detectDuplicateScrobble(c, previousScrobble, currentScrobble)
-		if err != nil {
-			slog.Warn("failed to detect duplicated scrobble", "error", err)
-			return currentScrobble
-		}
+		sameTrack := currentScrobble.artist == previousScrobble.artist &&
+			currentScrobble.track == previousScrobble.track &&
+			currentScrobble.timestamp != previousScrobble.timestamp
 
-		if isDuplicate {
+		if sameTrack && belowThreshold(previousScrobble, currentScrobble, c.DuplicateThreshold) {
+			slog.Info("🎯 Duplicate scrobble detected!", "artist", currentScrobble.artist, "track", currentScrobble.track, "duration", currentScrobble.trackDuration)
+
 			c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
 			if c.CanDelete {
-				if err := deleteScrobbleWithRetries(ctx, c, previousScrobble.timestampString, false, 3); err != nil {
+				if err := deleteScrobbleWithRetries(ctx, c, strconv.FormatInt(previousScrobble.timestamp.Unix(), 10), false); err != nil {
 					slog.Warn("failed to delete scrobble", "error", err)
 				}
 
@@ -620,64 +575,32 @@ func processPreviousAndCurrentScrobbles(ctx context.Context, c *Config, previous
 			return currentScrobble
 		}
 
-		if c.CompleteThreshold > 0 {
-			isIncomplete, err := detectIncompleteScrobble(c, previousScrobble, currentScrobble)
-			if err != nil {
-				slog.Warn("failed to detect incomplete scrobble", "error", err)
-				return currentScrobble
-			}
+		if c.CompleteThreshold > 0 && belowThreshold(previousScrobble, currentScrobble, c.CompleteThreshold) {
+			slog.Info("⏳ Incomplete scrobble detected!", "artist", currentScrobble.artist, "track", currentScrobble.track, "previousScrobbleTimestamp", previousScrobble.timestamp, "currentScrobbleTimestamp", currentScrobble.timestamp)
 
-			if isIncomplete {
-				c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
-				if c.CanDelete {
-					if err := deleteScrobbleWithRetries(ctx, c, currentScrobble.timestampString, true, 3); err != nil {
-						slog.Warn("failed to delete scrobble", "error", err)
-						return currentScrobble
-					}
-
-					slog.Info("Current scrobble deleted", "artist", currentScrobble.artist, "track", currentScrobble.track, "timestamp", currentScrobble.timestamp)
+			c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
+			if c.CanDelete {
+				if err := deleteScrobbleWithRetries(ctx, c, strconv.FormatInt(currentScrobble.timestamp.Unix(), 10), true); err != nil {
+					slog.Warn("failed to delete scrobble", "error", err)
+					return currentScrobble
 				}
 
-				return previousScrobble
+				slog.Info("Current scrobble deleted", "artist", currentScrobble.artist, "track", currentScrobble.track, "timestamp", currentScrobble.timestamp)
 			}
+
+			return previousScrobble
 		}
 	}
 
 	return currentScrobble
 }
 
-func detectDuplicateScrobble(c *Config, previousScrobble *scrobble, currentScrobble *scrobble) (bool, error) {
-	if currentScrobble.artist == previousScrobble.artist && currentScrobble.track == previousScrobble.track && currentScrobble.timestamp != previousScrobble.timestamp {
-		currentScrobbleDuration := currentScrobble.timestamp.Sub(previousScrobble.timestamp)
-		currentScrobbleCompletionPercentage := min((float64(currentScrobbleDuration)/float64(currentScrobble.trackDuration))*100, 100)
-		duplicateDurationThreshold := time.Duration(float64(currentScrobble.trackDuration) * float64(c.DuplicateThreshold) / 100.0)
-		isDuplicate := currentScrobbleCompletionPercentage < float64(c.DuplicateThreshold)
+// belowThreshold reports whether the time between two successive scrobbles is
+// less than pct percent of the current scrobble's track duration.
+func belowThreshold(prev, cur *scrobble, pct int) bool {
+	completionPercentage := min((float64(cur.timestamp.Sub(prev.timestamp))/float64(cur.trackDuration))*100, 100)
 
-		slog.Debug("duplicate scrobble detection calculations", "previousScrobbleTimestamp", previousScrobble.timestamp, "currentScrobbleTimestamp", currentScrobble.timestamp, "currentScrobbleDuration", currentScrobbleDuration, "duplicateThreshold", c.DuplicateThreshold, "duplicateDurationThreshold", duplicateDurationThreshold, "currentScrobbleCompletionPercentage", currentScrobbleCompletionPercentage, "isDuplicate", isDuplicate)
-
-		if isDuplicate {
-			slog.Info("🎯 Duplicate scrobble detected!", "artist", currentScrobble.artist, "track", currentScrobble.track, "duration", currentScrobble.trackDuration, "timeBetweenScrobbles", duplicateDurationThreshold, "scrobbleToDeleteTimestamp", previousScrobble.timestamp.Format(time.RFC822))
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func detectIncompleteScrobble(c *Config, previousScrobble *scrobble, currentScrobble *scrobble) (bool, error) {
-	currentScrobbleDuration := currentScrobble.timestamp.Sub(previousScrobble.timestamp)
-	currentScrobbleCompletionPercentage := min((float64(currentScrobbleDuration)/float64(currentScrobble.trackDuration))*100, 100)
-	completeDurationThreshold := time.Duration(float64(currentScrobble.trackDuration) * float64(c.CompleteThreshold) / 100.0)
-	isIncomplete := currentScrobbleCompletionPercentage < float64(c.CompleteThreshold)
-
-	slog.Debug("incomplete scrobble detection calculations", "previousScrobbleTimestamp", previousScrobble.timestamp, "currentTrackDuration", currentScrobble.trackDuration, "currentScrobbleTimestamp", currentScrobble.timestamp, "currentScrobbleDuration", currentScrobbleDuration, "completeThreshold", c.CompleteThreshold, "completeDurationThreshold", completeDurationThreshold, "currentScrobbleCompletionPercentage", currentScrobbleCompletionPercentage, "isIncomplete", isIncomplete)
-
-	if isIncomplete {
-		slog.Info("⏳ Incomplete scrobble detected!", "artist", currentScrobble.artist, "track", currentScrobble.track, "previousScrobbleTimestamp", previousScrobble.timestamp, "currentScrobbleTimestamp", currentScrobble.timestamp)
-		return true, nil
-	}
-
-	return false, nil
+	return completionPercentage < float64(pct)
 }
 
 func deleteScrobble(c *Config, timestamp string, deleteCurrentScrobble bool) error {
@@ -709,10 +632,10 @@ func deleteScrobble(c *Config, timestamp string, deleteCurrentScrobble bool) err
 	return nil
 }
 
-func deleteScrobbleWithRetries(ctx context.Context, c *Config, timestamp string, deleteCurrentScrobble bool, retryCount uint) error {
+func deleteScrobbleWithRetries(ctx context.Context, c *Config, timestamp string, deleteCurrentScrobble bool) error {
 	_, err := backoff.Retry(ctx, func() (struct{}, error) {
 		return struct{}{}, deleteScrobble(c, timestamp, deleteCurrentScrobble)
-	}, backoff.WithMaxTries(retryCount))
+	}, backoff.WithMaxTries(3))
 	if err != nil {
 		c.runStats.scrobbleDeleteFails++
 		return err
@@ -815,8 +738,7 @@ func exportScrobblesToCSV(c *Config, baseFilename string) {
 
 	file, err := os.Create(path.Join(c.DataDir, filename))
 	if err != nil {
-		slog.Warn("⚠️ Could not create deleted scrobble file, falling back to logging scrobbles as CSV", "file", filename, "error", err)
-		logScrobblesCSV(c.deletedScrobbles)
+		slog.Warn("Could not create deleted scrobble file", "file", filename, "error", err)
 
 		return
 	}
@@ -833,7 +755,7 @@ func exportScrobblesToCSV(c *Config, baseFilename string) {
 			s.artist,
 			s.track,
 			s.timestamp.Format(time.RFC3339),
-			s.timestampString,
+			strconv.FormatInt(s.timestamp.Unix(), 10),
 		}
 		_ = writer.Write(record)
 	}
@@ -843,23 +765,6 @@ func exportScrobblesToCSV(c *Config, baseFilename string) {
 	} else {
 		slog.Info("Would-be deleted scrobbles saved to file", "file", file.Name())
 	}
-}
-
-func logScrobblesCSV(scrobbles []*scrobble) {
-	var sb strings.Builder
-
-	// header
-	sb.WriteString("Artist,Track,Timestamp,TimestampString\n")
-
-	for _, s := range scrobbles {
-		fmt.Fprintf(&sb, "%s,%s,%s,%s\n",
-			s.artist,
-			s.track,
-			s.timestamp.Format(time.RFC3339),
-			s.timestampString)
-	}
-
-	fmt.Printf("Scrobbles CSV:\n%s", sb.String())
 }
 
 func finishRun(ctx context.Context, c *Config) error {

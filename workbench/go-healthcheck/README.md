@@ -1,7 +1,7 @@
 # go-healthcheck
 
-Web service that aggregates health checks for HTTP endpoints, PostgreSQL
-databases, and Redis instances into a single JSON status endpoint.
+Web service that aggregates health checks for HTTP endpoints and PostgreSQL
+databases into a single JSON status endpoint.
 
 Migrated from https://github.com/cterence/go-healthcheck.
 
@@ -13,8 +13,8 @@ Migrated from https://github.com/cterence/go-healthcheck.
 2. **Targets** — each target is validated and registered with the
    hellofresh/health-go library. HTTP targets optionally use a client
    certificate and a configurable status-code error threshold; PostgreSQL
-   and Redis targets connect with the given DSN.
-3. **Serve** — a chi router serves `/` with the aggregated measurement
+   targets connect with the given DSN.
+3. **Serve** — the service serves `/` with the aggregated measurement
    (HTTP 200 when everything passes, 503 when any check fails) and `/health`
    as a liveness heartbeat.
 
@@ -32,8 +32,6 @@ targets:
     - https://example.com/health
   postgresql:
     - postgresql://user:pass@host:5432/db
-  redis:
-    - redis://host:6379
 ```
 
 ## Development

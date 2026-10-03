@@ -2,9 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -26,12 +24,7 @@ type config struct {
 	telegramToken     string
 	mistralAPIKey     string
 	allowedUsers      []string
-	cacheMaxAgeDays   int
 	systemPromptClean string
-	systemPromptTitle string
-	// mistralAPIBase defaults to the public Mistral API; an env override
-	// allows local end-to-end testing against a fake API.
-	mistralAPIBase string
 }
 
 func loadConfig() (config, error) {
@@ -40,29 +33,10 @@ func loadConfig() (config, error) {
 		mistralAPIKey:     os.Getenv("MISTRAL_API_KEY"),
 		allowedUsers:      parseAllowedUsers(os.Getenv("ALLOWED_USERS")),
 		systemPromptClean: envOrDefault("SYSTEM_PROMPT_CLEAN", defaultCleanPrompt),
-		systemPromptTitle: envOrDefault("SYSTEM_PROMPT_TITLE", defaultTitlePrompt),
-		mistralAPIBase:    mistralAPIBase,
 	}
 
 	if cfg.telegramToken == "" || cfg.mistralAPIKey == "" {
 		return cfg, errors.New("TELEGRAM_BOT_TOKEN and MISTRAL_API_KEY environment variables must be set")
-	}
-
-	maxAge := defaultCacheMaxAgeDays
-
-	if raw := os.Getenv("CACHE_MAX_AGE_DAYS"); raw != "" {
-		parsed, err := strconv.Atoi(raw)
-		if err != nil {
-			return cfg, fmt.Errorf("parsing CACHE_MAX_AGE_DAYS %q: %w", raw, err)
-		}
-
-		maxAge = parsed
-	}
-
-	cfg.cacheMaxAgeDays = maxAge
-
-	if override := os.Getenv("MISTRAL_API_BASE"); override != "" {
-		cfg.mistralAPIBase = override
 	}
 
 	return cfg, nil

@@ -13,7 +13,6 @@ set -e
 #   PUID
 #   PGID
 #   PUMASK
-#   READONLY
 
 # Just in case this environment variable has gone missing.
 HTTPD_PREFIX="${HTTPD_PREFIX:-/usr/local/apache2}"

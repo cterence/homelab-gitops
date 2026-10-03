@@ -25,8 +25,7 @@ const listenAddr = ":8000"
 type config struct {
 	botToken string
 	chatID   string
-	// apiBase defaults to the public Telegram API; TELEGRAM_API_BASE can
-	// point it at a local fake for end-to-end testing.
+	// apiBase is the public Telegram API; tests inject a fake directly.
 	apiBase string
 }
 
@@ -35,9 +34,6 @@ func loadConfig() (config, error) {
 		botToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
 		chatID:   os.Getenv("TELEGRAM_CHAT_ID"),
 		apiBase:  telegramAPIBase,
-	}
-	if override := os.Getenv("TELEGRAM_API_BASE"); override != "" {
-		cfg.apiBase = override
 	}
 
 	if cfg.botToken == "" || cfg.chatID == "" {

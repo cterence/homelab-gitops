@@ -4,13 +4,7 @@ set -e
 
 DIR=$(dirname "$0")
 CONFIGURED_APPS=$(ls ${DIR}/../k8s-apps | xargs)
-EXCLUDED_APPS=$(for app in ${CONFIGURED_APPS}; do
-  # if deployed-apps:exclude is in the app's Chart.yaml, exclude it from the list
-  if grep -q "deployed-apps:exclude" ${DIR}/../k8s-apps/${app}/Chart.yaml 2>/dev/null; then
-    echo ${app}
-  fi
-done)
-EXCLUDED_APPS="${EXCLUDED_APPS} 0_template archive"
+EXCLUDED_APPS="0_template archive"
 # Remove excluded apps from the list of configured apps
 CONFIGURED_APPS=$(echo ${CONFIGURED_APPS} ${EXCLUDED_APPS} | tr ' ' '\n' | sort | uniq -u | xargs)
 DEPLOYED_APPS=$(ls ${DIR}/../k8s-apps/*/appset.yaml | xargs -n1 dirname | xargs -n1 basename | xargs)

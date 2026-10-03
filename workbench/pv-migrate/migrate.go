@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -21,15 +20,15 @@ var errPVMigrateNotFound = errors.New(
 // streams the child's stdout/stderr to the parent so progress bars and logs
 // are visible. The CLI must be on PATH; otherwise it returns
 // errPVMigrateNotFound.
-func runMigration(ctx context.Context, args []string, stdout, stderr io.Writer) error {
+func runMigration(ctx context.Context, args []string) error {
 	bin, err := exec.LookPath("pv-migrate")
 	if err != nil {
 		return errPVMigrateNotFound
 	}
 
 	cmd := exec.CommandContext(ctx, bin, args...)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	// pv-migrate shows a progress bar on stderr when it is a TTY; we let the
 	// child inherit the parent's TTY status by leaving stdin untouched.
 	cmd.Stdin = os.Stdin
@@ -58,7 +57,7 @@ func runMigration(ctx context.Context, args []string, stdout, stderr io.Writer) 
 // logged but not returned — the caller should still delete the temp PVC.
 //
 // kubeconfig may be empty to let pv-migrate use its default discovery.
-func cleanupPVMigrateReleases(kubeconfig string, stderr io.Writer) {
+func cleanupPVMigrateReleases(kubeconfig string) {
 	bin, err := exec.LookPath("pv-migrate")
 	if err != nil {
 		return
@@ -73,7 +72,7 @@ func cleanupPVMigrateReleases(kubeconfig string, stderr io.Writer) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, bin, args...)
-	cmd.Stderr = stderr
+	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
 		slog.Warn("pv-migrate cleanup had errors (orphaned releases may remain)", "error", err)

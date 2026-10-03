@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
 )
 
@@ -47,33 +46,29 @@ func pushMetrics(ctx context.Context, cfg Config, verifyResults []VerifyResult, 
 	// Use gauges instead of counters — each run is a short-lived process,
 	// so counters reset to 0 on every run and fluctuate in Prometheus.
 	// Gauges represent the latest run's values, which is what we want.
-	totalGauge, err := meter.Int64ObservableGauge("cnpg_restore_test_total")
+	totalGauge, err := meter.Int64Gauge("cnpg_restore_test_total")
 	if err != nil {
 		return fmt.Errorf("creating total gauge: %w", err)
 	}
 
-	successGauge, _ := meter.Int64ObservableGauge("cnpg_restore_test_success")
-	failureGauge, _ := meter.Int64ObservableGauge("cnpg_restore_test_failure")
-	skippedGauge, _ := meter.Int64ObservableGauge("cnpg_restore_test_skipped")
-	capacitySkippedGauge, _ := meter.Int64ObservableGauge("cnpg_restore_test_capacity_skipped")
-	durationGauge, _ := meter.Int64ObservableGauge("cnpg_restore_test_run_duration_seconds")
+	successGauge, _ := meter.Int64Gauge("cnpg_restore_test_success")
+	failureGauge, _ := meter.Int64Gauge("cnpg_restore_test_failure")
+	skippedGauge, _ := meter.Int64Gauge("cnpg_restore_test_skipped")
+	capacitySkippedGauge, _ := meter.Int64Gauge("cnpg_restore_test_capacity_skipped")
+	durationGauge, _ := meter.Int64Gauge("cnpg_restore_test_run_duration_seconds")
 
-	_, _ = meter.RegisterCallback(func(_ context.Context, o otelmetric.Observer) error {
-		o.ObserveInt64(totalGauge, int64(total))
-		o.ObserveInt64(successGauge, int64(success))
-		o.ObserveInt64(failureGauge, int64(failure))
-		o.ObserveInt64(skippedGauge, int64(skipped))
+	totalGauge.Record(ctx, int64(total))
+	successGauge.Record(ctx, int64(success))
+	failureGauge.Record(ctx, int64(failure))
+	skippedGauge.Record(ctx, int64(skipped))
 
-		if capacitySkipped {
-			o.ObserveInt64(capacitySkippedGauge, 1)
-		} else {
-			o.ObserveInt64(capacitySkippedGauge, 0)
-		}
+	if capacitySkipped {
+		capacitySkippedGauge.Record(ctx, 1)
+	} else {
+		capacitySkippedGauge.Record(ctx, 0)
+	}
 
-		o.ObserveInt64(durationGauge, int64(runDuration.Seconds()))
-
-		return nil
-	}, totalGauge, successGauge, failureGauge, skippedGauge, capacitySkippedGauge, durationGauge)
+	durationGauge.Record(ctx, int64(runDuration.Seconds()))
 
 	// Force flush metrics to the collector before shutting down.
 	// Use a fresh context — the caller's ctx may be cancelled (signal).

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -39,11 +40,10 @@ type Mirror struct {
 
 // repo is the subset of Gitea's repository response that we use.
 type repo struct {
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	Mirror   bool   `json:"mirror"`
-	Private  bool   `json:"private"`
-	Owner    struct {
+	Name    string `json:"name"`
+	Mirror  bool   `json:"mirror"`
+	Private bool   `json:"private"`
+	Owner   struct {
 		Name string `json:"login"`
 	} `json:"owner"`
 }
@@ -151,7 +151,7 @@ func (c *client) migrate(ctx context.Context, m Mirror) (err error) {
 }
 
 // updateRepo patches mirror_interval / private on an existing mirror.
-func (c *client) updateRepo(ctx context.Context, r *repo, m Mirror) (err error) {
+func (c *client) updateRepo(ctx context.Context, m Mirror) (err error) {
 	payload := map[string]any{
 		"private": m.Private,
 	}
@@ -196,7 +196,6 @@ func (c *client) searchPage(ctx context.Context, owner string, page int) (repos 
 
 	var pageResp struct {
 		Data []repo `json:"data"`
-		Ok   bool   `json:"ok"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&pageResp); err != nil {
 		return nil, false, fmt.Errorf("decode search: %w", err)
@@ -264,27 +263,18 @@ func bodyText(resp *http.Response) string {
 // repoNameFromURL derives a mirror name from a clone URL by taking the last
 // path segment and stripping a trailing ".git". For example
 // "https://github.com/cterence/homelab-gitops.git" -> "homelab-gitops".
-// It falls back to the raw host/path if the URL cannot be parsed.
 func repoNameFromURL(cloneAddr string) (string, error) {
 	u, err := url.Parse(cloneAddr)
 	if err != nil {
 		return "", fmt.Errorf("parse clone_addr %q: %w", cloneAddr, err)
 	}
 
-	p := strings.Trim(u.Path, "/")
-	p = strings.TrimSuffix(p, ".git")
-
-	p = strings.Trim(p, "/")
-	if p == "" {
+	name := strings.TrimSuffix(path.Base(u.Path), ".git")
+	if name == "" || name == "." || name == "/" || name == ".git" {
 		return "", fmt.Errorf("could not derive repo name from %q", cloneAddr)
 	}
-	// A scp-like "host:owner/repo" shorthand has no scheme and parses as path;
-	// take the last segment either way.
-	if i := strings.LastIndex(p, "/"); i >= 0 {
-		p = p[i+1:]
-	}
 
-	return p, nil
+	return name, nil
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -361,7 +351,8 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	mirrorsFile := env("MIRRORS_FILE", "/etc/mirrors/mirrors.yaml")
+	const mirrorsFile = "/etc/mirrors/mirrors.yaml"
+
 	dryRun := os.Getenv("DRY_RUN") == "true"
 
 	prune := os.Getenv("PRUNE")
@@ -409,12 +400,10 @@ func run() error {
 				fmt.Printf("update mirror %s (mirror_interval=%s private=%v)\n", key, m.MirrorInterval, m.Private)
 
 				if !dryRun {
-					if err := c.updateRepo(ctx, r, m); err != nil {
+					if err := c.updateRepo(ctx, m); err != nil {
 						return err
 					}
 				}
-			} else {
-				fmt.Printf("ok mirror %s\n", key)
 			}
 		}
 	}

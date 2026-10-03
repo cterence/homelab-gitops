@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -51,10 +52,12 @@ func run() error {
 
 	// Parse concurrency: "auto" = 0 (auto-detect), or a positive integer
 	if concurrencyStr != "auto" {
-		n, err := fmt.Sscanf(concurrencyStr, "%d", &cfg.Concurrency)
-		if err != nil || n != 1 || cfg.Concurrency < 1 {
+		n, err := strconv.Atoi(concurrencyStr)
+		if err != nil || n < 1 {
 			return fmt.Errorf("invalid --concurrency value %q: use \"auto\" or a positive integer", concurrencyStr)
 		}
+
+		cfg.Concurrency = n
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -72,17 +75,6 @@ func run() error {
 
 	ctx := signalCtx
 	runStart := time.Now()
-
-	// Acquire a lease so only one instance runs at a time (skip in dry-run)
-	if !cfg.DryRun {
-		identity := fmt.Sprintf("cnpg-restore-test-%d", time.Now().UnixNano())
-
-		releaseLease, err := client.acquireLease(ctx, cfg.Namespace, "cnpg-restore-test", identity)
-		if err != nil {
-			return fmt.Errorf("acquiring lease: %w", err)
-		}
-		defer releaseLease()
-	}
 
 	// Verify the restore storage class exists and uses Delete reclaim policy
 	sc, err := client.core.StorageV1().StorageClasses().Get(ctx, "cnpg-restore-test", metav1.GetOptions{})
@@ -150,10 +142,7 @@ func run() error {
 			vr[i] = VerifyResult{RestoreResult: r}
 		}
 
-		cleanupErrs := client.Cleanup(cleanupCtx, cfg, vr)
-		for _, ce := range cleanupErrs {
-			slog.Error("cleanup error", "cluster", ce.ClusterName, "error", ce.Error)
-		}
+		client.Cleanup(cleanupCtx, cfg, vr)
 	}
 	defer cleanup()
 
@@ -174,7 +163,7 @@ func run() error {
 	for i, ci := range clusters {
 		g.Go(func() error {
 			// Restore
-			rr, _ := client.restoreOne(ctx, cfg.Namespace, ci)
+			rr := client.restoreOne(ctx, cfg.Namespace, ci)
 			allResults[i] = rr
 
 			if rr.Error != nil {

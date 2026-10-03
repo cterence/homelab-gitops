@@ -63,20 +63,7 @@ func login(ctx context.Context, c *Config) error {
 }
 
 func getCookies(ctx context.Context) ([]*network.Cookie, error) {
-	var cookies []*network.Cookie
-
-	err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-		var err error
-
-		cookies, err = network.GetCookies().Do(ctx)
-
-		return err
-	}))
-	if err != nil {
-		return nil, err
-	}
-
-	return cookies, nil
+	return network.GetCookies().Do(ctx)
 }
 
 // Save cookies after login

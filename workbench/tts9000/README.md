@@ -21,7 +21,7 @@ message.
 Generated audio is cached by URL hash (md5 of the sanitized URL: no
 fragment, no query, no trailing slash) in the `generated` directory, so
 repeated URLs are served without new API calls. Cached files older than
-`CACHE_MAX_AGE_DAYS` (default 30) are pruned at startup.
+30 days are pruned at startup.
 
 Every step is logged as structured JSON (received URL, text extracted,
 title, cache hit/miss, cleaned, TTS generated, audio delivered).
@@ -43,11 +43,7 @@ in-cluster deployment):
 - `MISTRAL_API_KEY` — required, Mistral API access
 - `ALLOWED_USERS` — comma-separated Telegram user IDs allowed to use the
   bot (empty = everyone)
-- `CACHE_MAX_AGE_DAYS` — optional, cache prune age in days (default 30)
 - `SYSTEM_PROMPT_CLEAN` — optional, overrides the text-cleaning prompt
-- `SYSTEM_PROMPT_TITLE` — optional, overrides the title-extraction prompt
-- `MISTRAL_API_BASE` — optional, overrides the Mistral API endpoint for
-  local end-to-end testing
 
 ## Deployment
 

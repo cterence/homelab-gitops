@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
-	"io"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-func TestClampText(t *testing.T) {
+func TestTrimToRunes(t *testing.T) {
 	tests := []struct {
 		name     string
 		text     string
@@ -25,8 +23,8 @@ func TestClampText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := clampText(tt.text); got != tt.expected {
-				t.Errorf("clampText() = %d chars, want %d chars", len([]rune(got)), len([]rune(tt.expected)))
+			if got := trimToRunes(tt.text, maxTextLength); got != tt.expected {
+				t.Errorf("trimToRunes() = %d chars, want %d chars", len([]rune(got)), len([]rune(tt.expected)))
 			}
 		})
 	}
@@ -94,10 +92,7 @@ func newFakeTelegram(t *testing.T, statuses ...int) *fakeTelegram {
 }
 
 func testClient(apiBase string) *telegramClient {
-	// Tests silence the client logger by default; logging behavior is
-	// covered by logging_test.go.
-	return newTelegramClient(&http.Client{Timeout: telegramTimeout}, apiBase, "123:test-token", "-1001234").
-		withLogger(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	return newTelegramClient(&http.Client{Timeout: telegramTimeout}, apiBase, "123:test-token", "-1001234")
 }
 
 func TestDeliverTargetsLockedChat(t *testing.T) {

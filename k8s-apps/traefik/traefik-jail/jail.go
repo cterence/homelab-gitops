@@ -146,10 +146,6 @@ func (j *Jailer) banDuration(banCount int) time.Duration {
 		}
 	}
 
-	if d > j.maxBan {
-		return j.maxBan
-	}
-
 	return d
 }
 
@@ -175,30 +171,6 @@ func extractIPFromRequest(req *http.Request) string {
 	host, _, err := net.SplitHostPort(req.RemoteAddr)
 	if err != nil {
 		return req.RemoteAddr
-	}
-
-	return host
-}
-
-// extractIP returns the client IP from a header map, for testing.
-func extractIP(headers map[string]string, remoteAddr string) string {
-	if xff, ok := headers["X-Forwarded-For"]; ok && xff != "" {
-		for i := 0; i < len(xff); i++ {
-			if xff[i] == ',' {
-				return xff[:i]
-			}
-		}
-
-		return xff
-	}
-
-	if xri, ok := headers["X-Real-Ip"]; ok && xri != "" {
-		return xri
-	}
-
-	host, _, err := net.SplitHostPort(remoteAddr)
-	if err != nil {
-		return remoteAddr
 	}
 
 	return host

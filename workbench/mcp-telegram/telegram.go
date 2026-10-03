@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
@@ -35,7 +36,6 @@ type telegramClient struct {
 	apiBase    string
 	botToken   string
 	chatID     string
-	logger     *slog.Logger
 }
 
 func newTelegramClient(httpClient *http.Client, apiBase, botToken, chatID string) *telegramClient {
@@ -44,49 +44,23 @@ func newTelegramClient(httpClient *http.Client, apiBase, botToken, chatID string
 		apiBase:    apiBase,
 		botToken:   botToken,
 		chatID:     chatID,
-		logger:     slog.Default(),
 	}
-}
-
-func (c *telegramClient) withLogger(logger *slog.Logger) *telegramClient {
-	c.logger = logger
-	return c
-}
-
-// clampText caps text at maxTextLength runes, so multi-byte characters are
-// never split mid-sequence.
-func clampText(s string) string {
-	if len(s) <= maxTextLength {
-		return s
-	}
-
-	if r := []rune(s); len(r) > maxTextLength {
-		return string(r[:maxTextLength])
-	}
-
-	return s
 }
 
 func validParseMode(mode string) bool {
-	for _, m := range parseModes {
-		if m == mode {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(parseModes, mode)
 }
 
 // deliver posts a message to the locked chat, returning a trimmed API
 // response. If Telegram rejects the formatting (HTTP 400), it retries once
 // as plain text so the message still arrives.
 func (c *telegramClient) deliver(ctx context.Context, text, parseMode string) (string, error) {
-	text = clampText(text)
+	text = trimToRunes(text, maxTextLength)
 
 	response, err := c.post(ctx, text, parseMode)
 	if err != nil {
 		if parseMode != "" && isBadRequest(err) {
-			c.logger.Info("retrying as plain text after 400", "chat_id", c.chatID)
+			slog.Info("retrying as plain text after 400", "chat_id", c.chatID)
 			return c.post(ctx, text, "")
 		}
 

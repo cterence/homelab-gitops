@@ -1,6 +1,8 @@
 package traefikjail
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -303,50 +305,31 @@ func TestJailer_Only4xxTriggersBan(t *testing.T) {
 	}
 }
 
-func TestExtractIP(t *testing.T) {
+func TestExtractIPFromRequest(t *testing.T) {
 	tests := []struct {
 		name       string
-		headers    map[string]string
+		xff        string
+		xri        string
 		remoteAddr string
 		want       string
 	}{
-		{
-			name:       "X-Forwarded-For single",
-			headers:    map[string]string{"X-Forwarded-For": "1.2.3.4"},
-			remoteAddr: "10.0.0.1:12345",
-			want:       "1.2.3.4",
-		},
-		{
-			name:       "X-Forwarded-For multiple",
-			headers:    map[string]string{"X-Forwarded-For": "1.2.3.4, 5.6.7.8"},
-			remoteAddr: "10.0.0.1:12345",
-			want:       "1.2.3.4",
-		},
-		{
-			name:       "X-Real-Ip fallback",
-			headers:    map[string]string{"X-Real-Ip": "1.2.3.4"},
-			remoteAddr: "10.0.0.1:12345",
-			want:       "1.2.3.4",
-		},
-		{
-			name:       "remote addr fallback",
-			headers:    map[string]string{},
-			remoteAddr: "10.0.0.1:12345",
-			want:       "10.0.0.1",
-		},
-		{
-			name:       "remote addr no port",
-			headers:    map[string]string{},
-			remoteAddr: "10.0.0.1",
-			want:       "10.0.0.1",
-		},
+		{"X-Forwarded-For single", "1.2.3.4", "", "10.0.0.1:12345", "1.2.3.4"},
+		{"X-Forwarded-For multiple", "1.2.3.4, 5.6.7.8", "", "10.0.0.1:12345", "1.2.3.4"},
+		{"X-Real-Ip fallback", "", "1.2.3.4", "10.0.0.1:12345", "1.2.3.4"},
+		{"remote addr fallback", "", "", "10.0.0.1:12345", "10.0.0.1"},
+		{"remote addr no port", "", "", "10.0.0.1", "10.0.0.1"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractIP(tt.headers, tt.remoteAddr)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set("X-Forwarded-For", tt.xff)
+			req.Header.Set("X-Real-Ip", tt.xri)
+			req.RemoteAddr = tt.remoteAddr
+
+			got := extractIPFromRequest(req)
 			if got != tt.want {
-				t.Errorf("extractIP() = %q, want %q", got, tt.want)
+				t.Errorf("extractIPFromRequest() = %q, want %q", got, tt.want)
 			}
 		})
 	}
