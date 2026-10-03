@@ -98,17 +98,6 @@ func (c *k8sClient) patchPVClaimRefNil(ctx context.Context, pvName string) error
 	return nil
 }
 
-// getDestPVC validates that the destination PVC exists and is not currently
-// bound to the source PV (which would be a no-op or a mistake).
-func (c *k8sClient) getDestPVC(ctx context.Context, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
-	pvc, err := c.core.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("getting destination PVC %s/%s: %w", namespace, name, err)
-	}
-
-	return pvc, nil
-}
-
 // createTempPVC creates the temporary source PVC. It returns an error if a
 // PVC with the same name already exists (should not happen given the unique
 // prefix, but avoids silently adopting a leftover).

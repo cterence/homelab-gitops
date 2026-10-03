@@ -147,66 +147,66 @@ func tempNamespace(pv *corev1.PersistentVolume, tempNS, fallback string) string 
 
 // pvmigrateArgs builds the argument list for the `pv-migrate` CLI invocation.
 // kubeconfig may be empty to let pv-migrate use its default discovery.
-func pvmigrateArgs(srcPVC, srcNS, destPVC, destNS, kubeconfig string, opts migrationOpts) []string {
+func pvmigrateArgs(srcPVC, srcNS string, cfg config, strategies []string) []string {
 	args := []string{
 		"--source=" + srcPVC,
 		"--source-namespace=" + srcNS,
-		"--dest=" + destPVC,
-		"--dest-namespace=" + destNS,
+		"--dest=" + cfg.destPVC,
+		"--dest-namespace=" + cfg.destNamespace,
 	}
 
-	if kubeconfig != "" {
+	if kubeconfig := cfg.kubeconfig; kubeconfig != "" {
 		args = append(args, "--source-kubeconfig="+kubeconfig, "--dest-kubeconfig="+kubeconfig)
 	}
 
-	if opts.deleteExtraneous {
+	if cfg.deleteExtraneous {
 		args = append(args, "--dest-delete-extraneous-files")
 	}
 
-	if opts.ignoreMounted {
+	if cfg.ignoreMounted {
 		args = append(args, "--ignore-mounted")
 	}
 
-	if opts.nonRoot {
+	if cfg.nonRoot {
 		args = append(args, "--non-root")
 	}
 
-	if opts.noChown {
+	if cfg.noChown {
 		args = append(args, "--no-chown")
 	}
 
-	if opts.sourceMountReadWrite {
+	if cfg.sourceMountReadWrite {
 		args = append(args, "--source-mount-read-write")
 	}
 
-	if opts.noCompress {
+	if cfg.noCompress {
 		args = append(args, "--no-compress")
 	}
 
-	if len(opts.strategies) > 0 {
-		args = append(args, "--strategies="+strings.Join(opts.strategies, ","))
+	if len(strategies) > 0 {
+		args = append(args, "--strategies="+strings.Join(strategies, ","))
 	}
 
-	if opts.helmTimeout != "" {
-		args = append(args, "--helm-timeout="+opts.helmTimeout)
+	if cfg.helmTimeout != "" {
+		args = append(args, "--helm-timeout="+cfg.helmTimeout)
 	}
 
-	if opts.logLevel != "" {
-		args = append(args, "--log-level="+opts.logLevel)
+	if cfg.logLevel != "" {
+		args = append(args, "--log-level="+cfg.logLevel)
 	}
 
-	if opts.sourceNode != "" {
+	if cfg.sourceNode != "" {
 		// Use nodeSelector, not nodeName: nodeName bypasses the scheduler,
 		// which prevents WaitForFirstConsumer PVC binding (the scheduler's
 		// VolumeBinding plugin does that). nodeSelector goes through the
 		// scheduler so PVC binding works.
 		args = append(args,
-			"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname="+opts.sourceNode)
+			"--helm-set=sshd.nodeSelector.kubernetes\\.io/hostname="+cfg.sourceNode)
 	}
 
-	if opts.destNode != "" {
+	if cfg.destNode != "" {
 		args = append(args,
-			"--helm-set=rsync.nodeSelector.kubernetes\\.io/hostname="+opts.destNode)
+			"--helm-set=rsync.nodeSelector.kubernetes\\.io/hostname="+cfg.destNode)
 	}
 
 	return args
@@ -249,19 +249,4 @@ func resolveStrategies(strategies []string, sourceNode, destNode string) []strin
 		"strategies", filtered)
 
 	return filtered
-}
-
-// migrationOpts holds the passthrough flags for the pv-migrate CLI.
-type migrationOpts struct {
-	deleteExtraneous     bool
-	ignoreMounted        bool
-	nonRoot              bool
-	noChown              bool
-	sourceMountReadWrite bool
-	noCompress           bool
-	strategies           []string
-	helmTimeout          string // duration string, e.g. "1m"
-	logLevel             string
-	sourceNode           string // pin source-side pod (sshd in pull mode) to this node
-	destNode             string // pin dest-side pod (rsync in pull mode) to this node
 }

@@ -13,10 +13,12 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const defaultBindTimeout = 5 * time.Minute
@@ -110,8 +112,9 @@ func run() error {
 		return err
 	}
 
-	if _, err := client.getDestPVC(ctx, cfg.destPVC, cfg.destNamespace); err != nil {
-		return err
+	if _, err := client.core.CoreV1().PersistentVolumeClaims(cfg.destNamespace).Get(
+		ctx, cfg.destPVC, metav1.GetOptions{}); err != nil {
+		return fmt.Errorf("getting destination PVC %s/%s: %w", cfg.destNamespace, cfg.destPVC, err)
 	}
 
 	tempNS := tempNamespace(pv, cfg.tempNamespace, cfg.destNamespace)
@@ -163,7 +166,7 @@ func doMigrate(ctx context.Context, client *k8sClient, pv *corev1.PersistentVolu
 
 		// pv-migrate may leave Helm releases behind if it was interrupted
 		// before its own cleanup ran. Sweep them so nothing lingers.
-		cleanupPVMigrateReleases(cfg.kubeconfig, os.Stderr)
+		cleanupPVMigrateReleases(cfg.kubeconfig)
 	}()
 
 	// Make the PV Available if it is still Released (claimRef set).
@@ -204,22 +207,8 @@ func doMigrate(ctx context.Context, client *k8sClient, pv *corev1.PersistentVolu
 
 	strategies = resolveStrategies(strategies, cfg.sourceNode, cfg.destNode)
 
-	opts := migrationOpts{
-		deleteExtraneous:     cfg.deleteExtraneous,
-		ignoreMounted:        cfg.ignoreMounted,
-		nonRoot:              cfg.nonRoot,
-		noChown:              cfg.noChown,
-		sourceMountReadWrite: cfg.sourceMountReadWrite,
-		noCompress:           cfg.noCompress,
-		strategies:           strategies,
-		helmTimeout:          cfg.helmTimeout,
-		logLevel:             cfg.logLevel,
-		sourceNode:           cfg.sourceNode,
-		destNode:             cfg.destNode,
-	}
-
-	args := pvmigrateArgs(tempName, tempNS, cfg.destPVC, cfg.destNamespace, cfg.kubeconfig, opts)
-	if err := runMigration(ctx, args, os.Stdout, os.Stderr); err != nil {
+	args := pvmigrateArgs(tempName, tempNS, cfg, strategies)
+	if err := runMigration(ctx, args); err != nil {
 		return err
 	}
 
@@ -229,21 +218,11 @@ func doMigrate(ctx context.Context, client *k8sClient, pv *corev1.PersistentVolu
 }
 
 func splitCSV(s string) []string {
-	if s == "" {
-		return nil
-	}
-
 	var out []string
 
-	start := 0
-
-	for i := 0; i <= len(s); i++ {
-		if i == len(s) || s[i] == ',' {
-			if i > start {
-				out = append(out, s[start:i])
-			}
-
-			start = i + 1
+	for _, f := range strings.Split(s, ",") {
+		if f != "" {
+			out = append(out, f)
 		}
 	}
 
