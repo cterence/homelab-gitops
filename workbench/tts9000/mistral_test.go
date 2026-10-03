@@ -17,13 +17,7 @@ func newMistralTestClient(t *testing.T, handler http.HandlerFunc) *mistralClient
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 
-	return &mistralClient{
-		httpClient:        server.Client(),
-		apiKey:            "test-key",
-		apiBase:           server.URL,
-		systemPromptClean: defaultCleanPrompt,
-		systemPromptTitle: defaultTitlePrompt,
-	}
+	return newMistralClient(server.Client(), "test-key", server.URL, defaultCleanPrompt, defaultTitlePrompt)
 }
 
 func decodeJSON(t *testing.T, r io.Reader) map[string]any {
@@ -39,6 +33,8 @@ func decodeJSON(t *testing.T, r io.Reader) map[string]any {
 
 func TestCleanTextSendsPromptToChatModel(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		if r.URL.Path != "/v1/chat/completions" {
 			t.Errorf("path = %q, want /v1/chat/completions", r.URL.Path)
 		}
@@ -57,7 +53,7 @@ func TestCleanTextSendsPromptToChatModel(t *testing.T) {
 		}
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"choices": []map[string]any{{"message": map[string]any{"content": "cleaned text"}}},
+			"choices": []map[string]any{{"index": 0, "finish_reason": "stop", "message": map[string]any{"content": "cleaned text"}}},
 		})
 	})
 
@@ -73,6 +69,8 @@ func TestCleanTextSendsPromptToChatModel(t *testing.T) {
 
 func TestCleanTextIncludesArticleInPrompt(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		body := decodeJSON(t, r.Body)
 		messages := body["messages"].([]any)
 
@@ -82,7 +80,7 @@ func TestCleanTextIncludesArticleInPrompt(t *testing.T) {
 		}
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"choices": []map[string]any{{"message": map[string]any{"content": "ok"}}},
+			"choices": []map[string]any{{"index": 0, "finish_reason": "stop", "message": map[string]any{"content": "ok"}}},
 		})
 	})
 
@@ -93,6 +91,8 @@ func TestCleanTextIncludesArticleInPrompt(t *testing.T) {
 
 func TestArticleTitle(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		body := decodeJSON(t, r.Body)
 		if body["model"] != "mistral-small-latest" {
 			t.Errorf("model = %v, want mistral-small-latest", body["model"])
@@ -106,7 +106,7 @@ func TestArticleTitle(t *testing.T) {
 		}
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"choices": []map[string]any{{"message": map[string]any{"content": "  The Headline  "}}},
+			"choices": []map[string]any{{"index": 0, "finish_reason": "stop", "message": map[string]any{"content": "  The Headline  "}}},
 		})
 	})
 
@@ -118,6 +118,8 @@ func TestArticleTitle(t *testing.T) {
 
 func TestArticleTitleTruncatesLongText(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		body := decodeJSON(t, r.Body)
 		messages := body["messages"].([]any)
 
@@ -127,7 +129,7 @@ func TestArticleTitleTruncatesLongText(t *testing.T) {
 		}
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"choices": []map[string]any{{"message": map[string]any{"content": "ok"}}},
+			"choices": []map[string]any{{"index": 0, "finish_reason": "stop", "message": map[string]any{"content": "ok"}}},
 		})
 	})
 
@@ -136,6 +138,7 @@ func TestArticleTitleTruncatesLongText(t *testing.T) {
 
 func TestArticleTitleFallsBackOnError(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 	})
 
@@ -146,8 +149,9 @@ func TestArticleTitleFallsBackOnError(t *testing.T) {
 
 func TestArticleTitleFallsBackOnEmptyResult(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"choices": []map[string]any{{"message": map[string]any{"content": "   "}}},
+			"choices": []map[string]any{{"index": 0, "finish_reason": "stop", "message": map[string]any{"content": "   "}}},
 		})
 	})
 
@@ -158,6 +162,8 @@ func TestArticleTitleFallsBackOnEmptyResult(t *testing.T) {
 
 func TestGenerateTTS(t *testing.T) {
 	client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		if r.URL.Path != "/v1/audio/speech" {
 			t.Errorf("path = %q, want /v1/audio/speech", r.URL.Path)
 		}
@@ -204,6 +210,8 @@ func TestGenerateTTSVoiceByLanguage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := newMistralTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+
 				body := decodeJSON(t, r.Body)
 				if body["voice_id"] != tt.want {
 					t.Errorf("voice_id = %v, want %q", body["voice_id"], tt.want)
@@ -216,25 +224,6 @@ func TestGenerateTTSVoiceByLanguage(t *testing.T) {
 
 			if _, err := client.generateTTS(context.Background(), tt.text); err != nil {
 				t.Fatalf("generateTTS() error = %v", err)
-			}
-		})
-	}
-}
-
-func TestIsEnglish(t *testing.T) {
-	tests := []struct {
-		name string
-		text string
-		want bool
-	}{
-		{"english", "This is a fairly long English sentence about everyday things and places.", true},
-		{"french", "Voici une phrase assez longue en français qui parle de choses quotidiennes.", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isEnglish(tt.text); got != tt.want {
-				t.Errorf("isEnglish(%q) = %v, want %v", tt.text, got, tt.want)
 			}
 		})
 	}

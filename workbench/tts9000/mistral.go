@@ -1,15 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
+	"net/url"
 	"strings"
+
+	mistral "github.com/cterence/mistral-client-go/mistral"
 
 	"github.com/abadojack/whatlanggo"
 )
@@ -29,72 +29,63 @@ const (
 	titleMaxRunes = 2000
 )
 
-// mistralClient calls the Mistral REST API.
+type languageCode string
+
+const (
+	langEnglish languageCode = "en"
+	langFrench  languageCode = "fr"
+)
+
+// mistralClient calls the Mistral REST API through the
+// cterence/mistral-client-go SDK.
 type mistralClient struct {
-	httpClient        *http.Client
-	apiKey            string
-	apiBase           string
+	client            *mistral.APIClient
 	systemPromptClean string
 	systemPromptTitle string
 }
 
 func newMistralClient(httpClient *http.Client, apiKey, apiBase, cleanPrompt, titlePrompt string) *mistralClient {
+	cfg := mistral.NewConfiguration()
+	cfg.HTTPClient = httpClient
+
+	if u, err := url.Parse(apiBase); err == nil && u.Host != "" {
+		cfg.Scheme = u.Scheme
+		cfg.Host = u.Host
+	}
+
+	cfg.AddDefaultHeader("Authorization", "Bearer "+apiKey)
+
 	return &mistralClient{
-		httpClient:        httpClient,
-		apiKey:            apiKey,
-		apiBase:           apiBase,
+		client:            mistral.NewAPIClient(cfg),
 		systemPromptClean: cleanPrompt,
 		systemPromptTitle: titlePrompt,
 	}
 }
 
-type chatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type chatRequest struct {
-	Model       string        `json:"model"`
-	Messages    []chatMessage `json:"messages"`
-	Temperature float64       `json:"temperature"`
-}
-
-type chatResponse struct {
-	Choices []struct {
-		Message struct {
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-}
-
 // chatComplete runs a single-turn chat completion.
 func (m *mistralClient) chatComplete(ctx context.Context, model, prompt string) (string, error) {
-	reqBody, err := json.Marshal(chatRequest{
-		Model:       model,
-		Messages:    []chatMessage{{Role: "user", Content: prompt}},
-		Temperature: 0.1,
-	})
-	if err != nil {
-		return "", fmt.Errorf("encoding chat request: %w", err)
-	}
-
-	url := m.apiBase + "/v1/chat/completions"
-
-	content, err := m.postJSON(ctx, url, reqBody)
+	resp, _, err := m.client.ChatAPI.ChatCompletionV1ChatCompletionsPost(ctx).
+		ChatCompletionRequest(mistral.ChatCompletionRequest{
+			Model: model,
+			Messages: []mistral.MessagesInner{mistral.UserMessageAsMessagesInner(&mistral.UserMessage{
+				Role:    mistral.PtrString("user"),
+				Content: *mistral.NewNullableContent3(&mistral.Content3{String: mistral.PtrString(prompt)}),
+			})},
+			Temperature: *mistral.NewNullableFloat32(mistral.PtrFloat32(0.1)),
+		}).Execute()
 	if err != nil {
 		return "", fmt.Errorf("chat completion failed: %w", err)
 	}
 
-	var response chatResponse
-	if err := json.Unmarshal(content, &response); err != nil {
-		return "", fmt.Errorf("decoding chat response: %w", err)
-	}
-
-	if len(response.Choices) == 0 {
+	if len(resp.Choices) == 0 {
 		return "", errors.New("chat response had no choices")
 	}
 
-	return response.Choices[0].Message.Content, nil
+	if content := resp.Choices[0].Message.Content.Get().String; content != nil {
+		return *content, nil
+	}
+
+	return "", errors.New("chat response had no content")
 }
 
 // cleanText strips non-article content from raw text so it reads naturally
@@ -115,48 +106,23 @@ func (m *mistralClient) articleTitle(ctx context.Context, rawText string) string
 	return strings.TrimSpace(title)
 }
 
-type ttsRequest struct {
-	Model          string `json:"model"`
-	Input          string `json:"input"`
-	VoiceID        string `json:"voice_id"`
-	ResponseFormat string `json:"response_format"`
-}
-
-type ttsResponse struct {
-	AudioData string `json:"audio_data"`
-}
-
-// generateTTS converts text to MP3 audio, picking the English voice for
-// English text and the French voice otherwise.
+// generateTTS converts text to MP3 audio, picking the voice from the
+// detected language.
 func (m *mistralClient) generateTTS(ctx context.Context, text string) ([]byte, error) {
-	voice := voiceFrench
-	if isEnglish(text) {
-		voice = voiceEnglish
-	}
+	format := mistral.SPEECHOUTPUTFORMAT_MP3
 
-	reqBody, err := json.Marshal(ttsRequest{
-		Model:          ttsModel,
-		Input:          text,
-		VoiceID:        voice,
-		ResponseFormat: "mp3",
-	})
-	if err != nil {
-		return nil, fmt.Errorf("encoding TTS request: %w", err)
-	}
-
-	url := m.apiBase + "/v1/audio/speech"
-
-	content, err := m.postJSON(ctx, url, reqBody)
+	resp, _, err := m.client.AudioSpeechAPI.SpeechV1AudioSpeechPost(ctx).
+		SpeechRequest(mistral.SpeechRequest{
+			Model:          *mistral.NewNullableString(mistral.PtrString(ttsModel)),
+			VoiceId:        *mistral.NewNullableString(mistral.PtrString(selectVoice(detectLanguage(text)))),
+			Input:          text,
+			ResponseFormat: &format,
+		}).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("TTS generation failed: %w", err)
 	}
 
-	var response ttsResponse
-	if err := json.Unmarshal(content, &response); err != nil {
-		return nil, fmt.Errorf("decoding TTS response: %w", err)
-	}
-
-	audio, err := base64.StdEncoding.DecodeString(response.AudioData)
+	audio, err := base64.StdEncoding.DecodeString(resp.AudioData)
 	if err != nil {
 		return nil, fmt.Errorf("decoding audio data: %w", err)
 	}
@@ -164,37 +130,28 @@ func (m *mistralClient) generateTTS(ctx context.Context, text string) ([]byte, e
 	return audio, nil
 }
 
-func (m *mistralClient) postJSON(ctx context.Context, url string, body []byte) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("building request: %w", err)
+// detectLanguage returns the ISO-ish code for the text's language,
+// defaulting to English when detection is inconclusive.
+func detectLanguage(text string) languageCode {
+	info := whatlanggo.Detect(text)
+	switch info.Lang {
+	case whatlanggo.Eng:
+		return langEnglish
+	case whatlanggo.Fra:
+		return langFrench
+	default:
+		return languageCode(strings.ToLower(info.Lang.String()))
 	}
-
-	req.Header.Set("Authorization", "Bearer "+m.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := m.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	// The body is fully read below; nothing to propagate from Close.
-	defer func() { _ = resp.Body.Close() }()
-
-	content, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response: %w", err)
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, truncateRunes(string(content), 200))
-	}
-
-	return content, nil
 }
 
-// isEnglish reports whether the text is detected as English.
-func isEnglish(text string) bool {
-	return whatlanggo.Detect(text).Lang == whatlanggo.Eng
+// selectVoice maps the detected language to a TTS voice: English gets Jane,
+// everything else gets Marie.
+func selectVoice(lang languageCode) string {
+	if lang == langEnglish {
+		return voiceEnglish
+	}
+
+	return voiceFrench
 }
 
 // truncateRunes caps a string at n runes without splitting a multi-byte
