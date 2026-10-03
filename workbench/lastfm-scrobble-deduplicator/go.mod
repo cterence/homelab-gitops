@@ -5,7 +5,7 @@ go 1.27
 require (
 	github.com/antchfx/htmlquery v1.3.6
 	github.com/cenkalti/backoff/v7 v7.0.1
-	github.com/chromedp/cdproto v0.157.1
+	github.com/chromedp/cdproto v0.157.2
 	github.com/chromedp/chromedp v0.16.0
 	github.com/go-telegram/bot v1.27.0
 	github.com/goccy/go-yaml v1.19.2
