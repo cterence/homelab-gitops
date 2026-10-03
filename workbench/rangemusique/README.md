@@ -28,27 +28,9 @@ process the same download directory.
 
 ## Configuration
 
-All flags can be set via environment variables or a YAML config file
-(`--config`, default `config.yaml`):
-
-```yaml
-inputDir: /in
-outputDir: /out
-copy: false
-lockFile: /out/.soularr.lock
-jellyfin:
-  url: http://jellyfin:8096
-  apiKey: ...
-lidarr:
-  url: http://lidarr:8686
-  apiKey: ...
-discogs:
-  token: ...
-```
-
-Environment variables map to flags: `INPUT_DIR`, `OUTPUT_DIR`, `COPY`,
-`LOCK_FILE`, `JELLYFIN_URL`, `JELLYFIN_API_KEY`, `LIDARR_URL`,
-`LIDARR_API_KEY`, `DISCOGS_TOKEN`, `LOG_LEVEL`.
+All flags can be set via environment variables: `INPUT_DIR`, `OUTPUT_DIR`,
+`COPY`, `LOCK_FILE`, `JELLYFIN_URL`, `JELLYFIN_API_KEY`, `LIDARR_URL`,
+`LIDARR_API_KEY`, `LOG_LEVEL`.
 
 ## Development
 

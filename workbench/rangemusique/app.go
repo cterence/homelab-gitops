@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,10 +19,7 @@ import (
 
 	"github.com/h2non/filetype"
 	"github.com/michiwend/gomusicbrainz"
-	jellyfin "github.com/sj14/jellyfin-go/api"
 	"go.senan.xyz/taglib"
-	"golift.io/starr"
-	"golift.io/starr/lidarr"
 )
 
 type album struct {
@@ -56,10 +55,12 @@ func Run(ctx context.Context, cfg Config) error {
 		return nil
 	}
 
-	err = initApp(&cfg)
+	mb, err := gomusicbrainz.NewWS2Client("https://musicbrainz.org", "rangemusique", "1.0", "https://github.com/cterence")
 	if err != nil {
-		return fmt.Errorf("failed to initialize app: %w", err)
+		return fmt.Errorf("failed to create MusicBrainz client: %w", err)
 	}
+
+	cfg.mbClient = mb
 
 	trackFilePaths := []string{}
 	coverImagePath := []string{}
@@ -266,10 +267,7 @@ func buildAlbums(trackFilePaths, coverImagePaths []string) (map[string]album, er
 			}
 		}
 
-		track, err := getTrackElementsFromTags(tags)
-		if err != nil {
-			return nil, err
-		}
+		track := getTrackElementsFromTags(tags)
 
 		track.path = p
 
@@ -281,7 +279,7 @@ func buildAlbums(trackFilePaths, coverImagePaths []string) (map[string]album, er
 	return albums, nil
 }
 
-func getTrackElementsFromTags(tags map[string][]string) (track, error) {
+func getTrackElementsFromTags(tags map[string][]string) track {
 	var te track
 
 	titles, ok := tags["TITLE"]
@@ -301,7 +299,7 @@ func getTrackElementsFromTags(tags map[string][]string) (track, error) {
 		te.number = UNKNOWN_TRACKNUMBER
 	}
 
-	return te, nil
+	return te
 }
 
 func getOutDirPath(outDir, artist, album, year string) string {
@@ -345,58 +343,11 @@ func moveFile(src, dst string) error {
 }
 
 func moveCrossDevice(source, destination string) error {
-	src, err := os.Open(source)
-	if err != nil {
-		return fmt.Errorf("failed to open source file %s: %w", source, err)
+	if err := copyFile(source, destination); err != nil {
+		return err
 	}
 
-	dst, err := os.Create(destination)
-	if err != nil {
-		err := src.Close()
-		if err != nil {
-			return fmt.Errorf("failed to close source file %s: %w", source, err)
-		}
-
-		return fmt.Errorf("failed to create destination file %s: %w", destination, err)
-	}
-
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		return fmt.Errorf("failed to copy file %s to %s: %w", source, destination, err)
-	}
-
-	err = src.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close source file %s: %w", source, err)
-	}
-
-	err = dst.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close destination file %s: %w", destination, err)
-	}
-
-	fi, err := os.Stat(source)
-	if err != nil {
-		err = os.Remove(destination)
-		if err != nil {
-			return fmt.Errorf("failed to remove destination file %s: %w", destination, err)
-		}
-
-		return fmt.Errorf("failed to stat destination file %s: %w", destination, err)
-	}
-
-	err = os.Chmod(destination, fi.Mode())
-	if err != nil {
-		err = os.Remove(destination)
-		if err != nil {
-			return fmt.Errorf("failed to remove destination file %s: %w", destination, err)
-		}
-
-		return fmt.Errorf("failed to chmod destination file %s: %w", destination, err)
-	}
-
-	err = os.Remove(source)
-	if err != nil {
+	if err := os.Remove(source); err != nil {
 		return fmt.Errorf("failed to remove source file %s: %w", source, err)
 	}
 
@@ -420,16 +371,23 @@ func getReleaseYearFromMusicBrainz(mb *gomusicbrainz.WS2Client, artist, album st
 }
 
 func refreshJellyfinLibrary(ctx context.Context, jellyfinURL, jellyfinAPIKey string) error {
-	config := &jellyfin.Configuration{
-		Servers:       jellyfin.ServerConfigurations{{URL: jellyfinURL}},
-		DefaultHeader: map[string]string{"Authorization": fmt.Sprintf(`MediaBrowser Token="%s"`, jellyfinAPIKey)},
-	}
-	jc := jellyfin.NewAPIClient(config)
+	url := strings.TrimSuffix(jellyfinURL, "/") + "/Library/Refresh"
 
-	// Trigger library scan
-	_, err := jc.LibraryAPI.RefreshLibrary(ctx).Execute()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to build Jellyfin request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf(`MediaBrowser Token="%s"`, jellyfinAPIKey))
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to refresh Jellyfin library: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("failed to refresh Jellyfin library: unexpected status %s", resp.Status)
 	}
 
 	slog.Info("Jellyfin library refresh triggered")
@@ -438,19 +396,43 @@ func refreshJellyfinLibrary(ctx context.Context, jellyfinURL, jellyfinAPIKey str
 }
 
 func rescanLidarrFolders(lidarrURL, lidarrAPIKey string) error {
-	c := starr.New(lidarrURL, lidarrAPIKey, 5*time.Second)
-	l := lidarr.New(c)
-
-	command := &lidarr.CommandRequest{
-		Name: "RescanFolders",
+	body, err := json.Marshal(map[string]string{"name": "RescanFolders"})
+	if err != nil {
+		return fmt.Errorf("failed to encode Lidarr command: %w", err)
 	}
 
-	resp, err := l.SendCommand(command)
+	url := strings.TrimSuffix(lidarrURL, "/") + "/api/v1/command"
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("failed to build Lidarr request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Api-Key", lidarrAPIKey)
+
+	client := &http.Client{Timeout: 5 * time.Second}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send RescanFolders command to Lidarr: %w", err)
 	}
+	defer func() { _ = resp.Body.Close() }()
 
-	slog.Info("Lidarr folder rescan triggered", "status", resp.Status)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("failed to send RescanFolders command to Lidarr: unexpected status %s", resp.Status)
+	}
+
+	var cmdResp struct {
+		Status string `json:"status"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&cmdResp)
+	if err != nil {
+		return fmt.Errorf("failed to decode Lidarr command response: %w", err)
+	}
+
+	slog.Info("Lidarr folder rescan triggered", "status", cmdResp.Status)
 
 	return nil
 }

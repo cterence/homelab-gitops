@@ -6,7 +6,6 @@ type Config struct {
 	// User input fields
 	InputDir       string
 	OutputDir      string
-	DiscogsToken   string
 	Copy           bool
 	JellyfinURL    string
 	JellyfinAPIKey string

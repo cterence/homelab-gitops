@@ -6,8 +6,6 @@ import (
 	"log/slog"
 	"os"
 
-	altsrc "github.com/urfave/cli-altsrc/v3"
-	"github.com/urfave/cli-altsrc/v3/yaml"
 	"github.com/urfave/cli/v3"
 )
 
@@ -43,10 +41,8 @@ func main() {
 	)
 
 	var (
-		configPath     string
 		inputDir       string
 		outputDir      string
-		discogsToken   string
 		copy           bool
 		logLevel       string
 		jellyfinURL    string
@@ -62,19 +58,11 @@ func main() {
 		Version: fmt.Sprintf("Version: %s\nCommit: %s\nBuild Date: %s", version, commit, date),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "config",
-				Aliases:     []string{"c"},
-				Value:       "config.yaml",
-				Usage:       "path to the configuration file",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("CONFIG_PATH")),
-				Destination: &configPath,
-			},
-			&cli.StringFlag{
 				Name:        "input-dir",
 				Aliases:     []string{"i"},
 				Required:    true,
 				Usage:       "path to the input directory containing music files",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("INPUT_DIR"), yaml.YAML("inputDir", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("INPUT_DIR")),
 				Destination: &inputDir,
 			},
 			&cli.StringFlag{
@@ -82,56 +70,50 @@ func main() {
 				Aliases:     []string{"o"},
 				Required:    true,
 				Usage:       "path to the output directory where arranged files will be saved",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("OUTPUT_DIR"), yaml.YAML("outputDir", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("OUTPUT_DIR")),
 				Destination: &outputDir,
 			},
 			&cli.StringFlag{
 				Name:        "jellyfin-url",
 				Usage:       "url of the Jellyfin server",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("JELLYFIN_URL"), yaml.YAML("jellyfin.url", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("JELLYFIN_URL")),
 				Destination: &jellyfinURL,
 			},
 			&cli.StringFlag{
 				Name:        "jellyfin-api-key",
 				Usage:       "API key for the Jellyfin server",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("JELLYFIN_API_KEY"), yaml.YAML("jellyfin.apiKey", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("JELLYFIN_API_KEY")),
 				Destination: &jellyfinAPIKey,
 			},
 			&cli.StringFlag{
 				Name:        "lidarr-url",
 				Usage:       "url of the Lidarr server",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("LIDARR_URL"), yaml.YAML("lidarr.url", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("LIDARR_URL")),
 				Destination: &lidarrURL,
 			},
 			&cli.StringFlag{
 				Name:        "lidarr-api-key",
 				Usage:       "API key for the Lidarr server",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("LIDARR_API_KEY"), yaml.YAML("lidarr.apiKey", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("LIDARR_API_KEY")),
 				Destination: &lidarrAPIKey,
-			},
-			&cli.StringFlag{
-				Name:        "discogs-token",
-				Usage:       "token for Discogs API",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("DISCOGS_TOKEN"), yaml.YAML("discogs.token", altsrc.NewStringPtrSourcer(&configPath))),
-				Destination: &discogsToken,
 			},
 			&cli.StringFlag{
 				Name:        "log-level",
 				Usage:       "log level",
 				Value:       "info",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("LOG_LEVEL"), yaml.YAML("logLevel", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("LOG_LEVEL")),
 				Destination: &logLevel,
 			},
 			&cli.BoolFlag{
 				Name:        "copy",
 				Usage:       "copy instead of moving files",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("COPY"), yaml.YAML("copy", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("COPY")),
 				Destination: &copy,
 			},
 			&cli.StringFlag{
 				Name:        "lock-file",
 				Usage:       "path to a lock file; if it exists, the run is skipped",
-				Sources:     cli.NewValueSourceChain(cli.EnvVar("LOCK_FILE"), yaml.YAML("lockFile", altsrc.NewStringPtrSourcer(&configPath))),
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("LOCK_FILE")),
 				Destination: &lockFile,
 			},
 		},
@@ -146,7 +128,6 @@ func main() {
 			cfg := Config{
 				InputDir:       inputDir,
 				OutputDir:      outputDir,
-				DiscogsToken:   discogsToken,
 				Copy:           copy,
 				JellyfinURL:    jellyfinURL,
 				JellyfinAPIKey: jellyfinAPIKey,
