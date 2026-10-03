@@ -11,6 +11,8 @@ spec:
         revision: HEAD
         files:
           - path: "k8s-apps/*/appset.yaml"
+          - path: "k8s-apps/archive/**"
+            exclude: true
 
   template:
     metadata:
