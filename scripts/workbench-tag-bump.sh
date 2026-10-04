@@ -30,10 +30,10 @@ for app in $APPS; do
     continue
   fi
 
-  old=$(awk '/^tag:/{print $2}' "$build_yaml")
+  old=$(awk '/^tag:/{gsub(/"/, "", $2); print $2}' "$build_yaml")
   new="$(( ${old#v} + 1 ))"
 
-  awk -v new="tag: $new" '/^tag:/{print new; next} {print}' "$build_yaml" > "$build_yaml.tmp"
+  awk -v new="tag: \"$new\"" '/^tag:/{print new; next} {print}' "$build_yaml" > "$build_yaml.tmp"
   mv "$build_yaml.tmp" "$build_yaml"
 
   echo "bumped $app: $old -> $new"
@@ -46,7 +46,7 @@ for app in $APPS; do
         print
         next
       }
-      inblock && $0 ~ ("^[[:space:]]*tag: " old "[[:space:]]*$") { sub(old, new); inblock=0 }
+      inblock && $0 ~ ("^[[:space:]]*tag: \"?" old "\"?[[:space:]]*$") { sub(/tag:.*/, "tag: \"" new "\""); inblock=0 }
       { print }
     ' "$values" > "$values.tmp"
     if cmp -s "$values" "$values.tmp"; then
