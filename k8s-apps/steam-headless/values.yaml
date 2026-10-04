@@ -17,7 +17,7 @@ app-template:
         main:
           image:
             repository: docker.io/josh5/steam-headless
-            tag: latest@sha256:28acbee506844b60fe0a49f1f2a85f4a0a8dbccf8a83db7af73aacbb08d20f74
+            tag: 2.44@sha256:28acbee506844b60fe0a49f1f2a85f4a0a8dbccf8a83db7af73aacbb08d20f74
           env:
             TZ: Europe/Paris
             PUID: "1000"
