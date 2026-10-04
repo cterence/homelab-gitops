@@ -31,7 +31,7 @@ for app in $APPS; do
   fi
 
   old=$(awk '/^tag:/{print $2}' "$build_yaml")
-  new="v$(( ${old#v} + 1 ))"
+  new="$(( ${old#v} + 1 ))"
 
   awk -v new="tag: $new" '/^tag:/{print new; next} {print}' "$build_yaml" > "$build_yaml.tmp"
   mv "$build_yaml.tmp" "$build_yaml"

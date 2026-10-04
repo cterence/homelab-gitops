@@ -72,7 +72,7 @@ app-template:
         webdav:
           image:
             repository: registry.terence.cloud/apachewebdav
-            tag: v3
+            tag: 3
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
