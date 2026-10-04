@@ -21,7 +21,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/clowder
-            tag: "0.9"
+            tag: "0.10"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
