@@ -287,7 +287,7 @@ func TestClientStatus(t *testing.T) {
 	_ = conn.Close()
 
 	got := out.String()
-	for _, want := range []string{"inbox: 1 waiting (", "members: 2", "nas\n", "laptop [you] (listening)"} {
+	for _, want := range []string{"inbox: 1 waiting (5 B)", "members: 2", "nas\n", "laptop [you] (listening)"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("status output missing %q:\n%s", want, got)
 		}
@@ -337,6 +337,42 @@ func TestSendToSelfFails(t *testing.T) {
 
 	if m.Op != opReady || m.OK || m.Err == "" {
 		t.Fatalf("storer should refuse self-send, got %+v", m)
+	}
+}
+
+func TestDepositDedup(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("same bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	for range 3 {
+		conn := dial(t, st, laptop)
+		if err := clientSend(ctx, conn, laptop, "nas", src); err != nil {
+			t.Fatalf("send: %v", err)
+		}
+
+		_ = conn.Close()
+	}
+
+	if metas, _ := st.spool.items(); len(metas) != 1 {
+		t.Fatalf("identical deposits should collapse to one spool entry, got %d", len(metas))
 	}
 }
 

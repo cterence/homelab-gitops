@@ -80,7 +80,7 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 	var waitBytes int64
 
 	for _, it := range m.Items {
-		waitBytes += it.Size
+		waitBytes += it.Plain
 	}
 
 	_, _ = fmt.Fprintf(out, "inbox: %d waiting (%s)\n", len(m.Items), humanBytes(waitBytes))
@@ -367,7 +367,7 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 		return fmt.Errorf("ack %s: %s", it.ID, ack.Err)
 	}
 
-	fmt.Printf("got %s from %s (%s)\n", m.FileName, m.From, humanBytes(plainSize))
+	fmt.Printf("got %s from %s (%s)\n", filepath.Base(dst), m.From, humanBytes(plainSize))
 
 	return nil
 }

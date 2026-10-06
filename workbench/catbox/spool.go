@@ -15,12 +15,15 @@ import (
 )
 
 // spoolMeta is the sidecar describing one parked sealed stream.
+// Plain is the plaintext size for display; Size is the sealed size
+// that bounds transfers.
 type spoolMeta struct {
 	ID       string `json:"id"`
 	FileName string `json:"fn"`
 	SHA      string `json:"sha"`
 	From     string `json:"from"`
 	Target   string `json:"target"` // member name
+	Plain    int64  `json:"plain"`  // plaintext bytes
 	Size     int64  `json:"size"`   // sealed bytes
 	At       int64  `json:"at"`     // unix seconds
 }

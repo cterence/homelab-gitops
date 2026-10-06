@@ -271,7 +271,7 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		return
 	}
 
-	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name}
+	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name, Plain: m.Size}
 
 	meta, err = st.spool.put(rwc, meta)
 	if err != nil {
@@ -286,8 +286,33 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 	st.patchMeta(meta.ID, func(sm *spoolMeta) { sm.SHA = done.SHA })
 	st.log.Info("deposited", "id", meta.ID, "target", target.Name, "bytes", meta.Size)
+	st.dedup(target.Name, done.SHA, meta.ID)
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
+}
+
+// dedup deletes older spool entries with the same target and content
+// hash: identical deposits collapse to one file.
+func (st *storer) dedup(target, sha, keep string) {
+	if sha == "" {
+		return
+	}
+
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
+	metas, err := st.spool.items()
+	if err != nil {
+		return
+	}
+
+	for _, sm := range metas {
+		if sm.ID != keep && sm.Target == target && sm.SHA == sha {
+			if err := st.spool.delete(sm.ID); err == nil {
+				st.log.Info("deduped identical deposit", "id", sm.ID, "target", target)
+			}
+		}
+	}
 }
 
 // patchMeta rewrites one sidecar field.
@@ -319,7 +344,7 @@ func (st *storer) opPending(rwc io.ReadWriteCloser, me member) {
 			continue
 		}
 
-		items = append(items, item{ID: sm.ID, FileName: sm.FileName, SHA: sm.SHA, From: sm.From, Size: sm.Size})
+		items = append(items, item{ID: sm.ID, FileName: sm.FileName, SHA: sm.SHA, From: sm.From, Plain: sm.Plain, Size: sm.Size})
 	}
 
 	_ = writeMsg(rwc, msg{Op: opItems, OK: true, Items: items, Members: st.members()})

@@ -50,12 +50,14 @@ type msg struct {
 	Members  []member `json:"members,omitempty"`
 }
 
-// item is one file held at the storer.
+// item is one file held at the storer. Plain is for display; Size
+// (sealed) bounds the transfer.
 type item struct {
 	ID       string `json:"id"`
 	FileName string `json:"fn"`
 	SHA      string `json:"sha"`
 	From     string `json:"from"`
+	Plain    int64  `json:"plain"`
 	Size     int64  `json:"size"`
 }
 

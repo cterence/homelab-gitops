@@ -228,13 +228,14 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		return
 	}
 
-	if err := os.Rename(tmp.Name(), uniquePath(lc.inbox, m.FileName)); err != nil {
+	dst := uniquePath(lc.inbox, m.FileName)
+	if err := os.Rename(tmp.Name(), dst); err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
 
 		return
 	}
 
-	lc.log.Info("received directly", "filename", m.FileName, "from", senderName(sender), "size", humanBytes(plainSize))
+	lc.log.Info("received directly", "filename", filepath.Base(dst), "from", senderName(sender), "size", humanBytes(plainSize))
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
 }
