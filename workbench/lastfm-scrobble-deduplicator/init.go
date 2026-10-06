@@ -48,9 +48,11 @@ func initApp(ctx context.Context, c *Config) error {
 	if c.BrowserURL != "" {
 		allocCtx, allocCancel = chromedp.NewRemoteAllocator(ctx, c.BrowserURL, chromedp.NoModifyURL)
 	} else {
-		opts := append(chromedp.DefaultExecAllocatorOptions[:],
-			chromedp.Flag("headless", !c.BrowserHeadful),
-		)
+		opts := chromedp.DefaultExecAllocatorOptions[:]
+		if c.BrowserHeadful {
+			opts = append(opts, chromedp.VisibleWindow)
+		}
+
 		allocCtx, allocCancel = chromedp.NewExecAllocator(ctx, opts...)
 	}
 
@@ -63,7 +65,7 @@ func initApp(ctx context.Context, c *Config) error {
 
 	slog.Info("Starting browser")
 	// ensure that the browser process is started
-	err = chromedp.Run(taskCtx)
+	err = chromedp.Do(taskCtx)
 	if err != nil {
 		return fmt.Errorf("failed to start browser: %w", err)
 	}
