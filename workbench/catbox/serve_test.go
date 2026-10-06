@@ -1,0 +1,263 @@
+package main
+
+// End-to-end protocol over net.Pipe: join, send, pull. No tailcat, no
+// network: serveConn takes the peer key directly.
+
+import (
+	"bytes"
+	"context"
+	"io"
+	"log/slog"
+	"net"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/tailscale/tailcat"
+	"tailscale.com/types/key"
+)
+
+func newTestStorer(t *testing.T) *storer {
+	t.Helper()
+	dir := t.TempDir()
+
+	sp, err := openSpool(spoolDir(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return &storer{
+		dir:   dir,
+		log:   slog.New(slog.NewJSONHandler(io.Discard, nil)),
+		max:   1 << 30,
+		ttl:   24 * time.Hour,
+		spool: sp,
+	}
+}
+
+// dial wires one client session to serveConn over net.Pipe.
+func dial(t *testing.T, st *storer, client *peerID) net.Conn {
+	t.Helper()
+
+	c, s := net.Pipe()
+
+	go func() {
+		defer func() { _ = s.Close() }()
+
+		st.serveConn(s, client.DialKey.Public())
+	}()
+
+	return c
+}
+
+func testPeerID(name string) *peerID {
+	return &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StorerAddr: "tcunused"}
+}
+
+func TestJoinSendPull(t *testing.T) {
+	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "notes.txt")
+	if err := os.WriteFile(src, []byte("pick up milk"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 || metas[0].Target != "nas" || metas[0].From != "laptop" || metas[0].FileName != "notes.txt" {
+		t.Fatalf("spool = %+v", metas)
+	}
+
+	if metas[0].SHA == "" {
+		t.Fatal("meta missing plaintext SHA")
+	}
+
+	inbox := t.TempDir()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nas, inbox); err != nil {
+		t.Fatalf("inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	got, err := os.ReadFile(filepath.Join(inbox, "notes.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(got, []byte("pick up milk")) {
+		t.Fatalf("content = %q", got)
+	}
+
+	metas, err = st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 0 {
+		t.Fatalf("spool not emptied: %+v", metas)
+	}
+}
+
+func TestSendUnknownMemberRefreshesRoster(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// Wipe the laptop's roster cache: the refresh path must find "nas".
+	if err := os.Remove(rosterPath(peerConfigDir())); err != nil {
+		t.Fatal(err)
+	}
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src); err != nil {
+		t.Fatalf("send with refresh: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if metas, _ := st.spool.items(); len(metas) != 1 {
+		t.Fatalf("spool = %+v", metas)
+	}
+}
+
+func TestSendToUnknownNameFails(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+
+	conn := dial(t, st, laptop)
+	if err := joinReq(conn, laptop, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn = dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "ghost", src); err == nil {
+		t.Fatal("send to unknown member should fail")
+	}
+
+	_ = conn.Close()
+}
+
+func TestJoinNameTaken(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	st := newTestStorer(t)
+	first := testPeerID("laptop")
+	squatter := testPeerID("laptop")
+
+	conn := dial(t, st, first)
+	if err := joinReq(conn, first, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	conn = dial(t, st, squatter)
+	if err := joinReq(conn, squatter, ""); err == nil {
+		t.Fatal("duplicate name should be rejected")
+	}
+
+	_ = conn.Close()
+}
+
+func TestRejoinUpdatesListenerAddr(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+
+	conn := dial(t, st, laptop)
+	if err := joinReq(conn, laptop, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	// Register a listener address, then clear it on shutdown.
+	for _, addr := range []string{"tcregistered", ""} {
+		conn = dial(t, st, laptop)
+		if err := joinReq(conn, laptop, tailcat.Addr(addr)); err != nil {
+			t.Fatalf("rejoin with %q: %v", addr, err)
+		}
+
+		_ = conn.Close()
+
+		m, ok := memberByName(st.members(), "laptop")
+		if !ok || string(m.Addr) != addr {
+			t.Fatalf("after rejoin with %q: member = %+v", addr, m)
+		}
+	}
+}
+
+func TestNonMemberCannotSend(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	st := newTestStorer(t)
+	stranger := testPeerID("stranger")
+
+	conn := dial(t, st, stranger)
+	defer func() { _ = conn.Close() }()
+
+	if err := writeMsg(conn, msg{Op: opPending}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Err == "" {
+		t.Fatalf("non-member should be refused, got %+v", m)
+	}
+}

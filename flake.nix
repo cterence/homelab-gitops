@@ -17,7 +17,7 @@
       pre-commit-hooks,
     }:
     let
-      goVersion = 26; # Change this to update the whole stack
+      goVersion = 27;
 
       supportedSystems = [
         "x86_64-linux"
@@ -40,6 +40,7 @@
         );
 
       goApps = [
+        "catbox"
         "go-healthcheck"
         "lastfm-scrobble-deduplicator"
         "rangemusique"
@@ -133,6 +134,19 @@
               vault
               self.checks.${pkgs.stdenv.hostPlatform.system}.pre-commit-check.enabledPackages
             ];
+          };
+        }
+      );
+
+      packages = forEachSupportedSystem (
+        { pkgs }:
+        {
+          # The peer CLI for laptops: nix build github.com/cterence/homelab-gitops#catbox
+          catbox = pkgs.buildGo127Module {
+            pname = "catbox";
+            version = "0.1.0";
+            src = ./workbench/catbox;
+            vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";
           };
         }
       );
