@@ -52,6 +52,7 @@ func initApp(ctx context.Context, c *Config) error {
 		if c.BrowserHeadful {
 			opts = append(opts, chromedp.VisibleWindow)
 		}
+
 		allocCtx, allocCancel = chromedp.NewExecAllocator(ctx, opts...)
 	}
 
