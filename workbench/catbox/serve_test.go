@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -236,6 +237,46 @@ func TestRejoinUpdatesListenerAddr(t *testing.T) {
 		m, ok := memberByName(st.members(), "laptop")
 		if !ok || string(m.Addr) != addr {
 			t.Fatalf("after rejoin with %q: member = %+v", addr, m)
+		}
+	}
+}
+
+func TestClientStatus(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// Register laptop as listening, then check the status output.
+	conn := dial(t, st, laptop)
+	if err := joinReq(conn, laptop, "tclistening"); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	var out bytes.Buffer
+
+	conn = dial(t, st, laptop)
+	if err := clientStatus(conn, &out, laptop); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	got := out.String()
+	for _, want := range []string{"inbox: empty", "members: 2", "nas\n", "laptop [you] (listening)"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("status output missing %q:\n%s", want, got)
 		}
 	}
 }

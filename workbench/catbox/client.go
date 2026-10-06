@@ -51,7 +51,54 @@ func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr) error {
 		return fmt.Errorf("join rejected: %s", m.Err)
 	}
 
-	return saveRoster(rosterPath(peerConfigDir()), m.Members)
+	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
+
+	return nil
+}
+
+// clientStatus prints the roster and this peer's pending items, straight
+// from the storer, to out.
+func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
+	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
+		return err
+	}
+
+	m, err := readMsg(rwc)
+	if err != nil {
+		return err
+	}
+
+	if m.Op != opItems || !m.OK {
+		return fmt.Errorf("status: %s", m.Err)
+	}
+
+	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
+
+	switch n := len(m.Items); n {
+	case 0:
+		_, _ = fmt.Fprintln(out, "inbox: empty")
+	case 1:
+		_, _ = fmt.Fprintln(out, "inbox: 1 file waiting")
+	default:
+		_, _ = fmt.Fprintf(out, "inbox: %d files waiting\n", n)
+	}
+
+	_, _ = fmt.Fprintf(out, "members: %d\n", len(m.Members))
+
+	for _, mem := range m.Members {
+		marker := ""
+		if mem.Name == id.Name {
+			marker = " [you]"
+		}
+
+		if mem.Addr != "" {
+			marker += " (listening)"
+		}
+
+		_, _ = fmt.Fprintf(out, "  %s%s\n", mem.Name, marker)
+	}
+
+	return nil
 }
 
 func peerConfigDir() string {
@@ -98,26 +145,18 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 
 	defer func() { _ = f.Close() }()
 
-	roster, err := loadRoster(rosterPath(peerConfigDir()))
+	// The cached roster may lag a listener that just came online; the
+	// storer is the authority, and the tunnel is already open.
+	roster, err := refreshRoster(rwc)
 	if err != nil {
 		return err
 	}
 
+	_ = saveRoster(rosterPath(peerConfigDir()), roster) // cache only
+
 	target, ok := memberByName(roster, targetName)
 	if !ok {
-		// ponytail: one retry after a roster refresh covers new members
-		if roster, err = refreshRoster(rwc); err != nil {
-			return err
-		}
-
-		if err := saveRoster(rosterPath(peerConfigDir()), roster); err != nil {
-			return err
-		}
-
-		target, ok = memberByName(roster, targetName)
-		if !ok {
-			return fmt.Errorf("no member named %q", targetName)
-		}
+		return fmt.Errorf("no member named %q", targetName)
 	}
 
 	if target.Addr != "" {

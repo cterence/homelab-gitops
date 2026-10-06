@@ -26,10 +26,11 @@ daemonless peers, everything end-to-end encrypted.
 ```
 catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
 catbox addr
-catbox join   <storer-addr> --name NAME
+catbox join   --name NAME <storer-addr>
 catbox invite
 catbox send   <member> <file>
 catbox recv   [--dir DIR] [--stay]
+catbox status
 ```
 
 - `serve` runs the storer. First boot creates the identity (node key,
@@ -54,6 +55,10 @@ catbox recv   [--dir DIR] [--stay]
   storer deletes its copy. With `--stay` it keeps running afterwards
   as a direct-send listener, publishing its tailcat address in the
   roster and clearing it again on shutdown (Ctrl-C).
+- `status` asks the storer who's in the mesh: your name, how many
+  files are waiting for you, and every member with a listening
+  marker. The roster comes straight from the authority, never from
+  the local cache.
 
 ## Deployment
 

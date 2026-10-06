@@ -114,9 +114,24 @@ func run() error {
 			return err
 		}
 
-		fmt.Printf("catbox join '%s' --name <name>\n", id.StorerAddr)
+		fmt.Printf("catbox join --name <name> '%s'\n", id.StorerAddr)
 
 		return nil
+	case "status":
+		id, _, err := loadPeerID("", "")
+		if err != nil {
+			return err
+		}
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		return clientStatus(conn, os.Stdout, id)
 	case "send":
 		fs := flag.NewFlagSet("send", flag.ExitOnError)
 		_ = fs.Parse(os.Args[2:])
@@ -153,10 +168,11 @@ func usage() {
 usage:
   catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
   catbox addr
-  catbox join   <storer-addr> --name NAME
+  catbox join   --name NAME <storer-addr>
   catbox invite
   catbox send   <member> <file>
   catbox recv   [--dir DIR] [--stay]
+  catbox status
 `)
 }
 
