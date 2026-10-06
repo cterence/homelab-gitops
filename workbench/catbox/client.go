@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -370,6 +371,40 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 	fmt.Printf("got %s from %s (%s)\n", filepath.Base(dst), m.From, humanBytes(plainSize))
 
 	return nil
+}
+
+// statusJSON is the machine-readable answer to status --json.
+type statusJSON struct {
+	Name    string   `json:"name"`
+	Waiting []item   `json:"waiting"`
+	Members []member `json:"members"`
+}
+
+// clientStatusJSON writes the storer's answer as one JSON object.
+func clientStatusJSON(rwc io.ReadWriter, out io.Writer, id *peerID) error {
+	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
+		return err
+	}
+
+	m, err := readMsg(rwc)
+	if err != nil {
+		return err
+	}
+
+	if m.Op != opItems || !m.OK {
+		return fmt.Errorf("status: %s", m.Err)
+	}
+
+	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
+
+	slices.SortFunc(m.Members, func(a, b member) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	enc := json.NewEncoder(out)
+	enc.SetIndent("", "  ")
+
+	return enc.Encode(statusJSON{Name: id.Name, Waiting: m.Items, Members: m.Members})
 }
 
 // uniquePath returns dir/name, or dir/base(N).ext when it already

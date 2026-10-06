@@ -1,0 +1,7 @@
+# Gradle and AGP build state; the jniLibs binary comes from
+# build-native.sh or the nix APK build.
+.gradle/
+build/
+local.properties
+app/src/main/jniLibs/
+*.salive

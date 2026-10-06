@@ -58,7 +58,8 @@ catbox status
 - `status` asks the storer who's in the mesh: files and bytes waiting
   for you there, and every member with `[you]` and `(listening)`
   markers. The roster comes straight from the authority, never from
-  the local cache.
+  the local cache. `--json` emits one machine-readable object
+  (name, waiting items, members) for the Android app.
 - Received files never overwrite: a name collision in the inbox
   becomes `name(1).ext`, `name(2).ext`, and so on.
 
@@ -70,6 +71,28 @@ irreplaceable file is `identity.json`), health on `:8081` at
 `/healthz`. Image built in-cluster by Kaniko as
 `registry.terence.cloud/catbox:<tag>`; bump `build.yaml` and the
 chart's image tag together, never reusing a tag.
+
+## Android
+
+`android/` is a thin single-screen Compose app around the same
+binary: cross-compiled `GOOS=android` as `libcatbox.so`, exec'd as a
+child process with `HOME` pointed at the app's private storage (the
+identity lives there) and the inbox at the app's external files dir
+via `--dir`. The app runs one-shot `status --json` / `send` / `recv`
+and holds a long-lived `recv --listen` child while the listen toggle
+is on — its server engine (identity key) never conflicts with
+one-shot client execs (dial key).
+
+Build (hermetic, offline gradle, pinned debug keystore dedicated to
+catbox):
+
+    make catbox-apk        # → result.apk, ready for adb install
+
+Iterating on the Kotlin in the devshell:
+
+    nix develop .#android
+    ./android/build-native.sh   # the catbox binary into jniLibs
+    cd android && gradle assembleDebug
 
 ## v1 limits
 

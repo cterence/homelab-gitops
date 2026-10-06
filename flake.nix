@@ -4,6 +4,13 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
+    # The Android SDK as a flake. Only the catbox-android package and
+    # the android devShell depend on it.
+    android-nixpkgs = {
+      url = "github:tadfisher/android-nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     pre-commit-hooks = {
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -14,6 +21,7 @@
     {
       self,
       nixpkgs,
+      android-nixpkgs,
       pre-commit-hooks,
     }:
     let
@@ -136,6 +144,47 @@
             ];
           };
         }
+        // (
+          # The Android app shell: nix develop .#android. The SDK
+          # matches android/app/build.gradle.kts (compileSdk 34,
+          # build-tools 34.0.0, AGP 8.5.2, JDK 17) — bump them
+          # together. Hosts without an android-nixpkgs SDK composition
+          # (aarch64-linux) don't get the shell.
+          let
+            system = pkgs.stdenv.hostPlatform.system;
+            androidSystems = [
+              "x86_64-linux"
+              "aarch64-darwin"
+            ];
+          in
+          nixpkgs.lib.optionalAttrs (builtins.elem system androidSystems) {
+            android =
+              let
+                sdk = android-nixpkgs.sdk.${system} (
+                  sdkPkgs: with sdkPkgs; [
+                    cmdline-tools-latest
+                    platform-tools
+                    build-tools-34-0-0
+                    platforms-android-34
+                  ]
+                );
+              in
+              pkgs.mkShell rec {
+                packages = [
+                  sdk
+                  pkgs.jdk17
+                  pkgs.gradle
+                  pkgs.go
+                ];
+                ANDROID_HOME = "${sdk}/share/android-sdk";
+                ANDROID_SDK_ROOT = "${sdk}/share/android-sdk";
+                # AGP downloads a prebuilt aapt2 from Maven that does not
+                # run on Nix (unpatched ELF); point it at the SDK's own.
+                GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${ANDROID_HOME}/build-tools/34.0.0/aapt2";
+                JAVA_HOME = pkgs.jdk17.home;
+              };
+          }
+        )
       );
 
       packages = forEachSupportedSystem (
@@ -149,6 +198,32 @@
             vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";
           };
         }
+        // (
+          # The Android APK, hermetically built from
+          # workbench/catbox/nix/android.nix. Only hosts with an
+          # android-nixpkgs SDK composition can build it.
+          let
+            system = pkgs.stdenv.hostPlatform.system;
+            androidSystems = [
+              "x86_64-linux"
+              "aarch64-darwin"
+            ];
+          in
+          nixpkgs.lib.optionalAttrs (builtins.elem system androidSystems) (
+            let
+              catboxAndroid = import ./workbench/catbox/nix/android.nix {
+                inherit pkgs;
+                android-sdk = android-nixpkgs.sdk.${system};
+                src = self.outPath + "/workbench/catbox";
+                vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";
+              };
+            in
+            {
+              catbox-android = catboxAndroid.catbox-android;
+              catbox-android-bin = catboxAndroid.catbox-android-bin;
+            }
+          )
+        )
       );
 
       checks = forEachSupportedSystem (

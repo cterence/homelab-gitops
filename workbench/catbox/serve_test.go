@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"net"
@@ -373,6 +374,95 @@ func TestDepositDedup(t *testing.T) {
 
 	if metas, _ := st.spool.items(); len(metas) != 1 {
 		t.Fatalf("identical deposits should collapse to one spool entry, got %d", len(metas))
+	}
+}
+
+func TestClientStatusJSON(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("hello"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, nas)
+	if err := clientSend(context.Background(), conn, nas, "laptop", src); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	var out bytes.Buffer
+
+	conn = dial(t, st, laptop)
+	if err := clientStatusJSON(conn, &out, laptop); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	var s struct {
+		Name    string `json:"name"`
+		Waiting []item `json:"waiting"`
+		Members []struct {
+			Name string `json:"name"`
+		} `json:"members"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &s); err != nil {
+		t.Fatalf("parsing %s: %v", out.String(), err)
+	}
+
+	if s.Name != "laptop" {
+		t.Fatalf("name = %q", s.Name)
+	}
+
+	if len(s.Waiting) != 1 || s.Waiting[0].FileName != "f.txt" || s.Waiting[0].Plain != 5 {
+		t.Fatalf("waiting = %+v", s.Waiting)
+	}
+
+	if len(s.Members) != 2 || s.Members[0].Name != "laptop" || s.Members[1].Name != "nas" {
+		t.Fatalf("members = %+v", s.Members)
+	}
+}
+
+func TestPeerNameValidated(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	tests := []struct {
+		name    string
+		wantErr string
+	}{
+		{"", "run join with --name"},
+		{"My Laptop", "invalid member name"},
+		{"laptop", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := loadPeerID(tt.name, "tcx")
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("valid name rejected: %v", err)
+				}
+
+				return
+			}
+
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("err = %v, want containing %q", err, tt.wantErr)
+			}
+		})
 	}
 }
 

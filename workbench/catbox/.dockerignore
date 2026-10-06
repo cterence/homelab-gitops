@@ -1,0 +1,4 @@
+# The Android app builds via nix, not Kaniko; keep the image context lean.
+android/
+nix/
+README.md

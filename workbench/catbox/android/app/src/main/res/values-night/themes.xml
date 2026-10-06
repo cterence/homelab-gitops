@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark system theme: a dark window at launch, so the app never
+         flashes white before Compose draws. -->
+    <style name="Theme.Catbox" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>

@@ -9,3 +9,4 @@ docs/superpowers/
 .DS_STORE
 .direnv/
 .pre-commit-config.yaml
+result.apk

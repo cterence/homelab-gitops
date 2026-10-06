@@ -24,8 +24,13 @@ func main() {
 }
 
 // newLogger logs to stderr: human text on a terminal, JSON in
-// containers, where the streams are pipes.
+// containers. CATBOX_LOG_TEXT forces text for the Android app's log
+// pane.
 func newLogger() *slog.Logger {
+	if os.Getenv("CATBOX_LOG_TEXT") != "" {
+		return slog.New(slog.NewTextHandler(os.Stderr, nil))
+	}
+
 	if fi, err := os.Stderr.Stat(); err == nil && fi.Mode()&os.ModeCharDevice != 0 {
 		return slog.New(slog.NewTextHandler(os.Stderr, nil))
 	}
@@ -128,6 +133,10 @@ func run() error {
 
 		return nil
 	case "status":
+		fs := flag.NewFlagSet("status", flag.ExitOnError)
+		jsonOut := fs.Bool("json", false, "machine-readable status for UIs")
+		_ = fs.Parse(os.Args[2:])
+
 		id, _, err := loadPeerID("", "")
 		if err != nil {
 			return err
@@ -140,6 +149,10 @@ func run() error {
 
 		defer func() { _ = cl.Close() }()
 		defer func() { _ = conn.Close() }()
+
+		if *jsonOut {
+			return clientStatusJSON(conn, os.Stdout, id)
+		}
 
 		return clientStatus(conn, os.Stdout, id)
 	case "send":
@@ -182,7 +195,7 @@ usage:
   catbox invite
   catbox send   <member> <file>
   catbox recv   [--dir DIR] [--listen]
-  catbox status
+  catbox status [--json]
 `)
 }
 

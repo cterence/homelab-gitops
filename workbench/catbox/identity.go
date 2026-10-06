@@ -72,6 +72,10 @@ func loadPeerID(name string, storer tailcat.Addr) (*peerID, bool, error) {
 		return nil, false, fmt.Errorf("no identity in %s; run join with --name", path)
 	}
 
+	if !validName(name) {
+		return nil, false, fmt.Errorf("invalid member name %q: use a lowercase slug", name)
+	}
+
 	id := &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StorerAddr: storer}
 	if err := saveJSON(path, id); err != nil {
 		return nil, false, err
