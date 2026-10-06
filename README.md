@@ -51,6 +51,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes |
 | [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack |
 | [audiobookshelf](./scripts/../k8s-apps/audiobookshelf) | Self-hosted audiobook and podcast server |
+| [catbox](./scripts/../k8s-apps/catbox) | Async file-transfer hub over tailcat |
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes |
 | [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance |
