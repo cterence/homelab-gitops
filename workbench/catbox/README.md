@@ -55,10 +55,12 @@ catbox status
   storer deletes its copy. With `--stay` it keeps running afterwards
   as a direct-send listener, publishing its tailcat address in the
   roster and clearing it again on shutdown (Ctrl-C).
-- `status` asks the storer who's in the mesh: your name, how many
-  files are waiting for you, and every member with a listening
-  marker. The roster comes straight from the authority, never from
-  the local cache.
+- `status` asks the storer who's in the mesh: how many files are
+  waiting for you there, how many sit in your local inbox dir, and
+  every member with `[you]` and `(listening)` markers. The roster
+  comes straight from the authority, never from the local cache.
+- Received files never overwrite: a name collision in the inbox
+  becomes `name-1.ext`, `name-2.ext`, and so on.
 
 ## Deployment
 

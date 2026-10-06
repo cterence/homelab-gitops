@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -108,6 +109,60 @@ func TestLoadRosterMissing(t *testing.T) {
 
 	if len(out) != 0 {
 		t.Fatalf("out = %+v", out)
+	}
+}
+
+func TestUniquePath(t *testing.T) {
+	dir := t.TempDir()
+	tests := []struct {
+		name string
+		want string
+	}{
+		{"fresh.txt", "fresh.txt"},
+		{"photo.jpg", "photo-2.jpg"},     // photo.jpg and photo-1.jpg occupied
+		{"photo-1.jpg", "photo-1-1.jpg"}, // base-N applies to the given name
+		{"noext", "noext-1"},             // occupied, no extension
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "photo.jpg"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "photo-1.jpg"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "noext"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := uniquePath(dir, tt.name); filepath.Base(got) != tt.want {
+				t.Fatalf("uniquePath(%q) = %q, want %q", tt.name, filepath.Base(got), tt.want)
+			}
+		})
+	}
+}
+
+func TestInboxCount(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"a.txt", "b.txt", ".part-tmp", ".DS_Store"} {
+		if err := os.WriteFile(filepath.Join(dir, name), nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := os.Mkdir(filepath.Join(dir, "sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := inboxCount(dir); got != 3 {
+		t.Fatalf("inboxCount = %d, want 3 (partials and dirs excluded)", got)
+	}
+
+	if got := inboxCount(filepath.Join(dir, "missing")); got != 0 {
+		t.Fatalf("inboxCount(missing) = %d, want 0", got)
 	}
 }
 

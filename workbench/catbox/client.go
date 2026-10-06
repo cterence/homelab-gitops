@@ -5,11 +5,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/tailscale/tailcat"
@@ -74,16 +77,20 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 
 	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
 
-	switch n := len(m.Items); n {
-	case 0:
+	_, _ = fmt.Fprintf(out, "waiting: %d\n", len(m.Items))
+
+	inbox, _ := downloadDir()
+	if n := inboxCount(inbox); n == 0 {
 		_, _ = fmt.Fprintln(out, "inbox: empty")
-	case 1:
-		_, _ = fmt.Fprintln(out, "inbox: 1 file waiting")
-	default:
-		_, _ = fmt.Fprintf(out, "inbox: %d files waiting\n", n)
+	} else {
+		_, _ = fmt.Fprintf(out, "inbox: %d files\n", n)
 	}
 
 	_, _ = fmt.Fprintf(out, "members: %d\n", len(m.Members))
+
+	slices.SortFunc(m.Members, func(a, b member) int {
+		return strings.Compare(a.Name, b.Name)
+	})
 
 	for _, mem := range m.Members {
 		marker := ""
@@ -133,6 +140,10 @@ func refreshRoster(rwc io.ReadWriter) ([]member, error) {
 // a short timeout; the storer is always the fallback. rwc is the
 // already-open storer connection.
 func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetName, path string) error {
+	if targetName == id.Name {
+		return errors.New("can't send to yourself")
+	}
+
 	info, err := os.Stat(path)
 	if err != nil {
 		return err
@@ -320,7 +331,7 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 		return fmt.Errorf("fetch %s: %s", it.ID, m.Err)
 	}
 
-	dst := filepath.Join(dir, m.FileName)
+	dst := uniquePath(dir, m.FileName)
 
 	tmp, err := os.CreateTemp(dir, ".part-*")
 	if err != nil {
@@ -360,6 +371,43 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 	fmt.Printf("got %s from %s (%s)\n", m.FileName, m.From, humanBytes(plainSize))
 
 	return nil
+}
+
+// uniquePath returns dir/name, or dir/base-N.ext when it already
+// exists, so received files never overwrite each other.
+func uniquePath(dir, name string) string {
+	dst := filepath.Join(dir, name)
+	if _, err := os.Stat(dst); err != nil {
+		return dst
+	}
+
+	ext := filepath.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+
+	for i := 1; ; i++ {
+		dst = filepath.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
+		if _, err := os.Stat(dst); err != nil {
+			return dst
+		}
+	}
+}
+
+// inboxCount counts files in dir, ignoring directories and partials.
+func inboxCount(dir string) int {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return 0
+	}
+
+	n := 0
+
+	for _, e := range entries {
+		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".part-") {
+			n++
+		}
+	}
+
+	return n
 }
 
 // downloadDir is the default inbox: the OS downloads dir + /catbox.

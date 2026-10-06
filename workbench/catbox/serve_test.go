@@ -274,10 +274,56 @@ func TestClientStatus(t *testing.T) {
 	_ = conn.Close()
 
 	got := out.String()
-	for _, want := range []string{"inbox: empty", "members: 2", "nas\n", "laptop [you] (listening)"} {
+	for _, want := range []string{"waiting: 0", "inbox: empty", "members: 2", "nas\n", "laptop [you] (listening)"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("status output missing %q:\n%s", want, got)
 		}
+	}
+
+	if strings.Index(got, "laptop") > strings.Index(got, "nas") {
+		t.Fatalf("members not sorted:\n%s", got)
+	}
+}
+
+func TestSendToSelfFails(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+
+	conn := dial(t, st, laptop)
+	if err := joinReq(conn, laptop, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Client-side guard: refuses before any network op.
+	if err := clientSend(ctx, nil, laptop, "laptop", src); err == nil {
+		t.Fatal("self-send should fail client-side")
+	}
+
+	// Server-side guard: a bare opSend to self is refused.
+	conn = dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "laptop", FileName: "f.txt", Size: 1}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	if m.Op != opReady || m.OK || m.Err == "" {
+		t.Fatalf("storer should refuse self-send, got %+v", m)
 	}
 }
 

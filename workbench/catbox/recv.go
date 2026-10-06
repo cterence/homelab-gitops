@@ -212,7 +212,7 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		return
 	}
 
-	if err := os.Rename(tmp.Name(), filepath.Join(lc.inbox, m.FileName)); err != nil {
+	if err := os.Rename(tmp.Name(), uniquePath(lc.inbox, m.FileName)); err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
 
 		return

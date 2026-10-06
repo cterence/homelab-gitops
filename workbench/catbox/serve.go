@@ -241,6 +241,12 @@ func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member
 }
 
 func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
+	if m.Target == me.Name {
+		_ = writeMsg(rwc, msg{Op: opReady, Err: "can't send to yourself"})
+
+		return
+	}
+
 	target, ok := memberByName(st.members(), m.Target)
 	if !ok {
 		_ = writeMsg(rwc, msg{Op: opReady, Err: "unknown target " + m.Target, Members: st.members()})
