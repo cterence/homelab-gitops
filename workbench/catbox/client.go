@@ -339,7 +339,7 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 
 	defer func() { _ = os.Remove(tmp.Name()) }()
 
-	plainSize, sha, err := openStream(id.Key, io.LimitReader(rwc, m.Size), tmp)
+	_, plainSize, sha, err := openStream(id.Key, io.LimitReader(rwc, m.Size), tmp)
 	_ = tmp.Close()
 
 	if err != nil {
@@ -372,7 +372,7 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 	return nil
 }
 
-// uniquePath returns dir/name, or dir/base-N.ext when it already
+// uniquePath returns dir/name, or dir/base(N).ext when it already
 // exists, so received files never overwrite each other.
 func uniquePath(dir, name string) string {
 	dst := filepath.Join(dir, name)
@@ -384,7 +384,7 @@ func uniquePath(dir, name string) string {
 	base := strings.TrimSuffix(name, ext)
 
 	for i := 1; ; i++ {
-		dst = filepath.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
+		dst = filepath.Join(dir, fmt.Sprintf("%s(%d)%s", base, i, ext))
 		if _, err := os.Stat(dst); err != nil {
 			return dst
 		}

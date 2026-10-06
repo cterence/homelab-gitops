@@ -16,6 +16,7 @@ import (
 
 	"github.com/tailscale/tailcat"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 )
 
 // runRecv is the peer's single receive verb: pull everything the
@@ -122,6 +123,21 @@ func ensureListenerIdentity(ctx context.Context, id *peerID) error {
 
 func regionOf(id *peerID) tailcfg.DERPRegionID { return tailcfg.DERPRegionID(id.Region) }
 
+// senderName resolves a sender identity key to a member name from the
+// roster cache, or "unknown" when the cache predates the sender.
+func senderName(sender key.NodePublic) string {
+	roster, err := loadRoster(rosterPath(peerConfigDir()))
+	if err != nil {
+		return "unknown"
+	}
+
+	if m, ok := memberByIdentityKey(roster, sender); ok {
+		return m.Name
+	}
+
+	return "unknown"
+}
+
 type listener struct {
 	inbox string
 	log   *slog.Logger
@@ -188,7 +204,7 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 	defer func() { _ = os.Remove(tmp.Name()) }()
 
 	// The stream ends at its terminator; no size bound needed here.
-	_, sha, err := openStream(lc.id.Key, rwc, tmp)
+	sender, plainSize, sha, err := openStream(lc.id.Key, rwc, tmp)
 	_ = tmp.Close()
 
 	if err != nil {
@@ -218,7 +234,7 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		return
 	}
 
-	lc.log.Info("received directly", "fn", m.FileName, "from", "peer")
+	lc.log.Info("received directly", "filename", m.FileName, "from", senderName(sender), "size", humanBytes(plainSize))
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
 }

@@ -52,6 +52,18 @@ func memberByDialKey(members []member, k key.NodePublic) (member, bool) {
 	return member{}, false
 }
 
+// memberByIdentityKey finds a member by their identity key, which is
+// what sealed-file headers carry.
+func memberByIdentityKey(members []member, k key.NodePublic) (member, bool) {
+	for _, m := range members {
+		if m.Key == k {
+			return m, true
+		}
+	}
+
+	return member{}, false
+}
+
 // parseNodeKey parses a node public key's text form.
 func parseNodeKey(s string) (key.NodePublic, error) {
 	var k key.NodePublic

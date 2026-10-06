@@ -117,26 +117,28 @@ func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer,
 }
 
 // openStream decrypts one sealed stream into dst, returning the
-// plaintext size and hex SHA-256.
-func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (int64, string, error) {
+// sender's public key, the plaintext size, and hex SHA-256.
+func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (key.NodePublic, int64, string, error) {
+	var noSender key.NodePublic
+
 	header := make([]byte, headerLen)
 	if _, err := io.ReadFull(src, header); err != nil {
-		return 0, "", fmt.Errorf("%w: reading header: %v", errCorrupt, err)
+		return noSender, 0, "", fmt.Errorf("%w: reading header: %v", errCorrupt, err)
 	}
 
 	var sender tailcat.NodePublic
 	if err := sender.UnmarshalBinary(header[:key.NodePublicRawLen]); err != nil {
-		return 0, "", fmt.Errorf("%w: %v", errBadHeader, err)
+		return noSender, 0, "", fmt.Errorf("%w: %v", errBadHeader, err)
 	}
 
 	secret, ok := recipient.OpenFrom(sender.NodePublic, header[key.NodePublicRawLen:])
 	if !ok || len(secret) != fileKeyLen+prefixLen {
-		return 0, "", errBadHeader
+		return noSender, 0, "", errBadHeader
 	}
 
 	aead, err := chacha20poly1305.NewX(secret[:fileKeyLen])
 	if err != nil {
-		return 0, "", err
+		return noSender, 0, "", err
 	}
 
 	var prefix [prefixLen]byte
@@ -155,7 +157,7 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (int64,
 
 	for {
 		if _, err := io.ReadFull(src, frame[:]); err != nil {
-			return 0, "", fmt.Errorf("%w: missing terminator", errCorrupt)
+			return noSender, 0, "", fmt.Errorf("%w: missing terminator", errCorrupt)
 		}
 
 		n := binary.BigEndian.Uint32(frame[:])
@@ -164,23 +166,23 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (int64,
 		}
 
 		if n < uint32(aead.Overhead()) || n > uint32(len(ct)) {
-			return 0, "", fmt.Errorf("%w: chunk length %d out of range", errCorrupt, n)
+			return noSender, 0, "", fmt.Errorf("%w: chunk length %d out of range", errCorrupt, n)
 		}
 
 		if _, err := io.ReadFull(src, ct[:n]); err != nil {
-			return 0, "", fmt.Errorf("%w: chunk cut short", errCorrupt)
+			return noSender, 0, "", fmt.Errorf("%w: chunk cut short", errCorrupt)
 		}
 
 		pt, err := aead.Open(plain[:0], chunkNonce(&nonce, prefix, seq, 0), ct[:n], nil)
 		if err != nil {
 			pt, err = aead.Open(plain[:0], chunkNonce(&nonce, prefix, seq, 1), ct[:n], nil)
 			if err != nil {
-				return 0, "", errCorrupt
+				return noSender, 0, "", errCorrupt
 			}
 		}
 
 		if _, err := dst.Write(pt); err != nil {
-			return 0, "", fmt.Errorf("writing plaintext: %w", err)
+			return noSender, 0, "", fmt.Errorf("writing plaintext: %w", err)
 		}
 
 		h.Write(pt)
@@ -188,7 +190,7 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (int64,
 		seq++
 	}
 
-	return plainSize, hex.EncodeToString(h.Sum(nil)), nil
+	return sender.NodePublic, plainSize, hex.EncodeToString(h.Sum(nil)), nil
 }
 
 // relaySealed copies one sealed stream from src to dst without

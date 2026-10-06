@@ -60,7 +60,7 @@ catbox status
   markers. The roster comes straight from the authority, never from
   the local cache.
 - Received files never overwrite: a name collision in the inbox
-  becomes `name-1.ext`, `name-2.ext`, and so on.
+  becomes `name(1).ext`, `name(2).ext`, and so on.
 
 ## Deployment
 

@@ -33,9 +33,13 @@ func TestSealOpenRoundTrip(t *testing.T) {
 
 			var out bytes.Buffer
 
-			openSize, openSHA, err := openStream(recipient, &sealed, &out)
+			gotSender, openSize, openSHA, err := openStream(recipient, &sealed, &out)
 			if err != nil {
 				t.Fatal(err)
+			}
+
+			if gotSender != sender.Public() {
+				t.Fatalf("sender = %v, want %v", gotSender, sender.Public())
 			}
 
 			if openSize != int64(size) {
@@ -70,7 +74,7 @@ func TestOpenStreamRejects(t *testing.T) {
 		other := key.NewNode()
 
 		var out bytes.Buffer
-		if _, _, err := openStream(other, bytes.NewReader(seed()), &out); !errors.Is(err, errBadHeader) {
+		if _, _, _, err := openStream(other, bytes.NewReader(seed()), &out); !errors.Is(err, errBadHeader) {
 			t.Fatalf("err = %v, want errBadHeader", err)
 		}
 	})
@@ -80,7 +84,7 @@ func TestOpenStreamRejects(t *testing.T) {
 		b[len(b)-6] ^= 0xff // inside the last ciphertext
 
 		var out bytes.Buffer
-		if _, _, err := openStream(recipient, bytes.NewReader(b), &out); !errors.Is(err, errCorrupt) {
+		if _, _, _, err := openStream(recipient, bytes.NewReader(b), &out); !errors.Is(err, errCorrupt) {
 			t.Fatalf("err = %v, want errCorrupt", err)
 		}
 	})
@@ -90,14 +94,14 @@ func TestOpenStreamRejects(t *testing.T) {
 		b = b[:len(b)-5] // cut before the terminator
 
 		var out bytes.Buffer
-		if _, _, err := openStream(recipient, bytes.NewReader(b), &out); !errors.Is(err, errCorrupt) {
+		if _, _, _, err := openStream(recipient, bytes.NewReader(b), &out); !errors.Is(err, errCorrupt) {
 			t.Fatalf("err = %v, want errCorrupt", err)
 		}
 	})
 
 	t.Run("truncated header", func(t *testing.T) {
 		var out bytes.Buffer
-		if _, _, err := openStream(recipient, bytes.NewReader([]byte("short")), &out); !errors.Is(err, errCorrupt) {
+		if _, _, _, err := openStream(recipient, bytes.NewReader([]byte("short")), &out); !errors.Is(err, errCorrupt) {
 			t.Fatalf("err = %v, want errCorrupt", err)
 		}
 	})

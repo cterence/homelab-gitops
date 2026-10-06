@@ -119,12 +119,16 @@ func TestUniquePath(t *testing.T) {
 		want string
 	}{
 		{"fresh.txt", "fresh.txt"},
-		{"photo.jpg", "photo-2.jpg"},     // photo.jpg and photo-1.jpg occupied
-		{"photo-1.jpg", "photo-1-1.jpg"}, // base-N applies to the given name
-		{"noext", "noext-1"},             // occupied, no extension
+		{"photo.jpg", "photo(2).jpg"},     // photo.jpg and photo(1).jpg occupied
+		{"photo-1.jpg", "photo-1(1).jpg"}, // numbering applies to the given base
+		{"noext", "noext(1)"},             // occupied, no extension
 	}
 
 	if err := os.WriteFile(filepath.Join(dir, "photo.jpg"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "photo(1).jpg"), nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -245,7 +249,7 @@ func TestSpoolRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	plain, sha, err := openStream(recipient, &out, &bytes.Buffer{})
+	_, plain, sha, err := openStream(recipient, &out, &bytes.Buffer{})
 	if err != nil {
 		t.Fatal(err)
 	}
