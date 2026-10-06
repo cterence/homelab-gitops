@@ -16,6 +16,7 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
+
 const lastFMLoginURL = "https://www.last.fm/login"
 const cookieFile = "lastfm-cookies.json"
 
@@ -38,13 +39,15 @@ func login(ctx context.Context, c *Config) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, browserOperationsTimeout)
 	defer cancel()
 
-	err = chromedp.Run(timeoutCtx,
+	err = chromedp.Do(timeoutCtx,
 		chromedp.Navigate(lastFMLoginURL),
-		chromedp.ActionFunc(clickConsentBanner),
-		chromedp.SendKeys(`id_username_or_email`, strings.ToLower(c.LastFMUsername), chromedp.ByID),
-		chromedp.SendKeys(`id_password`, c.LastFMPassword, chromedp.ByID),
-		chromedp.Click(`//div[@class='form-submit']/button[@class='btn-primary']`, chromedp.BySearch),
-		chromedp.WaitVisible(`//h1[@class='header-title']/a`, chromedp.BySearch),
+		chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+			return clickConsentBanner(ctx)
+		}),
+		chromedp.SendKeys(chromedp.ID(`id_username_or_email`), strings.ToLower(c.LastFMUsername)),
+		chromedp.SendKeys(chromedp.ID(`id_password`), c.LastFMPassword),
+		chromedp.Click(`//div[@class='form-submit']/button[@class='btn-primary']`),
+		chromedp.WaitVisible(`//h1[@class='header-title']/a`),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to login to Last.fm: %w", err)
@@ -63,7 +66,12 @@ func login(ctx context.Context, c *Config) error {
 }
 
 func getCookies(ctx context.Context) ([]*network.Cookie, error) {
-	return network.GetCookies().Do(ctx)
+	res, err := chromedp.Call(ctx, network.GetCookies, network.GetCookiesParams{})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Cookies, nil
 }
 
 // Save cookies after login
@@ -101,23 +109,24 @@ func loadCookies(ctx context.Context, filename string) error {
 		return err
 	}
 
-	return chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
+	return chromedp.Do(ctx, chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
 		for _, cookie := range cookies {
-			cookieExpiry := cdp.TimeSinceEpoch(time.Unix(int64(cookie.Expires), 0))
-			if cookie.Name == "sessionid" {
-				if cookieExpiry.Time().Before(time.Now()) && cookie.Name == "sessionid" {
-					slog.Info("Session cookie expired, forcing login")
-					return ErrSessionCookieExpired
-				}
+			cookieExpiryTime := time.Unix(int64(cookie.Expires), 0)
+			if cookie.Name == "sessionid" && cookieExpiryTime.Before(time.Now()) {
+				slog.Info("Session cookie expired, forcing login")
+
+				return ErrSessionCookieExpired
 			}
 
-			err := network.SetCookie(cookie.Name, cookie.Value).
-				WithDomain(cookie.Domain).
-				WithPath(cookie.Path).
-				WithHTTPOnly(cookie.HTTPOnly).
-				WithSecure(cookie.Secure).
-				WithExpires(&cookieExpiry).
-				Do(ctx)
+			_, err := chromedp.Call(ctx, network.SetCookie, network.SetCookieParams{
+				Name:     cookie.Name,
+				Value:    cookie.Value,
+				Domain:   cookie.Domain,
+				Path:     cookie.Path,
+				HTTPOnly: &cookie.HTTPOnly,
+				Secure:   &cookie.Secure,
+				Expires:  cdp.TimeSinceEpoch(cookieExpiryTime.Unix()),
+			})
 			if err != nil {
 				return err
 			}

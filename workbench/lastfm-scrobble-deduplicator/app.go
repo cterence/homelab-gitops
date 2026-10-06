@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v7"
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	"github.com/go-telegram/bot"
@@ -65,8 +64,7 @@ func clickConsentBanner(ctx context.Context) error {
 
 		consentBoxCookie := cookies[consentBoxCookieIndex]
 
-		cookieExpiry := cdp.TimeSinceEpoch(time.Unix(int64(consentBoxCookie.Expires), 0))
-		if cookieExpiry.Time().Before(time.Now()) {
+		if time.Unix(int64(consentBoxCookie.Expires), 0).Before(time.Now()) {
 			slog.Info("Consent cookie expired, clicking on banner")
 
 			cookieExpired = true
@@ -74,10 +72,10 @@ func clickConsentBanner(ctx context.Context) error {
 	}
 
 	if consentBoxCookieIndex == -1 || cookieExpired {
-		err = chromedp.Run(timeoutCtx,
-			chromedp.WaitVisible(`#onetrust-reject-all-handler`, chromedp.ByID),
+		err = chromedp.Do(timeoutCtx,
+			chromedp.WaitVisible(chromedp.ID("onetrust-reject-all-handler")),
 			chromedp.Sleep(1*time.Second), // Cookie banner takes a while to come up, we don't want to miss the click
-			chromedp.Click(`#onetrust-reject-all-handler`, chromedp.ByID),
+			chromedp.Click(chromedp.ID("onetrust-reject-all-handler")),
 			chromedp.Sleep(500*time.Millisecond), // Wait for cookie banner to disappear
 		)
 		if err != nil {
@@ -125,33 +123,27 @@ func getStartPage(c *Config) (int, error) {
 
 	noScrobbles := false
 
-	err := chromedp.Run(timeoutCtx,
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			err := chromedp.Navigate("https://www.last.fm/user/" + c.LastFMUsername + "/library").Do(ctx)
-			if err != nil {
+	err := chromedp.Do(timeoutCtx,
+		chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+			if err := chromedp.Do(ctx, chromedp.Navigate("https://www.last.fm/user/" + c.LastFMUsername + "/library")); err != nil {
 				return fmt.Errorf("failed to navigate to user library: %w", err)
 			}
 
 			if c.noLogin {
-				err := clickConsentBanner(ctx)
-				if err != nil {
+				if err := clickConsentBanner(ctx); err != nil {
 					return fmt.Errorf("failed to click on consent banner: %w", err)
 				}
 			}
 
-			err = chromedp.Navigate(libraryURL(c, 1)).Do(ctx)
-			if err != nil {
+			if err := chromedp.Do(ctx, chromedp.Navigate(libraryURL(c, 1))); err != nil {
 				return fmt.Errorf("failed to navigate to user library with from / to dates: %w", err)
 			}
 
-			err = chromedp.WaitVisible(`//h1[@class='content-top-header']`, chromedp.BySearch).Do(ctx)
-			if err != nil {
+			if err := chromedp.Do(ctx, chromedp.WaitVisible(`//h1[@class='content-top-header']`)); err != nil {
 				return fmt.Errorf("failed to wait for h1 with content-top-header class: %w", err)
 			}
 
-			var noDataNodes []*cdp.Node
-
-			err = chromedp.Nodes(`//p[@class='no-data-message']`, &noDataNodes, chromedp.AtLeast(0)).Do(ctx)
+			noDataNodes, err := chromedp.Run(ctx, chromedp.Nodes(`//p[@class='no-data-message']`, chromedp.AtLeast(0)))
 			if err != nil {
 				return fmt.Errorf("failed to get no-data-message p element: %w", err)
 			}
@@ -161,9 +153,7 @@ func getStartPage(c *Config) (int, error) {
 				return nil
 			}
 
-			var scrobbleCountStr string
-
-			err = chromedp.Text(`//h2[@class='metadata-title' and text()='Scrobbles']/../p`, &scrobbleCountStr, chromedp.BySearch).Do(ctx)
+			scrobbleCountStr, err := chromedp.Run(ctx, chromedp.Text(`//h2[@class='metadata-title' and text()='Scrobbles']/../p`))
 			if err != nil {
 				return fmt.Errorf("failed to get scrobble count: %w", err)
 			}
@@ -182,7 +172,7 @@ func getStartPage(c *Config) (int, error) {
 			slog.Info("Scrobbles to process", "count", scrobbleCount)
 
 			if scrobbleCount > 50 {
-				err = chromedp.Evaluate(`[...document.querySelectorAll('.pagination-page')].map((e) => e.innerText)`, &pageNumbers).Do(ctx)
+				pageNumbers, err = chromedp.Run(ctx, chromedp.Evaluate[[]string](`[...document.querySelectorAll('.pagination-page')].map((e) => e.innerText)`))
 				if err != nil {
 					return fmt.Errorf("failed to get page numbers: %w", err)
 				}
@@ -255,26 +245,24 @@ func getScrobbles(c *Config, currentPage int) ([]scrobble, error) {
 
 	slog.Debug("get scrobble library page", "page", currentPage)
 
-	err := chromedp.Run(timeoutCtx,
+	err := chromedp.Do(timeoutCtx,
 		chromedp.Navigate(libraryURL(c, currentPage)),
-		chromedp.WaitVisible(`.top-bar`, chromedp.ByQuery),
+		chromedp.WaitVisible(chromedp.CSS(`.top-bar`)),
 		// Remove the top bar to avoid clicking on it by accident when deleting scrobbles
-		chromedp.Evaluate("let node1 = document.querySelector('.top-bar'); node1.parentNode.removeChild(node1)", nil),
-		chromedp.Evaluate("let node2 = document.querySelector('.masthead'); node2.parentNode.removeChild(node2)", nil),
+		chromedp.Evaluate[chromedp.Void]("let node1 = document.querySelector('.top-bar'); node1.parentNode.removeChild(node1)"),
+		chromedp.Evaluate[chromedp.Void]("let node2 = document.querySelector('.masthead'); node2.parentNode.removeChild(node2)"),
 	)
 	if err != nil {
 		slog.Error("Failed to navigate to page", "page", currentPage, "error", err)
 	}
 
-	var scrobbleRows []string
-
-	err = chromedp.Run(timeoutCtx,
-		chromedp.Evaluate(`[...document.querySelectorAll('.chartlist-row')].map((e) => JSON.stringify({
+	scrobbleRows, err := chromedp.Run(timeoutCtx,
+		chromedp.Evaluate[[]string](`[...document.querySelectorAll('.chartlist-row')].map((e) => JSON.stringify({
 			artist: e.querySelector("input[name='artist_name']")?.value,
 			track: e.querySelector("input[name='track_name']")?.value,
 			timestamp: e.querySelector("input[name='timestamp']")?.value,
 			url: e.querySelector("td.chartlist-name a")?.href
-		}))`, &scrobbleRows),
+		}))`),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve scrobble rows: %w", err)
@@ -479,21 +467,23 @@ func getTrackDurationFromMusicBrainz(c *Config, artist, track string) (time.Dura
 func getTrackDurationFromLastFM(c *Config, url string) (time.Duration, error) {
 	var duration time.Duration
 
-	timeoutCtx, cancel := context.WithTimeout(c.taskCtx, browserOperationsTimeout)
-	defer cancel()
+	timeoutCtx, timeoutCancel := context.WithTimeout(c.taskCtx, browserOperationsTimeout)
+	defer timeoutCancel()
 
 	ctx, cancel := chromedp.NewContext(timeoutCtx)
 	defer cancel()
 
-	trackDurationText := ""
-
-	err := chromedp.Run(ctx,
+	err := chromedp.Do(ctx,
 		chromedp.Navigate(url),
-		chromedp.WaitVisible(`//div[@class='header-new-content']`, chromedp.BySearch),
-		chromedp.Evaluate(`[...document.querySelectorAll('.catalogue-metadata-heading')].find((e) => e.innerText == "Length")?.nextElementSibling?.innerText`, &trackDurationText),
+		chromedp.WaitVisible(`//div[@class='header-new-content']`),
 	)
 	if err != nil {
-		if err.Error() == "encountered an undefined value" {
+		return duration, err
+	}
+
+	trackDurationText, err := chromedp.Run(ctx, chromedp.Evaluate[string](`[...document.querySelectorAll('.catalogue-metadata-heading')].find((e) => e.innerText == "Length")?.nextElementSibling?.innerText`))
+	if err != nil {
+		if errors.Is(err, chromedp.ErrJSUndefined) {
 			return duration, nil
 		}
 
@@ -616,14 +606,14 @@ func deleteScrobble(c *Config, timestamp string, deleteCurrentScrobble bool) err
 
 	slog.Debug("Attempting to delete scrobble", "timestamp", timestamp, "xpath", xpathPrefix)
 
-	err := chromedp.Run(timeoutCtx,
+	err := chromedp.Do(timeoutCtx,
 		// Click away to close any previous popup
 		chromedp.MouseClickXY(0, 0),
-		chromedp.Click(xpathPrefix+`/../../../../button`, chromedp.BySearch),
-		chromedp.WaitVisible(`//tr[contains(@class,'show-focus-controls')]`, chromedp.BySearch),
-		chromedp.Click(xpathPrefix+`/../../../../button`, chromedp.BySearch),
-		chromedp.WaitVisible(xpathPrefix+`/../button`, chromedp.BySearch),
-		chromedp.Click(xpathPrefix+`/../button`, chromedp.BySearch),
+		chromedp.Click(xpathPrefix + `/../../../../button`),
+		chromedp.WaitVisible(`//tr[contains(@class,'show-focus-controls')]`),
+		chromedp.Click(xpathPrefix + `/../../../../button`),
+		chromedp.WaitVisible(xpathPrefix + `/../button`),
+		chromedp.Click(xpathPrefix + `/../button`),
 	)
 	if err != nil {
 		return fmt.Errorf("failed delete scrobble: %w", err)
