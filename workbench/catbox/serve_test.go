@@ -264,6 +264,19 @@ func TestClientStatus(t *testing.T) {
 
 	_ = conn.Close()
 
+	// Park a file for laptop so the waiting line carries a byte count.
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("hello"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn = dial(t, st, nas)
+	if err := clientSend(context.Background(), conn, nas, "laptop", src); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
 	var out bytes.Buffer
 
 	conn = dial(t, st, laptop)
@@ -274,7 +287,7 @@ func TestClientStatus(t *testing.T) {
 	_ = conn.Close()
 
 	got := out.String()
-	for _, want := range []string{"waiting: 0", "inbox: empty", "members: 2", "nas\n", "laptop [you] (listening)"} {
+	for _, want := range []string{"inbox: 1 waiting (", "members: 2", "nas\n", "laptop [you] (listening)"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("status output missing %q:\n%s", want, got)
 		}

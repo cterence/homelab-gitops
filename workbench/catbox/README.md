@@ -12,7 +12,7 @@ daemonless peers, everything end-to-end encrypted.
   keeps the member roster, and hands out pending files on pull.
   Sealed files are opaque to it.
 - **peers**: one-shot commands, no resident process. `catbox recv`
-  pulls parked files; `catbox recv --stay` additionally receives
+  pulls parked files; `catbox recv --listen` additionally receives
   directly while online; senders try the listener first and always
   fall back to the storer.
 - Files are sealed to the recipient's node key: 64 KiB
@@ -29,7 +29,7 @@ catbox addr
 catbox join   --name NAME <storer-addr>
 catbox invite
 catbox send   <member> <file>
-catbox recv   [--dir DIR] [--stay]
+catbox recv   [--dir DIR] [--listen]
 catbox status
 ```
 
@@ -52,13 +52,13 @@ catbox status
 - `recv` is the single receive verb: it pulls everything the storer
   holds for this machine into the inbox dir (OS downloads + `/catbox`
   by default), verifying each file's SHA-256 and acknowledging so the
-  storer deletes its copy. With `--stay` it keeps running afterwards
+  storer deletes its copy. With `--listen` it keeps running afterwards
   as a direct-send listener, publishing its tailcat address in the
   roster and clearing it again on shutdown (Ctrl-C).
-- `status` asks the storer who's in the mesh: how many files are
-  waiting for you there, how many sit in your local inbox dir, and
-  every member with `[you]` and `(listening)` markers. The roster
-  comes straight from the authority, never from the local cache.
+- `status` asks the storer who's in the mesh: files and bytes waiting
+  for you there, and every member with `[you]` and `(listening)`
+  markers. The roster comes straight from the authority, never from
+  the local cache.
 - Received files never overwrite: a name collision in the inbox
   becomes `name-1.ext`, `name-2.ext`, and so on.
 

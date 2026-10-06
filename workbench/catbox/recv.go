@@ -19,9 +19,9 @@ import (
 )
 
 // runRecv is the peer's single receive verb: pull everything the
-// storer holds, then optionally stay online for direct sends, with the
-// listener address registered while staying and cleared on exit.
-func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, stay bool) error {
+// storer holds, then optionally listen for direct sends, with the
+// listener address registered while listening and cleared on exit.
+func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool) error {
 	id, _, err := loadPeerID("", "")
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, stay bool) 
 		return err
 	}
 
-	if !stay {
+	if !listen {
 		return nil
 	}
 

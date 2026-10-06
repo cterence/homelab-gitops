@@ -23,8 +23,18 @@ func main() {
 	}
 }
 
+// newLogger logs to stderr: human text on a terminal, JSON in
+// containers, where the streams are pipes.
+func newLogger() *slog.Logger {
+	if fi, err := os.Stderr.Stat(); err == nil && fi.Mode()&os.ModeCharDevice != 0 {
+		return slog.New(slog.NewTextHandler(os.Stderr, nil))
+	}
+
+	return slog.New(slog.NewJSONHandler(os.Stderr, nil))
+}
+
 func run() error {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log := newLogger()
 
 	if len(os.Args) < 2 {
 		usage()
@@ -95,7 +105,7 @@ func run() error {
 	case "recv":
 		fs := flag.NewFlagSet("recv", flag.ExitOnError)
 		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
-		stay := fs.Bool("stay", false, "after pulling, stay online for direct sends (Ctrl-C to stop)")
+		listen := fs.Bool("listen", false, "after pulling, listen for direct sends (Ctrl-C to stop)")
 		_ = fs.Parse(os.Args[2:])
 
 		if *dir == "" {
@@ -107,7 +117,7 @@ func run() error {
 			}
 		}
 
-		return runRecv(ctx, log, *dir, *stay)
+		return runRecv(ctx, log, *dir, *listen)
 	case "invite":
 		id, _, err := loadPeerID("", "")
 		if err != nil {
@@ -171,7 +181,7 @@ usage:
   catbox join   --name NAME <storer-addr>
   catbox invite
   catbox send   <member> <file>
-  catbox recv   [--dir DIR] [--stay]
+  catbox recv   [--dir DIR] [--listen]
   catbox status
 `)
 }

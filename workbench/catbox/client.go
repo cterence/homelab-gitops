@@ -77,14 +77,13 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 
 	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
 
-	_, _ = fmt.Fprintf(out, "waiting: %d\n", len(m.Items))
+	var waitBytes int64
 
-	inbox, _ := downloadDir()
-	if n := inboxCount(inbox); n == 0 {
-		_, _ = fmt.Fprintln(out, "inbox: empty")
-	} else {
-		_, _ = fmt.Fprintf(out, "inbox: %d files\n", n)
+	for _, it := range m.Items {
+		waitBytes += it.Size
 	}
+
+	_, _ = fmt.Fprintf(out, "inbox: %d waiting (%s)\n", len(m.Items), humanBytes(waitBytes))
 
 	_, _ = fmt.Fprintf(out, "members: %d\n", len(m.Members))
 
@@ -390,24 +389,6 @@ func uniquePath(dir, name string) string {
 			return dst
 		}
 	}
-}
-
-// inboxCount counts files in dir, ignoring directories and partials.
-func inboxCount(dir string) int {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return 0
-	}
-
-	n := 0
-
-	for _, e := range entries {
-		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".part-") {
-			n++
-		}
-	}
-
-	return n
 }
 
 // downloadDir is the default inbox: the OS downloads dir + /catbox.

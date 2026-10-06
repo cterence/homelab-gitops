@@ -145,27 +145,6 @@ func TestUniquePath(t *testing.T) {
 	}
 }
 
-func TestInboxCount(t *testing.T) {
-	dir := t.TempDir()
-	for _, name := range []string{"a.txt", "b.txt", ".part-tmp", ".DS_Store"} {
-		if err := os.WriteFile(filepath.Join(dir, name), nil, 0o600); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err := os.Mkdir(filepath.Join(dir, "sub"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	if got := inboxCount(dir); got != 3 {
-		t.Fatalf("inboxCount = %d, want 3 (partials and dirs excluded)", got)
-	}
-
-	if got := inboxCount(filepath.Join(dir, "missing")); got != 0 {
-		t.Fatalf("inboxCount(missing) = %d, want 0", got)
-	}
-}
-
 func TestValidName(t *testing.T) {
 	tests := []struct {
 		name string
