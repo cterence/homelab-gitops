@@ -437,6 +437,37 @@ func TestClientStatusJSON(t *testing.T) {
 	}
 }
 
+func TestStatusJSONEmptyWaiting(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+
+	conn := dial(t, st, laptop)
+	if err := joinReq(conn, laptop, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	var out bytes.Buffer
+
+	conn = dial(t, st, laptop)
+	if err := clientStatusJSON(conn, &out, laptop); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	got := out.String()
+	if strings.Contains(got, "null") {
+		t.Fatalf("empty waiting must marshal as [], got: %s", got)
+	}
+
+	if !strings.Contains(got, `"waiting":[]`) {
+		t.Fatalf("missing empty waiting array: %s", got)
+	}
+}
+
 func TestPeerNameValidated(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 

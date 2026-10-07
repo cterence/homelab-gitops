@@ -401,10 +401,22 @@ func clientStatusJSON(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 		return strings.Compare(a.Name, b.Name)
 	})
 
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
+	// Never emit JSON null: the phone app reads these as arrays.
+	waiting := m.Items
 
-	return enc.Encode(statusJSON{Name: id.Name, Waiting: m.Items, Members: m.Members})
+	if waiting == nil {
+		waiting = []item{}
+	}
+
+	members := m.Members
+
+	if members == nil {
+		members = []member{}
+	}
+
+	enc := json.NewEncoder(out)
+
+	return enc.Encode(statusJSON{Name: id.Name, Waiting: waiting, Members: members})
 }
 
 // uniquePath returns dir/name, or dir/base(N).ext when it already
