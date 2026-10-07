@@ -6,7 +6,7 @@ version: 0.1.0
 dependencies:
   - name: niks3
     repository: oci://ghcr.io/mic92/charts
-    version: 1.13.0
+    version: 1.14.2
   - name: cluster
     alias: cnpg-cluster
     repository: https://cloudnative-pg.github.io/charts
