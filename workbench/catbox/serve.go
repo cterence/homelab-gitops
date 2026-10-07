@@ -125,8 +125,9 @@ func (st *storer) handleConn(conn net.Conn) {
 		return // no authenticated peer key, nothing to say
 	}
 
-	// ponytail: one hour covers the largest deposit over DERP
-	_ = conn.SetDeadline(time.Now().Add(time.Hour))
+	// Initial deadline only: progress ticks keep extending it while
+	// bytes flow, so it caps inactivity, not transfer size.
+	_ = conn.SetDeadline(time.Now().Add(idleTimeout))
 	st.serveConn(conn, peer)
 }
 
@@ -153,6 +154,8 @@ func (st *storer) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
 			st.opPending(rwc, me)
 		case m.Op == opFetch:
 			st.opFetch(rwc, me, m)
+		case m.Op == opDismiss:
+			st.opDismiss(rwc, me, m)
 		default:
 			_ = writeMsg(rwc, msg{Op: opDone, Err: "unknown op " + m.Op})
 		}
@@ -177,11 +180,24 @@ func (st *storer) members() []member {
 
 func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member, isMember bool, m msg) {
 	if isMember {
-		// Re-join refreshes the identity key and listener address.
-		if m.Name != "" && m.Name != cur.Name {
-			_ = writeMsg(rwc, msg{Op: opJoined, Err: "already a member as " + cur.Name})
+		// Re-join refreshes the identity key and listener address; a
+		// different name is a rename.
+		newName := cur.Name
 
-			return
+		if m.Name != "" && m.Name != cur.Name {
+			if !validName(m.Name) {
+				_ = writeMsg(rwc, msg{Op: opJoined, Err: "name must be a lowercase slug"})
+
+				return
+			}
+
+			if _, taken := memberByName(st.members(), m.Name); taken {
+				_ = writeMsg(rwc, msg{Op: opJoined, Err: "name already taken"})
+
+				return
+			}
+
+			newName = m.Name
 		}
 
 		if ident, kerr := parseNodeKey(m.Key); kerr == nil {
@@ -189,6 +205,7 @@ func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member
 
 			for i := range st.roster {
 				if st.roster[i].Name == cur.Name {
+					st.roster[i].Name = newName
 					st.roster[i].Key = ident
 					st.roster[i].Addr = tailcat.Addr(m.Addr)
 				}
@@ -200,6 +217,11 @@ func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member
 			if err := saveRoster(rosterPath(st.dir), members); err != nil {
 				st.log.Error("saving roster", "err", err)
 			}
+		}
+
+		if newName != cur.Name {
+			st.retargetSpool(cur.Name, newName)
+			st.log.Info("member renamed", "from", cur.Name, "to", newName)
 		}
 
 		_ = writeMsg(rwc, msg{Op: opJoined, OK: true, Members: st.members()})
@@ -273,9 +295,24 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name, Plain: m.Size}
 
-	meta, err = st.spool.put(rwc, meta)
+	src := &progressReader{r: rwc, total: m.Size, label: "relayed", every: time.Second, onTick: func(int64) {
+		// Sliding deadline: bytes flowing extend the hour, so big
+		// deposits are bounded by inactivity, not total time.
+		if c, ok := rwc.(net.Conn); ok {
+			_ = c.SetDeadline(time.Now().Add(idleTimeout))
+		}
+	}}
+
+	meta, err = st.spool.put(src, meta)
+	src.close() // sealed streams self-terminate: no EOF reaches the reader
+
 	if err != nil {
 		st.log.Warn("deposit failed", "err", err)
+
+		// The sender is mid-readMsg: without a reply it blocks until
+		// the conn deadline.
+		_ = writeMsg(rwc, msg{Op: opDone, Err: "deposit failed: " + err.Error()})
+
 		return
 	}
 	// The sender's done message carries the plaintext SHA for the receiver.
@@ -289,6 +326,23 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	st.dedup(target.Name, done.SHA, meta.ID)
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
+}
+
+// retargetSpool repoints parked files from one member name to the
+// other, so a rename never orphans them.
+func (st *storer) retargetSpool(oldName, newName string) {
+	metas, err := st.spool.items()
+	if err != nil {
+		st.log.Error("spool scan for rename", "err", err)
+
+		return
+	}
+
+	for _, sm := range metas {
+		if sm.Target == oldName {
+			st.patchMeta(sm.ID, func(m *spoolMeta) { m.Target = newName })
+		}
+	}
 }
 
 // dedup deletes older spool entries with the same target and content
@@ -364,10 +418,18 @@ func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 		return
 	}
 
-	if _, err := io.Copy(rwc, blob); err != nil {
+	src := &progressReader{r: blob, total: meta.Size, label: "relayed", every: time.Second, onTick: func(int64) {
+		if c, ok := rwc.(net.Conn); ok {
+			_ = c.SetDeadline(time.Now().Add(idleTimeout)) // sliding, like the deposit
+		}
+	}}
+
+	if _, err := io.Copy(rwc, src); err != nil {
 		st.log.Warn("serving blob failed", "id", m.ID, "err", err)
 		return
 	}
+
+	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
 	ack, err := readMsg(rwc)
 	if err != nil || ack.Op != opAck || ack.ID != m.ID {
@@ -379,6 +441,30 @@ func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 	}
 
 	st.log.Info("delivered", "id", m.ID, "to", me.Name)
+
+	_ = writeMsg(rwc, msg{Op: opAcked, OK: true})
+}
+
+// opDismiss deletes one of the requester's own pending items without
+// delivering it: the receiver's call, never the sender's.
+func (st *storer) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
+	meta, blob, err := st.spool.open(m.ID)
+	if err != nil || meta.Target != me.Name {
+		_ = writeMsg(rwc, msg{Op: opAcked, Err: "no such item"})
+
+		return
+	}
+
+	_ = blob.Close()
+
+	if err := st.spool.delete(m.ID); err != nil {
+		st.log.Warn("dismiss delete failed", "id", m.ID, "err", err)
+		_ = writeMsg(rwc, msg{Op: opAcked, Err: err.Error()})
+
+		return
+	}
+
+	st.log.Info("dismissed", "id", m.ID, "file", meta.FileName, "from", meta.From, "target", me.Name)
 
 	_ = writeMsg(rwc, msg{Op: opAcked, OK: true})
 }

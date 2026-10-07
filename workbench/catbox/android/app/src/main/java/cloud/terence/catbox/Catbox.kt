@@ -18,6 +18,9 @@ object Catbox {
     /** The exec'd listener, if the toggle is on. */
     private val listener = AtomicReference<Process?>(null)
 
+    /** The exec'd one-shot action (recv/send/...), for cancel. */
+    private val current = AtomicReference<Process?>(null)
+
     fun bin(context: Context): String =
         File(context.applicationInfo.nativeLibraryDir, "libcatbox.so").absolutePath
 
@@ -28,6 +31,17 @@ object Catbox {
     fun inbox(context: Context): File {
         val dir = context.getExternalFilesDir(null) ?: context.filesDir
         return File(dir, "catbox")
+    }
+
+    /**
+     * Removes abandoned .part-* staging files: a cancelled transfer
+     * leaves its partial behind (the child dies mid-write, defers
+     * never run). publish() already hides them; this reclaims space.
+     */
+    fun sweepParts(context: Context) {
+        inbox(context).listFiles()?.forEach {
+            if (it.name.startsWith(".part-")) it.delete()
+        }
     }
 
     private fun builder(context: Context, vararg args: String): ProcessBuilder {
@@ -43,6 +57,7 @@ object Catbox {
      */
     fun run(context: Context, onLine: (String) -> Unit, vararg args: String): Int {
         val p = builder(context, *args).start()
+        current.set(p)
 
         // The stream can break mid-read (process killed, network
         // gone); the pane already has what was printed, the exit code
@@ -51,12 +66,23 @@ object Catbox {
             p.inputStream.bufferedReader().forEachLine(onLine)
         } catch (_: java.io.IOException) {
         }
-        return p.waitFor()
+        val code = p.waitFor()
+        current.compareAndSet(p, null)
+        return code
+    }
+
+    /**
+     * Kills the running one-shot action: a pull or send aborts
+     * mid-flight. A pulled item was never acked, so it stays parked
+     * at the storer.
+     */
+    fun cancelAction() {
+        current.getAndSet(null)?.destroy()
     }
 
     /** The status --json answer, or null when the command fails. */
     data class Status(val name: String, val waiting: List<Wait>, val members: List<Member>) {
-        data class Wait(val fn: String, val from: String, val plain: Long)
+        data class Wait(val id: String, val fn: String, val from: String, val plain: Long)
         data class Member(val name: String, val listening: Boolean)
     }
 
@@ -93,6 +119,7 @@ object Catbox {
                     (0 until waiting.length()).map { i ->
                         val w = waiting.getJSONObject(i)
                         Status.Wait(
+                            w.optString("id", ""),
                             w.optString("fn", "?"),
                             w.optString("from", "?"),
                             w.optLong("plain", 0),
@@ -156,9 +183,9 @@ object Catbox {
 
     /**
      * A file published to Download/Catbox, where the user (and other
-     * apps) can actually manage it.
+     * apps) can actually manage it. Date is epoch seconds.
      */
-    data class Published(val name: String, val size: Long, val uri: Uri)
+    data class Published(val name: String, val size: Long, val date: Long, val uri: Uri)
 
     /**
      * Moves finished files from the app-private staging inbox into
@@ -193,11 +220,16 @@ object Catbox {
         val out = mutableListOf<Published>()
         resolver.query(
             MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Downloads.DISPLAY_NAME, MediaStore.Downloads.SIZE, MediaStore.Downloads._ID),
+            arrayOf(
+                MediaStore.Downloads.DISPLAY_NAME,
+                MediaStore.Downloads.SIZE,
+                MediaStore.Downloads._ID,
+                MediaStore.Downloads.DATE_ADDED,
+            ),
             "${MediaStore.Downloads.RELATIVE_PATH} = ?",
             arrayOf("Download/Catbox/"),
             // Stable, newest first: new files prepend, nothing shuffles.
-            "${MediaStore.Downloads.DATE_ADDED} DESC",
+            "${MediaStore.Downloads.DATE_ADDED} DESC, ${MediaStore.Downloads._ID} DESC",
         )?.use { c ->
             while (c.moveToNext()) {
                 val id = c.getLong(2)
@@ -205,6 +237,7 @@ object Catbox {
                     Published(
                         c.getString(0),
                         c.getLong(1),
+                        c.getLong(3),
                         Uri.withAppendedPath(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id.toString()),
                     ),
                 )
@@ -213,7 +246,7 @@ object Catbox {
         return out
     }
 
-    private fun mimeOf(name: String): String = when {
+    fun mimeOf(name: String): String = when {
         name.endsWith(".apk") -> "application/vnd.android.package-archive"
         name.endsWith(".jpg", true) || name.endsWith(".png", true) -> "image/*"
         name.endsWith(".mp4", true) -> "video/mp4"

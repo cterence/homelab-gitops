@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/tailscale/tailcat"
 	"tailscale.com/types/key"
@@ -26,9 +27,16 @@ const (
 	opFile    = "file"    // storer: {OK, FileName, SHA, From, Size} then sealed stream
 	opAck     = "ack"     // peer: {ID} received and verified
 	opAcked   = "acked"   // storer: {OK, Err}
+	opDismiss = "dismiss" // peer: {ID} refuse delivery of my own pending item
 )
 
 const msgMax = 1 << 20
+
+// idleTimeout is the transfer inactivity cap: bytes flowing extend the
+// conn deadline (see the progress ticks), silence ends it — a vanished
+// peer or a dead network aborts a stuck transfer within this bound
+// instead of hanging until human intervention.
+const idleTimeout = 2 * time.Minute
 
 // msg is the wire message; Op dispatches. Size means plaintext bytes
 // for send. Key and Addr carry the joiner's identity public key and
