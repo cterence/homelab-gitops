@@ -31,7 +31,7 @@ let
   # nativeLibraryDir.
   catbox-android-bin = (pkgs.buildGo127Module) {
     pname = "catbox-android-bin";
-    version = "0.1.0";
+    version = "unstable";
     inherit src vendorHash;
     doCheck = false;
     env.CGO_ENABLED = "0";
