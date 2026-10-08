@@ -12,7 +12,7 @@ subPath: "" # required: path within the repo, e.g. "workbench/my-app"
 registry: registry.registry:5000
 repoURL: github.com/cterence/homelab-gitops
 branch: main
-kanikoImage: ghcr.io/osscontainertools/kaniko:v1.28.5
+kanikoImage: ghcr.io/osscontainertools/kaniko:v1.28.5@sha256:738807f0e31daf07743f89260a95956dcc6ee4f62553f4f6344c990cabab8675
 backoffLimit: 2
 ttlSecondsAfterFinished: 86400
 
