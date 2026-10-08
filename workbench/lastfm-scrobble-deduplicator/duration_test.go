@@ -40,3 +40,37 @@ func TestGetTrackDurationValidCustomDuration(t *testing.T) {
 		t.Errorf("trackDuration = %v, want 3m", s.trackDuration)
 	}
 }
+
+func TestGetTrackDurationNonPositiveCustomDuration(t *testing.T) {
+	// A zero or negative duration divides or flips the completion percentage,
+	// so such entries must be rejected instead of silently disabling or
+	// enabling duplicate detection.
+	tests := []struct {
+		name     string
+		duration string
+	}{
+		{name: "zero", duration: "0s"},
+		{name: "negative", duration: "-5m"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{cache: NewInMemory()}
+			s := &scrobble{artist: "Artist", track: "Track"}
+			userTrackDurations := durationByTrackByArtist{"Artist": {"Track": tt.duration}}
+
+			err := getTrackDuration(context.Background(), c, userTrackDurations, s)
+			if err == nil {
+				t.Fatalf("getTrackDuration expected error for %q duration, got nil", tt.duration)
+			}
+
+			if !strings.Contains(err.Error(), "invalid duration") {
+				t.Errorf("error = %v, want invalid duration error", err)
+			}
+
+			if s.trackDuration != 0 {
+				t.Errorf("trackDuration = %v, want zero (scrobble must be skipped)", s.trackDuration)
+			}
+		})
+	}
+}

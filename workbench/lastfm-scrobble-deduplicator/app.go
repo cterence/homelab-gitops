@@ -125,7 +125,7 @@ func getStartPage(c *Config) (int, error) {
 
 	err := chromedp.Do(timeoutCtx,
 		chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
-			if err := chromedp.Do(ctx, chromedp.Navigate("https://www.last.fm/user/" + c.LastFMUsername + "/library")); err != nil {
+			if err := chromedp.Do(ctx, chromedp.Navigate("https://www.last.fm/user/"+c.LastFMUsername+"/library")); err != nil {
 				return fmt.Errorf("failed to navigate to user library: %w", err)
 			}
 
@@ -337,9 +337,13 @@ func getTrackDuration(ctx context.Context, c *Config, userTrackDurations duratio
 	if userTrackDurations != nil && userTrackDurations[s.artist] != nil && userTrackDurations[s.artist][s.track] != "" {
 		// Convert to duration with 4m0s format
 		trackDuration, err := time.ParseDuration(userTrackDurations[s.artist][s.track])
+		if err == nil && trackDuration <= 0 {
+			err = errors.New("duration must be positive")
+		}
+
 		if err != nil {
-			// A malformed entry would silently produce a zero duration and disable
-			// duplicate detection for the track, so skip the scrobble instead.
+			// A malformed or non-positive entry would silently disable or
+			// mis-fire duplicate detection, so skip the scrobble instead.
 			return fmt.Errorf("invalid duration %q in track durations for %s - %s: %w", userTrackDurations[s.artist][s.track], s.artist, s.track, err)
 		}
 
@@ -553,13 +557,17 @@ func processPreviousAndCurrentScrobbles(ctx context.Context, c *Config, previous
 		if sameTrack && belowThreshold(previousScrobble, currentScrobble, c.DuplicateThreshold) {
 			slog.Info("🎯 Duplicate scrobble detected!", "artist", currentScrobble.artist, "track", currentScrobble.track, "duration", currentScrobble.trackDuration)
 
-			c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
-			if c.CanDelete {
-				if err := deleteScrobbleWithRetries(ctx, c, strconv.FormatInt(previousScrobble.timestamp.Unix(), 10), false); err != nil {
-					slog.Warn("failed to delete scrobble", "error", err)
-				}
+			// The previous (older) scrobble is deleted; record that one so the
+			// CSV can be used to undo the deletion. Record only deletions that
+			// actually happened.
+			if !c.CanDelete {
+				c.deletedScrobbles = append(c.deletedScrobbles, previousScrobble)
+			} else if err := deleteScrobbleWithRetries(ctx, c, previousScrobble, false); err != nil {
+				slog.Warn("failed to delete scrobble", "error", err)
+			} else {
+				c.deletedScrobbles = append(c.deletedScrobbles, previousScrobble)
 
-				slog.Info("Previous scrobble deleted", "artist", currentScrobble.artist, "track", currentScrobble.track, "timestamp", previousScrobble.timestamp)
+				slog.Info("Previous scrobble deleted", "artist", previousScrobble.artist, "track", previousScrobble.track, "timestamp", previousScrobble.timestamp)
 			}
 
 			return currentScrobble
@@ -568,12 +576,14 @@ func processPreviousAndCurrentScrobbles(ctx context.Context, c *Config, previous
 		if c.CompleteThreshold > 0 && belowThreshold(previousScrobble, currentScrobble, c.CompleteThreshold) {
 			slog.Info("⏳ Incomplete scrobble detected!", "artist", currentScrobble.artist, "track", currentScrobble.track, "previousScrobbleTimestamp", previousScrobble.timestamp, "currentScrobbleTimestamp", currentScrobble.timestamp)
 
-			c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
-			if c.CanDelete {
-				if err := deleteScrobbleWithRetries(ctx, c, strconv.FormatInt(currentScrobble.timestamp.Unix(), 10), true); err != nil {
-					slog.Warn("failed to delete scrobble", "error", err)
-					return currentScrobble
-				}
+			if !c.CanDelete {
+				c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
+			} else if err := deleteScrobbleWithRetries(ctx, c, currentScrobble, true); err != nil {
+				slog.Warn("failed to delete scrobble", "error", err)
+
+				return currentScrobble
+			} else {
+				c.deletedScrobbles = append(c.deletedScrobbles, currentScrobble)
 
 				slog.Info("Current scrobble deleted", "artist", currentScrobble.artist, "track", currentScrobble.track, "timestamp", currentScrobble.timestamp)
 			}
@@ -586,34 +596,71 @@ func processPreviousAndCurrentScrobbles(ctx context.Context, c *Config, previous
 }
 
 // belowThreshold reports whether the time between two successive scrobbles is
-// less than pct percent of the current scrobble's track duration.
+// less than pct percent of the current scrobble's track duration. An
+// out-of-order timestamp (clock-skewed scrobble) is never below the threshold.
 func belowThreshold(prev, cur *scrobble, pct int) bool {
+	if cur.timestamp.Before(prev.timestamp) {
+		return false
+	}
+
 	completionPercentage := min((float64(cur.timestamp.Sub(prev.timestamp))/float64(cur.trackDuration))*100, 100)
 
 	return completionPercentage < float64(pct)
 }
 
-func deleteScrobble(c *Config, timestamp string, deleteCurrentScrobble bool) error {
+// xpathString builds an XPath 1.0 string literal, switching quote kind or
+// falling back to concat() when the value contains the active quote character.
+func xpathString(s string) string {
+	if !strings.Contains(s, `'`) {
+		return `'` + s + `'`
+	}
+
+	if !strings.Contains(s, `"`) {
+		return `"` + s + `"`
+	}
+
+	parts := strings.Split(s, `'`)
+
+	lit := make([]string, 0, len(parts)+1)
+	for i, p := range parts {
+		lit = append(lit, `'`+p+`'`)
+		if i < len(parts)-1 {
+			lit = append(lit, `"'"`)
+		}
+	}
+
+	return "concat(" + strings.Join(lit, ",") + ")"
+}
+
+// scrobbleXPath locates the timestamp input of the scrobble row matching
+// artist and track, so a shared timestamp can't select another track's row.
+func scrobbleXPath(artist, track, timestamp string, last bool) string {
+	x := `(//tr[contains(@class,'chartlist-row')][.//input[@name='artist_name' and @value=` + xpathString(artist) +
+		`]][.//input[@name='track_name' and @value=` + xpathString(track) +
+		`]]//input[@name='timestamp' and @value='` + timestamp + `'])`
+	if last {
+		x += `[last()]`
+	}
+
+	return x
+}
+
+func deleteScrobble(c *Config, s *scrobble, deleteCurrentScrobble bool) error {
 	timeoutCtx, cancel := context.WithTimeout(c.taskCtx, 3*time.Second)
 	defer cancel()
 
-	// Sometimes two scrobbles have an identical timestamp
-	// Depending on if we want to delete the previous or the current scrobble, we modify the xpath expression
-	xpathPrefix := `(//input[@value='` + timestamp + `'])`
-	if deleteCurrentScrobble {
-		xpathPrefix += `[last()]`
-	}
+	xpathPrefix := scrobbleXPath(s.artist, s.track, strconv.FormatInt(s.timestamp.Unix(), 10), deleteCurrentScrobble)
 
-	slog.Debug("Attempting to delete scrobble", "timestamp", timestamp, "xpath", xpathPrefix)
+	slog.Debug("Attempting to delete scrobble", "timestamp", s.timestamp, "xpath", xpathPrefix)
 
 	err := chromedp.Do(timeoutCtx,
 		// Click away to close any previous popup
 		chromedp.MouseClickXY(0, 0),
-		chromedp.Click(xpathPrefix + `/../../../../button`),
+		chromedp.Click(xpathPrefix+`/../../../../button`),
 		chromedp.WaitVisible(`//tr[contains(@class,'show-focus-controls')]`),
-		chromedp.Click(xpathPrefix + `/../../../../button`),
-		chromedp.WaitVisible(xpathPrefix + `/../button`),
-		chromedp.Click(xpathPrefix + `/../button`),
+		chromedp.Click(xpathPrefix+`/../../../../button`),
+		chromedp.WaitVisible(xpathPrefix+`/../button`),
+		chromedp.Click(xpathPrefix+`/../button`),
 	)
 	if err != nil {
 		return fmt.Errorf("failed delete scrobble: %w", err)
@@ -622,9 +669,9 @@ func deleteScrobble(c *Config, timestamp string, deleteCurrentScrobble bool) err
 	return nil
 }
 
-func deleteScrobbleWithRetries(ctx context.Context, c *Config, timestamp string, deleteCurrentScrobble bool) error {
+func deleteScrobbleWithRetries(ctx context.Context, c *Config, s *scrobble, deleteCurrentScrobble bool) error {
 	_, err := backoff.Retry(ctx, func() (struct{}, error) {
-		return struct{}{}, deleteScrobble(c, timestamp, deleteCurrentScrobble)
+		return struct{}{}, deleteScrobble(c, s, deleteCurrentScrobble)
 	}, backoff.WithMaxTries(3))
 	if err != nil {
 		c.runStats.scrobbleDeleteFails++
@@ -695,7 +742,8 @@ func writeUnknownTrackDurations(unknownTrackDurations durationByTrackByArtist, d
 
 	bytes = append([]byte("# This file lists tracks that the program could not find a duration for using the MusicBrainz API\n# If a track has an unknown duration, this program will never delete its duplicate scrobbles\n# Specify the duration of each track using the Go time ParseDuration format (ex: 5m06s), then rerun the program\n# You may use it to override a track length, but you must strictly match the scrobble's artist and track name\n\n"), bytes...)
 
-	file, err := os.OpenFile(path.Join(dataDir, customTrackDurationsFile), os.O_RDWR|os.O_CREATE, 0666)
+	// Truncate on write: a shorter rewrite must not leave a stale YAML tail.
+	err = os.WriteFile(path.Join(dataDir, customTrackDurationsFile), bytes, 0666)
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {
 			slog.Warn("Failed to save unknown track durations in "+customTrackDurationsFile, "error", err)
@@ -705,20 +753,15 @@ func writeUnknownTrackDurations(unknownTrackDurations durationByTrackByArtist, d
 			return nil
 		}
 
-		return fmt.Errorf("failed to open unknown track durations file: %w", err)
-	}
-
-	_, err = file.Write(bytes)
-	if err != nil {
 		return fmt.Errorf("failed to save unknown track durations file: %w", err)
 	}
 
-	slog.Info("Unknown track durations saved to file", "file", file.Name())
+	slog.Info("Unknown track durations saved to file", "file", path.Join(dataDir, customTrackDurationsFile))
 
 	return nil
 }
 
-func exportScrobblesToCSV(c *Config, baseFilename string) {
+func exportScrobblesToCSV(c *Config, baseFilename string) error {
 	timestamp := c.startTime.Format("20060102-150405")
 	filename := fmt.Sprintf("%s-%s.csv", baseFilename, timestamp)
 
@@ -728,9 +771,7 @@ func exportScrobblesToCSV(c *Config, baseFilename string) {
 
 	file, err := os.Create(path.Join(c.DataDir, filename))
 	if err != nil {
-		slog.Warn("Could not create deleted scrobble file", "file", filename, "error", err)
-
-		return
+		return fmt.Errorf("could not create deleted scrobble file %s: %w", filename, err)
 	}
 	defer CloseFile(file)
 
@@ -750,20 +791,26 @@ func exportScrobblesToCSV(c *Config, baseFilename string) {
 		_ = writer.Write(record)
 	}
 
+	writer.Flush()
+
+	if err := writer.Error(); err != nil {
+		return fmt.Errorf("failed to write deleted scrobbles CSV: %w", err)
+	}
+
 	if c.CanDelete {
 		slog.Info("Deleted scrobbles saved to file", "file", file.Name())
 	} else {
 		slog.Info("Would-be deleted scrobbles saved to file", "file", file.Name())
 	}
+
+	return nil
 }
 
 func finishRun(ctx context.Context, c *Config) error {
 	defer c.close()
 
-	if err := logStats(ctx, c); err != nil {
-		return fmt.Errorf("failed to log stats: %w", err)
-	}
-
+	// Write the local records first: a Telegram failure must not cost us the
+	// CSV and durations files of an already-destructive run.
 	if len(c.unknownTrackDurations) > 0 {
 		err := writeUnknownTrackDurations(c.unknownTrackDurations, c.DataDir)
 		if err != nil {
@@ -772,7 +819,13 @@ func finishRun(ctx context.Context, c *Config) error {
 	}
 
 	if len(c.deletedScrobbles) > 0 {
-		exportScrobblesToCSV(c, "deleted-scrobbles")
+		if err := exportScrobblesToCSV(c, "deleted-scrobbles"); err != nil {
+			return err
+		}
+	}
+
+	if err := logStats(ctx, c); err != nil {
+		return fmt.Errorf("failed to log stats: %w", err)
 	}
 
 	return nil
