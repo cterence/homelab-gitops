@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -89,6 +90,13 @@ func run() error {
 			return err
 		}
 
+		release, err := lockPeer()
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
 		conn, cl, err := clientConn(ctx, id)
 		if err != nil {
 			return err
@@ -107,10 +115,54 @@ func run() error {
 		}
 
 		return nil
+	case "rename":
+		fs := flag.NewFlagSet("rename", flag.ExitOnError)
+		_ = fs.Parse(os.Args[2:])
+
+		if fs.NArg() != 1 {
+			return errors.New("rename takes <new-name>")
+		}
+
+		id, _, err := loadPeerID("", "")
+		if err != nil {
+			return err
+		}
+
+		release, err := lockPeer()
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		// The rename rides the join op: the storer validates the name
+		// and retargets parked files. Stop recv --listen first, or its
+		// registered listener address goes stale.
+		id.Name = fs.Arg(0)
+
+		if err := joinReq(conn, id, ""); err != nil {
+			return err
+		}
+
+		if err := saveJSON(filepath.Join(peerConfigDir(), "identity.json"), id); err != nil {
+			return err
+		}
+
+		fmt.Printf("renamed to %s\n", id.Name)
+
+		return nil
 	case "recv":
 		fs := flag.NewFlagSet("recv", flag.ExitOnError)
 		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
-		listen := fs.Bool("listen", false, "after pulling, listen for direct sends (Ctrl-C to stop)")
+		listen := fs.Bool("listen", false, "listen for direct sends only, no storer pull (Ctrl-C to stop)")
 		_ = fs.Parse(os.Args[2:])
 
 		if *dir == "" {
@@ -142,6 +194,13 @@ func run() error {
 			return err
 		}
 
+		release, err := lockPeer()
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
 		conn, cl, err := clientConn(ctx, id)
 		if err != nil {
 			return err
@@ -168,6 +227,13 @@ func run() error {
 			return err
 		}
 
+		release, err := lockPeer()
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
 		conn, cl, err := clientConn(ctx, id)
 		if err != nil {
 			return err
@@ -177,6 +243,41 @@ func run() error {
 		defer func() { _ = conn.Close() }()
 
 		return clientSend(ctx, conn, id, fs.Arg(0), fs.Arg(1))
+	case "dismiss":
+		fs := flag.NewFlagSet("dismiss", flag.ExitOnError)
+		_ = fs.Parse(os.Args[2:])
+
+		if fs.NArg() != 1 {
+			return errors.New("dismiss takes <id> (see catbox status)")
+		}
+
+		id, _, err := loadPeerID("", "")
+		if err != nil {
+			return err
+		}
+
+		release, err := lockPeer()
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		if err := clientDismiss(conn, fs.Arg(0)); err != nil {
+			return err
+		}
+
+		fmt.Printf("dismissed %s\n", fs.Arg(0))
+
+		return nil
 	default:
 		usage()
 		os.Exit(1)
@@ -192,9 +293,11 @@ usage:
   catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
   catbox addr
   catbox join   --name NAME <storer-addr>
+  catbox rename <new-name>
   catbox invite
   catbox send   <member> <file>
   catbox recv   [--dir DIR] [--listen]
+  catbox dismiss <id>
   catbox status [--json]
 `)
 }

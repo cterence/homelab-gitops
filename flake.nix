@@ -193,7 +193,7 @@
           # The peer CLI for laptops: nix build github.com/cterence/homelab-gitops#catbox
           catbox = pkgs.buildGo127Module {
             pname = "catbox";
-            version = "0.1.0";
+            version = "unstable";
             src = ./workbench/catbox;
             vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";
           };

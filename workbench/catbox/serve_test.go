@@ -288,13 +288,22 @@ func TestClientStatus(t *testing.T) {
 	_ = conn.Close()
 
 	got := out.String()
-	for _, want := range []string{"inbox: 1 waiting (5 B)", "members: 2", "nas\n", "laptop [you] (listening)"} {
+	for _, want := range []string{
+		"inbox: 1 waiting (5 B)",
+		"  f.txt from nas (5 B), id ",
+		"members: 2",
+		"laptop [you] (listening)",
+	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("status output missing %q:\n%s", want, got)
 		}
 	}
 
-	if strings.Index(got, "laptop") > strings.Index(got, "nas") {
+	membersAt := strings.Index(got, "members: 2")
+	laptopAt := strings.Index(got, "laptop [you] (listening)")
+
+	nasAt := strings.Index(got, "  nas\n")
+	if membersAt < 0 || laptopAt < 0 || nasAt < 0 || (membersAt >= laptopAt || laptopAt >= nasAt) {
 		t.Fatalf("members not sorted:\n%s", got)
 	}
 }
@@ -516,5 +525,205 @@ func TestNonMemberCannotSend(t *testing.T) {
 
 	if m.Err == "" {
 		t.Fatalf("non-member should be refused, got %+v", m)
+	}
+}
+
+func TestDismissDestinedFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
+
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "spam.txt")
+	if err := os.WriteFile(src, []byte("spam"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(context.Background(), conn, laptop, "nas", src); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 {
+		t.Fatalf("spool = %+v", metas)
+	}
+
+	conn = dial(t, st, nas)
+	if err := clientDismiss(conn, metas[0].ID); err != nil {
+		t.Fatalf("dismiss: %v", err)
+	}
+
+	_ = conn.Close()
+
+	metas, err = st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 0 {
+		t.Fatalf("spool not emptied: %+v", metas)
+	}
+}
+
+func TestDismissOnlyOwnItems(t *testing.T) {
+	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
+
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "spam.txt")
+	if err := os.WriteFile(src, []byte("spam"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(context.Background(), conn, laptop, "nas", src); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The sender is not the recipient: the item is not theirs to drop.
+	conn = dial(t, st, laptop)
+	if err := clientDismiss(conn, metas[0].ID); err == nil {
+		t.Fatal("dismiss by non-target should fail")
+	}
+
+	_ = conn.Close()
+
+	metas, err = st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 {
+		t.Fatalf("someone else's dismiss deleted the item: %+v", metas)
+	}
+}
+
+func TestRenameRetargetsSpool(t *testing.T) {
+	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
+
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// Park a file for nas before renaming it.
+	src := filepath.Join(t.TempDir(), "park.txt")
+	if err := os.WriteFile(src, []byte("parked"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(context.Background(), conn, laptop, "nas", src); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	// Rename: same dial key, new name.
+	nas.Name = "nas2"
+
+	conn = dial(t, st, nas)
+	if err := joinReq(conn, nas, ""); err != nil {
+		t.Fatalf("rename: %v", err)
+	}
+
+	_ = conn.Close()
+
+	// The old name is gone from the roster.
+	conn = dial(t, st, laptop)
+	if err := clientSend(context.Background(), conn, laptop, "nas", src); err == nil {
+		t.Fatal("send to the old name should fail")
+	}
+
+	_ = conn.Close()
+
+	// The parked file followed the rename.
+	inbox := t.TempDir()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(context.Background(), conn, nas, inbox); err != nil {
+		t.Fatalf("inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	got, err := os.ReadFile(filepath.Join(inbox, "park.txt"))
+	if err != nil || string(got) != "parked" {
+		t.Fatalf("spool not retargeted by rename: %v %q", err, got)
+	}
+}
+
+func TestRenameToTakenName(t *testing.T) {
+	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
+
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// nas may not steal laptop's name.
+	nas.Name = "laptop"
+
+	conn := dial(t, st, nas)
+	if err := joinReq(conn, nas, ""); err == nil {
+		t.Fatal("rename to a taken name should fail")
+	}
+
+	_ = conn.Close()
+
+	// nas is still nas.
+	if _, ok := memberByName(st.members(), "nas"); !ok {
+		t.Fatal("failed rename dropped the member")
 	}
 }

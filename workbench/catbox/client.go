@@ -13,11 +13,50 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/tailscale/tailcat"
 )
+
+// lockPeer serializes one-shot client commands: tailcat allows one
+// tunnel per peer key per server, so a second concurrent command
+// would hang at dial. Non-blocking — fail fast, retry when free. A
+// stale lock (crashed process) is detected by pid and reclaimed.
+func lockPeer() (release func(), err error) {
+	dir := peerConfigDir()
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return func() {}, nil // no config dir: proceed unlocked
+	}
+
+	path := filepath.Join(dir, "client.lock")
+
+	if b, rerr := os.ReadFile(path); rerr == nil {
+		if pid, perr := strconv.Atoi(strings.TrimSpace(string(b))); perr == nil {
+			if kerr := syscall.Kill(pid, 0); kerr == nil || errors.Is(kerr, syscall.EPERM) {
+				return nil, errors.New("another catbox command is already running for this identity")
+			}
+		}
+
+		_ = os.Remove(path) // stale: its process is gone
+	}
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		if os.IsExist(err) {
+			return nil, errors.New("another catbox command is already running for this identity")
+		}
+
+		return func() {}, nil // cannot lock: proceed unlocked
+	}
+
+	_, _ = fmt.Fprintf(f, "%d\n", os.Getpid())
+	_ = f.Close()
+
+	return func() { _ = os.Remove(path) }, nil
+}
 
 // clientConn opens a tailcat tunnel to the storer and dials the
 // protocol port. Close both when done.
@@ -30,6 +69,15 @@ func clientConn(ctx context.Context, id *peerID) (net.Conn, *tailcat.Client, err
 
 		return nil, nil, fmt.Errorf("connecting to storer: %w", err)
 	}
+
+	// A blocked write ignores the context: closing the conn is the
+	// only thing that unblocks it, so Ctrl-C must close the conn.
+	// These processes are one-shot: the watcher lives until they exit.
+	go func() {
+		<-ctx.Done()
+
+		_ = conn.Close()
+	}()
 
 	return conn, c, nil
 }
@@ -85,6 +133,10 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 	}
 
 	_, _ = fmt.Fprintf(out, "inbox: %d waiting (%s)\n", len(m.Items), humanBytes(waitBytes))
+
+	for _, it := range m.Items {
+		_, _ = fmt.Fprintf(out, "  %s from %s (%s), id %s\n", it.FileName, it.From, humanBytes(it.Plain), it.ID)
+	}
 
 	_, _ = fmt.Fprintf(out, "members: %d\n", len(m.Members))
 
@@ -171,13 +223,18 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 	}
 
 	if target.Addr != "" {
-		if err := directSend(ctx, id, target, f, info, path); err == nil {
+		fmt.Fprintf(os.Stderr, "dialing %s directly...\n", targetName)
+
+		err := directSend(ctx, id, target, f, info, path)
+		if err == nil {
 			fmt.Printf("sent %s to %s directly (%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()))
 			return nil
 		} else if ctx.Err() != nil {
-			return err
+			return ctx.Err() // Ctrl-C: the raw error is just the closed conn
 		}
 		// Target unreachable: fall through to the storer.
+		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", err)
+
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
@@ -200,8 +257,18 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
 	}
 
-	plainSize, sha, err := sealStream(id.Key, target.Key, rwc, f)
+	fmt.Fprintf(os.Stderr, "depositing %s at the storer...\n", humanBytes(info.Size()))
+
+	src := &progressReader{r: f, total: info.Size(), label: "depositing", every: time.Second}
+
+	plainSize, sha, err := sealStream(id.Key, target.Key, rwc, src)
+	src.close() // a failed write never reaches EOF: the line must not linger
+
 	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err() // Ctrl-C: the raw error is just the closed conn
+		}
+
 		return err
 	}
 
@@ -233,7 +300,10 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 
 	defer func() { _ = c.Close() }()
 
-	dialCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	// A live listener answers its handshake in well under a second;
+	// anything longer is a stale roster address — fail fast and let
+	// the caller fall back to the storer.
+	dialCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	conn, err := c.DialTCPPort(dialCtx, catboxPort)
@@ -243,7 +313,15 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 
 	defer func() { _ = conn.Close() }()
 
-	_ = conn.SetDeadline(time.Now().Add(time.Hour))
+	// Like clientConn: Ctrl-C closes the conn to unblock a stuck
+	// write — on the parent ctx, not the 3s dial timeout.
+	go func() {
+		<-ctx.Done()
+
+		_ = conn.Close()
+	}()
+
+	_ = conn.SetDeadline(time.Now().Add(idleTimeout))
 
 	if err := writeMsg(conn, msg{Op: opSend, Target: target.Name, FileName: filepath.Base(path), Size: info.Size()}); err != nil {
 		return err
@@ -258,8 +336,18 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 		return fmt.Errorf("target refused: %s", m.Err)
 	}
 
-	_, sha, err := sealStream(id.Key, target.Key, conn, f)
+	src := &progressReader{r: f, total: info.Size(), label: "sending", every: time.Second, onTick: func(int64) {
+		_ = conn.SetDeadline(time.Now().Add(idleTimeout)) // sliding: inactivity cap, not total
+	}}
+
+	_, sha, err := sealStream(id.Key, target.Key, conn, src)
+	src.close() // a failed write never reaches EOF: the line must not linger
+
 	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err() // Ctrl-C: the raw error is just the closed conn
+		}
+
 		return err
 	}
 
@@ -274,6 +362,25 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 
 	if m.Op != opDone || !m.OK {
 		return fmt.Errorf("direct send failed: %s", m.Err)
+	}
+
+	return nil
+}
+
+// clientDismiss refuses delivery of one pending item: the storer
+// deletes it without ever transferring the bytes.
+func clientDismiss(rwc io.ReadWriter, id string) error {
+	if err := writeMsg(rwc, msg{Op: opDismiss, ID: id}); err != nil {
+		return err
+	}
+
+	m, err := readMsg(rwc)
+	if err != nil {
+		return err
+	}
+
+	if m.Op != opAcked || !m.OK {
+		return fmt.Errorf("dismiss: %s", m.Err)
 	}
 
 	return nil
@@ -302,6 +409,14 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, dir st
 		fmt.Println("inbox empty")
 		return nil
 	}
+
+	var pullBytes int64
+
+	for _, it := range m.Items {
+		pullBytes += it.Plain
+	}
+
+	fmt.Fprintf(os.Stderr, "pulling %d files (%s)...\n", len(m.Items), humanBytes(pullBytes))
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
@@ -340,7 +455,12 @@ func clientFetch(rwc io.ReadWriteCloser, id *peerID, it item, dir string) error 
 
 	defer func() { _ = os.Remove(tmp.Name()) }()
 
-	_, plainSize, sha, err := openStream(id.Key, io.LimitReader(rwc, m.Size), tmp)
+	src := &progressReader{r: io.LimitReader(rwc, m.Size), total: it.Plain, label: "received", every: time.Second}
+
+	// The stream ends at its terminator; no size bound needed here.
+	_, plainSize, sha, err := openStream(id.Key, src, tmp)
+	src.close() // sealed streams self-terminate: no EOF reaches the reader
+
 	_ = tmp.Close()
 
 	if err != nil {

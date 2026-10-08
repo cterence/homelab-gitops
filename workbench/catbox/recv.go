@@ -19,30 +19,32 @@ import (
 	"tailscale.com/types/key"
 )
 
-// runRecv is the peer's single receive verb: pull everything the
-// storer holds, then optionally listen for direct sends, with the
-// listener address registered while listening and cleared on exit.
+// runRecv is the peer's two receive verbs: pull everything the storer
+// holds, or listen for direct sends. Listening never pulls — files
+// park at the storer until the peer asks for them.
 func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool) error {
 	id, _, err := loadPeerID("", "")
 	if err != nil {
 		return err
 	}
 
-	conn, cl, err := clientConn(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	err = clientInbox(ctx, conn, id, inboxDir)
-	_ = cl.Close()
-	_ = conn.Close()
-
-	if err != nil {
-		return err
-	}
-
 	if !listen {
-		return nil
+		release, err := lockPeer()
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		return clientInbox(ctx, conn, id, inboxDir)
 	}
 
 	if err := ensureListenerIdentity(ctx, id); err != nil {
@@ -155,7 +157,7 @@ func (lc *listener) onTCP(port uint16) func(net.Conn) {
 func (lc *listener) handleConn(conn net.Conn) {
 	defer func() { _ = conn.Close() }() // ponytail: address possession is the capability
 
-	_ = conn.SetDeadline(time.Now().Add(time.Hour))
+	_ = conn.SetDeadline(time.Now().Add(idleTimeout))
 	lc.listenConn(conn)
 }
 
@@ -204,11 +206,24 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 	defer func() { _ = os.Remove(tmp.Name()) }()
 
 	// The stream ends at its terminator; no size bound needed here.
-	sender, plainSize, sha, err := openStream(lc.id.Key, rwc, tmp)
+	// Ticks print progress (the app's log pane sees plain stderr) and
+	// slide the conn deadline.
+	src := &progressReader{r: rwc, total: m.Size, label: "received", every: time.Second, onTick: func(int64) {
+		if c, ok := rwc.(net.Conn); ok {
+			_ = c.SetDeadline(time.Now().Add(idleTimeout)) // sliding: inactivity cap
+		}
+	}}
+
+	sender, plainSize, sha, err := openStream(lc.id.Key, src, tmp)
+	src.close() // sealed streams self-terminate: no EOF ever reaches the reader
+
 	_ = tmp.Close()
 
 	if err != nil {
 		lc.log.Warn("direct receive failed", "err", err)
+
+		// Plain line so the app's indicator clears instead of freezing.
+		fmt.Fprintf(os.Stderr, "receive failed: %v\n", err)
 
 		_ = writeMsg(rwc, msg{Op: opDone, Err: "corrupt sealed stream"})
 
@@ -236,6 +251,10 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 	}
 
 	lc.log.Info("received directly", "filename", filepath.Base(dst), "from", senderName(sender), "size", humanBytes(plainSize))
+
+	// Plain line for humans and the app's pane (slog lines are noise
+	// there): also clears the in-UI transfer indicator.
+	fmt.Fprintf(os.Stderr, "got %s directly (%s)\n", filepath.Base(dst), humanBytes(plainSize))
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
 }

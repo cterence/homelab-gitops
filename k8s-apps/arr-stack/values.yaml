@@ -274,7 +274,7 @@ app-template:
         lidarr:
           image:
             repository: lscr.io/linuxserver/lidarr
-            tag: 3.1.0.4875-ls42@sha256:044d616beb43c5e7810991242c6a9c42b93ff238c8c0850684939634ea751208
+            tag: 3.1.0.4875-ls43@sha256:67887807b13ae025c0fe979da298347c8609969087ab064c81d8e9acc1e06bbf
           env:
             TZ: Europe/Paris
             PUID: 1000
@@ -307,7 +307,7 @@ app-template:
         prowlarr:
           image:
             repository: lscr.io/linuxserver/prowlarr
-            tag: 2.6.5.5623-ls162@sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95
+            tag: 2.6.5.5623-ls163@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902
           env:
             TZ: Europe/Paris
             PUID: 1000
@@ -562,7 +562,7 @@ app-template:
         tunnel-monitor:
           image:
             repository: quay.io/prometheus/blackbox-exporter
-            tag: v0.28.0@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+            tag: v0.29.0@sha256:9613f2884689b6fad9f1939f6a3b0388c93a022cfaededb19545b329b5c83dea
           args:
             - --config.file=/config/blackbox.yml
           ports:
