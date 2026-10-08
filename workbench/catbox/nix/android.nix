@@ -21,8 +21,8 @@ let
     sdkPkgs: with sdkPkgs; [
       cmdline-tools-latest
       platform-tools
-      build-tools-34-0-0
-      platforms-android-34
+      build-tools-35-0-0
+      platforms-android-36
     ]
   );
 
@@ -59,7 +59,7 @@ let
     # AGP downloads a prebuilt aapt2 from Maven that does not run on
     # Nix (unpatched ELF); point it at the SDK's own. Kotlin compiles
     # in-process: no daemon spawns under nix.
-    GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${sdk}/share/android-sdk/build-tools/34.0.0/aapt2 -Dkotlin.compiler.execution.strategy=in-process";
+    GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${sdk}/share/android-sdk/build-tools/35.0.0/aapt2 -Dkotlin.compiler.execution.strategy=in-process";
     # The nix daemon may export a stale or missing CA path; gradle's
     # HTTPS fetches deserve a real one.
     NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
@@ -122,7 +122,7 @@ let
     '';
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-ONLyfRsS6yhZLBbrqlciZKAUKqDnpAnxqwjMoxymC5g=";
+    outputHash = "sha256-jpgkLQd7DhgwtwFzcn4zrv90ISNDDJtiJS9BXxR4Ny8=";
   };
 in
 {
