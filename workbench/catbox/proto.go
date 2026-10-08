@@ -17,13 +17,13 @@ import (
 const (
 	opJoin    = "join"    // peer: {Name} admit me
 	opJoined  = "joined"  // storer: {OK, Err, Members}
-	opSend    = "send"    // peer: {Target, FileName, Size} then sealed stream
-	opReady   = "ready"   // storer: {OK, Err, Members}
+	opSend    = "send"    // peer: {Target, FileName, Size, SHA} then sealed stream
+	opReady   = "ready"   // receiver: {OK, Err, Have, Members}
 	opSent    = "sent"    // peer: {SHA} stream finished
-	opDone    = "done"    // storer: {OK, Err}
+	opDone    = "done"    // receiver: {OK, Err}
 	opPending = "pending" // peer: what's held for me
 	opItems   = "items"   // storer: {Items, Members}
-	opFetch   = "fetch"   // peer: {ID}
+	opFetch   = "fetch"   // peer: {ID, Have} pull from my chunk boundary
 	opFile    = "file"    // storer: {OK, FileName, SHA, From, Size} then sealed stream
 	opAck     = "ack"     // peer: {ID} received and verified
 	opAcked   = "acked"   // storer: {OK, Err}
@@ -53,6 +53,7 @@ type msg struct {
 	From     string   `json:"from,omitempty"`
 	Err      string   `json:"err,omitempty"`
 	Size     int64    `json:"size,omitempty"`
+	Have     int64    `json:"have,omitempty"` // chunk-aligned plaintext bytes the receiver already holds
 	OK       bool     `json:"ok,omitempty"`
 	Items    []item   `json:"items,omitempty"`
 	Members  []member `json:"members,omitempty"`

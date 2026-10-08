@@ -33,17 +33,6 @@ object Catbox {
         return File(dir, "catbox")
     }
 
-    /**
-     * Removes abandoned .part-* staging files: a cancelled transfer
-     * leaves its partial behind (the child dies mid-write, defers
-     * never run). publish() already hides them; this reclaims space.
-     */
-    fun sweepParts(context: Context) {
-        inbox(context).listFiles()?.forEach {
-            if (it.name.startsWith(".part-")) it.delete()
-        }
-    }
-
     private fun builder(context: Context, vararg args: String): ProcessBuilder {
         val pb = ProcessBuilder(bin(context), *args).redirectErrorStream(true)
         pb.environment()["HOME"] = home(context).absolutePath

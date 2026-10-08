@@ -221,8 +221,16 @@ func run() error {
 		fs := flag.NewFlagSet("send", flag.ExitOnError)
 		_ = fs.Parse(os.Args[2:])
 
-		if fs.NArg() != 2 {
-			return errors.New("send takes <member> <file>")
+		if fs.NArg() < 2 {
+			return errors.New("send takes <member> <file> [<file>...]")
+		}
+
+		for _, path := range fs.Args()[1:] {
+			if fi, err := os.Stat(path); err != nil {
+				return err
+			} else if fi.IsDir() {
+				return errors.New("send takes files, " + path + " is a directory")
+			}
 		}
 
 		id, _, err := loadPeerID("", "")
@@ -237,15 +245,31 @@ func run() error {
 
 		defer release()
 
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
+		for _, path := range fs.Args()[1:] {
+			// One storer conn per file: a long transfer starves the
+			// storer's idle deadline, and the next file must not
+			// inherit a dead conn. The SHA is known before sealing:
+			// it keys the deterministic file secret and the
+			// receiver's resume partial.
+			shaHex, err := fileSHA256(path)
+			if err != nil {
+				return fmt.Errorf("hashing %s: %w", path, err)
+			}
+
+			conn, err := storerConn(ctx, id)
+			if err != nil {
+				return err
+			}
+
+			err = clientSend(ctx, conn, tunnelClient(id.StorerAddr, id.DialKey), id, fs.Arg(0), path, shaHex)
+			_ = conn.Close()
+
+			if err != nil {
+				return fmt.Errorf("sending %s: %w", path, err)
+			}
 		}
 
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		return clientSend(ctx, conn, id, fs.Arg(0), fs.Arg(1))
+		return nil
 	case "dismiss":
 		fs := flag.NewFlagSet("dismiss", flag.ExitOnError)
 		_ = fs.Parse(os.Args[2:])
@@ -297,16 +321,32 @@ func usage() {
 	fmt.Fprint(os.Stderr, `catbox: async file transfer over tailcat, one storer, daemonless peers
 
 usage:
-  catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
-  catbox addr
-  catbox join   --name NAME <storer-addr>
-  catbox rename <new-name>
-  catbox invite
-  catbox send   <member> <file>
-  catbox recv   [--dir DIR] [--listen]
-  catbox dismiss <id>
-  catbox status [--json]
-  catbox version
+  catbox <command> [flags]
+
+storer commands:
+  serve     run the always-on storer; first boot creates its identity
+            [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
+  addr      print the storer's tailcat address from its data dir
+
+membership commands:
+  join      register this machine under a name
+            --name NAME <storer-addr>
+  invite    print the join line for enrolling another peer
+  rename    change this member's name
+            <new-name>
+  status    who's in the mesh and what's waiting for you
+            [--json]
+
+transfer commands:
+  send      seal and ship files to a member
+            <member> <file> [<file>...]
+  recv      pull held files, or listen for direct sends
+            [--dir DIR] [--listen]
+  dismiss   refuse delivery of one held item
+            <id>
+
+other commands:
+  version   print the build version
 `)
 }
 

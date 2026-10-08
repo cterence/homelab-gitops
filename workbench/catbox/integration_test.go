@@ -7,13 +7,22 @@ package main
 // every step is the real CLI driving a real storer process, with real
 // pairing over the real DERP network.
 //
+// The protocol is request-reply: the storer writes the roster, spool
+// entry, or deletion before it replies, and a listener verifies and
+// writes a file before its opDone — so a command's successful return
+// is the synchronization point, asserted directly with no polling. The
+// one async event (listener registration) is signaled by the process
+// itself: its "listening" log line, read live off stderr on a channel.
+//
 // Gated because it needs outbound access to the DERP relays:
 //
 //	CATBOX_INTEGRATION=1 go test . -run TestIntegration -v -count=1
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -88,9 +97,8 @@ func (n *node) env(extra map[string]string) []string {
 }
 
 // start runs the node's storer as a real subprocess and returns once
-// its health endpoint answers, so the test never sleeps on startup.
-// It returns errors instead of failing the test so the test goroutine
-// stays in charge.
+// its health endpoint answers. It returns errors instead of failing
+// the test so the test goroutine stays in charge.
 func (n *node) start() error {
 	port, err := freePort()
 	if err != nil {
@@ -115,9 +123,10 @@ func (n *node) start() error {
 	return n.waitHealthy()
 }
 
-// stop terminates the storer process, waiting for a graceful exit.
-// Once the test has failed, the process gets a SIGQUIT first: the Go
-// runtime dumps every goroutine's stack, which makes a wedged storer
+// stop terminates the node's subprocess, waiting for a graceful exit:
+// the storer shuts down, the listener deregisters its address. Once
+// the test has failed, the process gets a SIGQUIT first: the Go
+// runtime dumps every goroutine's stack, which makes a wedged process
 // post-mortem readable straight from the test output.
 func (n *node) stop() {
 	n.mu.Lock()
@@ -173,29 +182,55 @@ func (n *node) addr() string {
 	return strings.TrimSpace(n.cat(map[string]string{"CATBOX_DATA": n.dir}, "addr"))
 }
 
-// listen runs `recv --listen` as a long-lived subprocess: the node is
-// directly reachable until stopListener.
-func (n *node) listen() {
+// listen runs `recv --listen` as a long-lived subprocess and returns a
+// channel that closes when the process itself reports registered: its
+// "listening" log line, read live off stderr. The scanner keeps
+// draining so the child never blocks on a full pipe.
+func (n *node) listen() <-chan struct{} {
 	n.t.Helper()
+
+	ready := make(chan struct{})
 	cmd := exec.Command(os.Args[0], "recv", "--dir", n.inbox, "--listen")
 	cmd.Env = n.env(nil)
-	cmd.Stdout = &n.logs
 
-	cmd.Stderr = &n.logs
+	pr, pw := io.Pipe()
+	cmd.Stdout = io.MultiWriter(&n.logs, pw)
+
+	cmd.Stderr = io.MultiWriter(&n.logs, pw)
 	if err := cmd.Start(); err != nil {
+		_ = pr.Close()
+
 		n.t.Fatalf("node %s: starting listener: %v", n.name, err)
 	}
 
+	n.mu.Lock()
 	n.cmd = cmd
+	n.mu.Unlock()
 	n.t.Cleanup(func() { n.stop() })
+
+	go func() {
+		registered := false
+		sc := bufio.NewScanner(pr)
+
+		for sc.Scan() {
+			if !registered && strings.Contains(sc.Text(), `"msg":"listening"`) {
+				registered = true
+
+				close(ready)
+			}
+		}
+	}()
+
+	return ready
 }
 
 // TestIntegrationEndToEnd is the full user story against a real
 // storer process and the real DERP network: two peers join with the
-// storer's printed address, a file is sent directly to a listening
-// peer, then a second file rides the spool while the target is
-// offline, and the target pulls it with recv. Asserts the files'
-// contents, not internal state.
+// storer's printed address, two files are sent directly to a listening
+// peer in one command, then a third file rides the spool while the
+// target is offline, and the target pulls it with recv. Asserts the
+// files' contents, never internal state, and never sleeps: the CLI's
+// return is the sync point.
 func TestIntegrationEndToEnd(t *testing.T) {
 	if os.Getenv("CATBOX_INTEGRATION") != "1" {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
@@ -218,54 +253,146 @@ func TestIntegrationEndToEnd(t *testing.T) {
 		}
 	}
 
-	waitFor(t, func() bool {
-		return strings.Contains(milo.cat(nil, "status"), "puma") &&
-			strings.Contains(puma.cat(nil, "status"), "milo")
-	}, "the roster to show both members on both sides")
-
-	// A direct send lands in the target's inbox with its content
-	// intact, while the target's listener holds the door open.
-	puma.listen()
-
-	src := writeFile(t, "nap.txt", 128*1024)
-	waitFor(t, func() bool {
-		return strings.Contains(puma.cat(nil, "status"), "(listening)")
-	}, "puma to publish its listener address")
-
-	out := milo.cat(nil, "send", "puma", src)
-	if !strings.Contains(out, "sent nap.txt to puma directly") {
-		t.Fatalf("direct send output: %q", out)
+	// The storer writes the roster before replying to a join, so the
+	// joins returning is the sync: both sides must see both members.
+	if st := milo.cat(nil, "status"); !strings.Contains(st, "puma") {
+		t.Fatalf("milo status does not show puma: %q", st)
 	}
 
-	waitForFile(t, puma, "nap.txt", src)
+	if st := puma.cat(nil, "status"); !strings.Contains(st, "milo") {
+		t.Fatalf("puma status does not show milo: %q", st)
+	}
 
-	// Now the target goes offline and a second file must ride the
-	// spool: the direct dial fails and the storer holds it.
-	puma.stop()
+	// A direct send lands in the target's inbox with its content
+	// intact, while the target's listener holds the door open. The
+	// listener signals registration itself; two files ride one command.
+	ready := puma.listen()
 
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered")
+	}
+
+	src := writeFile(t, "nap.txt", 128*1024)
 	src2 := writeFile(t, "nap2.txt", 128*1024)
 
-	out = milo.cat(nil, "send", "puma", src2)
-	if !strings.Contains(out, "sent nap2.txt to puma via storer") {
+	out := milo.cat(nil, "send", "puma", src, src2)
+	for _, name := range []string{"nap.txt", "nap2.txt"} {
+		if !strings.Contains(out, "sent "+name+" to puma directly") {
+			t.Fatalf("direct send output: %q", out)
+		}
+	}
+
+	// "sent ... directly" only prints after the listener verified and
+	// wrote the file: assert the bytes, don't wait for them.
+	assertFile(t, puma, "nap.txt", src)
+	assertFile(t, puma, "nap2.txt", src2)
+
+	// Now the target goes offline — SIGTERM, so the listener
+	// deregisters — and a third file must ride the spool. The spool
+	// entry exists before the sender's command returns.
+	puma.stop()
+
+	src3 := writeFile(t, "nap3.txt", 128*1024)
+
+	out = milo.cat(nil, "send", "puma", src3)
+	if !strings.Contains(out, "sent nap3.txt to puma via storer") {
 		t.Fatalf("spool send output: %q", out)
 	}
 
-	waitFor(t, func() bool {
-		des, err := os.ReadDir(filepath.Join(storer.dir, "spool"))
-		return err == nil && len(des) > 0
-	}, "the storer to hold the offline peer's file")
+	assertSpoolLen(t, storer, 1)
 
-	// Back online, an explicit recv pulls the held file and acks it.
+	// Back online, an explicit recv pulls the held file and acks it;
+	// the storer deletes the spool entry before the ack reply.
 	out = puma.cat(nil, "recv", "--dir", puma.inbox)
-	if !strings.Contains(out, "got nap2.txt from milo") {
+	if !strings.Contains(out, "got nap3.txt from milo") {
 		t.Fatalf("pull output: %q", out)
 	}
 
-	waitForFile(t, puma, "nap2.txt", src2)
-	waitFor(t, func() bool {
-		des, err := os.ReadDir(filepath.Join(storer.dir, "spool"))
-		return err == nil && len(des) == 0
-	}, "the storer to drop the file after the ack")
+	assertFile(t, puma, "nap3.txt", src3)
+	assertSpoolLen(t, storer, 0)
+}
+
+// TestIntegrationResume pins the resume story: a pull is killed
+// mid-transfer, its partial survives, and the next pull continues at
+// its chunk boundary instead of starting over — the phone-sleep case.
+func TestIntegrationResume(t *testing.T) {
+	if os.Getenv("CATBOX_INTEGRATION") != "1" {
+		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
+	}
+
+	storer := newNode(t, "storer")
+	if err := storer.start(); err != nil {
+		t.Fatalf("starting storer: %v", err)
+	}
+
+	addr := storer.addr()
+
+	milo := newNode(t, "milo")
+
+	puma := newNode(t, "puma")
+	for _, n := range []*node{milo, puma} {
+		out := n.cat(nil, "join", "--name", n.name, addr)
+		if !strings.Contains(out, "joined as "+n.name) {
+			t.Fatalf("node %s: join output: %q", n.name, out)
+		}
+	}
+
+	// Puma never listens: the file rides the spool.
+	big := writeFile(t, "big.bin", 192<<20)
+
+	out := milo.cat(nil, "send", "puma", big)
+	if !strings.Contains(out, "sent big.bin to puma via storer") {
+		t.Fatalf("spool send output: %q", out)
+	}
+
+	// A pull starts, then dies mid-transfer: SIGKILL leaves the
+	// partial behind, torn tail and all.
+	pull := exec.Command(os.Args[0], "recv", "--dir", puma.inbox)
+	pull.Env = puma.env(nil)
+
+	var pullLogs bytes.Buffer
+
+	pull.Stdout = &pullLogs
+
+	pull.Stderr = &pullLogs
+	if err := pull.Start(); err != nil {
+		t.Fatalf("starting pull: %v", err)
+	}
+
+	deadline := time.Now().Add(60 * time.Second)
+	for time.Now().Before(deadline) {
+		des, err := os.ReadDir(puma.inbox)
+		if err == nil {
+			for _, de := range des {
+				if strings.HasPrefix(de.Name(), ".part-") {
+					if fi, err := de.Info(); err == nil && fi.Size() >= 2*chunkSize {
+						goto partial
+					}
+				}
+			}
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatalf("pull never produced a partial:\n%s", pullLogs.String())
+
+partial:
+	_ = pull.Process.Kill()
+
+	_ = pull.Wait()
+
+	// The next pull resumes: the storer serves from the partial's
+	// chunk boundary and the receiver finishes the file.
+	out = puma.cat(nil, "recv", "--dir", puma.inbox)
+	if !strings.Contains(out, "resumed from") {
+		t.Fatalf("resumed pull output has no resume marker: %q", out)
+	}
+
+	assertFile(t, puma, "big.bin", big)
+	assertSpoolLen(t, storer, 0)
 }
 
 // ---- helpers ----
@@ -317,25 +444,9 @@ func (n *node) waitHealthy() error {
 	return fmt.Errorf("node %s: storer never became healthy on %s", n.name, n.health)
 }
 
-// waitFor polls cond until it holds or the deadline passes.
-func waitFor(t *testing.T, cond func() bool, what string) {
-	t.Helper()
-
-	deadline := time.Now().Add(90 * time.Second)
-	for time.Now().Before(deadline) {
-		if cond() {
-			return
-		}
-
-		time.Sleep(250 * time.Millisecond)
-	}
-
-	t.Fatalf("timed out waiting for %s", what)
-}
-
-// waitForFile waits until the node's inbox holds name with exactly the
-// source file's content.
-func waitForFile(t *testing.T, n *node, name, srcPath string) {
+// assertFile pins the node's inbox holding name with exactly the
+// source file's content: a successful send/pull means it is there.
+func assertFile(t *testing.T, n *node, name, srcPath string) {
 	t.Helper()
 
 	want, err := os.ReadFile(srcPath)
@@ -343,10 +454,38 @@ func waitForFile(t *testing.T, n *node, name, srcPath string) {
 		t.Fatalf("reading source: %v", err)
 	}
 
-	waitFor(t, func() bool {
-		got, err := os.ReadFile(filepath.Join(n.inbox, name))
-		return err == nil && bytes.Equal(got, want)
-	}, fmt.Sprintf("%s to receive %s", n.name, name))
+	got, err := os.ReadFile(filepath.Join(n.inbox, name))
+	if err != nil {
+		t.Fatalf("node %s reading %s: %v", n.name, name, err)
+	}
+
+	if !bytes.Equal(got, want) {
+		t.Fatalf("node %s received %s with different content (%d vs %d bytes)", n.name, name, len(got), len(want))
+	}
+}
+
+// assertSpoolLen pins the storer's held-item count (one .json meta
+// per item): deposits and post-ack deletions happen before the
+// client's reply, so the count is settled by the return.
+func assertSpoolLen(t *testing.T, n *node, want int) {
+	t.Helper()
+
+	des, err := os.ReadDir(filepath.Join(n.dir, "spool"))
+	if err != nil {
+		t.Fatalf("reading spool: %v", err)
+	}
+
+	count := 0
+
+	for _, d := range des {
+		if strings.HasSuffix(d.Name(), ".json") {
+			count++
+		}
+	}
+
+	if count != want {
+		t.Fatalf("spool holds %d items, want %d", count, want)
+	}
 }
 
 func writeFile(t *testing.T, name string, size int) string {

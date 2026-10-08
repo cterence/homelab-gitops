@@ -49,7 +49,7 @@ func TestListenerReceivesDirect(t *testing.T) {
 
 	sender := key.NewNode()
 
-	plainSize, sha, err := sealStream(sender, nas.Key.Public(), c, bytes.NewReader([]byte("hello")))
+	plainSize, err := sealStream(sender, nas.Key.Public(), c, bytes.NewReader([]byte("hello")), shaHexOf([]byte("hello")), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestListenerReceivesDirect(t *testing.T) {
 		t.Fatalf("plainSize = %d", plainSize)
 	}
 
-	if err := writeMsg(c, msg{Op: opSent, SHA: sha}); err != nil {
+	if err := writeMsg(c, msg{Op: opSent, SHA: shaHexOf([]byte("hello"))}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -115,7 +115,7 @@ func TestListenerShaMismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, _, err := sealStream(key.NewNode(), nas.Key.Public(), c, bytes.NewReader([]byte("hello"))); err != nil {
+	if _, err := sealStream(key.NewNode(), nas.Key.Public(), c, bytes.NewReader([]byte("hello")), shaHexOf([]byte("hello")), 0); err != nil {
 		t.Fatal(err)
 	}
 

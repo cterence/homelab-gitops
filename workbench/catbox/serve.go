@@ -416,8 +416,36 @@ func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 
 	defer func() { _ = blob.Close() }()
 
-	if err := writeMsg(rwc, msg{Op: opFile, OK: true, FileName: meta.FileName, SHA: meta.SHA, From: meta.From, Size: meta.Size}); err != nil {
+	// Resume: only a chunk-aligned prefix of a smaller file can be
+	// trusted; anything else starts the stream over.
+	have := m.Have
+	if have < 0 || have%chunkSize != 0 || have >= meta.Plain || meta.SHA == "" {
+		have = 0
+	}
+
+	if err := writeMsg(rwc, msg{Op: opFile, OK: true, FileName: meta.FileName, SHA: meta.SHA, From: meta.From, Size: meta.Size, Have: have}); err != nil {
 		return
+	}
+
+	// A resumed stream still opens with the header, then continues at
+	// the receiver's chunk boundary.
+	if have > 0 {
+		hdr := make([]byte, headerLen)
+		if _, err := io.ReadFull(io.NewSectionReader(blob, 0, headerLen), hdr); err != nil {
+			st.log.Warn("resume header read failed", "id", m.ID, "err", err)
+
+			return
+		}
+
+		if _, err := rwc.Write(hdr); err != nil {
+			return
+		}
+
+		if _, err := blob.Seek(sealedOffset(have/chunkSize), io.SeekStart); err != nil {
+			st.log.Warn("resume seek failed", "id", m.ID, "err", err)
+
+			return
+		}
 	}
 
 	src := &progressReader{r: blob, total: meta.Size, label: "relayed", every: time.Second, onTick: func(int64) {

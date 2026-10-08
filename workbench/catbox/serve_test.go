@@ -20,6 +20,18 @@ import (
 	"tailscale.com/types/key"
 )
 
+// mustSHA hashes a file the way the send command does before sealing.
+func mustSHA(t *testing.T, path string) string {
+	t.Helper()
+
+	sha, err := fileSHA256(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return sha
+}
+
 func newTestStorer(t *testing.T) *storer {
 	t.Helper()
 	dir := t.TempDir()
@@ -80,7 +92,7 @@ func TestJoinSendPull(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(ctx, conn, laptop, "nas", src); err != nil {
+	if err := clientSend(ctx, conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -102,7 +114,7 @@ func TestJoinSendPull(t *testing.T) {
 	inbox := t.TempDir()
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(ctx, conn, nas, inbox); err != nil {
+	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
 		t.Fatalf("inbox: %v", err)
 	}
 
@@ -155,7 +167,7 @@ func TestSendUnknownMemberRefreshesRoster(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(ctx, conn, laptop, "nas", src); err != nil {
+	if err := clientSend(ctx, conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send with refresh: %v", err)
 	}
 
@@ -186,7 +198,7 @@ func TestSendToUnknownNameFails(t *testing.T) {
 	}
 
 	conn = dial(t, st, laptop)
-	if err := clientSend(ctx, conn, laptop, "ghost", src); err == nil {
+	if err := clientSend(ctx, conn, nil, laptop, "ghost", src, mustSHA(t, src)); err == nil {
 		t.Fatal("send to unknown member should fail")
 	}
 
@@ -272,7 +284,7 @@ func TestClientStatus(t *testing.T) {
 	}
 
 	conn = dial(t, st, nas)
-	if err := clientSend(context.Background(), conn, nas, "laptop", src); err != nil {
+	if err := clientSend(context.Background(), conn, nil, nas, "laptop", src, mustSHA(t, src)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -328,7 +340,7 @@ func TestSendToSelfFails(t *testing.T) {
 	}
 
 	// Client-side guard: refuses before any network op.
-	if err := clientSend(ctx, nil, laptop, "laptop", src); err == nil {
+	if err := clientSend(ctx, nil, nil, laptop, "laptop", src, mustSHA(t, src)); err == nil {
 		t.Fatal("self-send should fail client-side")
 	}
 
@@ -374,7 +386,7 @@ func TestDepositDedup(t *testing.T) {
 
 	for range 3 {
 		conn := dial(t, st, laptop)
-		if err := clientSend(ctx, conn, laptop, "nas", src); err != nil {
+		if err := clientSend(ctx, conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
 			t.Fatalf("send: %v", err)
 		}
 
@@ -407,7 +419,7 @@ func TestClientStatusJSON(t *testing.T) {
 	}
 
 	conn := dial(t, st, nas)
-	if err := clientSend(context.Background(), conn, nas, "laptop", src); err != nil {
+	if err := clientSend(context.Background(), conn, nil, nas, "laptop", src, mustSHA(t, src)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -550,7 +562,7 @@ func TestDismissDestinedFile(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, laptop, "nas", src); err != nil {
+	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -604,7 +616,7 @@ func TestDismissOnlyOwnItems(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, laptop, "nas", src); err != nil {
+	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -656,7 +668,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, laptop, "nas", src); err != nil {
+	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -674,7 +686,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 
 	// The old name is gone from the roster.
 	conn = dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, laptop, "nas", src); err == nil {
+	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err == nil {
 		t.Fatal("send to the old name should fail")
 	}
 
@@ -684,7 +696,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 	inbox := t.TempDir()
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(context.Background(), conn, nas, inbox); err != nil {
+	if err := clientInbox(context.Background(), conn, nil, nas, inbox); err != nil {
 		t.Fatalf("inbox: %v", err)
 	}
 

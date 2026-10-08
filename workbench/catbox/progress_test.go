@@ -103,7 +103,7 @@ func benchmarkSealStream(b *testing.B, wrap bool) {
 			r = &progressReader{r: r, total: int64(len(src)), label: "sending", every: time.Second, w: io.Discard}
 		}
 
-		if _, _, err := sealStream(sender, recipient.Public(), io.Discard, r); err != nil {
+		if _, err := sealStream(sender, recipient.Public(), io.Discard, r, "test", 0); err != nil {
 			b.Fatal(err)
 		}
 	}

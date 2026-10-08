@@ -32,7 +32,7 @@ catbox addr
 catbox join   --name NAME <storer-addr>
 catbox rename <new-name>
 catbox invite
-catbox send   <member> <file>
+catbox send   <member> <file> [<file>...]
 catbox recv   [--dir DIR] [--listen]
 catbox dismiss <id>
 catbox status
@@ -56,10 +56,19 @@ catbox version
   files follow the new name, and a taken or invalid name is rejected.
   Stop `recv --listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
-- `send` seals and ships the file: direct to the target's listener
+- `send` seals and ships each named file (one member, one or more
+  files per command): direct to the target's listener
   when it is online (3s dial timeout), otherwise deposited at the
   storer until the target pulls. Transfers abort after two minutes
   of silence and fall back to the storer; Ctrl-C aborts instantly.
+  Interrupted transfers resume: the receiver keeps its received bytes
+  in a content-keyed partial (`.part-<sha12>-<size>` in the inbox) and
+  the next attempt — direct or via the storer — continues at its
+  64 KiB chunk boundary. The file's SHA keys a deterministic per-file
+  secret, so a resumed attempt decrypts against the existing partial.
+  Stale partials (7 days untouched) are swept at `recv` startup; a
+  SHA mismatch deletes the partial outright. Output marks a resume
+  with `resumed from N`.
 - `recv` without `--listen` pulls everything the storer holds for
   this machine into the inbox dir (OS downloads + `/catbox` by
   default), verifying each file's SHA-256 and acknowledging so the
@@ -101,7 +110,11 @@ via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
 on screen — direct sends are always welcome, while storer pulls wait
 behind the explicit receive button, and parked files can be refused
 per file with a confirming dialog. Its server engine (identity key)
-never conflicts with one-shot client execs (dial key).
+never conflicts with one-shot client execs (dial key). While a
+transfer is in flight (own action or listener receive) the app holds a
+bounded partial wake lock, so screen-off does not suspend the device
+mid-transfer; if the lock ever drops, the partial resumes where the
+transfer stopped.
 
 Build (hermetic, offline gradle, pinned debug keystore dedicated to
 catbox):

@@ -271,6 +271,31 @@ fun CatboxApp() {
     val menuOpen = remember { mutableStateOf(false) }
     val refreshing = remember { mutableStateOf(false) }
 
+    // A transfer in flight keeps the CPU awake: screen-off would
+    // suspend the device mid-transfer and stall the child process.
+    // The acquire is bounded, so a wedged transfer can never drain the
+    // battery — the worst case is a dropped lock and a resume from
+    // the partial.
+    val wakeLock = remember {
+        context.getSystemService(android.os.PowerManager::class.java)
+            .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "catbox:transfer")
+    }
+    val transferring = busy.value || progress.value != null
+    LaunchedEffect(transferring) {
+        if (transferring) {
+            wakeLock.acquire(30 * 60 * 1000L)
+        } else if (wakeLock.isHeld) {
+            wakeLock.release()
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -347,19 +372,20 @@ fun CatboxApp() {
                                             if (busy.value) {
                                                 // Cancel an own action (pull/send):
                                                 // kill the child; a pulled item was
-                                                // never acked and stays parked.
+                                                // never acked and stays parked, its
+                                                // partial kept for the resume.
                                                 cancelRequested.value = true
                                                 Catbox.cancelAction()
-                                                Catbox.sweepParts(context)
                                                 progress.value = null
                                             } else {
                                                 // Cancel a direct receive: bounce the
                                                 // listener — the transfer dies with the
                                                 // old child, the restart waits out its
                                                 // deregister so the roster address
-                                                // isn't wiped late.
+                                                // isn't wiped late. The partial stays
+                                                // for the resume; the binary sweeps
+                                                // stale ones by TTL.
                                                 Catbox.stopListener()
-                                                Catbox.sweepParts(context)
                                                 progress.value = null
                                                 delay(1500)
                                                 Catbox.startListener(context, ::append)

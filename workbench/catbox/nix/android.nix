@@ -136,9 +136,10 @@ in
   inherit catbox-android-bin;
 
   # nix build .#catbox-android → the debug APK itself as the output
-  # (a single-file output): result IS the apk.
+  # (a single-file output): result IS the apk. The name only labels the
+  # store path — the APK's own version comes from build.gradle.kts.
   catbox-android = pkgs.stdenv.mkDerivation {
-    name = "catbox-android-0.1.0.apk";
+    name = "catbox-android-${version}.apk";
     src = src + "/android";
     nativeBuildInputs = [
       pkgs.jdk17

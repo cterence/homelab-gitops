@@ -222,7 +222,10 @@
               catboxAndroid = import ./workbench/catbox/nix/android.nix {
                 inherit pkgs version;
                 android-sdk = android-nixpkgs.sdk.${system};
-                src = self.outPath + "/workbench/catbox";
+                # A path literal, like the catbox package above: the
+                # git-filtered self.outPath would exclude untracked
+                # new files and break the cross-build.
+                src = ./workbench/catbox;
                 vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";
               };
             in

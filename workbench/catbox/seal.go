@@ -5,12 +5,13 @@ package main
 // chunks, age's STREAM construction. A zero-length frame terminates.
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 
 	"golang.org/x/crypto/chacha20poly1305"
@@ -28,42 +29,75 @@ const (
 	headerLen  = key.NodePublicRawLen + boxOver + fileKeyLen + prefixLen
 )
 
+// chunkFrameLen is the wire size of one full plaintext chunk: frame
+// length + ciphertext + tag.
+const chunkFrameLen = 4 + chunkSize + chacha20poly1305.Overhead
+
+// sealedOffset returns the byte offset of chunk k's frame in a sealed
+// stream: valid while every earlier chunk is full-size, which a
+// chunk-aligned k guarantees.
+func sealedOffset(k int64) int64 {
+	return headerLen + k*chunkFrameLen
+}
+
+// fileSecret derives the per-file key and nonce prefix instead of
+// generating them at random: a resumed attempt must decrypt the
+// receiver's existing partial, so the same (sender, recipient, file)
+// must always produce the same secret. Overlapping chunk counters
+// across attempts reuse nonces for identical plaintext; that equality
+// is visible only to the recipient, who already holds the plaintext.
+func fileSecret(sender key.NodePrivate, recipient key.NodePublic, shaHex string) [fileKeyLen + prefixLen]byte {
+	senderRaw := sender.Raw32()
+	recipientRaw := recipient.AppendTo(nil)
+
+	h := sha512.New()
+	h.Write([]byte("catbox file secret v1"))
+	h.Write(senderRaw[:])
+	h.Write(recipientRaw)
+	h.Write([]byte(shaHex))
+
+	var secret [fileKeyLen + prefixLen]byte
+
+	sum := h.Sum(nil)
+	copy(secret[:], sum[:len(secret)])
+
+	return secret
+}
+
 var (
 	errBadHeader = errors.New("cannot open sealed header (wrong key or corrupt header)")
 	errCorrupt   = errors.New("corrupt or truncated sealed stream")
 )
 
-// sealStream seals src to dst for recipient. It returns the plaintext
-// size and hex SHA-256 of the whole file.
-func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer, src io.Reader) (int64, string, error) {
-	var secret [fileKeyLen + prefixLen]byte
-	if _, err := rand.Read(secret[:]); err != nil {
-		return 0, "", fmt.Errorf("generating file key: %w", err)
-	}
+// sealStream seals src to dst for recipient, starting at plaintext
+// offset — a resumed attempt continues at its chunk boundary. shaHex
+// keys the deterministic file secret. It returns the total plaintext
+// size (offset plus what it sealed).
+func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer, src io.Reader, shaHex string, offset int64) (int64, error) {
+	secret := fileSecret(sender, recipient, shaHex)
 
 	aead, err := chacha20poly1305.NewX(secret[:fileKeyLen])
 	if err != nil {
-		return 0, "", err
+		return 0, err
 	}
 
 	senderRaw, err := tailcat.NodePublic{NodePublic: sender.Public()}.MarshalBinary()
 	if err != nil {
-		return 0, "", fmt.Errorf("encoding sender key: %w", err)
+		return 0, fmt.Errorf("encoding sender key: %w", err)
 	}
 
 	header := append(senderRaw, sender.SealTo(recipient, secret[:])...)
 	if len(header) != headerLen {
-		return 0, "", fmt.Errorf("header is %d bytes, want %d", len(header), headerLen)
+		return 0, fmt.Errorf("header is %d bytes, want %d", len(header), headerLen)
 	}
 
 	if _, err := dst.Write(header); err != nil {
-		return 0, "", fmt.Errorf("writing header: %w", err)
+		return 0, fmt.Errorf("writing header: %w", err)
 	}
 
 	var prefix [prefixLen]byte
 	copy(prefix[:], secret[fileKeyLen:])
 
-	h := sha256.New()
 	buf := make([]byte, chunkSize)
 
 	var (
@@ -73,10 +107,18 @@ func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer,
 		plainSize int64
 	)
 
+	if offset > 0 {
+		if _, err := io.CopyN(io.Discard, src, offset); err != nil {
+			return 0, fmt.Errorf("skipping resumed offset: %w", err)
+		}
+
+		seq = uint64(offset / chunkSize)
+		plainSize = offset
+	}
+
 	for {
 		n, rerr := io.ReadFull(src, buf)
 		if n > 0 {
-			h.Write(buf[:n])
 			plainSize += int64(n)
 
 			last := byte(0)
@@ -88,11 +130,11 @@ func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer,
 			binary.BigEndian.PutUint32(frame[:], uint32(len(ct)))
 
 			if _, err := dst.Write(frame[:]); err != nil {
-				return 0, "", fmt.Errorf("writing chunk frame: %w", err)
+				return 0, fmt.Errorf("writing chunk frame: %w", err)
 			}
 
 			if _, err := dst.Write(ct); err != nil {
-				return 0, "", fmt.Errorf("writing chunk: %w", err)
+				return 0, fmt.Errorf("writing chunk: %w", err)
 			}
 
 			seq++
@@ -103,23 +145,31 @@ func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer,
 				break
 			}
 
-			return 0, "", fmt.Errorf("reading plaintext: %w", rerr)
+			return 0, fmt.Errorf("reading plaintext: %w", rerr)
 		}
 	}
 
 	binary.BigEndian.PutUint32(frame[:], 0)
 
 	if _, err := dst.Write(frame[:]); err != nil {
-		return 0, "", fmt.Errorf("writing terminator: %w", err)
+		return 0, fmt.Errorf("writing terminator: %w", err)
 	}
 
-	return plainSize, hex.EncodeToString(h.Sum(nil)), nil
+	return plainSize, nil
 }
 
 // openStream decrypts one sealed stream into dst, returning the
-// sender's public key, the plaintext size, and hex SHA-256.
-func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (key.NodePublic, int64, string, error) {
+// sender's public key, the total plaintext size, and hex SHA-256.
+// offset is the chunk-aligned plaintext already on disk (a resumed
+// stream starts at that chunk counter); h, when non-nil, is the
+// caller's hash state over those bytes so the final SHA covers the
+// whole file.
+func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer, offset int64, h hash.Hash) (key.NodePublic, int64, string, error) {
 	var noSender key.NodePublic
+
+	if h == nil {
+		h = sha256.New()
+	}
 
 	header := make([]byte, headerLen)
 	if _, err := io.ReadFull(src, header); err != nil {
@@ -144,7 +194,6 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (key.No
 	var prefix [prefixLen]byte
 	copy(prefix[:], secret[fileKeyLen:])
 
-	h := sha256.New()
 	ct := make([]byte, chunkSize+aead.Overhead())
 	plain := make([]byte, 0, chunkSize)
 
@@ -154,6 +203,11 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer) (key.No
 		seq       uint64
 		plainSize int64
 	)
+
+	if offset > 0 {
+		seq = uint64(offset / chunkSize)
+		plainSize = offset
+	}
 
 	for {
 		if _, err := io.ReadFull(src, frame[:]); err != nil {

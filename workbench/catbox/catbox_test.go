@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -213,7 +214,7 @@ func TestSpoolRoundTrip(t *testing.T) {
 	recipient := key.NewNode()
 
 	var sealed bytes.Buffer
-	if _, _, err := sealStream(sender, recipient.Public(), &sealed, bytes.NewReader([]byte("payload"))); err != nil {
+	if _, err := sealStream(sender, recipient.Public(), &sealed, bytes.NewReader([]byte("payload")), shaHexOf([]byte("payload")), 0); err != nil {
 		t.Fatal(err)
 	}
 
@@ -250,7 +251,7 @@ func TestSpoolRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, plain, sha, err := openStream(recipient, &out, &bytes.Buffer{})
+	_, plain, sha, err := openStream(recipient, &out, &bytes.Buffer{}, 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +297,7 @@ func TestSpoolSweep(t *testing.T) {
 	fresh := spoolMeta{FileName: "new.bin"}
 	for _, m := range []spoolMeta{old, fresh} {
 		var sealed bytes.Buffer
-		if _, _, err := sealStream(key.NewNode(), recipient, &sealed, bytes.NewReader([]byte("x"))); err != nil {
+		if _, err := sealStream(key.NewNode(), recipient, &sealed, bytes.NewReader([]byte("x")), shaHexOf([]byte("x")), 0); err != nil {
 			t.Fatal(err)
 		}
 
@@ -325,7 +326,7 @@ func sealedStreamOf(t *testing.T, size int) *bytes.Buffer {
 	payload := make([]byte, size)
 
 	var sealed bytes.Buffer
-	if _, _, err := sealStream(key.NewNode(), key.NewNode().Public(), &sealed, bytes.NewReader(payload)); err != nil {
+	if _, err := sealStream(key.NewNode(), key.NewNode().Public(), &sealed, bytes.NewReader(payload), "test", 0); err != nil {
 		t.Fatal(err)
 	}
 
@@ -367,5 +368,24 @@ func TestSpoolPutEnforcesByteBudget(t *testing.T) {
 
 	if _, err := sp.put(stream, spoolMeta{FileName: "fits.bin"}, streamLen); err != nil {
 		t.Fatalf("put within budget: %v", err)
+	}
+}
+
+func TestSendRejectsDirectory(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	dir := t.TempDir()
+
+	argv := os.Args
+	defer func() { os.Args = argv }()
+
+	os.Args = []string{"catbox", "send", "peer", dir}
+
+	err := run()
+	if err == nil {
+		t.Fatal("sending a directory: want error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "is a directory") {
+		t.Fatalf("sending a directory: error = %v, want it to say it is a directory", err)
 	}
 }

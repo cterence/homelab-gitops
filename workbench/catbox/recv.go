@@ -28,6 +28,8 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 		return err
 	}
 
+	sweepPartials(inboxDir)
+
 	if !listen {
 		release, err := lockPeer()
 		if err != nil {
@@ -44,7 +46,7 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 		defer func() { _ = cl.Close() }()
 		defer func() { _ = conn.Close() }()
 
-		return clientInbox(ctx, conn, id, inboxDir)
+		return clientInbox(ctx, conn, cl, id, inboxDir)
 	}
 
 	if err := ensureListenerIdentity(ctx, id); err != nil {
@@ -60,6 +62,8 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 		Logf:         func(format string, args ...any) { log.Debug(fmt.Sprintf(format, args...)) },
 		OnTCP:        lc.onTCP,
 	}
+	lc.srv = srv
+
 	if err := srv.Start(); err != nil {
 		return fmt.Errorf("starting tailcat: %w", err)
 	}
@@ -144,6 +148,17 @@ type listener struct {
 	inbox string
 	log   *slog.Logger
 	id    *peerID
+	srv   *tailcat.Server // set by runRecv; nil in tests, silencing the path report
+}
+
+// senderPath reports the network path a sender's transfer used; a nil
+// srv (tests) reports nothing.
+func (lc *listener) senderPath(sender key.NodePublic) string {
+	if lc.srv == nil {
+		return ""
+	}
+
+	return pathOf(lc.srv.Status(), sender)
 }
 
 func (lc *listener) onTCP(port uint16) func(net.Conn) {
@@ -184,26 +199,38 @@ func (lc *listener) listenConn(rwc io.ReadWriteCloser) {
 	}
 }
 
-// receive takes one sealed stream to the inbox.
+// receive takes one sealed stream to the inbox, resuming from this
+// transfer's partial when there is one.
 func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
-	if err := writeMsg(rwc, msg{Op: opReady, OK: true}); err != nil {
-		return
-	}
-
 	if err := os.MkdirAll(lc.inbox, 0o755); err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
 
 		return
 	}
 
-	tmp, err := os.CreateTemp(lc.inbox, ".part-*")
+	f, h, have, resumable, err := partialFor(lc.inbox, m.SHA, m.Size)
 	if err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
 
 		return
 	}
 
-	defer func() { _ = os.Remove(tmp.Name()) }()
+	// A resumable partial survives a failed attempt; a corrupt one
+	// (SHA mismatch) and a plain temp do not.
+	cleanup := !resumable
+	done := false
+
+	defer func() {
+		_ = f.Close()
+
+		if !done && cleanup {
+			_ = os.Remove(f.Name())
+		}
+	}()
+
+	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Have: have}); err != nil {
+		return
+	}
 
 	// The stream ends at its terminator; no size bound needed here.
 	// Ticks print progress (the app's log pane sees plain stderr) and
@@ -214,10 +241,10 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		}
 	}}
 
-	sender, plainSize, sha, err := openStream(lc.id.Key, src, tmp)
+	sender, plainSize, sha, err := openStream(lc.id.Key, src, f, have, h)
 	src.close() // sealed streams self-terminate: no EOF ever reaches the reader
 
-	_ = tmp.Close()
+	_ = f.Close()
 
 	if err != nil {
 		lc.log.Warn("direct receive failed", "err", err)
@@ -237,24 +264,28 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 
 	if sent.SHA != "" && sent.SHA != sha {
 		// Reply only after cleanup so senders never observe stale temps.
-		_ = os.Remove(tmp.Name())
+		cleanup = true // the partial's prefix is corrupt: failed for good
+		_ = os.Remove(f.Name())
 		_ = writeMsg(rwc, msg{Op: opDone, Err: "sha mismatch"})
 
 		return
 	}
 
 	dst := uniquePath(lc.inbox, m.FileName)
-	if err := os.Rename(tmp.Name(), dst); err != nil {
+	if err := os.Rename(f.Name(), dst); err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
 
 		return
 	}
 
-	lc.log.Info("received directly", "filename", filepath.Base(dst), "from", senderName(sender), "size", humanBytes(plainSize))
+	done = true
+
+	p := lc.senderPath(sender)
+	lc.log.Info("received directly", "filename", filepath.Base(dst), "from", senderName(sender), "size", humanBytes(plainSize), "resumed", have, "path", p)
 
 	// Plain line for humans and the app's pane (slog lines are noise
 	// there): also clears the in-UI transfer indicator.
-	fmt.Fprintf(os.Stderr, "got %s directly (%s)\n", filepath.Base(dst), humanBytes(plainSize))
+	fmt.Fprintf(os.Stderr, "got %s directly (%s%s%s)\n", filepath.Base(dst), humanBytes(plainSize), resumedSuffix(have), pathSuffix(p))
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
 }
