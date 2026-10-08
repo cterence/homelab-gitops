@@ -2,6 +2,7 @@
 app-template:
   defaultPodOptions:
     automountServiceAccountToken: false
+    hostNetwork: true
     securityContext:
       runAsUser: 100
       runAsGroup: 101
