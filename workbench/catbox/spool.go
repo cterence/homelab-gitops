@@ -30,6 +30,28 @@ type spoolMeta struct {
 
 type spool struct{ dir string }
 
+// errSpoolFull marks deposits that exceed the spool's remaining byte budget.
+var errSpoolFull = errors.New("deposit exceeds the spool's remaining capacity")
+
+// budgetWriter counts bytes written and refuses writes past max, so a
+// sender streaming more than it claimed cannot fill the disk.
+type budgetWriter struct {
+	w   io.Writer
+	n   int64
+	max int64
+}
+
+func (b *budgetWriter) Write(p []byte) (int, error) {
+	if b.n+int64(len(p)) > b.max {
+		return 0, fmt.Errorf("%w: %d bytes exceeds budget %d", errSpoolFull, b.n+int64(len(p)), b.max)
+	}
+
+	n, err := b.w.Write(p)
+	b.n += int64(n)
+
+	return n, err
+}
+
 func openSpool(dir string) (*spool, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("mkdir %s: %w", dir, err)
@@ -47,7 +69,8 @@ func newID() string {
 
 // put spools one sealed stream from src (frames through the zero
 // terminator) and records meta; the returned meta carries ID and Size.
-func (s *spool) put(src io.Reader, m spoolMeta) (spoolMeta, error) {
+// maxBytes bounds the sealed bytes written, independent of any claimed size.
+func (s *spool) put(src io.Reader, m spoolMeta, maxBytes int64) (spoolMeta, error) {
 	m.ID = newID()
 	if m.At == 0 {
 		m.At = time.Now().Unix()
@@ -60,7 +83,7 @@ func (s *spool) put(src io.Reader, m spoolMeta) (spoolMeta, error) {
 
 	defer func() { _ = os.Remove(tmp.Name()) }()
 
-	size, err := relaySealed(tmp, src)
+	size, err := relaySealed(&budgetWriter{w: tmp, max: maxBytes}, src)
 	if err != nil {
 		_ = tmp.Close()
 

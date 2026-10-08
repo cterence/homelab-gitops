@@ -273,7 +273,9 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name, Plain: m.Size}
 
-	meta, err = st.spool.put(rwc, meta)
+	// The claimed size admitted the deposit; the transfer itself is bounded
+	// by the remaining budget, so a lying sender cannot fill the disk.
+	meta, err = st.spool.put(rwc, meta, st.max-usage)
 	if err != nil {
 		st.log.Warn("deposit failed", "err", err)
 		return
