@@ -127,8 +127,15 @@ func TestSealResumeRoundTrip(t *testing.T) {
 	}
 
 	// Second attempt: the sender resumes from the receiver's boundary.
+	// sealStream takes the reader already positioned at the offset.
 	var resumed bytes.Buffer
-	if _, err := sealStream(sender, recipient.Public(), &resumed, bytes.NewReader(plain), shaHex, k*chunkSize); err != nil {
+
+	rr := bytes.NewReader(plain)
+	if _, err := rr.Seek(k*chunkSize, io.SeekStart); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := sealStream(sender, recipient.Public(), &resumed, rr, shaHex, k*chunkSize); err != nil {
 		t.Fatal(err)
 	}
 

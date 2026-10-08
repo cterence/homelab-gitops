@@ -395,6 +395,105 @@ partial:
 	assertSpoolLen(t, storer, 0)
 }
 
+// TestIntegrationDirectResume pins the direct-path resume: a listener
+// dies mid-direct-send, the re-registration lets the next send
+// continue at the receiver's partial — not from zero, and not from a
+// double-skipped offset.
+func TestIntegrationDirectResume(t *testing.T) {
+	if os.Getenv("CATBOX_INTEGRATION") != "1" {
+		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
+	}
+
+	storer := newNode(t, "storer")
+	if err := storer.start(); err != nil {
+		t.Fatalf("starting storer: %v", err)
+	}
+
+	addr := storer.addr()
+
+	milo := newNode(t, "milo")
+
+	puma := newNode(t, "puma")
+	for _, n := range []*node{milo, puma} {
+		out := n.cat(nil, "join", "--name", n.name, addr)
+		if !strings.Contains(out, "joined as "+n.name) {
+			t.Fatalf("node %s: join output: %q", n.name, out)
+		}
+	}
+
+	big := writeFile(t, "big.bin", 96<<20)
+
+	// First send: direct, killed mid-transfer once the partial exists.
+	ready := puma.listen()
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered")
+	}
+
+	send := exec.Command(os.Args[0], "send", "puma", big)
+	send.Env = milo.env(nil)
+
+	var sendLogs bytes.Buffer
+
+	send.Stdout = &sendLogs
+
+	send.Stderr = &sendLogs
+	if err := send.Start(); err != nil {
+		t.Fatalf("starting send: %v", err)
+	}
+
+	deadline := time.Now().Add(60 * time.Second)
+	for time.Now().Before(deadline) {
+		des, err := os.ReadDir(puma.inbox)
+		if err == nil {
+			for _, de := range des {
+				if strings.HasPrefix(de.Name(), ".part-") {
+					if fi, err := de.Info(); err == nil && fi.Size() >= 2*chunkSize {
+						goto partial
+					}
+				}
+			}
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatalf("direct send never produced a partial:\n%s", sendLogs.String())
+
+partial:
+	// The listener shuts down mid-flight (SIGTERM, like a phone
+	// lock): the closed server kills the transfer now, the sender
+	// falls back fast, and the partial is kept.
+	puma.stop()
+
+	_ = send.Wait()
+
+	// The sender fell back to the storer: the file is parked, the
+	// partial is kept.
+	assertSpoolLen(t, storer, 1)
+
+	// Second send: the listener is back, and the direct path must
+	// continue from the partial.
+	ready = puma.listen()
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered after restart")
+	}
+
+	out := milo.cat(nil, "send", "puma", big)
+	if !strings.Contains(out, "resumed from") {
+		t.Fatalf("resumed direct send output has no resume marker: %q", out)
+	}
+
+	assertFile(t, puma, "big.bin", big)
+
+	// The first send's fallback copy stays parked at the storer: a
+	// direct delivery does not ack spool items.
+	assertSpoolLen(t, storer, 1)
+}
+
 // ---- helpers ----
 
 // cat runs the catbox binary as a helper subprocess with the given

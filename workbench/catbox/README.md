@@ -59,8 +59,9 @@ catbox version
 - `send` seals and ships each named file (one member, one or more
   files per command): direct to the target's listener
   when it is online (3s dial timeout), otherwise deposited at the
-  storer until the target pulls. Transfers abort after two minutes
-  of silence and fall back to the storer; Ctrl-C aborts instantly.
+  storer until the target pulls. Direct transfers abort after 30
+  seconds of silence and fall back to the storer; storer-path
+  transfers abort after two minutes; Ctrl-C aborts instantly.
   Interrupted transfers resume: the receiver keeps its received bytes
   in a content-keyed partial (`.part-<sha12>-<size>` in the inbox) and
   the next attempt — direct or via the storer — continues at its

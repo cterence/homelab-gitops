@@ -432,7 +432,7 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 		_ = conn.Close()
 	}()
 
-	_ = conn.SetDeadline(time.Now().Add(idleTimeout))
+	_ = conn.SetDeadline(time.Now().Add(directStall))
 
 	if err := writeMsg(conn, msg{Op: opSend, Target: target.Name, FileName: filepath.Base(path), Size: info.Size(), SHA: shaHex}); err != nil {
 		return 0, err
@@ -461,7 +461,7 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 	}
 
 	src := &progressReader{r: f, total: info.Size() - resumed, label: "sending", every: time.Second, onTick: func(int64) {
-		_ = conn.SetDeadline(time.Now().Add(idleTimeout)) // sliding: inactivity cap, not total
+		_ = conn.SetDeadline(time.Now().Add(directStall)) // sliding: inactivity cap, not total
 	}}
 
 	plainSize, err := sealStream(id.Key, target.Key, conn, src, shaHex, resumed)

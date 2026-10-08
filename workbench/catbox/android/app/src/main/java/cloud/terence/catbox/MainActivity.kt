@@ -104,16 +104,31 @@ fun CatboxApp() {
     val aboutOpen = remember { mutableStateOf<String?>(null) } // open about dialog: the version line
     val snackbar = remember { SnackbarHostState() }
 
+    // A transfer in flight keeps the CPU awake: screen-off suspends
+    // the device and stalls the child. Driven from the data path, not
+    // the UI — recomposition freezes when the screen is off, so only
+    // the child's own output lines can be trusted to fire. Each
+    // progress tick re-arms a sliding window; silence lets it drop
+    // at the same cap that ends the transfer.
+    val wakeLock = remember {
+        context.getSystemService(android.os.PowerManager::class.java)
+            .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "catbox:transfer")
+    }
+
     fun append(line: String) {
         // Progress and completion lines from any child (send, pull,
         // listener) drive the in-UI transfer indicator.
         val t = line.trim()
         when {
-            t.startsWith("sending ") || t.startsWith("received ") || t.startsWith("depositing ") ->
+            t.startsWith("sending ") || t.startsWith("received ") || t.startsWith("depositing ") -> {
                 progress.value = t
+                wakeLock.acquire(2 * 60 * 1000L)
+            }
             t.startsWith("got ") || t.startsWith("sent ") || t.startsWith("dismissed ") ||
-                t.startsWith("receive failed") ->
+                t.startsWith("receive failed") -> {
                 progress.value = null
+                if (wakeLock.isHeld) wakeLock.release()
+            }
         }
     }
 
@@ -270,31 +285,6 @@ fun CatboxApp() {
 
     val menuOpen = remember { mutableStateOf(false) }
     val refreshing = remember { mutableStateOf(false) }
-
-    // A transfer in flight keeps the CPU awake: screen-off would
-    // suspend the device mid-transfer and stall the child process.
-    // The acquire is bounded, so a wedged transfer can never drain the
-    // battery — the worst case is a dropped lock and a resume from
-    // the partial.
-    val wakeLock = remember {
-        context.getSystemService(android.os.PowerManager::class.java)
-            .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "catbox:transfer")
-    }
-    val transferring = busy.value || progress.value != null
-    LaunchedEffect(transferring) {
-        if (transferring) {
-            wakeLock.acquire(30 * 60 * 1000L)
-        } else if (wakeLock.isHeld) {
-            wakeLock.release()
-        }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            if (wakeLock.isHeld) {
-                wakeLock.release()
-            }
-        }
-    }
 
     Scaffold(
         topBar = {

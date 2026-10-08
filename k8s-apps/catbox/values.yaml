@@ -12,7 +12,7 @@ app-template:
   controllers:
     main:
       type: deployment
-      strategy: RollingUpdate
+      strategy: Recreate
       replicas: 1
       labels:
         sablier.enable: "false"
@@ -23,7 +23,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/catbox
-            tag: "18"
+            tag: "19"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris

@@ -68,15 +68,23 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 		return fmt.Errorf("starting tailcat: %w", err)
 	}
 
-	defer func() { _ = srv.Close() }()
-
 	if err := registerListener(ctx, id, srv.TailcatAddr()); err != nil {
+		_ = srv.Close()
+
 		return err
 	}
 
 	log.Info("listening", "port", catboxPort, "inbox", inboxDir) // no address: it's a capability
 
 	<-ctx.Done()
+
+	// Close the server before deregistering: in-flight transfers die
+	// now, so a shut-down listener makes senders fall back to the
+	// storer immediately instead of stalling until their idle
+	// deadline.
+	if err := srv.Close(); err != nil {
+		log.Warn("closing listener failed", "err", err)
+	}
 
 	// Deregister so senders don't waste their direct-dial timeout on us.
 	deregCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)

@@ -38,6 +38,12 @@ const msgMax = 1 << 20
 // instead of hanging until human intervention.
 const idleTimeout = 2 * time.Minute
 
+// directStall caps a direct transfer's silence tighter than the
+// storer paths: a vanished listener must be detected fast enough that
+// the storer fallback still helps, and a resume makes the abort
+// cheap.
+const directStall = 30 * time.Second
+
 // msg is the wire message; Op dispatches. Size means plaintext bytes
 // for send. Key and Addr carry the joiner's identity public key and
 // listener address.

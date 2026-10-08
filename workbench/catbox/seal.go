@@ -69,10 +69,11 @@ var (
 	errCorrupt   = errors.New("corrupt or truncated sealed stream")
 )
 
-// sealStream seals src to dst for recipient, starting at plaintext
-// offset — a resumed attempt continues at its chunk boundary. shaHex
-// keys the deterministic file secret. It returns the total plaintext
-// size (offset plus what it sealed).
+// sealStream seals src to dst for recipient, continuing at plaintext
+// offset — a resumed attempt's chunk counter. src must already be
+// positioned at that offset. shaHex keys the deterministic file
+// secret. It returns the total plaintext size (offset plus what it
+// sealed).
 func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer, src io.Reader, shaHex string, offset int64) (int64, error) {
 	secret := fileSecret(sender, recipient, shaHex)
 
@@ -108,10 +109,6 @@ func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer,
 	)
 
 	if offset > 0 {
-		if _, err := io.CopyN(io.Discard, src, offset); err != nil {
-			return 0, fmt.Errorf("skipping resumed offset: %w", err)
-		}
-
 		seq = uint64(offset / chunkSize)
 		plainSize = offset
 	}
