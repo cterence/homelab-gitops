@@ -30,9 +30,10 @@ app-template:
             CATBOX_DATA: /data
           args:
             - serve
+            - --health=:38081
           ports:
             - name: http
-              containerPort: 8081
+              containerPort: 38081
           probes:
             startup:
               enabled: true
