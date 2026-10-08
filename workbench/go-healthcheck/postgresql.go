@@ -16,7 +16,7 @@ type PostgreSQL struct {
 func (t *PostgreSQL) New(uri string) error {
 	u, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return fmt.Errorf("failed to parse postgresql url %s: %v", u, err)
+		return fmt.Errorf("failed to parse postgresql url %s: %v", redactedURI(uri), err)
 	}
 
 	if u.Scheme != "postgresql" {
@@ -38,7 +38,7 @@ func (t *PostgreSQL) Register(h *health.Health, c *Config) error {
 		}),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to register postgresql health check %s: %v", t.URI, err)
+		return fmt.Errorf("failed to register postgresql health check %s: %v", t.URI.Redacted(), err)
 	}
 
 	return nil

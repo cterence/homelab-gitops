@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -220,7 +221,7 @@ func TestSpoolRoundTrip(t *testing.T) {
 
 	meta := spoolMeta{FileName: "f.bin", From: "laptop", Target: "nas"}
 
-	put, err := sp.put(&sealed, meta)
+	put, err := sp.put(&sealed, meta, 1<<20)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +300,7 @@ func TestSpoolSweep(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if _, err := sp.put(&sealed, m); err != nil {
+		if _, err := sp.put(&sealed, m, 1<<20); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -315,5 +316,56 @@ func TestSpoolSweep(t *testing.T) {
 
 	if len(items) != 1 || items[0].FileName != "new.bin" {
 		t.Fatalf("after sweep: %+v", items)
+	}
+}
+
+func sealedStreamOf(t *testing.T, size int) *bytes.Buffer {
+	t.Helper()
+
+	payload := make([]byte, size)
+
+	var sealed bytes.Buffer
+	if _, _, err := sealStream(key.NewNode(), key.NewNode().Public(), &sealed, bytes.NewReader(payload)); err != nil {
+		t.Fatal(err)
+	}
+
+	return &sealed
+}
+
+func TestSpoolPutEnforcesByteBudget(t *testing.T) {
+	// The sender claims a size for admission, but the transfer itself is
+	// what lands on disk: a stream longer than the remaining spool budget
+	// must be cut off and leave nothing behind.
+	dir := t.TempDir()
+
+	sp, err := openSpool(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stream := sealedStreamOf(t, 64<<10)
+	streamLen := int64(stream.Len())
+
+	if _, err := sp.put(stream, spoolMeta{FileName: "liar.bin"}, streamLen-1); !errors.Is(err, errSpoolFull) {
+		t.Fatalf("put over budget error = %v, want errSpoolFull", err)
+	}
+
+	if items, _ := sp.items(); len(items) != 0 {
+		t.Fatalf("rejected deposit left spool entries: %+v", items)
+	}
+
+	usage, err := sp.usage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if usage != 0 {
+		t.Fatalf("rejected deposit left %d bytes on disk", usage)
+	}
+
+	stream = sealedStreamOf(t, 64<<10)
+
+	if _, err := sp.put(stream, spoolMeta{FileName: "fits.bin"}, streamLen); err != nil {
+		t.Fatalf("put within budget: %v", err)
 	}
 }

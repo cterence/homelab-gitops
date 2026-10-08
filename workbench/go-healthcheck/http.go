@@ -18,7 +18,7 @@ type HTTP struct {
 func (t *HTTP) New(uri string) error {
 	u, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return fmt.Errorf("failed to parse url %s: %v", u, err)
+		return fmt.Errorf("failed to parse url %s: %v", redactedURI(uri), err)
 	}
 
 	if u.Scheme != "http" && u.Scheme != "https" {
@@ -60,7 +60,7 @@ func (t *HTTP) Register(h *health.Health, c *Config) error {
 		SkipOnErr: false,
 		Check:     newHTTPCustomCheck(httpConfig),
 	}); err != nil {
-		return fmt.Errorf("failed to register HTTP health check %s: %v", t.URL, err)
+		return fmt.Errorf("failed to register HTTP health check %s: %v", t.URL.Redacted(), err)
 	}
 
 	return nil

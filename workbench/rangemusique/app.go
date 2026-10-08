@@ -191,9 +191,15 @@ func Run(ctx context.Context, cfg Config) error {
 	return nil
 }
 
+// sanitizeTag makes a tag safe to use as a path component: no separators
+// and no "." / ".." references that filepath.Join would clean upward.
 func sanitizeTag(tag string) string {
 	tag = strings.TrimSpace(tag)
 	tag = strings.ReplaceAll(tag, "/", "_")
+
+	if tag == "." || tag == ".." {
+		tag = "_"
+	}
 
 	return tag
 }

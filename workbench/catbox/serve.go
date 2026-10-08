@@ -303,7 +303,9 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		}
 	}}
 
-	meta, err = st.spool.put(src, meta)
+	// The claimed size admitted the deposit; the transfer itself is bounded
+	// by the remaining budget, so a lying sender cannot fill the disk.
+	meta, err = st.spool.put(src, meta, st.max-usage)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
 	if err != nil {

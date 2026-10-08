@@ -75,7 +75,7 @@ mirrors:
 | `owner` | `defaultOwner` | Gitea owner (user or org) for the mirror. |
 | `name` | derived from URL | Repository name. |
 | `mirror_interval` | `defaultMirrorInterval` | Gitea mirror pull interval (e.g. `8h`). |
-| `private` | `false` | Whether the mirror is private. |
+| `private` | unset | Tri-state: unset leaves the repo's visibility untouched on update (Gitea's default on create); `true`/`false` enforces it. |
 | `wiki` | `false` | Whether to mirror the wiki. |
 
 ## Deployment

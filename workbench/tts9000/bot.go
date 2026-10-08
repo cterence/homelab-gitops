@@ -22,13 +22,9 @@ type bot struct {
 	logger     *slog.Logger
 }
 
-// isAllowedUser reports whether the user may use the bot; an empty allow
-// list allows everyone.
+// isAllowedUser reports whether the user may use the bot; no user matches
+// an empty list, so the bot fails closed even if the startup check is bypassed.
 func isAllowedUser(allowed []string, userID int64) bool {
-	if len(allowed) == 0 {
-		return true
-	}
-
 	id := strconv.FormatInt(userID, 10)
 	for _, u := range allowed {
 		if u == id {

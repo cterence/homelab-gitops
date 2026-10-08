@@ -28,14 +28,21 @@ type Config struct {
 
 // Mirror is a single desired mirror entry. Only CloneAddr is required;
 // Owner, Name and the rest fall back to Config defaults or are derived
-// from the clone URL.
+// from the clone URL. Private is tri-state: nil leaves the repo's
+// visibility untouched on update (Gitea's default on create).
 type Mirror struct {
 	Owner          string `yaml:"owner"           json:"owner"`
 	Name           string `yaml:"name"            json:"name"`
 	CloneAddr      string `yaml:"clone_addr"      json:"clone_addr"`
 	MirrorInterval string `yaml:"mirror_interval" json:"mirror_interval,omitempty"`
-	Private        bool   `yaml:"private"          json:"private"`
+	Private        *bool  `yaml:"private"          json:"private,omitempty"`
 	Wiki           bool   `yaml:"wiki"            json:"wiki"`
+}
+
+// repoKey identifies a mirror case-insensitively; Gitea repo lookup is
+// case-insensitive while search results use the stored casing.
+func repoKey(owner, name string) string {
+	return strings.ToLower(owner + "/" + name)
 }
 
 // repo is the subset of Gitea's repository response that we use.
@@ -126,9 +133,12 @@ func (c *client) migrate(ctx context.Context, m Mirror) (err error) {
 		"repo_owner": m.Owner,
 		"repo_name":  m.Name,
 		"mirror":     true,
-		"private":    m.Private,
 		"wiki":       m.Wiki,
 	}
+	if m.Private != nil {
+		payload["private"] = *m.Private
+	}
+
 	if m.MirrorInterval != "" {
 		payload["mirror_interval"] = m.MirrorInterval
 	}
@@ -151,10 +161,14 @@ func (c *client) migrate(ctx context.Context, m Mirror) (err error) {
 }
 
 // updateRepo patches mirror_interval / private on an existing mirror.
+// Private is only sent when the config sets it, so an omitted key can no
+// longer flip a private repo to public.
 func (c *client) updateRepo(ctx context.Context, m Mirror) (err error) {
-	payload := map[string]any{
-		"private": m.Private,
+	payload := map[string]any{}
+	if m.Private != nil {
+		payload["private"] = *m.Private
 	}
+
 	if m.MirrorInterval != "" {
 		payload["mirror_interval"] = m.MirrorInterval
 	}
@@ -229,7 +243,7 @@ func (c *client) listRepos(ctx context.Context, owner string) ([]repo, error) {
 	var filtered []repo
 
 	for _, r := range out {
-		if r.Owner.Name == owner {
+		if strings.EqualFold(r.Owner.Name, owner) {
 			filtered = append(filtered, r)
 		}
 	}
@@ -321,7 +335,7 @@ func loadConfig(path string) (*Config, error) {
 			m.MirrorInterval = cfg.DefaultMirrorInterval
 		}
 
-		key := m.Owner + "/" + m.Name
+		key := repoKey(m.Owner, m.Name)
 		if seen[key] {
 			return nil, fmt.Errorf("duplicate mirror %s", key)
 		}
@@ -375,7 +389,7 @@ func run() error {
 	desired := map[string]bool{}
 
 	for _, m := range cfg.Mirrors {
-		key := m.Owner + "/" + m.Name
+		key := repoKey(m.Owner, m.Name)
 		desired[key] = true
 
 		r, err := c.getRepo(ctx, m.Owner, m.Name)
@@ -396,7 +410,7 @@ func run() error {
 			fmt.Printf("error: %s exists but is not a mirror; refusing to convert it\n", key)
 			continue
 		default:
-			if m.MirrorInterval != "" || r.Private != m.Private {
+			if m.MirrorInterval != "" || (m.Private != nil && *m.Private != r.Private) {
 				fmt.Printf("update mirror %s (mirror_interval=%s private=%v)\n", key, m.MirrorInterval, m.Private)
 
 				if !dryRun {
@@ -426,7 +440,7 @@ func run() error {
 		}
 
 		for _, r := range repos {
-			key := r.Owner.Name + "/" + r.Name
+			key := repoKey(r.Owner.Name, r.Name)
 			if !r.Mirror {
 				continue // never touch non-mirror repos
 			}

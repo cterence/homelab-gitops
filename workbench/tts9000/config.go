@@ -39,6 +39,10 @@ func loadConfig() (config, error) {
 		return cfg, errors.New("TELEGRAM_BOT_TOKEN and MISTRAL_API_KEY environment variables must be set")
 	}
 
+	if len(cfg.allowedUsers) == 0 {
+		return cfg, errors.New("ALLOWED_USERS environment variable must be set (comma-separated Telegram user IDs)")
+	}
+
 	return cfg, nil
 }
 

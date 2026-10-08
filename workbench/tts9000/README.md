@@ -41,8 +41,8 @@ in-cluster deployment):
 
 - `TELEGRAM_BOT_TOKEN` — required, bot token
 - `MISTRAL_API_KEY` — required, Mistral API access
-- `ALLOWED_USERS` — comma-separated Telegram user IDs allowed to use the
-  bot (empty = everyone)
+- `ALLOWED_USERS` — required, comma-separated Telegram user IDs allowed to use
+  the bot; the bot refuses to start when unset (fail closed)
 - `SYSTEM_PROMPT_CLEAN` — optional, overrides the text-cleaning prompt
 
 ## Deployment
