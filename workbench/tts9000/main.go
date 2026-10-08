@@ -48,10 +48,13 @@ func run(ctx context.Context) error {
 		cfg.systemPromptClean,
 		defaultTitlePrompt,
 	)
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = safeDialContext
+
 	b := &bot{
 		api:        api,
 		mistral:    mistral,
-		httpClient: &http.Client{Timeout: extractTimeout},
+		httpClient: &http.Client{Timeout: extractTimeout, Transport: transport},
 		cfg:        cfg,
 		logger:     logger,
 	}

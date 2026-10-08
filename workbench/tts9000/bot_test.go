@@ -11,7 +11,7 @@ func TestIsAllowedUser(t *testing.T) {
 		userID   int64
 		expected bool
 	}{
-		{"empty list allows everyone", nil, 123, true},
+		{"empty list allows no one (fail closed)", nil, 123, false},
 		{"user in list", []string{"111", "222"}, 222, true},
 		{"user not in list", []string{"111", "222"}, 333, false},
 	}

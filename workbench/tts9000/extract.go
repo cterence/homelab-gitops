@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -14,8 +16,43 @@ import (
 // protection, so the bot can reply with a friendlier message.
 var errBlocked = errors.New("access blocked")
 
+// errSSRF marks refusals to fetch private or reserved addresses: a bot
+// user must not be able to read cluster internals through the pod.
+var errSSRF = errors.New("refusing to fetch a private or reserved address")
+
 const extractUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 	"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+// isPublicIP reports whether ip is safe to fetch: not private, loopback,
+// link-local (cloud metadata), multicast or unspecified.
+func isPublicIP(ip net.IP) bool {
+	return ip.IsGlobalUnicast() && !ip.IsPrivate()
+}
+
+// safeDialContext resolves host, rejects any non-public address, and dials
+// the checked IP. Redirects go through it too, and dialing the resolved IP
+// closes the check-then-dial rebinding gap.
+func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ip := range ips {
+		if !isPublicIP(ip.IP) {
+			return nil, fmt.Errorf("%w: %s resolves to %s", errSSRF, host, ip.IP)
+		}
+	}
+
+	dialer := net.Dialer{Timeout: 30 * time.Second}
+
+	return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].IP.String(), port))
+}
 
 // extractArticleText fetches the URL and returns the page's text content,
 // mirroring BeautifulSoup's get_text(separator="\n", strip=True).
