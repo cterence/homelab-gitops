@@ -55,7 +55,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes |
 | [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance |
-| [clowder](./scripts/../k8s-apps/clowder) | Clowder storer-only (dropbox) mesh node |
 | [cnpg-restore-test](./scripts/../k8s-apps/cnpg-restore-test) | Daily CNPG backup restore verification |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter |
 | [disk-usage-exporter](./scripts/../k8s-apps/disk-usage-exporter) | Per-directory disk usage Prometheus exporter for local-path volumes |
