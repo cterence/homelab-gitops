@@ -27,6 +27,9 @@
     let
       goVersion = 27;
 
+      # Baked into both catbox binaries via -X main.version.
+      version = self.shortRev or self.dirtyShortRev or "dev";
+
       supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -140,8 +143,8 @@
               golangci-lint
               uv
               vault
-              self.checks.${pkgs.stdenv.hostPlatform.system}.pre-commit-check.enabledPackages
-            ];
+            ]
+            ++ self.checks.${pkgs.stdenv.hostPlatform.system}.pre-commit-check.enabledPackages;
           };
         }
         // (
@@ -196,6 +199,11 @@
             version = "unstable";
             src = ./workbench/catbox;
             vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";
+            ldflags = [
+              "-s"
+              "-w"
+              "-X main.version=${version}"
+            ];
           };
         }
         // (
@@ -212,7 +220,7 @@
           nixpkgs.lib.optionalAttrs (builtins.elem system androidSystems) (
             let
               catboxAndroid = import ./workbench/catbox/nix/android.nix {
-                inherit pkgs;
+                inherit pkgs version;
                 android-sdk = android-nixpkgs.sdk.${system};
                 src = self.outPath + "/workbench/catbox";
                 vendorHash = "sha256-B0NZyZgmJqKRNZ+9iHPPM1LBdx5UpVxkdEkOIlllXTc=";

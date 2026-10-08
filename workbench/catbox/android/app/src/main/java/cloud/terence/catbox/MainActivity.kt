@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,7 +54,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,7 +65,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -75,12 +72,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.time.LocalTime
-import java.time.temporal.ChronoUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,25 +91,20 @@ class MainActivity : ComponentActivity() {
 fun CatboxApp() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val log = remember { MutableStateFlow<List<String>>(emptyList()) }
-    val logLines by log.collectAsState()
     val status = remember { mutableStateOf<Catbox.Status?>(null) }
     val joined = remember { mutableStateOf<Boolean?>(null) } // null = checking
     val busy = remember { mutableStateOf(false) } // an action (receive/send) is running
     val progress = remember { mutableStateOf<String?>(null) } // what busy is doing
     val cancelRequested = remember { mutableStateOf(false) } // user canceled the current action
     val ops = remember { kotlinx.coroutines.sync.Mutex() } // serializes all binary execs
-    val logOpen = remember { mutableStateOf(false) }
     val pendingFiles = remember { mutableStateOf<List<Uri>>(emptyList()) }
     val clipboardSend = remember { mutableStateOf(false) } // pendingFiles came from the clipboard
     val sendTargets = remember { mutableStateOf(setOf<String>()) }
     val invite = remember { mutableStateOf<String?>(null) } // open invite dialog
+    val aboutOpen = remember { mutableStateOf<String?>(null) } // open about dialog: the version line
     val snackbar = remember { SnackbarHostState() }
 
     fun append(line: String) {
-        // slog noise and the status JSON never belong in the pane.
-        if (line.startsWith("time=") || line.trim().startsWith("{")) return
-
         // Progress and completion lines from any child (send, pull,
         // listener) drive the in-UI transfer indicator.
         val t = line.trim()
@@ -126,9 +115,6 @@ fun CatboxApp() {
                 t.startsWith("receive failed") ->
                 progress.value = null
         }
-
-        val stamp = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
-        log.value = (log.value + "$stamp  $line").takeLast(200)
     }
 
     // A background status poll: skips silently when an action holds
@@ -161,7 +147,7 @@ fun CatboxApp() {
 
         when {
             code != 0 && cancelRequested.value -> snackbar.showSnackbar("canceled")
-            code != 0 -> snackbar.showSnackbar("failed (exit $code) — open the logs for details")
+            code != 0 -> snackbar.showSnackbar("failed (exit $code)")
         }
 
         cancelRequested.value = false
@@ -210,7 +196,7 @@ fun CatboxApp() {
             val n = uris.size
             snackbar.showSnackbar("sent ${if (n == 1) "1 file" else "$n files"} to ${targets.joinToString()}")
         } else {
-            snackbar.showSnackbar(problems.joinToString(" · ") + " — see logs")
+            snackbar.showSnackbar(problems.joinToString(" · "))
         }
         refresh()
     }
@@ -298,7 +284,7 @@ fun CatboxApp() {
                                 refreshing.value = false
                             }
                         }) {
-                            if (refreshing.value) {
+                            if (refreshing.value || status.value == null) {
                                 CircularProgressIndicator(Modifier.size(24.dp))
                             } else {
                                 Icon(Icons.Outlined.Refresh, "refresh")
@@ -318,10 +304,12 @@ fun CatboxApp() {
                                 },
                             )
                             DropdownMenuItem(
-                                text = { Text("logs") },
+                                text = { Text("about") },
                                 onClick = {
                                     menuOpen.value = false
-                                    logOpen.value = true
+                                    scope.launch {
+                                        aboutOpen.value = withContext(Dispatchers.IO) { Catbox.version(context) }
+                                    }
                                 },
                             )
                         }
@@ -539,35 +527,14 @@ fun CatboxApp() {
             )
         }
 
-        // The log: a compact dialog over the app — the raw output is a
-        // debugging aid, not screen furniture.
-        if (logOpen.value) {
+        // About: the version the bundled binary was built with.
+        aboutOpen.value?.let { ver ->
             AlertDialog(
-                onDismissRequest = { logOpen.value = false },
-                title = { Text("log") },
-                text = {
-                    if (logLines.isEmpty()) {
-                        Text("no log output yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    } else {
-                        SelectionContainer {
-                            LazyColumn(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 420.dp),
-                            ) {
-                                items(logLines.reversed()) { line ->
-                                    Text(
-                                        line,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = FontFamily.Monospace,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                },
+                onDismissRequest = { aboutOpen.value = null },
+                title = { Text("about") },
+                text = { Text(ver) },
                 confirmButton = {
-                    TextButton(onClick = { logOpen.value = false }) { Text("close") }
+                    TextButton(onClick = { aboutOpen.value = null }) { Text("close") }
                 },
             )
         }
@@ -620,15 +587,6 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onDismiss: (String) -> Uni
             Text(
                 if (status != null) "connected" else "offline",
                 style = MaterialTheme.typography.titleSmall,
-            )
-        }
-
-        if (status == null) {
-            // The raw error lives in the logs; the pane says it in one line.
-            Text(
-                "can't reach the storer",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
             )
         }
 
@@ -718,14 +676,10 @@ fun humanBytes(n: Long): String = when {
     else -> "%.1f GiB".format(n / 1024.0 / 1024.0 / 1024.0)
 }
 
-/** HH:mm today, "d MMM HH:mm" any other day. */
+/** "d MMM yyyy HH:mm", in the local zone. */
 fun humanWhen(epoch: Long): String {
     val t = java.time.Instant.ofEpochSecond(epoch).atZone(java.time.ZoneId.systemDefault())
-    return if (t.toLocalDate() == java.time.LocalDate.now()) {
-        t.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-    } else {
-        t.format(java.time.format.DateTimeFormatter.ofPattern("d MMM HH:mm"))
-    }
+    return t.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy HH:mm"))
 }
 
 /**

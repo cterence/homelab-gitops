@@ -102,6 +102,22 @@ object Catbox {
         return parseStatus(out.toString())
     }
 
+    /** The `catbox version` output, "dev" or the baked build stamp. */
+    fun version(context: Context): String {
+        val p = builder(context, "version").start()
+        val out = StringBuilder()
+
+        try {
+            p.inputStream.bufferedReader().forEachLine {
+                if (!it.startsWith("time=")) out.appendLine(it) // log lines stay out
+            }
+        } catch (_: java.io.IOException) {
+        }
+
+        p.waitFor()
+        return out.toString().trim().ifEmpty { "catbox unknown" }
+    }
+
     private fun parseStatus(text: String): Status? {
         // The JSON object is one compact line (the Go side guarantees
         // it); log lines may precede it. Parse failures return null

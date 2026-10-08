@@ -17,6 +17,9 @@ import (
 	"github.com/tailscale/tailcat"
 )
 
+// Baked at build time via -ldflags "-X main.version=…"; "dev" otherwise.
+var version = "dev"
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "catbox:", err)
@@ -278,6 +281,10 @@ func run() error {
 		fmt.Printf("dismissed %s\n", fs.Arg(0))
 
 		return nil
+	case "version":
+		fmt.Println("catbox " + version)
+
+		return nil
 	default:
 		usage()
 		os.Exit(1)
@@ -299,6 +306,7 @@ usage:
   catbox recv   [--dir DIR] [--listen]
   catbox dismiss <id>
   catbox status [--json]
+  catbox version
 `)
 }
 

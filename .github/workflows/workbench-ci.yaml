@@ -60,6 +60,18 @@ jobs:
       - name: Test
         run: go test ./...
         working-directory: workbench/${{ matrix.app }}
+      - name: Integration tests
+        run: |
+          if [ ! -f integration_test.go ]; then
+            echo "no integration_test.go, skipping"
+            exit 0
+          fi
+          # Convention: apps gate their e2e behind <APP>_INTEGRATION=1.
+          gate="$(echo "$APP" | tr '[:lower:]-' '[:upper:]_')_INTEGRATION=1"
+          env "$gate" go test . -run TestIntegration -v -count=1
+        env:
+          APP: ${{ matrix.app }}
+        working-directory: workbench/${{ matrix.app }}
       - name: Lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:

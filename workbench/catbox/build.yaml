@@ -1,2 +1,4 @@
 image: catbox
-tag: "16"
+tag: "17"
+buildArgs:
+  VERSION: "17"

@@ -36,6 +36,7 @@ catbox send   <member> <file>
 catbox recv   [--dir DIR] [--listen]
 catbox dismiss <id>
 catbox status
+catbox version
 ```
 
 - `serve` runs the storer. First boot creates the identity (node key,
@@ -74,6 +75,9 @@ catbox status
   from the authority, never from the local cache. `--json` emits one
   machine-readable object (name, waiting items, members) for the
   Android app.
+- `version` prints the build stamp baked in via `-ldflags
+  "-X main.version=…"`: the git short rev in nix builds, the image tag
+  in Docker builds, `dev` otherwise.
 - Received files never overwrite: a name collision in the inbox
   becomes `name(1).ext`, `name(2).ext`, and so on.
 

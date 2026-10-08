@@ -14,6 +14,7 @@
   android-sdk,
   src,
   vendorHash,
+  version,
 }:
 
 let
@@ -34,6 +35,11 @@ let
     version = "unstable";
     inherit src vendorHash;
     doCheck = false;
+    ldflags = [
+      "-s"
+      "-w"
+      "-X main.version=${version}"
+    ];
     env.CGO_ENABLED = "0";
     # module.nix pins GOOS/GOARCH to the host platform (darwin here);
     # exporting in preBuild — after the env is set, before go build —

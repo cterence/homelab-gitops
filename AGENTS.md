@@ -132,5 +132,5 @@ Renovate uses the `fix:` conventional-commit prefix.
 
 - `update-deployed-apps.yaml` — regenerates the deployed apps table in README.md on push to main.
 - `pr-argo-diff.yaml` — runs `argocd app diff` per changed app on PRs touching `k8s-apps/**` and posts the diff as a PR comment.
-- `workbench-ci.yaml` — on PRs touching `workbench/**`: runs `go vet`/`go test`/golangci-lint per changed Go app, pytest per changed Python app, and a no-push docker build mirroring the Kaniko context. Its `tag-bump` job auto-bumps `build.yaml` (and the matching `k8s-apps` image tag) when a PR modifies a workbench app without bumping its tag; idempotent per PR (merge-base diff), works on Renovate PRs too.
+- `workbench-ci.yaml` — on PRs touching `workbench/**`: runs `go vet`/`go test`/golangci-lint per changed Go app, pytest per changed Python app, and a no-push docker build mirroring the Kaniko context. A changed Go app with an `integration_test.go` also runs it gated with `<APP>_INTEGRATION=1` (helper-process e2e; needs the DERP network, available on hosted runners). Its `tag-bump` job auto-bumps `build.yaml` (and the matching `k8s-apps` image tag) when a PR modifies a workbench app without bumping its tag; idempotent per PR (merge-base diff), works on Renovate PRs too.
 - Image builds still happen in-cluster via Kaniko on merge to main; CI builds are validation only.
