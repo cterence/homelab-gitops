@@ -28,6 +28,7 @@ const (
 	opAck     = "ack"     // peer: {ID} received and verified
 	opAcked   = "acked"   // storer: {OK, Err}
 	opDismiss = "dismiss" // peer: {ID} refuse delivery of my own pending item
+	opRemove  = "remove"  // peer: {Target} drop a member from the roster
 )
 
 const msgMax = 1 << 20

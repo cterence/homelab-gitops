@@ -114,6 +114,7 @@ fun CatboxApp() {
     val sendTargets = remember { mutableStateOf(setOf<String>()) }
     val invite = remember { mutableStateOf<String?>(null) } // open invite dialog
     val aboutOpen = remember { mutableStateOf<String?>(null) } // open about dialog: the version line
+    val resetPending = remember { mutableStateOf(false) } // open reset confirmation dialog
     val snackbar = remember { SnackbarHostState() }
 
     // A transfer in flight keeps the CPU awake: screen-off suspends
@@ -421,6 +422,13 @@ fun CatboxApp() {
                                     }
                                 },
                             )
+                            DropdownMenuItem(
+                                text = { Text("Reset") },
+                                onClick = {
+                                    menuOpen.value = false
+                                    resetPending.value = true
+                                },
+                            )
                         }
                     }
                 },
@@ -660,6 +668,35 @@ fun CatboxApp() {
                 },
             )
         }
+
+        // Reset: leave the mesh and wipe this device's identity. The
+        // binary removes this connection's member (dial-key bound:
+        // a device can never reset another) and deletes the identity.
+        if (resetPending.value) {
+            AlertDialog(
+                onDismissRequest = { resetPending.value = false },
+                title = { Text("Reset this device?") },
+                text = {
+                    Text(
+                        "It leaves the roster when the storer is reachable, and its identity is wiped either way. It can join again afterwards.",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            resetPending.value = false
+                            Catbox.stopListener()
+                            scope.launch { run("reset"); refresh() }
+                        },
+                    ) {
+                        Text("Reset")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { resetPending.value = false }) { Text("Cancel") }
+                },
+            )
+        }
     }
 }
 
@@ -871,6 +908,12 @@ fun LiveItem(file: String, from: String, detail: String, path: String?, frac: Fl
     )
 }
 
+/** The paste is often the whole invite line; keep only its address. */
+fun storerAddressOf(paste: String): String {
+    val t = paste.trim()
+    return if (t.startsWith("catbox join ")) t.split(Regex("\\s+")).last() else t
+}
+
 fun humanBytes(n: Long): String = when {
     n < 1024 -> "$n B"
     n < 1024 * 1024 -> "%.1f KiB".format(n / 1024.0)
@@ -982,7 +1025,7 @@ fun JoinCard(onJoin: (String, String) -> Unit) {
                 singleLine = true,
             )
             Button(
-                onClick = { onJoin(addr.trim(), name.trim()) },
+                onClick = { onJoin(storerAddressOf(addr), name.trim()) },
                 enabled = addr.isNotEmpty() && name.isNotEmpty(),
             ) {
                 Text("Join")

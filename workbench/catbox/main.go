@@ -88,33 +88,15 @@ func run() error {
 			return errors.New("join takes one storer address argument")
 		}
 
-		id, created, err := loadPeerID(*name, tailcat.Addr(fs.Arg(0)))
+		created, err := runJoin(ctx, *name, fs.Arg(0))
 		if err != nil {
-			return err
-		}
-
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		if err := joinReq(conn, id, ""); err != nil {
 			return err
 		}
 
 		if created {
-			fmt.Printf("joined as %s\n", id.Name)
+			fmt.Printf("joined as %s\n", *name)
 		} else {
-			fmt.Printf("already joined as %s (roster refreshed)\n", id.Name)
+			fmt.Printf("already joined as %s (roster refreshed)\n", *name)
 		}
 
 		return nil
@@ -305,6 +287,74 @@ func run() error {
 		fmt.Printf("dismissed %s\n", fs.Arg(0))
 
 		return nil
+	case "remove":
+		fs := flag.NewFlagSet("remove", flag.ExitOnError)
+		_ = fs.Parse(os.Args[2:])
+
+		if fs.NArg() != 1 {
+			return errors.New("remove takes <member> (see catbox status)")
+		}
+
+		id, _, err := loadPeerID("", "")
+		if err != nil {
+			return err
+		}
+
+		release, err := lockPeer(ctx)
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		if err := clientRemove(conn, fs.Arg(0)); err != nil {
+			return err
+		}
+
+		fmt.Printf("removed %s\n", fs.Arg(0))
+
+		return nil
+	case "reset":
+		// Leave the roster before wiping the identity, so no ghost
+		// member survives. Best effort: offline, the reset still
+		// completes and the member can be removed later.
+		if id, _, err := loadPeerID("", ""); err == nil {
+			release, err := lockPeer(ctx)
+			if err != nil {
+				return err
+			}
+
+			if conn, cl, cerr := clientConn(ctx, id); cerr == nil {
+				// The dial key binds the removal to this device:
+				// reset can never remove another member.
+				if rerr := clientRemove(conn, ""); rerr != nil {
+					fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove %s\" from a member later\n", rerr, id.Name)
+				}
+
+				_ = cl.Close()
+				_ = conn.Close()
+			} else {
+				fmt.Fprintf(os.Stderr, "catbox: could not reach the storer: %v; run \"catbox remove %s\" from a member later\n", cerr, id.Name)
+			}
+
+			release()
+		}
+
+		if err := resetPeer(); err != nil {
+			return err
+		}
+
+		fmt.Println("reset")
+
+		return nil
 	case "version":
 		fmt.Println("catbox " + version)
 
@@ -315,6 +365,48 @@ func run() error {
 	}
 
 	return nil
+}
+
+// runJoin registers this machine with the storer, creating the peer
+// identity on first use. A join that fails after creating the
+// identity rolls it back: a half-joined device would be locked out of
+// ever joining again.
+func runJoin(ctx context.Context, name, addr string) (created bool, err error) {
+	id, created, err := loadPeerID(name, tailcat.Addr(addr))
+	if err != nil {
+		return false, err
+	}
+
+	registered := false
+
+	defer func() {
+		if created && !registered {
+			_ = resetPeer()
+		}
+	}()
+
+	release, err := lockPeer(ctx)
+	if err != nil {
+		return created, err
+	}
+
+	defer release()
+
+	conn, cl, err := clientConn(ctx, id)
+	if err != nil {
+		return created, err
+	}
+
+	defer func() { _ = cl.Close() }()
+	defer func() { _ = conn.Close() }()
+
+	if err := joinReq(conn, id, ""); err != nil {
+		return created, err
+	}
+
+	registered = true
+
+	return created, nil
 }
 
 func usage() {
@@ -334,6 +426,9 @@ membership commands:
   invite    print the join line for enrolling another peer
   rename    change this member's name
             <new-name>
+  remove    drop a member from the roster; their parked items go too
+            <member>
+  reset     leave the mesh (best effort) and wipe this machine's identity
   status    who's in the mesh and what's waiting for you
             [--json]
 

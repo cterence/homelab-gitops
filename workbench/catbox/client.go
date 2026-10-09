@@ -755,6 +755,26 @@ func clientDismiss(rwc io.ReadWriter, id string) error {
 	return nil
 }
 
+// clientRemove asks the storer to drop the named member from the
+// roster; their parked items go with them. An empty name removes the
+// requester itself — reset's leave, bound to the dial key.
+func clientRemove(rwc io.ReadWriter, name string) error {
+	if err := writeMsg(rwc, msg{Op: opRemove, Target: name}); err != nil {
+		return err
+	}
+
+	m, err := readMsg(rwc)
+	if err != nil {
+		return err
+	}
+
+	if m.Op != opAcked || !m.OK {
+		return fmt.Errorf("remove: %s", m.Err)
+	}
+
+	return nil
+}
+
 // clientInbox pulls what the storer holds for this peer into dir: the
 // named ids only, or everything when ids is empty. cl, when non-nil,
 // lets each pull report its network path.

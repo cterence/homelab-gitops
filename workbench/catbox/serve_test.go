@@ -1327,3 +1327,216 @@ func TestDepositIdempotent(t *testing.T) {
 		t.Fatalf("idempotent deposit duplicated the item: %+v", metas)
 	}
 }
+
+// TestOpRemove: any member removes another from the roster; the
+// target's parked items go with them and their next dial is refused.
+func TestOpRemove(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+	emu := testPeerID("emu")
+
+	for _, id := range []*peerID{laptop, nas, emu} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("for nas"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
+		t.Fatalf("send to nas: %v", err)
+	}
+
+	if err := clientSend(ctx, conn, laptop, "emu", src, mustSHA(t, src)); err != nil {
+		t.Fatalf("send to emu: %v", err)
+	}
+
+	if err := clientRemove(conn, "nas"); err != nil {
+		t.Fatalf("remove nas: %v", err)
+	}
+
+	if err := clientRemove(conn, "ghost"); err == nil {
+		t.Fatal("removing an unknown member should fail")
+	}
+
+	_ = conn.Close()
+
+	if metas, _ := st.spool.items(); len(metas) != 1 || metas[0].Target != "emu" {
+		t.Fatalf("parked items for nas survived: %+v", metas)
+	}
+
+	for _, m := range st.members() {
+		if m.Name == "nas" {
+			t.Fatalf("nas still in roster: %+v", st.members())
+		}
+	}
+
+	// The removed member's next connection is not a member's anymore.
+	nasConn := dial(t, st, nas)
+	if err := writeMsg(nasConn, msg{Op: opPending}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(nasConn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.OK || m.Err != "not a member; run catbox join" {
+		t.Fatalf("removed member still served: %+v", m)
+	}
+}
+
+// TestRemoveMemberLocal: the storer-side remove rewrites the roster on
+// disk and sweeps the member's parked items.
+func TestRemoveMemberLocal(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	dir := t.TempDir()
+	laptop, nas := testPeerID("laptop"), testPeerID("nas")
+
+	members := []member{
+		{Name: "laptop", Key: laptop.Key.Public(), DialKey: laptop.DialKey.Public(), Joined: 1},
+		{Name: "nas", Key: nas.Key.Public(), DialKey: nas.DialKey.Public(), Joined: 2},
+	}
+
+	if err := saveRoster(rosterPath(dir), members); err != nil {
+		t.Fatal(err)
+	}
+
+	sp, err := openSpool(spoolDir(dir), testLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var sealed bytes.Buffer
+	if _, err := sealStream(laptop.Key, nas.Key.Public(), &sealed, strings.NewReader("x"), shaHexOf([]byte("x")), 0); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, target := range []string{"nas", "laptop"} {
+		if _, err := sp.put(bytes.NewReader(sealed.Bytes()), spoolMeta{ID: newID(), FileName: "f", SHA: shaHexOf([]byte("x")), From: "laptop", Target: target, Plain: 1, Size: int64(sealed.Len()), At: 1}, 1<<20, 0); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := removeMemberLocal(dir, "nas", testLogger()); err != nil {
+		t.Fatalf("remove: %v", err)
+	}
+
+	kept, err := loadRoster(rosterPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(kept) != 1 || kept[0].Name != "laptop" {
+		t.Fatalf("roster = %+v", kept)
+	}
+
+	metas, err := sp.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 || metas[0].Target != "laptop" {
+		t.Fatalf("parked items = %+v", metas)
+	}
+
+	if err := removeMemberLocal(dir, "ghost", testLogger()); err == nil {
+		t.Fatal("removing an unknown member should fail")
+	}
+}
+
+// TestStorerReloadsExternalRosterEdit: a roster edited out of band (the
+// storer-side remove) takes effect without restarting serve.
+func TestStorerReloadsExternalRosterEdit(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	if err := saveRoster(rosterPath(st.dir), []member{{Name: "laptop", Key: laptop.Key.Public(), DialKey: laptop.DialKey.Public(), Joined: 1}}); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, nas)
+	if err := writeMsg(conn, msg{Op: opPending}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.OK || m.Err != "not a member; run catbox join" {
+		t.Fatalf("external edit not picked up: %+v", m)
+	}
+}
+
+// TestOpRemoveSelf: an empty target removes the requester — reset's
+// leave. The dial key binds it: only the member itself can reset it.
+func TestOpRemoveSelf(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientRemove(conn, ""); err != nil {
+		t.Fatalf("self remove: %v", err)
+	}
+
+	_ = conn.Close()
+
+	for _, m := range st.members() {
+		if m.Name == "laptop" {
+			t.Fatalf("laptop still in roster: %+v", st.members())
+		}
+	}
+
+	laptopConn := dial(t, st, laptop)
+	if err := writeMsg(laptopConn, msg{Op: opPending}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(laptopConn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.OK || m.Err != "not a member; run catbox join" {
+		t.Fatalf("reset member still served: %+v", m)
+	}
+}

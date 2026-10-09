@@ -84,6 +84,24 @@ func loadPeerID(name string, storer tailcat.Addr) (*peerID, bool, error) {
 	return id, true, nil
 }
 
+// resetPeer deletes the local identity and roster cache: the device
+// is new again and can join a different storer. The old entry stays
+// in the storer's roster until a member runs `catbox remove`.
+func resetPeer() error {
+	dir, err := peerDir()
+	if err != nil {
+		return err
+	}
+
+	for _, name := range []string{"identity.json", "roster.json"} {
+		if err := os.Remove(filepath.Join(dir, name)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("removing %s: %w", name, err)
+		}
+	}
+
+	return nil
+}
+
 // loadStorerIdentity returns the storer identity, creating it on first
 // use. Region 0 probes the DERP map once; the choice is baked in so the
 // tailcat address never changes. A negative region never creates.

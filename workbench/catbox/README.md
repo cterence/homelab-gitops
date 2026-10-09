@@ -30,6 +30,8 @@ catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :808
 catbox addr
 catbox join   --name NAME <storer-addr>
 catbox rename <new-name>
+catbox remove <member>            # or --data DIR <member>, on the storer itself
+catbox reset
 catbox invite
 catbox send   <member> <file> [<file>...]
 catbox recv   [--dir DIR] [--listen] [<id>...]
@@ -48,13 +50,29 @@ catbox version
   password. It never creates the identity — only `serve` does.
 - `join` registers this machine under a lowercase-slug name. Run once
   per machine; the identity lives in the OS config dir
-  (`~/.config/catbox` or `~/Library/Application Support/catbox`).
+  (`~/.config/catbox` or `~/Library/Application Support/catbox`). A
+  join that fails after creating the identity rolls it back — a
+  half-joined device is never locked out of joining again.
 - `invite` prints the join line (with the cached storer address) for
-  enrolling another machine.
+  enrolling another machine. The Android app's join card accepts the
+  whole line or the bare address.
 - `rename <new-name>` changes this member's name in the roster; parked
   files follow the new name, and a taken or invalid name is rejected.
   Stop `recv --listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
+- `remove <member>` drops a member from the roster, parking and all;
+  any member may call it — the roster is a shared trust set. On the
+  storer itself (`--data DIR`, e.g.
+  `kubectl -n catbox exec catbox-0 -- catbox remove --data /data <member>`)
+  it rewrites the roster on disk, and the running storer picks the
+  edit up on the next message — the path for a device that reset
+  while offline and left a ghost.
+- `reset` leaves the mesh and wipes this machine's identity: it
+  removes its own roster entry (best effort — the removal is bound to
+  this device's dial key, a device can never reset another member)
+  and deletes the local identity and roster cache. When the storer is
+  unreachable the reset still completes; clean up the leftover entry
+  later with `remove`.
 - `send` seals and ships each named file (one member, one or more
   files per command): direct to the target's listener
   when it is online (3s dial timeout), otherwise deposited at the
@@ -126,7 +144,10 @@ via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
 on screen — direct sends are always welcome, every waiting file
 carries its own receive action, and the waiting header receives
 everything at once; parked files can be refused per file with a
-confirming dialog. Its server engine (identity key) never conflicts
+confirming dialog. The overflow menu's Reset leaves the mesh and wipes
+the app's identity (the binary's `reset`, confirmation dialog first);
+the join card accepts the full `catbox join` invite line as the storer
+address. Its server engine (identity key) never conflicts
 with one-shot client execs (dial key). While an own-action transfer
 is in flight the app holds a bounded partial wake lock, so screen-off
 does not suspend it mid-transfer; a listener receive ends with the
@@ -145,6 +166,7 @@ Iterating on the Kotlin in the devshell:
 
 ## v1 limits
 
-No revocation or member removal, no renames, no roster deletions, one
-storer, no Android/web client. Losing the storer's data dir means a
+No revocation beyond `remove` (any member can remove any other — the
+roster is a shared trust set), no renames beyond `rename`, one
+storer. Losing the storer's data dir means a
 new identity and re-joining every peer.
