@@ -32,18 +32,22 @@ func mustSHA(t *testing.T, path string) string {
 	return sha
 }
 
+func testLogger() *slog.Logger {
+	return slog.New(slog.NewJSONHandler(io.Discard, nil))
+}
+
 func newTestStorer(t *testing.T) *storer {
 	t.Helper()
 	dir := t.TempDir()
 
-	sp, err := openSpool(spoolDir(dir))
+	sp, err := openSpool(spoolDir(dir), testLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	return &storer{
 		dir:   dir,
-		log:   slog.New(slog.NewJSONHandler(io.Discard, nil)),
+		log:   testLogger(),
 		max:   1 << 30,
 		ttl:   24 * time.Hour,
 		spool: sp,
@@ -867,6 +871,109 @@ func TestDepositResumesAfterInterruption(t *testing.T) {
 
 	if metas, _ := st.spool.items(); len(metas) != 0 {
 		t.Fatalf("spool not emptied after ack: %+v", metas)
+	}
+}
+
+// TestDepositResumesNearCap pins the cap accounting: a resumed
+// deposit's partial is already inside usage, so only the missing
+// bytes count — a near-cap retry is not refused for space it holds.
+func TestDepositResumesNearCap(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	// Room for the two-chunk partial plus the missing bytes, but not
+	// for the whole file counted again.
+	st.max = int64(headerLen+2*chunkFrameLen+10) + 100000
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	payload := bytes.Repeat([]byte("catbox near cap\n"), 200000/16+1)[:200000]
+
+	src := filepath.Join(t.TempDir(), "big.bin")
+	if err := os.WriteFile(src, payload, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	sha := mustSHA(t, src)
+
+	var sealed bytes.Buffer
+	if _, err := sealStream(laptop.Key, nas.Key.Public(), &sealed, bytes.NewReader(payload), sha, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	// First attempt dies mid-stream after two whole chunks.
+	conn := dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "big.bin", Size: int64(len(payload)), SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || !m.OK {
+		t.Fatalf("first opReady = %+v", m)
+	}
+
+	if _, err := conn.Write(sealed.Bytes()[:headerLen+2*chunkFrameLen+10]); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close() // mid-deposit disconnect: the partial survives
+
+	// Retry under the tightened cap: must be admitted with resume.
+	conn = dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "big.bin", Size: int64(len(payload)), SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err = readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close()
+
+	if m.Op != opReady || !m.OK || m.Have != 2*chunkSize {
+		t.Fatalf("retry opReady = %+v, want OK with Have=%d", m, 2*chunkSize)
+	}
+
+	// The resumed deposit completes within the remaining budget.
+	conn = dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("resumed send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	inbox := t.TempDir()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
+		t.Fatalf("inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	got, err := os.ReadFile(filepath.Join(inbox, "big.bin"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(got, payload) {
+		t.Fatalf("near-cap resumed deposit delivered %d bytes, want %d", len(got), len(payload))
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -31,6 +32,7 @@ type spoolMeta struct {
 
 type spool struct {
 	dir   string
+	log   *slog.Logger
 	putMu sync.Map // partial path → *sync.Mutex: same-content deposits serialize
 }
 
@@ -56,12 +58,12 @@ func (b *budgetWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-func openSpool(dir string) (*spool, error) {
+func openSpool(dir string, log *slog.Logger) (*spool, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("mkdir %s: %w", dir, err)
 	}
 
-	return &spool{dir: dir}, nil
+	return &spool{dir: dir, log: log}, nil
 }
 
 func newID() string {
@@ -231,7 +233,12 @@ func (s *spool) items() ([]spoolMeta, error) {
 
 		m := spoolMeta{}
 		if err := loadJSON(s.metaPath(trimExt(e.Name())), &m); err != nil {
-			continue // ponytail: orphaned sidecar, sweep will take it
+			// Unreadable sidecars can never be pulled or swept: reclaim.
+			id := trimExt(e.Name())
+			s.log.Warn("unreadable sidecar, reclaiming", "id", id, "err", err)
+			_ = s.delete(id)
+
+			continue
 		}
 
 		metas = append(metas, m)

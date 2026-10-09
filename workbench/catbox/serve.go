@@ -49,7 +49,7 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 		return err
 	}
 
-	sp, err := openSpool(spoolDir(dataDir))
+	sp, err := openSpool(spoolDir(dataDir), log)
 	if err != nil {
 		return err
 	}
@@ -287,22 +287,20 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		return
 	}
 
-	// The claimed size double-counts a resumed deposit's partial (it is
-	// already in usage): near the cap a resumable deposit can be refused.
-	// ponytail: fine while the spool cap dwarfs file sizes; upgrade when
-	// deposits grow near the cap.
-	if usage+m.Size > st.max {
-		_ = writeMsg(rwc, msg{Op: opReady, Err: "spool full"})
-
-		return
-	}
-
 	have := st.spool.resumeHave(m.SHA, m.Size)
 
 	// An identical item is already parked for this target: the
 	// deposit is idempotent — no bytes needed.
 	if st.parkedFor(target.Name, m.SHA) {
 		have = m.Size
+	}
+
+	// A resumed deposit's partial is already inside usage: only the
+	// missing bytes count against the cap.
+	if usage+m.Size-have > st.max {
+		_ = writeMsg(rwc, msg{Op: opReady, Err: "spool full"})
+
+		return
 	}
 
 	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Members: st.members(), Have: have}); err != nil {
@@ -512,7 +510,8 @@ func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 	if err != nil || ack.Op != opAck || ack.ID != m.ID {
 		return
 	}
-	// ponytail: trust the receiver's ack; SHA was verified client-side
+	// The blob is sealed end-to-end: the storer cannot verify content,
+	// so the receiver's post-decrypt SHA check is the delivery proof.
 	if err := st.spool.delete(m.ID); err != nil {
 		st.log.Warn("delete after ack failed", "id", m.ID, "err", err)
 	}
