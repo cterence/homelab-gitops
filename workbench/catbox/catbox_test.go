@@ -205,7 +205,7 @@ func TestParseSize(t *testing.T) {
 func TestSpoolRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 
-	sp, err := openSpool(dir)
+	sp, err := openSpool(dir, testLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,7 +285,7 @@ func TestSpoolRoundTrip(t *testing.T) {
 func TestSpoolSweep(t *testing.T) {
 	dir := t.TempDir()
 
-	sp, err := openSpool(dir)
+	sp, err := openSpool(dir, testLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -339,7 +339,7 @@ func TestSpoolPutEnforcesByteBudget(t *testing.T) {
 	// must be cut off and leave nothing behind.
 	dir := t.TempDir()
 
-	sp, err := openSpool(dir)
+	sp, err := openSpool(dir, testLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -387,5 +387,40 @@ func TestSendRejectsDirectory(t *testing.T) {
 
 	if !strings.Contains(err.Error(), "is a directory") {
 		t.Fatalf("sending a directory: error = %v, want it to say it is a directory", err)
+	}
+}
+
+// TestSpoolRemovesCorruptSidecar pins the reclaim: an unreadable
+// sidecar can never be pulled or swept, so items() deletes it and
+// its blob instead of leaking them against the cap forever.
+func TestSpoolRemovesCorruptSidecar(t *testing.T) {
+	dir := t.TempDir()
+
+	sp, err := openSpool(dir, testLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(sp.metaPath("dead"), []byte("not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(sp.blobPath("dead"), []byte("sealed bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	items, err := sp.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(items) != 0 {
+		t.Fatalf("items = %+v, want none", items)
+	}
+
+	for _, p := range []string{sp.metaPath("dead"), sp.blobPath("dead")} {
+		if _, err := os.Stat(p); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("%s still on disk: %v", p, err)
+		}
 	}
 }
