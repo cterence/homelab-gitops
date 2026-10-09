@@ -308,6 +308,14 @@ func run() error {
 
 		return nil
 	case "reset":
+		fs := flag.NewFlagSet("reset", flag.ExitOnError)
+		yes := fs.Bool("yes", false, "confirm: leave the mesh and wipe the identity")
+		_ = fs.Parse(os.Args[2:])
+
+		if !*yes {
+			return errors.New("reset leaves the mesh and wipes this machine's identity; rerun with --yes")
+		}
+
 		// Leave the roster before wiping the identity, so no ghost
 		// member survives. Best effort: offline, the reset still
 		// completes and the member can be removed later.
@@ -414,6 +422,7 @@ membership commands:
   remove    drop a member from the roster (runs on the storer)
             --data DIR <member>
   reset     leave the mesh (best effort) and wipe this machine's identity
+            --yes
   status    who's in the mesh and what's waiting for you
             [--json]
 
