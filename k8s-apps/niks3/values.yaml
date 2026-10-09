@@ -27,11 +27,15 @@ niks3:
         audience: https://niks3.terence.cloud
         bound_claims:
           repository_owner: ["cterence"]
+        # The slug entry covers the repo by name; the ID entry survives
+        # renames and forks. Get them with:
+        #   gh api repos/<owner>/<repo> -q '.id + " " + .owner.id'
+        # prints "<repo-id> <owner-id>", used in the ID-form entries.
         bound_subject:
           - "repo:cterence/nixos-config:*"
-          - "repo:cterence/clowder:*"
+          - "repo:cterence/homelab-gitops:*"
           - "repo:cterence@25285508/nixos-config@1175564420:*"
-          - "repo:cterence@25285508/clowder@1388222425:*"
+          - "repo:cterence@25285508/homelab-gitops@458852372:*"
 
   signing:
     existingSecret: signing-key
