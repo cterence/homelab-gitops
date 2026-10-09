@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -29,9 +30,10 @@ type storer struct {
 	max int64
 	ttl time.Duration
 
-	mu     sync.Mutex
-	roster []member
-	spool  *spool
+	mu        sync.Mutex
+	roster    []member
+	rosterMod time.Time // roster.json mtime at last load: external edits reload
+	spool     *spool
 }
 
 func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int64, max int64, ttl time.Duration, healthAddr string) error {
@@ -144,6 +146,8 @@ func (st *storer) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
 			return
 		}
 
+		st.reloadRoster()
+
 		me, isMember := st.lookupMember(peer)
 		switch {
 		case m.Op == opJoin:
@@ -160,10 +164,72 @@ func (st *storer) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
 			st.opFetch(rwc, me, m)
 		case m.Op == opDismiss:
 			st.opDismiss(rwc, me, m)
+		case m.Op == opRemove:
+			st.opRemove(rwc, me, m)
 		default:
 			_ = writeMsg(rwc, msg{Op: opDone, Err: "unknown op " + m.Op})
 		}
 	}
+}
+
+// reloadRoster picks up an out-of-band roster edit (the storer-side
+// remove): when roster.json moved, the file is the source of truth.
+func (st *storer) reloadRoster() {
+	fi, err := os.Stat(rosterPath(st.dir))
+	if err != nil || !fi.ModTime().After(st.rosterMod) {
+		return
+	}
+
+	roster, err := loadRoster(rosterPath(st.dir))
+	if err != nil {
+		return // unreadable edit: keep serving the roster we have
+	}
+
+	st.mu.Lock()
+	st.roster = roster
+	st.rosterMod = fi.ModTime()
+	st.mu.Unlock()
+}
+
+// removeMemberLocal is the storer-side remove: rewrite the roster on
+// disk and sweep the member's parked items. The running storer picks
+// the edit up on its next message (reloadRoster).
+func removeMemberLocal(dataDir, name string, log *slog.Logger) error {
+	roster, err := loadRoster(rosterPath(dataDir))
+	if err != nil {
+		return fmt.Errorf("loading roster: %w", err)
+	}
+
+	kept, ok := removeMember(roster, name)
+	if !ok {
+		return fmt.Errorf("unknown member %s", name)
+	}
+
+	if err := saveRoster(rosterPath(dataDir), kept); err != nil {
+		return fmt.Errorf("saving roster: %w", err)
+	}
+
+	sp, err := openSpool(spoolDir(dataDir), log)
+	if err != nil {
+		return fmt.Errorf("opening spool: %w", err)
+	}
+
+	metas, err := sp.items()
+	if err != nil {
+		return fmt.Errorf("listing spool: %w", err)
+	}
+
+	for _, meta := range metas {
+		if meta.Target != name {
+			continue
+		}
+
+		if err := sp.delete(meta.ID); err != nil {
+			log.Warn("remove delete failed", "id", meta.ID, "err", err)
+		}
+	}
+
+	return nil
 }
 
 func (st *storer) lookupMember(k key.NodePublic) (m member, ok bool) {
@@ -543,6 +609,54 @@ func (st *storer) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
 	st.log.Info("dismissed", "id", m.ID, "file", meta.FileName, "from", meta.From, "target", me.Name)
 
 	_ = writeMsg(rwc, msg{Op: opAcked, OK: true})
+}
+
+// opRemove is self-removal only (reset's leave): the dial key binds
+// it to the requester, and their parked items go with them. A member
+// can never remove another — that is the storer's call (catbox
+// remove --data DIR, or kubectl exec on the storer).
+func (st *storer) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
+	if m.Target != "" && m.Target != me.Name {
+		_ = writeMsg(rwc, msg{Op: opAcked, Err: "a member can only remove itself; run catbox remove on the storer"})
+
+		return
+	}
+
+	target := me.Name
+
+	st.mu.Lock()
+
+	kept, ok := removeMember(st.roster, target)
+	if ok {
+		st.roster = kept
+	}
+	st.mu.Unlock()
+
+	if !ok {
+		_ = writeMsg(rwc, msg{Op: opAcked, Err: "unknown member " + target})
+
+		return
+	}
+
+	if err := saveRoster(rosterPath(st.dir), kept); err != nil {
+		st.log.Error("saving roster", "err", err)
+	}
+
+	if metas, err := st.spool.items(); err == nil {
+		for _, meta := range metas {
+			if meta.Target != target {
+				continue
+			}
+
+			if err := st.spool.delete(meta.ID); err != nil {
+				st.log.Warn("remove delete failed", "id", meta.ID, "err", err)
+			}
+		}
+	}
+
+	st.log.Info("member removed", "name", target, "by", me.Name)
+
+	_ = writeMsg(rwc, msg{Op: opAcked, OK: true, Members: st.members()})
 }
 
 // startHealth serves /healthz for probes.

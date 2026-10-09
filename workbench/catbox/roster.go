@@ -91,6 +91,24 @@ func validName(name string) bool {
 	return true
 }
 
+// removeMember drops the named member, reporting whether it existed.
+func removeMember(members []member, name string) ([]member, bool) {
+	out := make([]member, 0, len(members))
+	found := false
+
+	for _, m := range members {
+		if m.Name == name {
+			found = true
+
+			continue
+		}
+
+		out = append(out, m)
+	}
+
+	return out, found
+}
+
 // loadJSON reads path into v.
 func loadJSON(path string, v any) error {
 	b, err := os.ReadFile(path)

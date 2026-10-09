@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"github.com/tailscale/tailcat"
@@ -28,6 +29,7 @@ const (
 	opAck     = "ack"     // peer: {ID} received and verified
 	opAcked   = "acked"   // storer: {OK, Err}
 	opDismiss = "dismiss" // peer: {ID} refuse delivery of my own pending item
+	opRemove  = "remove"  // peer: {Target} drop a member from the roster
 )
 
 const msgMax = 1 << 20
@@ -47,22 +49,33 @@ const directStall = 30 * time.Second
 // directRetryWindow bounds how long a failed direct attempt is
 // retried before the storer fallback: every redial resumes from the
 // listener's partial, so a target that vanished mid-transfer and
-// comes back within it finishes direct with no storer bytes. A var
-// so tests can shorten it.
+// comes back within it finishes direct with no storer bytes.
 var directRetryWindow = 2 * time.Minute
 
 // directBackoff paces the direct redials inside the retry window.
-const directBackoff = 5 * time.Second
+var directBackoff = 5 * time.Second
 
 // directDial bounds the first direct dial: a live listener answers
 // its handshake in well under a second, so this is the stale-address
 // detector.
-const directDial = 3 * time.Second
+var directDial = 3 * time.Second
 
 // directRetryDial bounds a retry's dial: it rides a fresh client, so
 // it must also cover the meow re-handshake with a listener that
 // restarted.
-const directRetryDial = 15 * time.Second
+var directRetryDial = 15 * time.Second
+
+func init() {
+	// Test seam: the integration test's helper children shrink the
+	// retry patience, so a dead listener falls back to the storer in
+	// about a second instead of after the real window.
+	if os.Getenv("CATBOX_FAST_TIMERS") == "1" {
+		directRetryWindow = 500 * time.Millisecond
+		directBackoff = 100 * time.Millisecond
+		directDial = time.Second
+		directRetryDial = time.Second
+	}
+}
 
 // msg is the wire message; Op dispatches. Size means plaintext bytes
 // for send. Key and Addr carry the joiner's identity public key and

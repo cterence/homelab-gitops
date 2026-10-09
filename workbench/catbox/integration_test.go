@@ -88,7 +88,7 @@ func newNode(t *testing.T, name string) *node {
 // env is the node's environment: its own HOME isolates the peer
 // identity (peerDir is under os.UserConfigDir).
 func (n *node) env(extra map[string]string) []string {
-	out := []string{"HOME=" + n.dir, "CATBOX_HELPER=1"}
+	out := []string{"HOME=" + n.dir, "CATBOX_HELPER=1", "CATBOX_FAST_TIMERS=1"}
 	for k, v := range extra {
 		out = append(out, k+"="+v)
 	}
@@ -340,7 +340,7 @@ func TestIntegrationResume(t *testing.T) {
 	}
 
 	// Puma never listens: the file rides the spool.
-	big := writeFile(t, "big.bin", 192<<20)
+	big := writeFile(t, "big.bin", 8<<20)
 
 	out := milo.cat(nil, "send", "puma", big)
 	if !strings.Contains(out, "sent big.bin to puma via storer") {
@@ -421,7 +421,7 @@ func TestIntegrationDirectResume(t *testing.T) {
 		}
 	}
 
-	big := writeFile(t, "big.bin", 96<<20)
+	big := writeFile(t, "big.bin", 8<<20)
 
 	// First send: direct, killed mid-transfer once the partial exists.
 	ready := puma.listen()
@@ -521,7 +521,7 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 		}
 	}
 
-	big := writeFile(t, "big.bin", 96<<20)
+	big := writeFile(t, "big.bin", 8<<20)
 
 	// Puma's listener is up, then killed without deregistering: the
 	// roster keeps a stale address, exactly like a locked phone.
