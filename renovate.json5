@@ -9,6 +9,7 @@
     ':automergeStableNonMajor',
     ':automergeDigest',
   ],
+  platformAutomerge: true,
   gomod: {
     postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],
   },
