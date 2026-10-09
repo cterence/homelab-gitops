@@ -1,4 +1,4 @@
-.PHONY: catbox-apk catbox-emu catbox-emu-install
+.PHONY: catbox-apk catbox-emu catbox-emu-stop catbox-emu-install
 
 CATBOX_ANDROID := workbench/catbox/android
 
@@ -12,6 +12,11 @@ catbox-apk:
 # android devshell. Ctrl-C stops the emulator.
 catbox-emu:
 	nix develop .#android -c bash -c 'avdmanager list avd | grep -q "Name: catbox" || echo no | avdmanager create avd -n catbox -k "system-images;android-36;default;arm64-v8a" -d pixel_7; exec $$ANDROID_HOME/emulator/emulator -avd catbox -gpu host'
+
+# catbox-emu-stop: shut the emulator down cleanly. A no-op (still
+# exit 0) when it is not running.
+catbox-emu-stop:
+	nix develop .#android -c bash -c 'adb emu kill || true'
 
 # catbox-emu-install: build the debug APK (with the cross-compiled
 # binary) and install + launch it on the emulator. Starts with the
