@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -65,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -129,7 +131,7 @@ fun CatboxApp() {
         when {
             t.startsWith("sending ") || t.startsWith("received ") || t.startsWith("depositing ") -> {
                 progressFrac.value = Regex("\\((\\d+)%\\)").find(t)?.groupValues?.get(1)?.toFloat()?.div(100f)
-                progress.value = Regex("\\s*\\(\\d+%\\)").replace(t, "")
+                progress.value = Regex("\\s*\\(\\d+%\\)").replace(t, "").replaceFirstChar { it.uppercase() }
                 lastTick.set(System.currentTimeMillis())
                 wakeLock.acquire(2 * 60 * 1000L)
             }
@@ -172,7 +174,7 @@ fun CatboxApp() {
 
         when {
             code != 0 && cancelRequested.value -> snackbar.showSnackbar("canceled")
-            code != 0 -> snackbar.showSnackbar("failed (exit $code)")
+            code != 0 -> snackbar.showSnackbar("Failed (exit $code)")
         }
 
         cancelRequested.value = false
@@ -201,11 +203,11 @@ fun CatboxApp() {
                         }
                         f
                     }
-                    progress.value = "sending $done/$total: ${tmp.name}"
+                    progress.value = "Sending $done/$total: ${tmp.name}"
                     progressFrac.value = null // staging: no percent yet
                     val code = withContext(Dispatchers.IO) { Catbox.run(context, ::append, "send", target, tmp.absolutePath) }
                     tmp.delete()
-                    if (code != 0 && !cancelRequested.value) problems += "send to $target failed (exit $code)"
+                    if (code != 0 && !cancelRequested.value) problems += "Send to $target failed (exit $code)"
                 }
             }
         } finally {
@@ -217,10 +219,10 @@ fun CatboxApp() {
         }
         // Snackbars only after busy clears: the bar never outlives the message.
         if (canceled) {
-            snackbar.showSnackbar("canceled")
+            snackbar.showSnackbar("Canceled")
         } else if (problems.isEmpty()) {
             val n = uris.size
-            snackbar.showSnackbar("sent ${if (n == 1) "1 file" else "$n files"} to ${targets.joinToString()}")
+            snackbar.showSnackbar("Sent ${if (n == 1) "1 file" else "$n files"} to ${targets.joinToString()}")
         } else {
             snackbar.showSnackbar(problems.joinToString(" · "))
         }
@@ -256,7 +258,7 @@ fun CatboxApp() {
         }
 
         if (uri == null) {
-            scope.launch { snackbar.showSnackbar("clipboard has nothing sendable") }
+            scope.launch { snackbar.showSnackbar("Clipboard has nothing sendable") }
             return
         }
 
@@ -323,14 +325,24 @@ fun CatboxApp() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("catbox") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(R.drawable.tailcat),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text("Catbox")
+                    }
+                },
                 actions = {
                     if (joined.value == true) {
                         // The status indicator lives in the header: the
                         // dot says everything, the word says the rest.
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                if (status.value != null) "online" else "offline",
+                                if (status.value != null) "Online" else "Offline",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -347,15 +359,15 @@ fun CatboxApp() {
                             if (refreshing.value || status.value == null) {
                                 CircularProgressIndicator(Modifier.size(24.dp))
                             } else {
-                                Icon(Icons.Outlined.Refresh, "refresh")
+                                Icon(Icons.Outlined.Refresh, "Refresh")
                             }
                         }
                         IconButton(onClick = { menuOpen.value = true }) {
-                            Icon(Icons.Outlined.MoreVert, "menu")
+                            Icon(Icons.Outlined.MoreVert, "Menu")
                         }
                         DropdownMenu(expanded = menuOpen.value, onDismissRequest = { menuOpen.value = false }) {
                             DropdownMenuItem(
-                                text = { Text("invite a device") },
+                                text = { Text("Invite a device") },
                                 onClick = {
                                     menuOpen.value = false
                                     scope.launch {
@@ -364,7 +376,7 @@ fun CatboxApp() {
                                 },
                             )
                             DropdownMenuItem(
-                                text = { Text("about") },
+                                text = { Text("About") },
                                 onClick = {
                                     menuOpen.value = false
                                     scope.launch {
@@ -428,7 +440,7 @@ fun CatboxApp() {
                                         }
                                     },
                                 ) {
-                                    Text("cancel")
+                                    Text("Cancel")
                                 }
                             }
                         }
@@ -445,10 +457,10 @@ fun CatboxApp() {
                             enabled = !busy.value,
                             modifier = Modifier.weight(1f),
                         ) {
-                            Text("send")
+                            Text("Send")
                         }
                         IconButton(onClick = { sendClipboard() }, enabled = !busy.value) {
-                            Icon(Icons.Outlined.ContentPaste, contentDescription = "send clipboard")
+                            Icon(Icons.Outlined.ContentPaste, contentDescription = "Send clipboard")
                         }
                     }
                 }
@@ -458,7 +470,7 @@ fun CatboxApp() {
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             when (joined.value) {
                 null -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("checking…")
+                    Text("Checking…")
                 }
                 false -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     JoinCard { addr, name -> scope.launch { run("join", "--name", name, addr); refresh() } }
@@ -476,7 +488,7 @@ fun CatboxApp() {
         // Step 2 of send: files picked, pick peers with checkboxes.
         if (pendingFiles.value.isNotEmpty()) {
             val me = Catbox.cachedName(context)
-            val peers = Catbox.cachedMembers(context).filter { it != me }
+            val peers = Catbox.cachedMembers(context).filter { it != me }.sorted()
             AlertDialog(
                 onDismissRequest = {
                     pendingFiles.value = emptyList()
@@ -486,16 +498,16 @@ fun CatboxApp() {
                     val n = pendingFiles.value.size
                     Text(
                         if (clipboardSend.value) {
-                            "send clipboard content to"
+                            "Send clipboard content to"
                         } else {
-                            "send ${if (n == 1) "file" else "$n files"} to"
+                            "Send ${if (n == 1) "file" else "$n files"} to"
                         },
                     )
                 },
                 text = {
                     Column {
                         if (peers.isEmpty()) {
-                            Text("no other members in the roster")
+                            Text("No other members in the roster")
                         }
                         peers.forEach { peer ->
                             ListItem(
@@ -527,7 +539,7 @@ fun CatboxApp() {
                             scope.launch { sendAll(files, targets) }
                         },
                     ) {
-                        Text("send")
+                        Text("Send")
                     }
                 },
                 dismissButton = {
@@ -537,7 +549,7 @@ fun CatboxApp() {
                             sendTargets.value = emptySet()
                         },
                     ) {
-                        Text("cancel")
+                        Text("Cancel")
                     }
                 },
             )
@@ -548,10 +560,10 @@ fun CatboxApp() {
         invite.value?.let { line ->
             AlertDialog(
                 onDismissRequest = { invite.value = null },
-                title = { Text("invite a device") },
+                title = { Text("Invite a device") },
                 text = {
                     if (line.isEmpty()) {
-                        Text("no identity yet — join first")
+                        Text("No identity yet — join first")
                     } else {
                         SelectionContainer {
                             Text(line, style = MaterialTheme.typography.bodyMedium)
@@ -570,12 +582,12 @@ fun CatboxApp() {
                             }
                             context.startActivity(android.content.Intent.createChooser(send, null))
                         }) {
-                            Text("share")
+                            Text("Share")
                         }
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { invite.value = null }) { Text("close") }
+                    TextButton(onClick = { invite.value = null }) { Text("Close") }
                 },
             )
         }
@@ -584,10 +596,10 @@ fun CatboxApp() {
         aboutOpen.value?.let { ver ->
             AlertDialog(
                 onDismissRequest = { aboutOpen.value = null },
-                title = { Text("about") },
+                title = { Text("About") },
                 text = { Text(ver) },
                 confirmButton = {
-                    TextButton(onClick = { aboutOpen.value = null }) { Text("close") }
+                    TextButton(onClick = { aboutOpen.value = null }) { Text("Close") }
                 },
             )
         }
@@ -637,7 +649,7 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
             // Nothing to scroll: no LazyColumn, so no nudgeable empty state.
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "nothing received yet",
+                    "Nothing received yet",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -648,9 +660,9 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
                 if (waiting.isNotEmpty()) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            SectionLabel("waiting", Modifier.weight(1f))
+                            SectionLabel("Waiting", Modifier.weight(1f))
                             IconButton(onClick = onReceiveAll) {
-                                Icon(Icons.Outlined.Download, contentDescription = "receive all")
+                                Icon(Icons.Outlined.Download, contentDescription = "Receive all")
                             }
                         }
                     }
@@ -665,17 +677,17 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
                             },
                             supportingContent = {
                                 Column {
-                                    Text("from ${f.from}")
+                                    Text("From ${f.from}")
                                     Text(humanBytes(f.plain))
                                 }
                             },
                             trailingContent = {
                                 Row {
                                     IconButton(onClick = { onReceive(f.id) }) {
-                                        Icon(Icons.Outlined.Download, contentDescription = "receive")
+                                        Icon(Icons.Outlined.Download, contentDescription = "Receive")
                                     }
                                     IconButton(onClick = { dismissPending = f }) {
-                                        Icon(Icons.Outlined.Delete, contentDescription = "dismiss")
+                                        Icon(Icons.Outlined.Delete, contentDescription = "Dismiss")
                                     }
                                 }
                             },
@@ -685,9 +697,9 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
                 }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        SectionLabel("received", Modifier.weight(1f))
+                        SectionLabel("Received", Modifier.weight(1f))
                         IconButton(onClick = { openInFilesApp(context) }) {
-                            Icon(Icons.AutoMirrored.Outlined.ExitToApp, "open in Files")
+                            Icon(Icons.AutoMirrored.Outlined.ExitToApp, "Open in Files")
                         }
                     }
                 }
@@ -697,7 +709,7 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
                         supportingContent = { Text("${humanBytes(f.size)} · ${humanWhen(f.date)}") },
                         trailingContent = {
                             IconButton(onClick = { sharePublished(context, f) }) {
-                                Icon(Icons.Outlined.Share, "share")
+                                Icon(Icons.Outlined.Share, "Share")
                             }
                         },
                         modifier = Modifier.animateItem().clickable { openPublished(context, f) },
@@ -711,17 +723,17 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
     dismissPending?.let { f ->
         AlertDialog(
             onDismissRequest = { dismissPending = null },
-            title = { Text("dismiss file") },
+            title = { Text("Dismiss file") },
             text = {
                 Text(
                     "${f.fn} from ${f.from} (${humanBytes(f.plain)}) will be deleted at the storer without being received.",
                 )
             },
             confirmButton = {
-                TextButton(onClick = { onDismiss(f.id); dismissPending = null }) { Text("dismiss") }
+                TextButton(onClick = { onDismiss(f.id); dismissPending = null }) { Text("Dismiss") }
             },
             dismissButton = {
-                TextButton(onClick = { dismissPending = null }) { Text("cancel") }
+                TextButton(onClick = { dismissPending = null }) { Text("Cancel") }
             },
         )
     }
@@ -838,20 +850,20 @@ fun JoinCard(onJoin: (String, String) -> Unit) {
             OutlinedTextField(
                 value = addr,
                 onValueChange = { addr = it },
-                label = { Text("storer address (tc…)") },
+                label = { Text("Storer address (tc…)") },
                 singleLine = true,
             )
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("this device's name") },
+                label = { Text("This device's name") },
                 singleLine = true,
             )
             Button(
                 onClick = { onJoin(addr.trim(), name.trim()) },
                 enabled = addr.isNotEmpty() && name.isNotEmpty(),
             ) {
-                Text("join")
+                Text("Join")
             }
         }
     }
