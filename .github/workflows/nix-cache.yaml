@@ -40,5 +40,10 @@ jobs:
           server-url: https://niks3.terence.cloud
       - name: Build
         run: |
-          nix build --print-out-paths .#catbox .#catbox-android .#catbox-android-bin \
-            | tee -a "$GITHUB_STEP_SUMMARY"
+          # Every package for this system — new flake outputs join
+          # automatically. (nix build . alone needs a "default" attr.)
+          attrs=$(nix eval --json '.#packages.${{ matrix.system }}' --apply builtins.attrNames | jq -r '.[]')
+          for attr in $attrs; do
+            echo "## $attr (${{ matrix.system }})"
+            nix build --print-out-paths ".#$attr" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
