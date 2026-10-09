@@ -14,12 +14,13 @@ import (
 )
 
 type progressReader struct {
-	r     io.Reader
-	total int64         // 0 = unknown: no percentage, no ETA
-	label string        // "sending", "received", "relayed"
-	every time.Duration // interval between lines
-	w     io.Writer     // progress lines; defaults to stderr
-	now   func() time.Time
+	r      io.Reader
+	total  int64         // 0 = unknown: no percentage, no ETA
+	offset int64         // resume point: the counter starts here, wire bytes add on top
+	label  string        // "sending", "received", "relayed"
+	every  time.Duration // interval between lines
+	w      io.Writer     // progress lines; defaults to stderr
+	now    func() time.Time
 
 	rewrite bool // tty: redraw one line with \r instead of appending
 	printed bool // a rewritten line is on screen and needs closing
@@ -52,7 +53,7 @@ func (p *progressReader) Read(b []byte) (int, error) {
 			rate = int64(float64(p.n-p.lastN) / dt)
 		}
 
-		p.emit(p.n, rate)
+		p.emit(p.offset+p.n, rate)
 
 		p.last, p.lastN = now, p.n
 	}

@@ -261,7 +261,7 @@ func run() error {
 				return err
 			}
 
-			err = clientSend(ctx, conn, tunnelClient(id.StorerAddr, id.DialKey), id, fs.Arg(0), path, shaHex)
+			err = clientSend(ctx, conn, id, fs.Arg(0), path, shaHex)
 			_ = conn.Close()
 
 			if err != nil {

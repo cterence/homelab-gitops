@@ -222,7 +222,7 @@ func TestSpoolRoundTrip(t *testing.T) {
 
 	meta := spoolMeta{FileName: "f.bin", From: "laptop", Target: "nas"}
 
-	put, err := sp.put(&sealed, meta, 1<<20)
+	put, err := sp.put(&sealed, meta, 1<<20, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -301,7 +301,7 @@ func TestSpoolSweep(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if _, err := sp.put(&sealed, m, 1<<20); err != nil {
+		if _, err := sp.put(&sealed, m, 1<<20, 0); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -347,7 +347,7 @@ func TestSpoolPutEnforcesByteBudget(t *testing.T) {
 	stream := sealedStreamOf(t, 64<<10)
 	streamLen := int64(stream.Len())
 
-	if _, err := sp.put(stream, spoolMeta{FileName: "liar.bin"}, streamLen-1); !errors.Is(err, errSpoolFull) {
+	if _, err := sp.put(stream, spoolMeta{FileName: "liar.bin"}, streamLen-1, 0); !errors.Is(err, errSpoolFull) {
 		t.Fatalf("put over budget error = %v, want errSpoolFull", err)
 	}
 
@@ -366,7 +366,7 @@ func TestSpoolPutEnforcesByteBudget(t *testing.T) {
 
 	stream = sealedStreamOf(t, 64<<10)
 
-	if _, err := sp.put(stream, spoolMeta{FileName: "fits.bin"}, streamLen); err != nil {
+	if _, err := sp.put(stream, spoolMeta{FileName: "fits.bin"}, streamLen, 0); err != nil {
 		t.Fatalf("put within budget: %v", err)
 	}
 }

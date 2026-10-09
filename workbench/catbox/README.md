@@ -60,14 +60,24 @@ catbox version
   files per command): direct to the target's listener
   when it is online (3s dial timeout), otherwise deposited at the
   storer until the target pulls. Direct transfers abort after 30
-  seconds of silence and fall back to the storer; storer-path
-  transfers abort after two minutes; Ctrl-C aborts instantly.
-  Interrupted transfers resume: the receiver keeps its received bytes
-  in a content-keyed partial (`.part-<sha12>-<size>` in the inbox) and
-  the next attempt — direct or via the storer — continues at its
-  64 KiB chunk boundary. The file's SHA keys a deterministic per-file
-  secret, so a resumed attempt decrypts against the existing partial.
-  Stale partials (7 days untouched) are swept at `recv` startup; a
+  seconds of silence; a failed direct attempt is retried every few
+  seconds for two minutes before the fallback — each redial resumes
+  from the listener's partial, so a phone that locks and comes back
+  finishes direct with no storer bytes. Storer-path transfers abort
+  after two minutes; Ctrl-C aborts instantly.
+  Interrupted transfers resume at either end: the receiver keeps its
+  received bytes in a content-keyed partial (`.part-<sha12>-<size>` in
+  the inbox), and the storer keeps an interrupted deposit's partial
+  in its spool — the next attempt, direct, deposit, or pull, continues
+  at its 64 KiB chunk boundary instead of starting over. Retried
+  deposits are idempotent: when the storer already parks the same
+  content for the same target, it answers so and no bytes move. One
+  receiver per partial: a pull and a direct receive of the same
+  content never interleave — the second declines, and the sender's
+  fallback finds the item already parked. The file's
+  SHA keys a deterministic per-file secret, so a resumed attempt
+  decrypts against the existing partial. Stale partials (7 days
+  untouched) are swept at `recv` startup and hourly by `serve`; a
   SHA mismatch deletes the partial outright. Output marks a resume
   with `resumed from N`.
 - `recv` without `--listen` pulls everything the storer holds for
@@ -108,14 +118,15 @@ child process with `HOME` pointed at the app's private storage (the
 identity lives there) and the inbox at the app's external files dir
 via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
 `dismiss` and holds a long-lived `recv --listen` child whenever it is
-on screen — direct sends are always welcome, while storer pulls wait
-behind the explicit receive button, and parked files can be refused
-per file with a confirming dialog. Its server engine (identity key)
-never conflicts with one-shot client execs (dial key). While a
-transfer is in flight (own action or listener receive) the app holds a
-bounded partial wake lock, so screen-off does not suspend the device
-mid-transfer; if the lock ever drops, the partial resumes where the
-transfer stopped.
+on screen — direct sends are always welcome, and parked files collect
+themselves while on screen on an unmetered network (the explicit
+receive button stays the path for metered pulls); parked files can be
+refused per file with a confirming dialog. Its server engine
+(identity key) never conflicts with one-shot client execs (dial key).
+While an own-action transfer is in flight the app holds a bounded
+partial wake lock, so screen-off does not suspend it mid-transfer; a
+listener receive ends with the screen, its partial resuming wherever
+the next attempt picks up.
 
 Build (hermetic, offline gradle, pinned debug keystore dedicated to
 catbox):

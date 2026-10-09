@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -28,7 +29,10 @@ type spoolMeta struct {
 	At       int64  `json:"at"`     // unix seconds
 }
 
-type spool struct{ dir string }
+type spool struct {
+	dir   string
+	putMu sync.Map // partial path → *sync.Mutex: same-content deposits serialize
+}
 
 // errSpoolFull marks deposits that exceed the spool's remaining byte budget.
 var errSpoolFull = errors.New("deposit exceeds the spool's remaining capacity")
@@ -67,40 +71,141 @@ func newID() string {
 	return hex.EncodeToString(b)
 }
 
+// resumeHave reports the chunk-aligned plaintext prefix already held
+// for this content: an interrupted deposit's partial, floored to its
+// last whole frame.
+func (s *spool) resumeHave(shaHex string, plain int64) int64 {
+	if shaHex == "" {
+		return 0
+	}
+
+	fi, err := os.Stat(partialPath(s.dir, shaHex, plain))
+	if err != nil {
+		return 0
+	}
+
+	sealed := fi.Size() - headerLen
+	if sealed < 0 {
+		return 0
+	}
+
+	have := sealed / chunkFrameLen * chunkSize
+	if have >= plain {
+		return 0 // a partial as big as the file is corrupt: restart
+	}
+
+	return have
+}
+
 // put spools one sealed stream from src (frames through the zero
 // terminator) and records meta; the returned meta carries ID and Size.
-// maxBytes bounds the sealed bytes written, independent of any claimed size.
-func (s *spool) put(src io.Reader, m spoolMeta, maxBytes int64) (spoolMeta, error) {
+// maxBytes bounds the sealed bytes written, independent of any claimed
+// size. With content metadata, the deposit lands in a content-keyed
+// partial that survives interruption: have is the caller-advertised
+// resume point (see resumeHave), and a failed attempt leaves the
+// partial for the retry instead of starting over.
+func (s *spool) put(src io.Reader, m spoolMeta, maxBytes, have int64) (spoolMeta, error) {
 	m.ID = newID()
 	if m.At == 0 {
 		m.At = time.Now().Unix()
 	}
 
-	tmp, err := os.CreateTemp(s.dir, ".put-*")
-	if err != nil {
-		return m, fmt.Errorf("spool temp: %w", err)
+	if m.SHA == "" {
+		tmp, err := os.CreateTemp(s.dir, ".put-*")
+		if err != nil {
+			return m, fmt.Errorf("spool temp: %w", err)
+		}
+
+		defer func() { _ = os.Remove(tmp.Name()) }()
+
+		size, err := relaySealed(&budgetWriter{w: tmp, max: maxBytes}, src)
+		if err != nil {
+			_ = tmp.Close()
+
+			return m, err
+		}
+
+		if err := tmp.Close(); err != nil {
+			return m, err
+		}
+
+		m.Size = size
+		if err := os.Chmod(tmp.Name(), 0o600); err != nil {
+			return m, err
+		}
+
+		blob := s.blobPath(m.ID)
+		if err := os.Rename(tmp.Name(), blob); err != nil {
+			return m, fmt.Errorf("spooling %s: %w", blob, err)
+		}
+
+		return m, saveJSON(s.metaPath(m.ID), m)
 	}
 
-	defer func() { _ = os.Remove(tmp.Name()) }()
+	part := partialPath(s.dir, m.SHA, m.Plain)
 
-	size, err := relaySealed(&budgetWriter{w: tmp, max: maxBytes}, src)
+	mu, _ := s.putMu.LoadOrStore(part, &sync.Mutex{})
+	locked := mu.(*sync.Mutex)
+	locked.Lock()
+	defer locked.Unlock()
+
+	f, err := os.OpenFile(part, os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
-		_ = tmp.Close()
+		return m, fmt.Errorf("spool partial: %w", err)
+	}
+
+	// The sealed prefix resumes at the advertised chunk: a torn tail
+	// is dropped, and a partial that vanished mid-flight fails the
+	// deposit rather than corrupting it.
+	at := int64(0)
+	if have > 0 {
+		at = sealedOffset(have / chunkSize)
+
+		fi, err := f.Stat()
+		if err != nil || fi.Size() < at {
+			_ = f.Close()
+
+			return m, errors.New("deposit partial vanished; retry from zero")
+		}
+	}
+
+	if err := f.Truncate(at); err != nil {
+		_ = f.Close()
 
 		return m, err
 	}
 
-	if err := tmp.Close(); err != nil {
+	if _, err := f.Seek(at, io.SeekStart); err != nil {
+		_ = f.Close()
+
 		return m, err
 	}
 
-	m.Size = size
-	if err := os.Chmod(tmp.Name(), 0o600); err != nil {
+	_, err = relaySealedAt(&budgetWriter{w: f, max: maxBytes}, src, have)
+	if err != nil {
+		_ = f.Close()
+
+		return m, err // the partial stays: the retry continues at have
+	}
+
+	fi, err := f.Stat()
+	if err != nil {
+		_ = f.Close()
+
+		return m, err
+	}
+
+	m.Size = fi.Size()
+	if err := f.Close(); err != nil {
+		return m, err
+	}
+
+	if err := os.Chmod(part, 0o600); err != nil {
 		return m, err
 	}
 
 	blob := s.blobPath(m.ID)
-	if err := os.Rename(tmp.Name(), blob); err != nil {
+	if err := os.Rename(part, blob); err != nil {
 		return m, fmt.Errorf("spooling %s: %w", blob, err)
 	}
 

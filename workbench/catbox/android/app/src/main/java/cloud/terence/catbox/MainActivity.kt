@@ -254,6 +254,26 @@ fun CatboxApp() {
         sendTargets.value = emptySet()
     }
 
+    // On screen with files parked at the storer and an unmetered
+    // network, they collect themselves — the receive button stays
+    // the path for metered pulls. One attempt per waiting set: a
+    // failed pull never loops.
+    val foreground = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
+    val autoPulled = remember { mutableStateOf(emptySet<String>()) }
+
+    fun maybeAutoPull() {
+        val waiting = status.value?.waiting.orEmpty()
+        val ids = waiting.map { it.id }.toSet()
+        if (waiting.isEmpty() || ids == autoPulled.value) return
+        if (!foreground.get() || busy.value || progress.value != null) return
+        if (isMetered(context)) return
+        autoPulled.value = ids
+        scope.launch {
+            run("recv", "--dir", Catbox.inbox(context).absolutePath)
+            refresh()
+        }
+    }
+
     LaunchedEffect(Unit) {
         refresh()
         // Keep the indicator honest; offline polls are cheap and
@@ -261,12 +281,15 @@ fun CatboxApp() {
         while (true) {
             delay(if (status.value == null) 5_000 else 15_000)
             refresh()
+            maybeAutoPull()
         }
     }
 
     // The listener follows the app's visibility: direct sends are
     // always welcome while catbox is on screen, while storer pulls
-    // stay behind the explicit receive button.
+    // stay behind the explicit receive button — except that parked
+    // files collect themselves while on screen on an unmetered
+    // network (see maybeAutoPull).
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(joined.value) {
         if (joined.value == true) Catbox.startListener(context, ::append)
@@ -274,8 +297,14 @@ fun CatboxApp() {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> if (joined.value == true) Catbox.startListener(context, ::append)
-                Lifecycle.Event.ON_STOP -> Catbox.stopListener()
+                Lifecycle.Event.ON_START -> {
+                    foreground.set(true)
+                    if (joined.value == true) Catbox.startListener(context, ::append)
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    foreground.set(false)
+                    Catbox.stopListener()
+                }
                 else -> {}
             }
         }
@@ -691,6 +720,14 @@ fun humanBytes(n: Long): String = when {
     n < 1024L * 1024 * 1024 -> "%.1f MiB".format(n / 1024.0 / 1024.0)
     else -> "%.1f GiB".format(n / 1024.0 / 1024.0 / 1024.0)
 }
+
+/**
+ * Whether the current network bills by the byte: auto-pulls wait for
+ * Wi-Fi, the receive button covers the rest.
+ */
+fun isMetered(context: android.content.Context): Boolean =
+    context.getSystemService(android.net.ConnectivityManager::class.java)?.isActiveNetworkMetered
+        ?: true
 
 /** "d MMM yyyy HH:mm", in the local zone. */
 fun humanWhen(epoch: Long): String {

@@ -101,6 +101,41 @@ func TestListenerRefusesOtherTargets(t *testing.T) {
 	}
 }
 
+// A locked partial — a pull is already delivering this exact content —
+// must be refused before any bytes move: the sender falls back to the
+// storer instead of interleaving two receivers into corruption.
+func TestListenerDeclinesBusyPartial(t *testing.T) {
+	nas := testPeerID("nas")
+	sha := shaHexOf([]byte("hello"))
+
+	lc, c := testListener(t, nas)
+	defer func() { _ = c.Close() }()
+
+	release, err := lockPartial(lc.inbox, sha, 5)
+	if err != nil {
+		t.Fatalf("lock: %v", err)
+	}
+
+	defer release()
+
+	if err := writeMsg(c, msg{Op: opSend, Target: "nas", FileName: "hello.txt", Size: 5, SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.OK || m.Err != busyRefusal {
+		t.Fatalf("busy partial must be refused with %q, got %+v", busyRefusal, m)
+	}
+
+	if _, err := os.Stat(partialPath(lc.inbox, sha, 5)); !os.IsNotExist(err) {
+		t.Fatalf("refused send must not touch the partial: %v", err)
+	}
+}
+
 func TestListenerShaMismatch(t *testing.T) {
 	nas := testPeerID("nas")
 

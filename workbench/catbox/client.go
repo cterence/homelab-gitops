@@ -268,14 +268,23 @@ func storerConn(ctx context.Context, id *peerID) (io.ReadWriteCloser, error) {
 	return conn, nil
 }
 
+// resumeOffset validates a receiver-advertised resume point: only a
+// chunk-aligned prefix of a smaller file can be trusted.
+func resumeOffset(have, size int64) int64 {
+	if have < 0 || have%chunkSize != 0 || have >= size {
+		return 0
+	}
+
+	return have
+}
+
 // clientSend seals file to target: directly when the target is
 // listening, else deposited at the storer. Direct is tried first with
-// a short timeout; the storer is always the fallback. cl, when non-nil,
-// redials the fallback deposit's conn: a stalled direct attempt can
-// burn rwc's idle deadline, so reusing it writes into a conn the
-// storer has closed. shaHex is the file's pre-computed SHA: it keys
-// the deterministic file secret and the receiver's resume partial.
-func clientSend(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client, id *peerID, targetName, path, shaHex string) error {
+// a short timeout; the storer is always the fallback. An interrupted
+// deposit resumes at the chunk boundary the storer advertises.
+// shaHex is the file's pre-computed SHA: it keys the deterministic
+// file secret and the receiver's resume partial.
+func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetName, path, shaHex string) error {
 	if targetName == id.Name {
 		return errors.New("can't send to yourself")
 	}
@@ -309,7 +318,38 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client,
 	if target.Addr != "" {
 		fmt.Fprintf(os.Stderr, "dialing %s directly...\n", targetName)
 
-		resumed, err := directSend(ctx, id, target, f, info, path, shaHex)
+		// A failed direct attempt is retried within a short window
+		// before the storer fallback: each redial resumes from the
+		// listener's partial, so a target that vanished mid-transfer
+		// and came back finishes with no storer bytes.
+		deadline := time.Now().Add(directRetryWindow)
+
+		resumed, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
+
+		for err != nil && ctx.Err() == nil && time.Now().Before(deadline) {
+			if errors.Is(err, errPartialBusy) {
+				break // a pull is delivering this content: the storer already parks it
+			}
+
+			fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(directBackoff):
+			}
+
+			// A restarted listener has the same address but fresh
+			// peer state: it only re-adds us on a new meow
+			// handshake, which the cached client never redoes
+			// (its up flag is sticky) — so the retry dials on a
+			// fresh, uncached client, patient enough for the
+			// re-handshake.
+			rc := &tailcat.Client{Server: target.Addr, Key: id.DialKey, Logf: func(string, ...any) {}}
+			resumed, err = directSend(ctx, rc, directRetryDial, id, target, f, info, path, shaHex)
+			_ = rc.Close()
+		}
+
 		if err == nil {
 			p := discoPath(ctx, tunnelClient(target.Addr, id.DialKey))
 			fmt.Printf("sent %s to %s directly (%s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), resumedSuffix(resumed), pathSuffix(p))
@@ -319,21 +359,14 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client,
 			return ctx.Err() // Ctrl-C: the raw error is just the closed conn
 		}
 		// Target unreachable: fall through to the storer. The failed
-		// direct attempt may have burned rwc's idle deadline, so a
-		// real run redials on the warm engine before depositing.
+		// direct attempt burned rwc's idle deadline, so try to redial
+		// on the warm engine — through storerConn, whose watcher
+		// keeps Ctrl-C able to abort the deposit. A failed redial
+		// still deposits on the old conn.
 		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", err)
 
-		if _, err := f.Seek(0, io.SeekStart); err != nil {
-			return err
-		}
-
-		if cl != nil {
+		if fresh, ferr := storerConn(ctx, id); ferr == nil {
 			_ = rwc.Close()
-
-			fresh, ferr := cl.DialTCPPort(ctx, catboxPort)
-			if ferr != nil {
-				return fmt.Errorf("reconnecting to storer: %w", ferr)
-			}
 
 			rwc = fresh
 		}
@@ -356,11 +389,39 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client,
 		_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
 	}
 
-	fmt.Fprintf(os.Stderr, "depositing %s at the storer...\n", humanBytes(info.Size()))
+	// Have as big as the file: the storer already parks this exact
+	// content — the deposit is idempotent, no bytes to move.
+	if info.Size() > 0 && m.Have >= info.Size() {
+		if err := writeMsg(rwc, msg{Op: opSent, SHA: shaHex}); err != nil {
+			return err
+		}
 
-	src := &progressReader{r: f, total: info.Size(), label: "depositing", every: time.Second}
+		if m, err = readMsg(rwc); err != nil {
+			return err
+		}
 
-	plainSize, err := sealStream(id.Key, target.Key, rwc, src, shaHex, 0)
+		if m.Op != opDone || !m.OK {
+			return fmt.Errorf("deposit failed: %s", m.Err)
+		}
+
+		fmt.Printf("sent %s to %s via storer (already parked, sha256 %s)\n", filepath.Base(path), targetName, shaHex[:12])
+
+		return nil
+	}
+
+	// The storer may hold an interrupted deposit's partial: resume at
+	// its chunk boundary like the direct path.
+	resumed := resumeOffset(m.Have, info.Size())
+
+	if _, err := f.Seek(resumed, io.SeekStart); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(os.Stderr, "depositing %s at the storer%s...\n", humanBytes(info.Size()-resumed), resumedSuffix(resumed))
+
+	src := &progressReader{r: f, total: info.Size() - resumed, label: "depositing", every: time.Second}
+
+	plainSize, err := sealStream(id.Key, target.Key, rwc, src, shaHex, resumed)
 	src.close() // a failed write never reaches EOF: the line must not linger
 
 	if err != nil {
@@ -389,7 +450,7 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client,
 	}
 
 	p := discoPath(ctx, tunnelClient(id.StorerAddr, id.DialKey))
-	fmt.Printf("sent %s to %s via storer (%s, sha256 %s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), shaHex[:12], pathSuffix(p))
+	fmt.Printf("sent %s to %s via storer (%s, sha256 %s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), shaHex[:12], resumedSuffix(resumed), pathSuffix(p))
 
 	return nil
 }
@@ -407,14 +468,13 @@ func tunnelClient(addr tailcat.Addr, dialKey key.NodePrivate) *tailcat.Client {
 
 // directSend dials the target's listener and hands it the sealed
 // file, resuming from the listener's advertised chunk boundary. It
-// returns the offset it resumed from.
-func directSend(ctx context.Context, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, error) {
-	c := tunnelClient(target.Addr, id.DialKey)
-
+// returns the offset it resumed from. dialTimeout bounds the dial
+// and, for a fresh client, its first meow handshake.
+func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duration, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, error) {
 	// A live listener answers its handshake in well under a second;
 	// anything longer is a stale roster address — fail fast and let
 	// the caller fall back to the storer.
-	dialCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	dialCtx, cancel := context.WithTimeout(ctx, dialTimeout)
 	defer cancel()
 
 	conn, err := c.DialTCPPort(dialCtx, catboxPort)
@@ -444,20 +504,21 @@ func directSend(ctx context.Context, id *peerID, target member, f *os.File, info
 	}
 
 	if m.Op != opReady || !m.OK {
+		if m.Err == busyRefusal {
+			return 0, fmt.Errorf("target refused: %w", errPartialBusy)
+		}
+
 		return 0, fmt.Errorf("target refused: %s", m.Err)
 	}
 
 	// The listener's partial decides where the stream continues; only
-	// a chunk-aligned prefix of a smaller file can be trusted.
-	resumed := m.Have
-	if resumed < 0 || resumed%chunkSize != 0 || resumed >= info.Size() {
-		resumed = 0
-	}
+	// a chunk-aligned prefix of a smaller file can be trusted. The
+	// seek is unconditional: a retry re-enters with the file at an
+	// arbitrary offset.
+	resumed := resumeOffset(m.Have, info.Size())
 
-	if resumed > 0 {
-		if _, err := f.Seek(resumed, io.SeekStart); err != nil {
-			return 0, err
-		}
+	if _, err := f.Seek(resumed, io.SeekStart); err != nil {
+		return 0, err
 	}
 
 	src := &progressReader{r: f, total: info.Size() - resumed, label: "sending", every: time.Second, onTick: func(int64) {
@@ -553,6 +614,12 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 	for _, it := range m.Items {
 		if err := clientFetch(ctx, rwc, cl, id, it, dir); err != nil {
+			if errors.Is(err, errPartialBusy) {
+				fmt.Printf("skipped %s (already receiving)\n", it.FileName)
+
+				continue // a direct receive holds it: leave it parked
+			}
+
 			return err
 		}
 	}
@@ -565,6 +632,15 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 // its partial (content-keyed by it.SHA): the next attempt resumes at
 // its chunk boundary.
 func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client, id *peerID, it item, dir string) error {
+	// One receiver per partial: a direct receive already writing this
+	// exact content would interleave with ours into corruption.
+	release, err := lockPartial(dir, it.SHA, it.Plain)
+	if errors.Is(err, errPartialBusy) {
+		return fmt.Errorf("%s: %w", it.FileName, errPartialBusy)
+	}
+
+	defer release()
+
 	f, h, have, resumable, err := partialFor(dir, it.SHA, it.Plain)
 	if err != nil {
 		return err
@@ -611,7 +687,7 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 	dst := uniquePath(dir, m.FileName)
 
-	src := &progressReader{r: io.LimitReader(rwc, m.Size), total: it.Plain, label: "received", every: time.Second}
+	src := &progressReader{r: io.LimitReader(rwc, m.Size), total: it.Plain, offset: have, label: "received", every: time.Second}
 
 	// The stream ends at its terminator; no size bound needed here.
 	_, plainSize, sha, err := openStream(id.Key, src, f, have, h)

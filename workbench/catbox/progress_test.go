@@ -86,6 +86,32 @@ func TestProgressReaderNoEmitBeforeInterval(t *testing.T) {
 	}
 }
 
+// A resumed transfer's line shows the full-file position, not the wire
+// count: the counter starts at the resume offset.
+func TestProgressReaderResumeOffset(t *testing.T) {
+	r, out, clock := newProgress(t, 1000, strings.NewReader(strings.Repeat("a", 300)))
+
+	r.offset = 700 // already on disk before this attempt
+
+	readN(t, r, 100) // t0: counters start
+
+	clock.advance(time.Second)
+	readN(t, r, 100) // 200 wire bytes: 900 of the file
+
+	clock.advance(time.Second)
+	readN(t, r, 100) // 300 wire bytes: the whole file
+
+	got := out.String()
+	for _, want := range []string{
+		"sending 900 B / 1000 B (90%",
+		"sending 1000 B / 1000 B (100%",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("output missing %q:\n%s", want, got)
+		}
+	}
+}
+
 // The data path must not notice the progress wrapper: seal 64 MiB with
 // and without it and compare throughputs.
 func benchmarkSealStream(b *testing.B, wrap bool) {

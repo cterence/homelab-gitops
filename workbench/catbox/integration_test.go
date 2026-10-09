@@ -494,6 +494,145 @@ partial:
 	assertSpoolLen(t, storer, 1)
 }
 
+// TestIntegrationInterruptedDeposit pins the locked-phone story: a
+// listener vanishes without deregistering (SIGKILL, like a locked
+// phone), the sender falls back to the storer, and SIGINT during the
+// fallback deposit must abort the command instead of riding it out —
+// then a re-send resumes at the storer's chunk boundary, not from zero.
+func TestIntegrationInterruptedDeposit(t *testing.T) {
+	if os.Getenv("CATBOX_INTEGRATION") != "1" {
+		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
+	}
+
+	storer := newNode(t, "storer")
+	if err := storer.start(); err != nil {
+		t.Fatalf("starting storer: %v", err)
+	}
+
+	addr := storer.addr()
+
+	milo := newNode(t, "milo")
+
+	puma := newNode(t, "puma")
+	for _, n := range []*node{milo, puma} {
+		out := n.cat(nil, "join", "--name", n.name, addr)
+		if !strings.Contains(out, "joined as "+n.name) {
+			t.Fatalf("node %s: join output: %q", n.name, out)
+		}
+	}
+
+	big := writeFile(t, "big.bin", 96<<20)
+
+	// Puma's listener is up, then killed without deregistering: the
+	// roster keeps a stale address, exactly like a locked phone.
+	ready := puma.listen()
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered")
+	}
+
+	puma.mu.Lock()
+	listener := puma.cmd
+	puma.cmd = nil
+	puma.mu.Unlock()
+
+	if listener == nil || listener.Process == nil {
+		t.Fatalf("node puma: no listener process to kill")
+	}
+
+	if err := listener.Process.Kill(); err != nil {
+		t.Fatalf("killing puma listener: %v", err)
+	}
+
+	_, _ = listener.Process.Wait()
+
+	// The send: direct dial fails on the stale address, the deposit
+	// at the storer starts, and SIGINT must land mid-deposit.
+	send := exec.Command(os.Args[0], "send", "puma", big)
+	send.Env = milo.env(nil)
+
+	var sendLogs bytes.Buffer
+
+	send.Stdout = &sendLogs
+
+	send.Stderr = &sendLogs
+	if err := send.Start(); err != nil {
+		t.Fatalf("starting send: %v", err)
+	}
+
+	spoolDir := filepath.Join(storer.dir, "spool")
+
+	// The dead listener is retried before the fallback: the deposit
+	// starts after the retry window, so the poll waits it out.
+	deadline := time.Now().Add(directRetryWindow + 90*time.Second)
+	for time.Now().Before(deadline) {
+		if des, err := os.ReadDir(spoolDir); err == nil {
+			for _, de := range des {
+				name := de.Name()
+				if !strings.HasPrefix(name, ".put-") && !strings.HasPrefix(name, ".part-") {
+					continue
+				}
+
+				// One whole chunk at least: a resume marker needs it.
+				if fi, err := de.Info(); err == nil && fi.Size() >= headerLen+chunkFrameLen {
+					goto depositing
+				}
+			}
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	_ = send.Process.Kill()
+
+	t.Fatalf("send never started depositing:\n%s", sendLogs.String())
+
+depositing:
+	_ = send.Process.Signal(os.Interrupt)
+
+	done := make(chan error, 1)
+	go func() { done <- send.Wait() }()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatalf("SIGINT did not abort the send:\n%s", sendLogs.String())
+		}
+	case <-time.After(30 * time.Second):
+		_ = send.Process.Kill()
+
+		<-done
+
+		t.Fatalf("SIGINT did not kill the send within 30s:\n%s", sendLogs.String())
+	}
+
+	if out := sendLogs.String(); strings.Contains(out, "sent big.bin") {
+		t.Fatalf("aborted send still reported success:\n%s", out)
+	}
+
+	// No spool entry: an aborted deposit stays a partial.
+	assertSpoolLen(t, storer, 0)
+
+	// Re-send: the storer holds the partial, so the deposit resumes at
+	// its chunk boundary instead of starting over.
+	out := milo.cat(nil, "send", "puma", big)
+	if !strings.Contains(out, "resumed from") {
+		t.Fatalf("re-send did not resume the interrupted deposit: %q", out)
+	}
+
+	assertSpoolLen(t, storer, 1)
+
+	// The parked file pulls clean: both attempts' frames line up.
+	out = puma.cat(nil, "recv", "--dir", puma.inbox)
+	if !strings.Contains(out, "got big.bin from milo") {
+		t.Fatalf("pull output: %q", out)
+	}
+
+	assertFile(t, puma, "big.bin", big)
+	assertSpoolLen(t, storer, 0)
+}
+
 // ---- helpers ----
 
 // cat runs the catbox binary as a helper subprocess with the given

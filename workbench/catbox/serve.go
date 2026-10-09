@@ -91,6 +91,8 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 		log.Warn("spool sweep failed", "err", err)
 	}
 
+	sweepPartials(spoolDir(dataDir)) // interrupted deposits: their sender gave up after the TTL
+
 	ticker := time.NewTicker(time.Hour)
 	defer ticker.Stop()
 
@@ -102,6 +104,8 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 			if err := st.spool.sweep(st.ttl); err != nil {
 				log.Warn("spool sweep failed", "err", err)
 			}
+
+			sweepPartials(spoolDir(dataDir))
 		}
 	}
 }
@@ -283,17 +287,39 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		return
 	}
 
+	// The claimed size double-counts a resumed deposit's partial (it is
+	// already in usage): near the cap a resumable deposit can be refused.
+	// ponytail: fine while the spool cap dwarfs file sizes; upgrade when
+	// deposits grow near the cap.
 	if usage+m.Size > st.max {
 		_ = writeMsg(rwc, msg{Op: opReady, Err: "spool full"})
 
 		return
 	}
 
-	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Members: st.members()}); err != nil {
+	have := st.spool.resumeHave(m.SHA, m.Size)
+
+	// An identical item is already parked for this target: the
+	// deposit is idempotent — no bytes needed.
+	if st.parkedFor(target.Name, m.SHA) {
+		have = m.Size
+	}
+
+	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Members: st.members(), Have: have}); err != nil {
 		return
 	}
 
-	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name, Plain: m.Size}
+	if have > 0 && have == m.Size {
+		if done, err := readMsg(rwc); err != nil || done.Op != opSent {
+			return
+		}
+
+		_ = writeMsg(rwc, msg{Op: opDone, OK: true})
+
+		return
+	}
+
+	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name, Plain: m.Size, SHA: m.SHA}
 
 	src := &progressReader{r: rwc, total: m.Size, label: "relayed", every: time.Second, onTick: func(int64) {
 		// Sliding deadline: bytes flowing extend the hour, so big
@@ -305,7 +331,7 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 	// The claimed size admitted the deposit; the transfer itself is bounded
 	// by the remaining budget, so a lying sender cannot fill the disk.
-	meta, err = st.spool.put(src, meta, st.max-usage)
+	meta, err = st.spool.put(src, meta, st.max-usage, have)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
 	if err != nil {
@@ -328,6 +354,27 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	st.dedup(target.Name, done.SHA, meta.ID)
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
+}
+
+// parkedFor reports whether an identical sealed file is already
+// spooled for the target: a retried deposit needs no bytes.
+func (st *storer) parkedFor(target, sha string) bool {
+	if sha == "" {
+		return false
+	}
+
+	metas, err := st.spool.items()
+	if err != nil {
+		return false
+	}
+
+	for _, sm := range metas {
+		if sm.Target == target && sm.SHA == sha {
+			return true
+		}
+	}
+
+	return false
 }
 
 // retargetSpool repoints parked files from one member name to the

@@ -196,26 +196,29 @@ object Catbox {
      * Moves finished files from the app-private staging inbox into
      * Download/Catbox via MediaStore. Android/data is locked glass:
      * nothing outside this app can delete from it, so the public
-     * folder is the real destination.
+     * folder is the real destination. Serialized: two publishers
+     * racing the same staged file would insert it twice.
      */
     fun publish(context: Context) {
-        val staged = inbox(context).listFiles()?.filter { !it.name.startsWith(".part-") } ?: return
-        if (staged.isEmpty()) return
-        val resolver = context.contentResolver
-        for (f in staged) {
-            val values = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, f.name)
-                put(MediaStore.Downloads.MIME_TYPE, mimeOf(f.name))
-                put(MediaStore.Downloads.RELATIVE_PATH, "Download/Catbox")
-                put(MediaStore.Downloads.IS_PENDING, 1)
+        synchronized(this) {
+            val staged = inbox(context).listFiles()?.filter { !it.name.startsWith(".part-") } ?: return
+            if (staged.isEmpty()) return
+            val resolver = context.contentResolver
+            for (f in staged) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, f.name)
+                    put(MediaStore.Downloads.MIME_TYPE, mimeOf(f.name))
+                    put(MediaStore.Downloads.RELATIVE_PATH, "Download/Catbox")
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: continue
+                resolver.openOutputStream(uri)?.use { out ->
+                    f.inputStream().use { it.copyTo(out) }
+                }
+                val done = ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }
+                resolver.update(uri, done, null, null)
+                f.delete()
             }
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: continue
-            resolver.openOutputStream(uri)?.use { out ->
-                f.inputStream().use { it.copyTo(out) }
-            }
-            val done = ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }
-            resolver.update(uri, done, null, null)
-            f.delete()
         }
     }
 

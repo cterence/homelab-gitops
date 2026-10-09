@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -216,6 +217,19 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		return
 	}
 
+	// One receiver per partial: a pull already delivering this exact
+	// content would interleave with ours into corruption. Decline, and
+	// the sender falls back to the storer where the identical item is
+	// already parked.
+	release, err := lockPartial(lc.inbox, m.SHA, m.Size)
+	if errors.Is(err, errPartialBusy) {
+		_ = writeMsg(rwc, msg{Op: opReady, Err: busyRefusal})
+
+		return
+	}
+
+	defer release()
+
 	f, h, have, resumable, err := partialFor(lc.inbox, m.SHA, m.Size)
 	if err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
@@ -243,7 +257,7 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 	// The stream ends at its terminator; no size bound needed here.
 	// Ticks print progress (the app's log pane sees plain stderr) and
 	// slide the conn deadline.
-	src := &progressReader{r: rwc, total: m.Size, label: "received", every: time.Second, onTick: func(int64) {
+	src := &progressReader{r: rwc, total: m.Size, offset: have, label: "received", every: time.Second, onTick: func(int64) {
 		if c, ok := rwc.(net.Conn); ok {
 			_ = c.SetDeadline(time.Now().Add(idleTimeout)) // sliding: inactivity cap
 		}

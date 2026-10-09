@@ -44,6 +44,26 @@ const idleTimeout = 2 * time.Minute
 // cheap.
 const directStall = 30 * time.Second
 
+// directRetryWindow bounds how long a failed direct attempt is
+// retried before the storer fallback: every redial resumes from the
+// listener's partial, so a target that vanished mid-transfer and
+// comes back within it finishes direct with no storer bytes. A var
+// so tests can shorten it.
+var directRetryWindow = 2 * time.Minute
+
+// directBackoff paces the direct redials inside the retry window.
+const directBackoff = 5 * time.Second
+
+// directDial bounds the first direct dial: a live listener answers
+// its handshake in well under a second, so this is the stale-address
+// detector.
+const directDial = 3 * time.Second
+
+// directRetryDial bounds a retry's dial: it rides a fresh client, so
+// it must also cover the meow re-handshake with a listener that
+// restarted.
+const directRetryDial = 15 * time.Second
+
 // msg is the wire message; Op dispatches. Size means plaintext bytes
 // for send. Key and Addr carry the joiner's identity public key and
 // listener address.

@@ -1,11 +1,37 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 )
+
+// One receiver per partial at a time, across processes: the listener
+// and a pull appending the same file would interleave into corruption.
+func TestPartialLockExclusive(t *testing.T) {
+	dir := t.TempDir()
+	shaHex := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+	release, err := lockPartial(dir, shaHex, 4096)
+	if err != nil {
+		t.Fatalf("first lock: %v", err)
+	}
+
+	if _, err := lockPartial(dir, shaHex, 4096); !errors.Is(err, errPartialBusy) {
+		t.Fatalf("second lock err = %v, want errPartialBusy", err)
+	}
+
+	release()
+
+	release, err = lockPartial(dir, shaHex, 4096)
+	if err != nil {
+		t.Fatalf("lock after release: %v", err)
+	}
+
+	release()
+}
 
 func TestPartialFor(t *testing.T) {
 	dir := t.TempDir()

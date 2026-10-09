@@ -247,16 +247,27 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer, offset 
 // relaySealed copies one sealed stream from src to dst without
 // decrypting: the fixed header, then frames until the terminator.
 func relaySealed(dst io.Writer, src io.Reader) (int64, error) {
+	return relaySealedAt(dst, src, 0)
+}
+
+// relaySealedAt is relaySealed resumed at plaintext offset have: the
+// deterministic header is consumed from src either way and kept only
+// when the copy starts at zero; frames continue at the offset's chunk.
+func relaySealedAt(dst io.Writer, src io.Reader, have int64) (int64, error) {
 	header := make([]byte, headerLen)
 	if _, err := io.ReadFull(src, header); err != nil {
 		return 0, fmt.Errorf("%w: header cut short", errCorrupt)
 	}
 
-	if _, err := dst.Write(header); err != nil {
-		return 0, err
-	}
+	var total int64
 
-	total := int64(headerLen)
+	if have == 0 {
+		if _, err := dst.Write(header); err != nil {
+			return 0, err
+		}
+
+		total = headerLen
+	}
 
 	var frame [4]byte
 

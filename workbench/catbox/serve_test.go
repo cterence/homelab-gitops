@@ -92,7 +92,7 @@ func TestJoinSendPull(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(ctx, conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(ctx, conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -167,7 +167,7 @@ func TestSendUnknownMemberRefreshesRoster(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(ctx, conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(ctx, conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send with refresh: %v", err)
 	}
 
@@ -198,7 +198,7 @@ func TestSendToUnknownNameFails(t *testing.T) {
 	}
 
 	conn = dial(t, st, laptop)
-	if err := clientSend(ctx, conn, nil, laptop, "ghost", src, mustSHA(t, src)); err == nil {
+	if err := clientSend(ctx, conn, laptop, "ghost", src, mustSHA(t, src)); err == nil {
 		t.Fatal("send to unknown member should fail")
 	}
 
@@ -256,6 +256,13 @@ func TestRejoinUpdatesListenerAddr(t *testing.T) {
 
 func TestClientStatus(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+
+	// Direct retries would crawl through the real retry window on the
+	// bogus listener address: this test only exercises the deposit.
+	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+
+	directRetryWindow = 0
+
 	st := newTestStorer(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
@@ -284,7 +291,7 @@ func TestClientStatus(t *testing.T) {
 	}
 
 	conn = dial(t, st, nas)
-	if err := clientSend(context.Background(), conn, nil, nas, "laptop", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(context.Background(), conn, nas, "laptop", src, mustSHA(t, src)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -340,7 +347,7 @@ func TestSendToSelfFails(t *testing.T) {
 	}
 
 	// Client-side guard: refuses before any network op.
-	if err := clientSend(ctx, nil, nil, laptop, "laptop", src, mustSHA(t, src)); err == nil {
+	if err := clientSend(ctx, nil, laptop, "laptop", src, mustSHA(t, src)); err == nil {
 		t.Fatal("self-send should fail client-side")
 	}
 
@@ -386,7 +393,7 @@ func TestDepositDedup(t *testing.T) {
 
 	for range 3 {
 		conn := dial(t, st, laptop)
-		if err := clientSend(ctx, conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
+		if err := clientSend(ctx, conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
 			t.Fatalf("send: %v", err)
 		}
 
@@ -400,6 +407,13 @@ func TestDepositDedup(t *testing.T) {
 
 func TestClientStatusJSON(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+
+	// Direct retries would crawl through the real retry window on the
+	// bogus listener address: this test only exercises the deposit.
+	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+
+	directRetryWindow = 0
+
 	st := newTestStorer(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
@@ -419,7 +433,7 @@ func TestClientStatusJSON(t *testing.T) {
 	}
 
 	conn := dial(t, st, nas)
-	if err := clientSend(context.Background(), conn, nil, nas, "laptop", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(context.Background(), conn, nas, "laptop", src, mustSHA(t, src)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -562,7 +576,7 @@ func TestDismissDestinedFile(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(context.Background(), conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -616,7 +630,7 @@ func TestDismissOnlyOwnItems(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(context.Background(), conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -668,7 +682,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 	}
 
 	conn := dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err != nil {
+	if err := clientSend(context.Background(), conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 
@@ -686,7 +700,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 
 	// The old name is gone from the roster.
 	conn = dial(t, st, laptop)
-	if err := clientSend(context.Background(), conn, nil, laptop, "nas", src, mustSHA(t, src)); err == nil {
+	if err := clientSend(context.Background(), conn, laptop, "nas", src, mustSHA(t, src)); err == nil {
 		t.Fatal("send to the old name should fail")
 	}
 
@@ -737,5 +751,272 @@ func TestRenameToTakenName(t *testing.T) {
 	// nas is still nas.
 	if _, ok := memberByName(st.members(), "nas"); !ok {
 		t.Fatal("failed rename dropped the member")
+	}
+}
+
+// TestDepositResumesAfterInterruption pins the sender-side resume: an
+// interrupted deposit keeps a partial at the storer, the retry is
+// advertised its chunk boundary, and the resumed deposit's frames line
+// up with the kept prefix.
+func TestDepositResumesAfterInterruption(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	payload := bytes.Repeat([]byte("catbox deposit resume\n"), 200000/22+1)[:200000]
+
+	src := filepath.Join(t.TempDir(), "big.bin")
+	if err := os.WriteFile(src, payload, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	sha := mustSHA(t, src)
+
+	// First attempt: the deposit dies mid-stream after two whole
+	// chunks, torn tail and all.
+	var sealed bytes.Buffer
+	if _, err := sealStream(laptop.Key, nas.Key.Public(), &sealed, bytes.NewReader(payload), sha, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "big.bin", Size: int64(len(payload)), SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || !m.OK {
+		t.Fatalf("first opReady = %+v", m)
+	}
+
+	if _, err := conn.Write(sealed.Bytes()[:headerLen+2*chunkFrameLen+10]); err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close() // mid-deposit disconnect
+
+	if metas, _ := st.spool.items(); len(metas) != 0 {
+		t.Fatalf("interrupted deposit must not appear as a spool entry: %+v", metas)
+	}
+
+	// Retry: the storer advertises the partial's chunk boundary, the
+	// torn tail dropped.
+	conn = dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "big.bin", Size: int64(len(payload)), SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err = readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = conn.Close() // abandoned again; the partial must survive
+
+	if m.Op != opReady || !m.OK {
+		t.Fatalf("retry opReady = %+v", m)
+	}
+
+	if m.Have != 2*chunkSize {
+		t.Fatalf("retry opReady Have = %d, want %d", m.Have, 2*chunkSize)
+	}
+
+	// Third attempt through the real client: it resumes and completes.
+	conn = dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("resumed send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	// The pull delivers the whole file: frames from both attempts must
+	// decrypt as one stream.
+	inbox := t.TempDir()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+		t.Fatalf("inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	got, err := os.ReadFile(filepath.Join(inbox, "big.bin"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(got, payload) {
+		t.Fatalf("resumed deposit delivered %d bytes, want %d", len(got), len(payload))
+	}
+
+	if metas, _ := st.spool.items(); len(metas) != 0 {
+		t.Fatalf("spool not emptied after ack: %+v", metas)
+	}
+}
+
+// TestPullSkipsBusyPartial pins the pull side of the single-writer
+// rule: a partial locked by a direct receive makes the pull skip that
+// item without failing the run, and it delivers once freed.
+func TestPullSkipsBusyPartial(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "busy.txt")
+	if err := os.WriteFile(src, []byte("busy bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	sha := mustSHA(t, src)
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	inbox := t.TempDir()
+
+	release, err := lockPartial(inbox, sha, int64(len("busy bytes")))
+	if err != nil {
+		t.Fatalf("lock: %v", err)
+	}
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+		t.Fatalf("a busy partial must be skipped, not failed: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if metas, _ := st.spool.items(); len(metas) != 1 {
+		t.Fatalf("skipped item must stay parked: %+v", metas)
+	}
+
+	release()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+		t.Fatalf("inbox after release: %v", err)
+	}
+
+	_ = conn.Close()
+
+	got, err := os.ReadFile(filepath.Join(inbox, "busy.txt"))
+	if err != nil || string(got) != "busy bytes" {
+		t.Fatalf("deliver after release: %v %q", err, got)
+	}
+
+	if metas, _ := st.spool.items(); len(metas) != 0 {
+		t.Fatalf("spool not emptied: %+v", metas)
+	}
+}
+
+// TestDepositIdempotent pins the retried-deposit short-circuit: when
+// an identical file is already parked for the target, the storer
+// answers Have=Size, the sender sends no bytes, and the spool keeps
+// exactly one entry.
+func TestDepositIdempotent(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("same bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	sha := mustSHA(t, src)
+
+	// First send parks the file.
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	// A retried opSend is told the file is already parked.
+	conn = dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "f.txt", Size: 10, SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || !m.OK || m.Have != 10 {
+		t.Fatalf("retry opReady = %+v, want Have = full size", m)
+	}
+
+	if err := writeMsg(conn, msg{Op: opSent, SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	if m, err = readMsg(conn); err != nil || m.Op != opDone || !m.OK {
+		t.Fatalf("retry done = %+v, err %v", m, err)
+	}
+
+	_ = conn.Close()
+
+	// The real client takes the short path too, and the spool still
+	// holds exactly one entry.
+	conn = dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("idempotent resend: %v", err)
+	}
+
+	_ = conn.Close()
+
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 {
+		t.Fatalf("idempotent deposit duplicated the item: %+v", metas)
 	}
 }

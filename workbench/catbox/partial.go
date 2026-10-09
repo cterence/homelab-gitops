@@ -9,14 +9,49 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
+
+// errPartialBusy marks a transfer whose partial another receiver is
+// already writing: the listener and a pull appending the same file
+// would interleave plaintext into corruption, so the second declines.
+var errPartialBusy = errors.New("another receive is already writing this partial")
+
+// busyRefusal is the listener's wire form of errPartialBusy: the
+// sender stops its direct retries and falls back to the storer,
+// where the identical item is already parked.
+const busyRefusal = "partial busy"
+
+// lockPartial takes an exclusive advisory lock on a transfer's
+// partial: one receiver per content at a time, across processes (the
+// listener and a pull are separate children). The lock dies with its
+// holder; the lock file sweeps with the partials by TTL.
+func lockPartial(dir, shaHex string, size int64) (release func(), err error) {
+	if shaHex == "" {
+		return func() {}, nil // plain temps are private by name
+	}
+
+	f, err := os.OpenFile(partialPath(dir, shaHex, size)+".lock", os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return func() {}, nil // no lock possible: proceed unlocked
+	}
+
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		_ = f.Close()
+
+		return nil, errPartialBusy
+	}
+
+	return func() { _ = f.Close() }, nil
+}
 
 // partialTTL bounds how long a partial waits for its sender: longer
 // than this and the sender gave up.
