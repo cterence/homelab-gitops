@@ -611,15 +611,18 @@ func (st *storer) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
 	_ = writeMsg(rwc, msg{Op: opAcked, OK: true})
 }
 
-// opRemove drops a member from the roster and deletes their parked
-// items: any member's call, the roster is a shared trust set. An
-// empty target is reset's leave: the dial key binds it to the
-// requester, so a device can only remove itself.
+// opRemove is self-removal only (reset's leave): the dial key binds
+// it to the requester, and their parked items go with them. A member
+// can never remove another — that is the storer's call (catbox
+// remove --data DIR, or kubectl exec on the storer).
 func (st *storer) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
-	target := m.Target
-	if target == "" {
-		target = me.Name
+	if m.Target != "" && m.Target != me.Name {
+		_ = writeMsg(rwc, msg{Op: opAcked, Err: "a member can only remove itself; run catbox remove on the storer"})
+
+		return
 	}
+
+	target := me.Name
 
 	st.mu.Lock()
 

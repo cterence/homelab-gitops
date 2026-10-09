@@ -289,33 +289,18 @@ func run() error {
 		return nil
 	case "remove":
 		fs := flag.NewFlagSet("remove", flag.ExitOnError)
+		data := fs.String("data", "", "storer data dir: the storer, not a peer, removes members")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
 			return errors.New("remove takes <member> (see catbox status)")
 		}
 
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
+		if *data == "" {
+			return errors.New("removing a member runs on the storer: catbox remove --data DIR <member> (a peer can only reset itself)")
 		}
 
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		if err := clientRemove(conn, fs.Arg(0)); err != nil {
+		if err := removeMemberLocal(*data, fs.Arg(0), log); err != nil {
 			return err
 		}
 
@@ -336,13 +321,13 @@ func run() error {
 				// The dial key binds the removal to this device:
 				// reset can never remove another member.
 				if rerr := clientRemove(conn, ""); rerr != nil {
-					fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove %s\" from a member later\n", rerr, id.Name)
+					fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove --data /data %s\" on the storer later\n", rerr, id.Name)
 				}
 
 				_ = cl.Close()
 				_ = conn.Close()
 			} else {
-				fmt.Fprintf(os.Stderr, "catbox: could not reach the storer: %v; run \"catbox remove %s\" from a member later\n", cerr, id.Name)
+				fmt.Fprintf(os.Stderr, "catbox: could not reach the storer: %v; run \"catbox remove --data /data %s\" on the storer later\n", cerr, id.Name)
 			}
 
 			release()
@@ -426,8 +411,8 @@ membership commands:
   invite    print the join line for enrolling another peer
   rename    change this member's name
             <new-name>
-  remove    drop a member from the roster; their parked items go too
-            <member>
+  remove    drop a member from the roster (runs on the storer)
+            --data DIR <member>
   reset     leave the mesh (best effort) and wipe this machine's identity
   status    who's in the mesh and what's waiting for you
             [--json]

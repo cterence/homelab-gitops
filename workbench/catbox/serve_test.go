@@ -1328,8 +1328,8 @@ func TestDepositIdempotent(t *testing.T) {
 	}
 }
 
-// TestOpRemove: any member removes another from the roster; the
-// target's parked items go with them and their next dial is refused.
+// TestOpRemove: a member can never remove another — the wire op is
+// self-removal only (reset's leave); the roster is the storer's call.
 func TestOpRemove(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
@@ -1337,9 +1337,8 @@ func TestOpRemove(t *testing.T) {
 	st := newTestStorer(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
-	emu := testPeerID("emu")
 
-	for _, id := range []*peerID{laptop, nas, emu} {
+	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
 		if err := joinReq(conn, id, ""); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
@@ -1358,31 +1357,23 @@ func TestOpRemove(t *testing.T) {
 		t.Fatalf("send to nas: %v", err)
 	}
 
-	if err := clientSend(ctx, conn, laptop, "emu", src, mustSHA(t, src)); err != nil {
-		t.Fatalf("send to emu: %v", err)
-	}
-
-	if err := clientRemove(conn, "nas"); err != nil {
-		t.Fatalf("remove nas: %v", err)
-	}
-
-	if err := clientRemove(conn, "ghost"); err == nil {
-		t.Fatal("removing an unknown member should fail")
+	if err := clientRemove(conn, "nas"); err == nil {
+		t.Fatal("a member removed another member")
 	}
 
 	_ = conn.Close()
 
-	if metas, _ := st.spool.items(); len(metas) != 1 || metas[0].Target != "emu" {
-		t.Fatalf("parked items for nas survived: %+v", metas)
+	if metas, _ := st.spool.items(); len(metas) != 1 || metas[0].Target != "nas" {
+		t.Fatalf("cross-member remove touched the spool: %+v", metas)
 	}
 
 	for _, m := range st.members() {
-		if m.Name == "nas" {
-			t.Fatalf("nas still in roster: %+v", st.members())
+		if m.Name != "laptop" && m.Name != "nas" {
+			t.Fatalf("roster changed by a cross-member remove: %+v", st.members())
 		}
 	}
 
-	// The removed member's next connection is not a member's anymore.
+	// The named member is still a member.
 	nasConn := dial(t, st, nas)
 	if err := writeMsg(nasConn, msg{Op: opPending}); err != nil {
 		t.Fatal(err)
@@ -1393,8 +1384,8 @@ func TestOpRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if m.OK || m.Err != "not a member; run catbox join" {
-		t.Fatalf("removed member still served: %+v", m)
+	if !m.OK {
+		t.Fatalf("cross-member remove booted the target: %+v", m)
 	}
 }
 

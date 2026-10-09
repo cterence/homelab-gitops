@@ -755,9 +755,9 @@ func clientDismiss(rwc io.ReadWriter, id string) error {
 	return nil
 }
 
-// clientRemove asks the storer to drop the named member from the
-// roster; their parked items go with them. An empty name removes the
-// requester itself — reset's leave, bound to the dial key.
+// clientRemove is the wire form of the member's leave: an empty name
+// removes the requester, bound to its dial key. A named target is
+// refused — that is the storer's call (kept here to test the refusal).
 func clientRemove(rwc io.ReadWriter, name string) error {
 	if err := writeMsg(rwc, msg{Op: opRemove, Target: name}); err != nil {
 		return err

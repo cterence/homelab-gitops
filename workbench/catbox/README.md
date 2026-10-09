@@ -30,7 +30,7 @@ catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :808
 catbox addr
 catbox join   --name NAME <storer-addr>
 catbox rename <new-name>
-catbox remove <member>            # or --data DIR <member>, on the storer itself
+catbox remove --data DIR <member>   # runs on the storer
 catbox reset
 catbox invite
 catbox send   <member> <file> [<file>...]
@@ -60,19 +60,19 @@ catbox version
   files follow the new name, and a taken or invalid name is rejected.
   Stop `recv --listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
-- `remove <member>` drops a member from the roster, parking and all;
-  any member may call it — the roster is a shared trust set. On the
-  storer itself (`--data DIR`, e.g.
-  `kubectl -n catbox exec catbox-0 -- catbox remove --data /data <member>`)
-  it rewrites the roster on disk, and the running storer picks the
-  edit up on the next message — the path for a device that reset
-  while offline and left a ghost.
+- `remove --data DIR <member>` drops a member from the roster, parked
+  items and all — storer only: a cat can never remove another cat.
+  Run it inside the cluster:
+  `kubectl -n catbox exec catbox-0 -- catbox remove --data /data <member>`.
+  It rewrites the roster on disk and sweeps the spool; the running
+  storer picks the edit up on its next message. This is the cleanup
+  path for a device that reset while offline and left a ghost.
 - `reset` leaves the mesh and wipes this machine's identity: it
-  removes its own roster entry (best effort — the removal is bound to
-  this device's dial key, a device can never reset another member)
-  and deletes the local identity and roster cache. When the storer is
+  removes its own roster entry (the removal is bound to this device's
+  dial key — a device can never reset or remove another member) and
+  deletes the local identity and roster cache. When the storer is
   unreachable the reset still completes; clean up the leftover entry
-  later with `remove`.
+  later with `remove` on the storer.
 - `send` seals and ships each named file (one member, one or more
   files per command): direct to the target's listener
   when it is online (3s dial timeout), otherwise deposited at the
@@ -166,7 +166,7 @@ Iterating on the Kotlin in the devshell:
 
 ## v1 limits
 
-No revocation beyond `remove` (any member can remove any other — the
-roster is a shared trust set), no renames beyond `rename`, one
-storer. Losing the storer's data dir means a
-new identity and re-joining every peer.
+Member removal is storer-only (`remove --data`), self-removal
+(`reset`) aside — a peer cannot touch another peer's roster entry. No
+renames beyond `rename`, one storer. Losing the storer's data dir
+means a new identity and re-joining every peer.
