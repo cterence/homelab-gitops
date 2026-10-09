@@ -9,10 +9,53 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"tailscale.com/types/key"
 )
+
+// The listener announces a direct send before any bytes move: the
+// CLI log and the app's parser both read plain stderr lines.
+func TestListenerAnnouncesDirectSender(t *testing.T) {
+	nas := testPeerID("nas")
+
+	_, c := testListener(t, nas)
+	defer func() { _ = c.Close() }()
+
+	capR, capW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	old := os.Stderr
+	os.Stderr = capW
+
+	if err := writeMsg(c, msg{Op: opSend, Target: "nas", From: "macbook-home", FileName: "hello.txt", Size: 5}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	os.Stderr = old
+	_ = capW.Close()
+
+	out, err := io.ReadAll(capR)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || !m.OK {
+		t.Fatalf("ready = %+v", m)
+	}
+
+	if !strings.Contains(string(out), "macbook-home is sending hello.txt directly") {
+		t.Fatalf("announce = %q", out)
+	}
+}
 
 func testListener(t *testing.T, id *peerID) (*listener, net.Conn) {
 	t.Helper()
