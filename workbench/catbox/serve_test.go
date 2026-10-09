@@ -977,6 +977,102 @@ func TestDepositResumesNearCap(t *testing.T) {
 	}
 }
 
+// The pull announces each file before the bytes, like the direct
+// path: the app's live row names the file in flight.
+func TestPullAnnouncesFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "hello.txt")
+	if err := os.WriteFile(src, []byte("hello"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	sha := mustSHA(t, src)
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	capR, capW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	old := os.Stderr
+	os.Stderr = capW
+
+	inbox := t.TempDir()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
+		t.Fatalf("inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	os.Stderr = old
+	_ = capW.Close()
+
+	out, err := io.ReadAll(capR)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(string(out), "receiving hello.txt from laptop") {
+		t.Fatalf("announce = %q", out)
+	}
+}
+
+// An imperative cancel — Ctrl-C, the app's cancel button — must not
+// leave a partial behind: the pull dies by ctx, its partial with it.
+func TestPullCancelSweepsPartial(t *testing.T) {
+	nas := testPeerID("nas")
+	dir := t.TempDir()
+	it := item{ID: "x", FileName: "f.bin", From: "laptop", SHA: strings.Repeat("a", 64), Plain: 4096, Size: 5000}
+
+	c, s := net.Pipe()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // imperative from the first byte
+
+	go func() {
+		defer func() { _ = s.Close() }()
+
+		if m, err := readMsg(s); err != nil || m.Op != opFetch {
+			return
+		}
+
+		_ = writeMsg(s, msg{Op: opFile, OK: true, FileName: it.FileName, From: it.From, Size: 100, Have: 0})
+	}()
+
+	if err := clientFetch(ctx, c, nil, nas, it, dir); err == nil {
+		t.Fatal("canceled fetch: want error")
+	}
+
+	_ = c.Close()
+
+	if _, err := os.Stat(partialPath(dir, it.SHA, it.Plain)); !os.IsNotExist(err) {
+		t.Fatalf("canceled pull left its partial: %v", err)
+	}
+}
+
 // TestPullSelectedItems pins the id-filtered pull: recv with ids
 // delivers only those items, the rest stay parked, and an unknown id
 // is an error.

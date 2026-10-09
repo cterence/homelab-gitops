@@ -254,6 +254,26 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		}
 	}()
 
+	// Announce before the bytes move: the CLI log and the app's row
+	// both come from this plain stderr line. The name is resolved
+	// from the roster by peer key when the engine knows it — a
+	// claimed name on the wire is display-only, never an identity.
+	from := m.From
+
+	if conn, ok := rwc.(net.Conn); ok && lc.srv != nil {
+		if peer, pok := lc.srv.PeerKey(conn.RemoteAddr()); pok {
+			if name := senderName(peer); name != "unknown" {
+				from = name
+			}
+		}
+	}
+
+	if from == "" {
+		from = "unknown peer"
+	}
+
+	fmt.Fprintf(os.Stderr, "%s is sending %s directly (%s%s)\n", from, m.FileName, humanBytes(m.Size), resumedSuffix(have))
+
 	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Have: have}); err != nil {
 		return
 	}

@@ -53,9 +53,10 @@ func lockPartial(dir, shaHex string, size int64) (release func(), err error) {
 	return func() { _ = f.Close() }, nil
 }
 
-// partialTTL bounds how long a partial waits for its sender: longer
-// than this and the sender gave up.
-const partialTTL = 7 * 24 * time.Hour
+// partialTTL bounds how long a partial waits for its sender: the
+// sender's retry window is minutes, so an hour covers an unlock
+// resume — longer is storage clogging for nothing.
+const partialTTL = 1 * time.Hour
 
 // fileSHA256 streams one file through SHA-256: known before sealing,
 // it keys the deterministic file secret and the receiver's partial.

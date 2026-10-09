@@ -288,5 +288,12 @@ object Catbox {
         listener.getAndSet(null)?.destroy()
     }
 
-    fun isListening(): Boolean = listener.get() != null
+    /**
+     * Deletes every resume partial in the staging inbox. Only safe
+     * while no receiver can be writing: the listener must be stopped
+     * and no pull running — the cancel paths guarantee both.
+     */
+    fun sweepPartials(context: Context) {
+        inbox(context).listFiles()?.filter { it.name.startsWith(".part-") }?.forEach { it.delete() }
+    }
 }
