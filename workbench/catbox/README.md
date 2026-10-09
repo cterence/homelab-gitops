@@ -15,9 +15,8 @@ daemonless peers, everything end-to-end encrypted.
   pulls parked files; `catbox recv --listen` receives direct sends
   while online (it never pulls); senders try the listener first and
   always fall back to the storer. tailcat allows one tunnel per peer
-  key, so concurrent client commands serialize: the second fails
-  fast ("another catbox command is already running") instead of
-  hanging.
+  key, so concurrent client commands queue on the local lock and run
+  one at a time, in arrival order.
 - Files are sealed to the recipient's node key: 64 KiB
   XChaCha20-Poly1305 chunks under a per-file key wrapped in a sealed
   box (age's STREAM construction). The storer relays ciphertext only.
@@ -33,7 +32,7 @@ catbox join   --name NAME <storer-addr>
 catbox rename <new-name>
 catbox invite
 catbox send   <member> <file> [<file>...]
-catbox recv   [--dir DIR] [--listen]
+catbox recv   [--dir DIR] [--listen] [<id>...]
 catbox dismiss <id>
 catbox status
 catbox version
@@ -80,12 +79,13 @@ catbox version
   untouched) are swept at `recv` startup and hourly by `serve`; a
   SHA mismatch deletes the partial outright. Output marks a resume
   with `resumed from N`.
-- `recv` without `--listen` pulls everything the storer holds for
-  this machine into the inbox dir (OS downloads + `/catbox` by
-  default), verifying each file's SHA-256 and acknowledging so the
-  storer deletes its copy. `recv --listen` only listens: it publishes
-  its tailcat address in the roster and clears it again on shutdown
-  (Ctrl-C); pulling stays an explicit decision.
+- `recv` without `--listen` pulls held files into the inbox dir (OS
+  downloads + `/catbox` by default) — everything, or only the files
+  named by id (see `catbox status`) — verifying each file's SHA-256
+  and acknowledging so the storer deletes its copy; an unknown id is
+  an error. `recv --listen` only listens: it publishes its tailcat
+  address in the roster and clears it again on shutdown (Ctrl-C);
+  pulling stays an explicit decision.
 - `dismiss <id>` refuses delivery of one of your own pending items:
   the storer deletes it without the bytes ever transferring. `status`
   lists the ids of everything waiting for you.
@@ -118,15 +118,14 @@ child process with `HOME` pointed at the app's private storage (the
 identity lives there) and the inbox at the app's external files dir
 via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
 `dismiss` and holds a long-lived `recv --listen` child whenever it is
-on screen — direct sends are always welcome, and parked files collect
-themselves while on screen on an unmetered network (the explicit
-receive button stays the path for metered pulls); parked files can be
-refused per file with a confirming dialog. Its server engine
-(identity key) never conflicts with one-shot client execs (dial key).
-While an own-action transfer is in flight the app holds a bounded
-partial wake lock, so screen-off does not suspend it mid-transfer; a
-listener receive ends with the screen, its partial resuming wherever
-the next attempt picks up.
+on screen — direct sends are always welcome, every waiting file
+carries its own receive action, and the waiting header receives
+everything at once; parked files can be refused per file with a
+confirming dialog. Its server engine (identity key) never conflicts
+with one-shot client execs (dial key). While an own-action transfer
+is in flight the app holds a bounded partial wake lock, so screen-off
+does not suspend it mid-transfer; a listener receive ends with the
+screen, its partial resuming wherever the next attempt picks up.
 
 Build (hermetic, offline gradle, pinned debug keystore dedicated to
 catbox):

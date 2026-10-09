@@ -19,6 +19,7 @@ type progressReader struct {
 	offset int64         // resume point: the counter starts here, wire bytes add on top
 	label  string        // "sending", "received", "relayed"
 	every  time.Duration // interval between lines
+	path   func() string // live network path; may be nil
 	w      io.Writer     // progress lines; defaults to stderr
 	now    func() time.Time
 
@@ -70,11 +71,16 @@ func (p *progressReader) Read(b []byte) (int, error) {
 func (p *progressReader) emit(n, rate int64) {
 	w, rewrite := p.sink()
 
+	var path string
+	if p.path != nil {
+		path = p.path()
+	}
+
 	if rewrite {
-		_, _ = fmt.Fprintf(w, "\r  %s", progressLine(p.label, n, p.total, rate))
+		_, _ = fmt.Fprintf(w, "\r  %s", progressLine(p.label, n, p.total, rate, path, true))
 		p.printed = true
 	} else {
-		_, _ = fmt.Fprintf(w, "  %s\n", progressLine(p.label, n, p.total, rate))
+		_, _ = fmt.Fprintf(w, "  %s\n", progressLine(p.label, n, p.total, rate, path, false))
 	}
 
 	if p.onTick != nil {
@@ -122,38 +128,55 @@ func (p *progressReader) clock() time.Time {
 	return time.Now()
 }
 
-// progressLine renders one progress step: "sending 512 MiB / 943 MiB
-// (54%, 41 MiB/s, eta 11s)", degraded to "relayed 1.2 GiB (38 MiB/s)"
-// when the total is unknown.
-func progressLine(label string, n, total, rate int64) string {
-	s := fmt.Sprintf("%s %s", label, humanBytes(n))
+// progressLine renders one progress step: "sending [████░░] 78.6 MiB
+// / 418.3 MiB (19%), 20.0 MiB/s, path: direct 192.0.2.1:41414" — the
+// bar only on a terminal, the numbers absolute, the path naming the
+// connection. Degraded to "relayed 1.2 GiB (38 MiB/s)" when the total
+// is unknown.
+func progressLine(label string, n, total, rate int64, path string, bar bool) string {
+	if path != "" {
+		path = ", path: " + path
+	}
+
+	var s string
+	if bar && total > 0 {
+		s = fmt.Sprintf("%s %s %s", label, barCells(n, total), humanBytes(n))
+	} else {
+		s = fmt.Sprintf("%s %s", label, humanBytes(n))
+	}
 
 	switch {
 	case total > 0 && rate > 0:
-		eta := (total - n) / rate
-		if eta < 0 {
-			eta = 0
-		}
-
-		return fmt.Sprintf("%s / %s (%.0f%%, %s/s, eta %s)",
-			s, humanBytes(total), 100*float64(n)/float64(total), humanBytes(rate), humanETA(eta))
+		return fmt.Sprintf("%s / %s (%.0f%%), %s/s%s",
+			s, humanBytes(total), 100*float64(n)/float64(total), humanBytes(rate), path)
 	case total > 0:
-		return fmt.Sprintf("%s / %s (%.0f%%)", s, humanBytes(total), 100*float64(n)/float64(total))
+		return fmt.Sprintf("%s / %s (%.0f%%%s)", s, humanBytes(total), 100*float64(n)/float64(total), path)
 	case rate > 0:
-		return fmt.Sprintf("%s (%s/s)", s, humanBytes(rate))
+		return fmt.Sprintf("%s (%s/s%s)", s, humanBytes(rate), path)
 	default:
-		return s
+		return s + path
 	}
 }
 
-// humanETA formats a seconds count as 42s, 4m07s, or 3h12m.
-func humanETA(sec int64) string {
-	switch {
-	case sec < 60:
-		return fmt.Sprintf("%ds", sec)
-	case sec < 3600:
-		return fmt.Sprintf("%dm%02ds", sec/60, sec%60)
-	default:
-		return fmt.Sprintf("%dh%02dm", sec/3600, (sec%3600)/60)
+// barCells renders a fixed-width unicode bar: n of total.
+func barCells(n, total int64) string {
+	const width = 24
+
+	cells := make([]rune, width)
+	for i := range cells {
+		cells[i] = '░'
 	}
+
+	if total > 0 {
+		filled := int(float64(n) / float64(total) * float64(width))
+		if filled > width {
+			filled = width
+		}
+
+		for i := range filled {
+			cells[i] = '█'
+		}
+	}
+
+	return "[" + string(cells) + "]"
 }

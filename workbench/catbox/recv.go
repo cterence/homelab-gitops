@@ -20,10 +20,11 @@ import (
 	"tailscale.com/types/key"
 )
 
-// runRecv is the peer's two receive verbs: pull everything the storer
-// holds, or listen for direct sends. Listening never pulls — files
-// park at the storer until the peer asks for them.
-func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool) error {
+// runRecv is the peer's two receive verbs: pull what the storer holds
+// — everything, or the named ids only — or listen for direct sends.
+// Listening never pulls — files park at the storer until the peer
+// asks for them.
+func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool, ids []string) error {
 	id, _, err := loadPeerID("", "")
 	if err != nil {
 		return err
@@ -32,7 +33,7 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 	sweepPartials(inboxDir)
 
 	if !listen {
-		release, err := lockPeer()
+		release, err := lockPeer(ctx)
 		if err != nil {
 			return err
 		}
@@ -47,7 +48,7 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 		defer func() { _ = cl.Close() }()
 		defer func() { _ = conn.Close() }()
 
-		return clientInbox(ctx, conn, cl, id, inboxDir)
+		return clientInbox(ctx, conn, cl, id, inboxDir, ids)
 	}
 
 	if err := ensureListenerIdentity(ctx, id); err != nil {
@@ -181,7 +182,10 @@ func (lc *listener) onTCP(port uint16) func(net.Conn) {
 func (lc *listener) handleConn(conn net.Conn) {
 	defer func() { _ = conn.Close() }() // ponytail: address possession is the capability
 
-	_ = conn.SetDeadline(time.Now().Add(idleTimeout))
+	// The direct send's silence cap, mirrored: a vanished sender ends
+	// the receive at the same cap the sender aborts at, instead of
+	// riding the storer paths' longer idle deadline.
+	_ = conn.SetDeadline(time.Now().Add(directStall))
 	lc.listenConn(conn)
 }
 
@@ -254,12 +258,23 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		return
 	}
 
+	// The live path for the progress lines: this conn's peer, read
+	// passively from the engine status — the sender is the one
+	// pinging; the listener just watches its own state.
+	var pathFn func() string
+
+	if conn, ok := rwc.(net.Conn); ok && lc.srv != nil {
+		if peer, ok := lc.srv.PeerKey(conn.RemoteAddr()); ok {
+			pathFn = func() string { return pathOf(lc.srv.Status(), peer) }
+		}
+	}
+
 	// The stream ends at its terminator; no size bound needed here.
 	// Ticks print progress (the app's log pane sees plain stderr) and
 	// slide the conn deadline.
-	src := &progressReader{r: rwc, total: m.Size, offset: have, label: "received", every: time.Second, onTick: func(int64) {
+	src := &progressReader{r: rwc, total: m.Size, offset: have, label: "received", every: time.Second, path: pathFn, onTick: func(int64) {
 		if c, ok := rwc.(net.Conn); ok {
-			_ = c.SetDeadline(time.Now().Add(idleTimeout)) // sliding: inactivity cap
+			_ = c.SetDeadline(time.Now().Add(directStall)) // sliding: inactivity cap, like the sender's
 		}
 	}}
 

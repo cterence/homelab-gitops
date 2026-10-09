@@ -114,7 +114,7 @@ func TestJoinSendPull(t *testing.T) {
 	inbox := t.TempDir()
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
 		t.Fatalf("inbox: %v", err)
 	}
 
@@ -710,7 +710,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 	inbox := t.TempDir()
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(context.Background(), conn, nil, nas, inbox); err != nil {
+	if err := clientInbox(context.Background(), conn, nil, nas, inbox, nil); err != nil {
 		t.Fatalf("inbox: %v", err)
 	}
 
@@ -850,7 +850,7 @@ func TestDepositResumesAfterInterruption(t *testing.T) {
 	inbox := t.TempDir()
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
 		t.Fatalf("inbox: %v", err)
 	}
 
@@ -867,6 +867,110 @@ func TestDepositResumesAfterInterruption(t *testing.T) {
 
 	if metas, _ := st.spool.items(); len(metas) != 0 {
 		t.Fatalf("spool not emptied after ack: %+v", metas)
+	}
+}
+
+// TestPullSelectedItems pins the id-filtered pull: recv with ids
+// delivers only those items, the rest stay parked, and an unknown id
+// is an error.
+func TestPullSelectedItems(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, ""); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	type parked struct {
+		id   string
+		path string
+	}
+
+	var want []parked
+
+	for _, name := range []string{"one.txt", "two.txt"} {
+		src := filepath.Join(t.TempDir(), name)
+		if err := os.WriteFile(src, []byte(name), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		conn := dial(t, st, laptop)
+		if err := clientSend(ctx, conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
+			t.Fatalf("send %s: %v", name, err)
+		}
+
+		_ = conn.Close()
+
+		metas, err := st.spool.items()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Same-second deposits tie in the spool order: match by name.
+		var id string
+
+		for _, m := range metas {
+			if m.FileName == name {
+				id = m.ID
+			}
+		}
+
+		if id == "" {
+			t.Fatalf("%s never parked: %+v", name, metas)
+		}
+
+		want = append(want, parked{id: id, path: src})
+	}
+
+	inbox := t.TempDir()
+
+	// Pull only the second item.
+	conn := dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox, []string{want[1].id}); err != nil {
+		t.Fatalf("selective pull: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if _, err := os.Stat(filepath.Join(inbox, "two.txt")); err != nil {
+		t.Fatalf("selected item not delivered: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(inbox, "one.txt")); !os.IsNotExist(err) {
+		t.Fatalf("unselected item must stay parked: %v", err)
+	}
+
+	// An unknown id is an error, not a silent skip.
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox, []string{"bogus"}); err == nil || !strings.Contains(err.Error(), "no such pending item") {
+		t.Fatalf("unknown id err = %v, want no such pending item", err)
+	}
+
+	_ = conn.Close()
+
+	// Everything else still delivers when no ids are given.
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
+		t.Fatalf("pull all: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if _, err := os.Stat(filepath.Join(inbox, "one.txt")); err != nil {
+		t.Fatalf("remaining item not delivered: %v", err)
+	}
+
+	if metas, _ := st.spool.items(); len(metas) != 0 {
+		t.Fatalf("spool not emptied: %+v", metas)
 	}
 }
 
@@ -912,7 +1016,7 @@ func TestPullSkipsBusyPartial(t *testing.T) {
 	}
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
 		t.Fatalf("a busy partial must be skipped, not failed: %v", err)
 	}
 
@@ -925,7 +1029,7 @@ func TestPullSkipsBusyPartial(t *testing.T) {
 	release()
 
 	conn = dial(t, st, nas)
-	if err := clientInbox(ctx, conn, nil, nas, inbox); err != nil {
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
 		t.Fatalf("inbox after release: %v", err)
 	}
 

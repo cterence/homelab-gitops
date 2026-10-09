@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -25,40 +24,168 @@ import (
 )
 
 // lockPeer serializes one-shot client commands: tailcat allows one
-// tunnel per peer key per server, so a second concurrent command
-// would hang at dial. Non-blocking — fail fast, retry when free. A
-// stale lock (crashed process) is detected by pid and reclaimed.
-func lockPeer() (release func(), err error) {
+// tunnel per peer key per server, so concurrent commands queue in
+// client.queue and take the lock in arrival order (or give up with
+// ctx). Both the lock and every queue slot is an flock — a crashed
+// process releases them by dying, so a stale lock or a reused pid can
+// never jam the queue.
+func lockPeer(ctx context.Context) (release func(), err error) {
 	dir := peerConfigDir()
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return func() {}, nil // no config dir: proceed unlocked
 	}
 
-	path := filepath.Join(dir, "client.lock")
+	queue := filepath.Join(dir, "client.queue")
+	if err := os.MkdirAll(queue, 0o700); err != nil {
+		return func() {}, nil // cannot queue: proceed unlocked
+	}
 
-	if b, rerr := os.ReadFile(path); rerr == nil {
-		if pid, perr := strconv.Atoi(strings.TrimSpace(string(b))); perr == nil {
-			if kerr := syscall.Kill(pid, 0); kerr == nil || errors.Is(kerr, syscall.EPERM) {
-				return nil, errors.New("another catbox command is already running for this identity")
+	// The queue slot: nanosecond names put waiters in arrival order,
+	// and its flock is the waiter's liveness — death releases it.
+	var (
+		entry string
+		slot  *os.File
+	)
+
+	for slot == nil {
+		name := fmt.Sprintf("%d-%d", time.Now().UnixNano(), os.Getpid())
+
+		f, err := os.OpenFile(filepath.Join(queue, name), os.O_CREATE|os.O_EXCL|os.O_RDWR, 0o600)
+		if os.IsExist(err) {
+			continue // same-nanosecond collision: take the next nanosecond
+		}
+
+		if err != nil {
+			return func() {}, nil // cannot queue: proceed unlocked
+		}
+
+		if ferr := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); ferr != nil {
+			_ = f.Close()
+			_ = os.Remove(filepath.Join(queue, name))
+
+			return func() {}, nil // cannot queue: proceed unlocked
+		}
+
+		slot = f
+		entry = name
+	}
+
+	if err := ctx.Err(); err != nil {
+		_ = slot.Close()
+		_ = os.Remove(filepath.Join(queue, entry))
+
+		return nil, err // a canceled command never runs
+	}
+
+	giveUp := func() {
+		_ = slot.Close()
+		_ = os.Remove(filepath.Join(queue, entry))
+	}
+
+	lockPath := filepath.Join(dir, "client.lock")
+
+	tick := time.NewTicker(200 * time.Millisecond)
+	defer tick.Stop()
+
+	var logged bool
+
+	for {
+		head, ahead := queueState(queue, entry)
+		if head == entry {
+			if lf, ok := takeLock(lockPath); ok {
+				_ = slot.Close()
+				_ = os.Remove(filepath.Join(queue, entry))
+
+				return func() { _ = lf.Close() }, nil
 			}
 		}
 
-		_ = os.Remove(path) // stale: its process is gone
-	}
+		// Waiting must say so: a silent stall looks like a hang.
+		if !logged {
+			note := "another catbox command is running, queued"
+			if ahead > 0 {
+				note = fmt.Sprintf("%s (%d ahead)", note, ahead)
+			}
 
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
-	if err != nil {
-		if os.IsExist(err) {
-			return nil, errors.New("another catbox command is already running for this identity")
+			fmt.Fprintln(os.Stderr, note)
+
+			logged = true
 		}
 
-		return func() {}, nil // cannot lock: proceed unlocked
+		select {
+		case <-ctx.Done():
+			giveUp()
+
+			return nil, ctx.Err()
+		case <-tick.C:
+		}
+	}
+}
+
+// takeLock claims the client lock: an flock on client.lock, held by
+// the returned file until it closes — the holder's death releases it.
+func takeLock(path string) (*os.File, bool) {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, false
 	}
 
-	_, _ = fmt.Fprintf(f, "%d\n", os.Getpid())
-	_ = f.Close()
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		_ = f.Close()
 
-	return func() { _ = os.Remove(path) }, nil
+		return nil, false
+	}
+
+	return f, true
+}
+
+// queueState reports the first live queue entry and how many live
+// ones sit ahead of ours. A slot's flock is its waiter's liveness:
+// a probe that locks the slot means its waiter is gone — the slot is
+// removed — so a crashed waiter never jams the queue.
+func queueState(queue, ours string) (head string, ahead int) {
+	des, err := os.ReadDir(queue)
+	if err != nil {
+		return ours, 0 // unreadable queue: fall through to the lock claim
+	}
+
+	names := make([]string, 0, len(des))
+	for _, de := range des {
+		names = append(names, de.Name())
+	}
+
+	slices.Sort(names)
+
+	for _, name := range names {
+		if name == ours {
+			break // ours: everything live ahead of it is counted
+		}
+
+		f, err := os.OpenFile(filepath.Join(queue, name), os.O_RDWR, 0o600)
+		if err != nil {
+			continue
+		}
+
+		if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+			_ = f.Close() // held: its waiter lives
+			ahead++
+
+			if head == "" {
+				head = name
+			}
+
+			continue
+		}
+
+		_ = f.Close() // the probe took it: the waiter is dead
+		_ = os.Remove(filepath.Join(queue, name))
+	}
+
+	if head == "" {
+		head = ours // nothing live ahead: our turn
+	}
+
+	return head, ahead
 }
 
 // clientConn opens a tailcat tunnel to the storer and dials the
@@ -236,7 +363,7 @@ func discoPath(ctx context.Context, c *tailcat.Client) string {
 // pathSuffix formats the path report for a transfer output line.
 func pathSuffix(p string) string {
 	if p == "" {
-		return ""
+		return ", path: unknown" // the report must never fail the transfer, but must never hide either
 	}
 
 	return ", path: " + p
@@ -276,6 +403,53 @@ func resumeOffset(have, size int64) int64 {
 	}
 
 	return have
+}
+
+// livePath polls the tunnel's network path in the background — one
+// bounded disco ping every few seconds, off the data path — so
+// progress lines can show it, including its relay-to-direct upgrade
+// mid-transfer. stop ends the poller; the getter returns the last
+// answer, "" before the first one lands.
+func livePath(ctx context.Context, c *tailcat.Client) (get func() string, stop func()) {
+	var (
+		mu sync.Mutex
+		p  string
+	)
+
+	pctx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		defer cancel()
+
+		poll := func() {
+			if s := discoPath(pctx, c); s != "" {
+				mu.Lock()
+				p = s
+				mu.Unlock()
+			}
+		}
+
+		poll() // the first answer before the first tick
+
+		tick := time.NewTicker(5 * time.Second)
+		defer tick.Stop()
+
+		for {
+			select {
+			case <-pctx.Done():
+				return
+			case <-tick.C:
+				poll()
+			}
+		}
+	}()
+
+	return func() string {
+		mu.Lock()
+		defer mu.Unlock()
+
+		return p
+	}, cancel
 }
 
 // clientSend seals file to target: directly when the target is
@@ -324,7 +498,7 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		// and came back finishes with no storer bytes.
 		deadline := time.Now().Add(directRetryWindow)
 
-		resumed, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
+		resumed, dpath, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
 
 		for err != nil && ctx.Err() == nil && time.Now().Before(deadline) {
 			if errors.Is(err, errPartialBusy) {
@@ -346,13 +520,12 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 			// fresh, uncached client, patient enough for the
 			// re-handshake.
 			rc := &tailcat.Client{Server: target.Addr, Key: id.DialKey, Logf: func(string, ...any) {}}
-			resumed, err = directSend(ctx, rc, directRetryDial, id, target, f, info, path, shaHex)
+			resumed, dpath, err = directSend(ctx, rc, directRetryDial, id, target, f, info, path, shaHex)
 			_ = rc.Close()
 		}
 
 		if err == nil {
-			p := discoPath(ctx, tunnelClient(target.Addr, id.DialKey))
-			fmt.Printf("sent %s to %s directly (%s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), resumedSuffix(resumed), pathSuffix(p))
+			fmt.Printf("sent %s to %s directly (%s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), resumedSuffix(resumed), pathSuffix(dpath))
 
 			return nil
 		} else if ctx.Err() != nil {
@@ -419,7 +592,10 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 
 	fmt.Fprintf(os.Stderr, "depositing %s at the storer%s...\n", humanBytes(info.Size()-resumed), resumedSuffix(resumed))
 
-	src := &progressReader{r: f, total: info.Size() - resumed, label: "depositing", every: time.Second}
+	pathFn, stopPath := livePath(ctx, tunnelClient(id.StorerAddr, id.DialKey))
+	defer stopPath()
+
+	src := &progressReader{r: f, total: info.Size() - resumed, label: "depositing", every: time.Second, path: pathFn}
 
 	plainSize, err := sealStream(id.Key, target.Key, rwc, src, shaHex, resumed)
 	src.close() // a failed write never reaches EOF: the line must not linger
@@ -450,6 +626,10 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 	}
 
 	p := discoPath(ctx, tunnelClient(id.StorerAddr, id.DialKey))
+	if s := pathFn(); s != "" {
+		p = s // the poller watched this transfer's actual path
+	}
+
 	fmt.Printf("sent %s to %s via storer (%s, sha256 %s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), shaHex[:12], resumedSuffix(resumed), pathSuffix(p))
 
 	return nil
@@ -468,9 +648,10 @@ func tunnelClient(addr tailcat.Addr, dialKey key.NodePrivate) *tailcat.Client {
 
 // directSend dials the target's listener and hands it the sealed
 // file, resuming from the listener's advertised chunk boundary. It
-// returns the offset it resumed from. dialTimeout bounds the dial
-// and, for a fresh client, its first meow handshake.
-func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duration, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, error) {
+// returns the offset it resumed from and the network path the
+// transfer used. dialTimeout bounds the dial and, for a fresh client,
+// its first meow handshake.
+func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duration, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, string, error) {
 	// A live listener answers its handshake in well under a second;
 	// anything longer is a stale roster address — fail fast and let
 	// the caller fall back to the storer.
@@ -479,7 +660,7 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 
 	conn, err := c.DialTCPPort(dialCtx, catboxPort)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	defer func() { _ = conn.Close() }()
@@ -492,23 +673,26 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 		_ = conn.Close()
 	}()
 
+	pathFn, stopPath := livePath(ctx, c)
+	defer stopPath()
+
 	_ = conn.SetDeadline(time.Now().Add(directStall))
 
 	if err := writeMsg(conn, msg{Op: opSend, Target: target.Name, FileName: filepath.Base(path), Size: info.Size(), SHA: shaHex}); err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	m, err := readMsg(conn)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	if m.Op != opReady || !m.OK {
 		if m.Err == busyRefusal {
-			return 0, fmt.Errorf("target refused: %w", errPartialBusy)
+			return 0, "", fmt.Errorf("target refused: %w", errPartialBusy)
 		}
 
-		return 0, fmt.Errorf("target refused: %s", m.Err)
+		return 0, "", fmt.Errorf("target refused: %s", m.Err)
 	}
 
 	// The listener's partial decides where the stream continues; only
@@ -518,10 +702,10 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 	resumed := resumeOffset(m.Have, info.Size())
 
 	if _, err := f.Seek(resumed, io.SeekStart); err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
-	src := &progressReader{r: f, total: info.Size() - resumed, label: "sending", every: time.Second, onTick: func(int64) {
+	src := &progressReader{r: f, total: info.Size() - resumed, label: "sending", every: time.Second, path: pathFn, onTick: func(int64) {
 		_ = conn.SetDeadline(time.Now().Add(directStall)) // sliding: inactivity cap, not total
 	}}
 
@@ -530,30 +714,30 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 
 	if err != nil {
 		if ctx.Err() != nil {
-			return 0, ctx.Err() // Ctrl-C: the raw error is just the closed conn
+			return 0, "", ctx.Err() // Ctrl-C: the raw error is just the closed conn
 		}
 
-		return 0, err
+		return 0, "", err
 	}
 
 	if plainSize != info.Size() {
-		return 0, fmt.Errorf("sealed %d bytes but file is %d", plainSize, info.Size())
+		return 0, "", fmt.Errorf("sealed %d bytes but file is %d", plainSize, info.Size())
 	}
 
 	if err := writeMsg(conn, msg{Op: opSent, SHA: shaHex}); err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	m, err = readMsg(conn)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	if m.Op != opDone || !m.OK {
-		return 0, fmt.Errorf("direct send failed: %s", m.Err)
+		return 0, "", fmt.Errorf("direct send failed: %s", m.Err)
 	}
 
-	return resumed, nil
+	return resumed, pathFn(), nil
 }
 
 // clientDismiss refuses delivery of one pending item: the storer
@@ -575,9 +759,10 @@ func clientDismiss(rwc io.ReadWriter, id string) error {
 	return nil
 }
 
-// clientInbox pulls everything held for this peer into dir. cl, when
-// non-nil, lets each pull report its network path.
-func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client, id *peerID, dir string) error {
+// clientInbox pulls what the storer holds for this peer into dir: the
+// named ids only, or everything when ids is empty. cl, when non-nil,
+// lets each pull report its network path.
+func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client, id *peerID, dir string, ids []string) error {
 	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
 		return err
 	}
@@ -597,22 +782,56 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 	if len(m.Items) == 0 {
 		fmt.Println("inbox empty")
+
 		return nil
+	}
+
+	// The pull set: the named ids, or everything.
+	pull := m.Items
+
+	if len(ids) > 0 {
+		want := make(map[string]bool, len(ids))
+		for _, id := range ids {
+			want[id] = true
+		}
+
+		got := make(map[string]bool, len(m.Items))
+		pull = pull[:0]
+
+		for _, it := range m.Items {
+			if want[it.ID] {
+				pull = append(pull, it)
+			}
+
+			got[it.ID] = true
+		}
+
+		var missing []string
+
+		for _, id := range ids {
+			if !got[id] {
+				missing = append(missing, id)
+			}
+		}
+
+		if len(missing) > 0 {
+			return fmt.Errorf("no such pending item: %s", strings.Join(missing, ", "))
+		}
 	}
 
 	var pullBytes int64
 
-	for _, it := range m.Items {
+	for _, it := range pull {
 		pullBytes += it.Plain
 	}
 
-	fmt.Fprintf(os.Stderr, "pulling %d files (%s)...\n", len(m.Items), humanBytes(pullBytes))
+	fmt.Fprintf(os.Stderr, "pulling %d files (%s)...\n", len(pull), humanBytes(pullBytes))
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 
-	for _, it := range m.Items {
+	for _, it := range pull {
 		if err := clientFetch(ctx, rwc, cl, id, it, dir); err != nil {
 			if errors.Is(err, errPartialBusy) {
 				fmt.Printf("skipped %s (already receiving)\n", it.FileName)
@@ -687,7 +906,18 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 	dst := uniquePath(dir, m.FileName)
 
-	src := &progressReader{r: io.LimitReader(rwc, m.Size), total: it.Plain, offset: have, label: "received", every: time.Second}
+	// A live path for the progress lines when the pull knows its
+	// client (tests pass nil).
+	var pathFn func() string
+
+	if cl != nil {
+		var stopPath func()
+
+		pathFn, stopPath = livePath(ctx, cl)
+		defer stopPath()
+	}
+
+	src := &progressReader{r: io.LimitReader(rwc, m.Size), total: it.Plain, offset: have, label: "received", every: time.Second, path: pathFn}
 
 	// The stream ends at its terminator; no size bound needed here.
 	_, plainSize, sha, err := openStream(id.Key, src, f, have, h)
@@ -726,7 +956,11 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 	p := ""
 	if cl != nil {
-		p = discoPath(ctx, cl)
+		p = pathFn()
+
+		if p == "" {
+			p = discoPath(ctx, cl)
+		}
 	}
 
 	fmt.Printf("got %s from %s (%s%s%s)\n", filepath.Base(dst), m.From, humanBytes(plainSize), resumedSuffix(have), pathSuffix(p))

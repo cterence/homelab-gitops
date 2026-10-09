@@ -93,7 +93,7 @@ func run() error {
 			return err
 		}
 
-		release, err := lockPeer()
+		release, err := lockPeer(ctx)
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func run() error {
 			return err
 		}
 
-		release, err := lockPeer()
+		release, err := lockPeer(ctx)
 		if err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func run() error {
 			}
 		}
 
-		return runRecv(ctx, log, *dir, *listen)
+		return runRecv(ctx, log, *dir, *listen, fs.Args())
 	case "invite":
 		id, _, err := loadPeerID("", "")
 		if err != nil {
@@ -197,7 +197,7 @@ func run() error {
 			return err
 		}
 
-		release, err := lockPeer()
+		release, err := lockPeer(ctx)
 		if err != nil {
 			return err
 		}
@@ -238,7 +238,7 @@ func run() error {
 			return err
 		}
 
-		release, err := lockPeer()
+		release, err := lockPeer(ctx)
 		if err != nil {
 			return err
 		}
@@ -283,7 +283,7 @@ func run() error {
 			return err
 		}
 
-		release, err := lockPeer()
+		release, err := lockPeer(ctx)
 		if err != nil {
 			return err
 		}
@@ -341,7 +341,7 @@ transfer commands:
   send      seal and ship files to a member
             <member> <file> [<file>...]
   recv      pull held files, or listen for direct sends
-            [--dir DIR] [--listen]
+            [--dir DIR] [--listen] [<id>...]
   dismiss   refuse delivery of one held item
             <id>
 

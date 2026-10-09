@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -53,8 +55,8 @@ func TestProgressReaderEmitsPerInterval(t *testing.T) {
 
 	got := out.String()
 	for _, want := range []string{
-		"sending 300 B / 1000 B (30%, 200 B/s, eta 3s)",
-		"sending 600 B / 1000 B (60%, 300 B/s, eta 1s)",
+		"sending 300 B / 1000 B (30%), 200 B/s",
+		"sending 600 B / 1000 B (60%), 300 B/s",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("output missing %q:\n%s", want, got)
@@ -83,6 +85,22 @@ func TestProgressReaderNoEmitBeforeInterval(t *testing.T) {
 
 	if out.Len() != 0 {
 		t.Fatalf("emitted before the interval elapsed: %q", out.String())
+	}
+}
+
+// The live path provider rides inside the tick line's parens.
+func TestProgressReaderLivePath(t *testing.T) {
+	r, out, clock := newProgress(t, 1000, strings.NewReader(strings.Repeat("a", 400)))
+
+	r.path = func() string { return "direct 192.0.2.1:41414" }
+
+	readN(t, r, 100) // t0: counters start
+
+	clock.advance(time.Second)
+	readN(t, r, 200) // t1: 300 total
+
+	if want := "sending 300 B / 1000 B (30%), 200 B/s, path: direct 192.0.2.1:41414"; !strings.Contains(out.String(), want) {
+		t.Fatalf("output missing %q:\n%s", want, out.String())
 	}
 }
 
@@ -159,8 +177,16 @@ func TestProgressReaderRewritesOnTerminal(t *testing.T) {
 	readN(t, r, 100) // emit, redrawn
 
 	got := out.String()
-	if !strings.Contains(got, "\r  sending 200 B / 500 B (40%, 100 B/s, eta 3s)") {
-		t.Fatalf("no rewritten progress line:\n%q", got)
+	if !strings.Contains(got, "\r  sending [") {
+		t.Fatalf("terminal mode must draw the bar:\n%q", got)
+	}
+
+	if !strings.Contains(got, "] 200 B / 500 B (40%), 100 B/s") {
+		t.Fatalf("barred progress line wrong:\n%q", got)
+	}
+
+	if strings.Contains(got, "eta") {
+		t.Fatalf("the line must not carry an eta:\n%q", got)
 	}
 
 	if strings.Contains(got, "\n") {
@@ -178,24 +204,127 @@ func TestProgressReaderRewritesOnTerminal(t *testing.T) {
 	}
 }
 
-func TestLockPeerExclusive(t *testing.T) {
+// Concurrent client commands queue behind the lock and take it in
+// arrival order; a canceled wait never runs.
+func TestLockPeerQueue(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	release, err := lockPeer()
+	ctx := context.Background()
+
+	release, err := lockPeer(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := lockPeer(); err == nil {
-		t.Fatal("a second concurrent lock must contend, not succeed")
+	// Two waiters queue behind the holder, in arrival order.
+	type turn struct {
+		n       int
+		release func()
+	}
+
+	got := make(chan turn, 2)
+
+	for i := range 2 {
+		go func(n int) {
+			r, err := lockPeer(ctx)
+			if err == nil {
+				got <- turn{n, r}
+			}
+		}(i)
+
+		time.Sleep(50 * time.Millisecond) // arrival order = entry order
+	}
+
+	select {
+	case <-got:
+		t.Fatal("the lock was taken while the holder lives")
+	case <-time.After(600 * time.Millisecond):
 	}
 
 	release()
 
-	again, err := lockPeer()
+	first := <-got
+	if first.n != 0 {
+		t.Fatalf("the first waiter must go first, got %d", first.n)
+	}
+
+	first.release()
+
+	second := <-got
+	if second.n != 1 {
+		t.Fatalf("the second waiter must go second, got %d", second.n)
+	}
+
+	second.release()
+
+	// A canceled wait never takes the lock.
+	cctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if _, err := lockPeer(cctx); err == nil {
+		t.Fatal("a canceled wait must not take the lock")
+	}
+
+	// With everyone gone, a fresh command takes it at once.
+	again, err := lockPeer(ctx)
 	if err != nil {
-		t.Fatalf("after release: %v", err)
+		t.Fatal(err)
 	}
 
 	again()
+}
+
+// A queued command says so: a silent stall looks like a hang.
+func TestLockPeerQueuedLog(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	release, err := lockPeer(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer release()
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	saved := os.Stderr
+	os.Stderr = w
+
+	defer func() { os.Stderr = saved }()
+
+	done := make(chan error, 1)
+
+	go func() {
+		rel, err := lockPeer(ctx)
+		if err == nil {
+			rel()
+		}
+
+		done <- err
+	}()
+
+	time.Sleep(400 * time.Millisecond) // the waiter logs on its first poll
+
+	_ = w.Close()
+
+	got, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(string(got), "another catbox command is running, queued") {
+		t.Fatalf("no queued note: %q", got)
+	}
+
+	cancel()
+
+	if err := <-done; err == nil {
+		t.Fatal("the canceled waiter must give up")
+	}
 }

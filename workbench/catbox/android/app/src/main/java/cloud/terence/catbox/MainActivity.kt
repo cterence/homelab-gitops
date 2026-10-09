@@ -27,6 +27,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
@@ -43,7 +46,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -63,7 +65,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -95,6 +96,7 @@ fun CatboxApp() {
     val joined = remember { mutableStateOf<Boolean?>(null) } // null = checking
     val busy = remember { mutableStateOf(false) } // an action (receive/send) is running
     val progress = remember { mutableStateOf<String?>(null) } // what busy is doing
+    val progressFrac = remember { mutableStateOf<Float?>(null) } // parsed from the tick line: the real bar
     val cancelRequested = remember { mutableStateOf(false) } // user canceled the current action
     val ops = remember { kotlinx.coroutines.sync.Mutex() } // serializes all binary execs
     val pendingFiles = remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -115,18 +117,26 @@ fun CatboxApp() {
             .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "catbox:transfer")
     }
 
+    // When the last progress line arrived: a live transfer ticks every
+    // second, so long silence means the transfer is gone.
+    val lastTick = remember { java.util.concurrent.atomic.AtomicLong(0) }
+
     fun append(line: String) {
         // Progress and completion lines from any child (send, pull,
-        // listener) drive the in-UI transfer indicator.
+        // listener) drive the in-UI transfer indicator: the percent
+        // feeds the real bar, the text keeps numbers, bandwidth, path.
         val t = line.trim()
         when {
             t.startsWith("sending ") || t.startsWith("received ") || t.startsWith("depositing ") -> {
-                progress.value = t
+                progressFrac.value = Regex("\\((\\d+)%\\)").find(t)?.groupValues?.get(1)?.toFloat()?.div(100f)
+                progress.value = Regex("\\s*\\(\\d+%\\)").replace(t, "")
+                lastTick.set(System.currentTimeMillis())
                 wakeLock.acquire(2 * 60 * 1000L)
             }
             t.startsWith("got ") || t.startsWith("sent ") || t.startsWith("dismissed ") ||
                 t.startsWith("receive failed") -> {
                 progress.value = null
+                progressFrac.value = null
                 if (wakeLock.isHeld) wakeLock.release()
             }
         }
@@ -192,6 +202,7 @@ fun CatboxApp() {
                         f
                     }
                     progress.value = "sending $done/$total: ${tmp.name}"
+                    progressFrac.value = null // staging: no percent yet
                     val code = withContext(Dispatchers.IO) { Catbox.run(context, ::append, "send", target, tmp.absolutePath) }
                     tmp.delete()
                     if (code != 0 && !cancelRequested.value) problems += "send to $target failed (exit $code)"
@@ -254,26 +265,6 @@ fun CatboxApp() {
         sendTargets.value = emptySet()
     }
 
-    // On screen with files parked at the storer and an unmetered
-    // network, they collect themselves — the receive button stays
-    // the path for metered pulls. One attempt per waiting set: a
-    // failed pull never loops.
-    val foreground = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
-    val autoPulled = remember { mutableStateOf(emptySet<String>()) }
-
-    fun maybeAutoPull() {
-        val waiting = status.value?.waiting.orEmpty()
-        val ids = waiting.map { it.id }.toSet()
-        if (waiting.isEmpty() || ids == autoPulled.value) return
-        if (!foreground.get() || busy.value || progress.value != null) return
-        if (isMetered(context)) return
-        autoPulled.value = ids
-        scope.launch {
-            run("recv", "--dir", Catbox.inbox(context).absolutePath)
-            refresh()
-        }
-    }
-
     LaunchedEffect(Unit) {
         refresh()
         // Keep the indicator honest; offline polls are cheap and
@@ -281,15 +272,26 @@ fun CatboxApp() {
         while (true) {
             delay(if (status.value == null) 5_000 else 15_000)
             refresh()
-            maybeAutoPull()
+        }
+    }
+
+    // A stalled indicator clears itself: no tick for half a minute
+    // means the child is frozen or dead without a completion line —
+    // a vanished sender, a lock that killed the listener mid-receive.
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5_000)
+            if (progress.value != null && System.currentTimeMillis() - lastTick.get() > 35_000) {
+                progress.value = null
+                progressFrac.value = null
+                if (wakeLock.isHeld) wakeLock.release()
+            }
         }
     }
 
     // The listener follows the app's visibility: direct sends are
     // always welcome while catbox is on screen, while storer pulls
-    // stay behind the explicit receive button — except that parked
-    // files collect themselves while on screen on an unmetered
-    // network (see maybeAutoPull).
+    // wait behind each waiting file's receive button.
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(joined.value) {
         if (joined.value == true) Catbox.startListener(context, ::append)
@@ -297,13 +299,16 @@ fun CatboxApp() {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> {
-                    foreground.set(true)
-                    if (joined.value == true) Catbox.startListener(context, ::append)
-                }
+                Lifecycle.Event.ON_START -> if (joined.value == true) Catbox.startListener(context, ::append)
                 Lifecycle.Event.ON_STOP -> {
-                    foreground.set(false)
                     Catbox.stopListener()
+                    // The listener child died mid-receive: no completion
+                    // line is coming — the indicator must not survive it.
+                    if (progress.value != null && !busy.value) {
+                        progress.value = null
+                        progressFrac.value = null
+                        if (wakeLock.isHeld) wakeLock.release()
+                    }
                 }
                 else -> {}
             }
@@ -321,6 +326,17 @@ fun CatboxApp() {
                 title = { Text("catbox") },
                 actions = {
                     if (joined.value == true) {
+                        // The status indicator lives in the header: the
+                        // dot says everything, the word says the rest.
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                if (status.value != null) "online" else "offline",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.size(4.dp))
+                            Dot(online = status.value != null)
+                        }
                         IconButton(onClick = {
                             scope.launch {
                                 refreshing.value = true
@@ -379,7 +395,7 @@ fun CatboxApp() {
                                 Text(
                                     it,
                                     style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
+                                    maxLines = 2, // two lines: the path tail of a tick line stays visible
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f),
                                 )
@@ -416,22 +432,15 @@ fun CatboxApp() {
                                 }
                             }
                         }
-                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                        // The real bar: determinate when the tick
+                        // carries a percent, indeterminate otherwise
+                        // (staging lines, unknown totals).
+                        progressFrac.value?.let { f ->
+                            LinearProgressIndicator(progress = { f }, modifier = Modifier.fillMaxWidth())
+                        } ?: LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
-                            onClick = {
-                                scope.launch {
-                                    run("recv", "--dir", Catbox.inbox(context).absolutePath)
-                                    refresh()
-                                }
-                            },
-                            enabled = !busy.value,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("receive")
-                        }
-                        OutlinedButton(
                             onClick = { pickFiles.launch(arrayOf("*/*")) },
                             enabled = !busy.value,
                             modifier = Modifier.weight(1f),
@@ -439,10 +448,7 @@ fun CatboxApp() {
                             Text("send")
                         }
                         IconButton(onClick = { sendClipboard() }, enabled = !busy.value) {
-                            Icon(
-                                painterResource(R.drawable.ic_clipboard),
-                                contentDescription = "send clipboard",
-                            )
+                            Icon(Icons.Outlined.ContentPaste, contentDescription = "send clipboard")
                         }
                     }
                 }
@@ -460,6 +466,8 @@ fun CatboxApp() {
                 else -> MainScreen(
                     status.value,
                     busy.value,
+                    onReceive = { id -> scope.launch { run("recv", "--dir", Catbox.inbox(context).absolutePath, id); refresh() } },
+                    onReceiveAll = { scope.launch { run("recv", "--dir", Catbox.inbox(context).absolutePath); refresh() } },
                     onDismiss = { id -> scope.launch { run("dismiss", id); refresh() } },
                 )
             }
@@ -602,7 +610,7 @@ fun Dot(online: Boolean) {
 }
 
 @Composable
-fun MainScreen(status: Catbox.Status?, busy: Boolean, onDismiss: (String) -> Unit) {
+fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Unit, onReceiveAll: () -> Unit, onDismiss: (String) -> Unit) {
     val waiting = status?.waiting.orEmpty()
     val context = LocalContext.current
     var published by remember { mutableStateOf(emptyList<Catbox.Published>()) }
@@ -625,16 +633,6 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onDismiss: (String) -> Uni
     }
 
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // Quiet status row: the dot says everything.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Dot(online = status != null)
-            Spacer(Modifier.size(8.dp))
-            Text(
-                if (status != null) "connected" else "offline",
-                style = MaterialTheme.typography.titleSmall,
-            )
-        }
-
         if (waiting.isEmpty() && published.isEmpty()) {
             // Nothing to scroll: no LazyColumn, so no nudgeable empty state.
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -648,13 +646,38 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onDismiss: (String) -> Uni
             // The files: one scroll area, sections by state.
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (waiting.isNotEmpty()) {
-                    item { SectionLabel("waiting", Modifier) }
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            SectionLabel("waiting", Modifier.weight(1f))
+                            IconButton(onClick = onReceiveAll) {
+                                Icon(Icons.Outlined.Download, contentDescription = "receive all")
+                            }
+                        }
+                    }
                     items(waiting, key = { it.id }) { f ->
                         ListItem(
-                            headlineContent = { Text(f.fn) },
-                            supportingContent = { Text("from ${f.from} · ${humanBytes(f.plain)}") },
+                            headlineContent = {
+                                Text(
+                                    f.fn,
+                                    maxLines = 1, // a long name ellipsizes, never wraps
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                            supportingContent = {
+                                Column {
+                                    Text("from ${f.from}")
+                                    Text(humanBytes(f.plain))
+                                }
+                            },
                             trailingContent = {
-                                TextButton(onClick = { dismissPending = f }) { Text("dismiss") }
+                                Row {
+                                    IconButton(onClick = { onReceive(f.id) }) {
+                                        Icon(Icons.Outlined.Download, contentDescription = "receive")
+                                    }
+                                    IconButton(onClick = { dismissPending = f }) {
+                                        Icon(Icons.Outlined.Delete, contentDescription = "dismiss")
+                                    }
+                                }
                             },
                             modifier = Modifier.animateItem(),
                         )
@@ -720,14 +743,6 @@ fun humanBytes(n: Long): String = when {
     n < 1024L * 1024 * 1024 -> "%.1f MiB".format(n / 1024.0 / 1024.0)
     else -> "%.1f GiB".format(n / 1024.0 / 1024.0 / 1024.0)
 }
-
-/**
- * Whether the current network bills by the byte: auto-pulls wait for
- * Wi-Fi, the receive button covers the rest.
- */
-fun isMetered(context: android.content.Context): Boolean =
-    context.getSystemService(android.net.ConnectivityManager::class.java)?.isActiveNetworkMetered
-        ?: true
 
 /** "d MMM yyyy HH:mm", in the local zone. */
 fun humanWhen(epoch: Long): String {
