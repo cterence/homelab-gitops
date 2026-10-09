@@ -24,6 +24,7 @@ The root `flake.nix` provides the tool shell and pre-commit checks for the workb
 ```
 argocd-apps/   ApplicationSet registering every deployed app
 k8s-apps/      One Helm umbrella chart per app (<app>/Chart.yaml + values.yaml)
+charts/        Shared Helm charts rendered as extra Application sources
 workbench/     Go source code + Dockerfiles for self-built images
 scripts/       Helper scripts (deployed-apps table, pv-diff)
 docs/superpowers/  Design specs and implementation plans
@@ -63,8 +64,13 @@ Caveats:
 
 - Never reuse an old tag for new code — `pullPolicy: IfNotPresent` means nodes
   will keep serving the cached image. Always increment.
+- Every app carries the `charts/image-wait` chart as a second Application
+  source (wired in `argocd-apps/applicationset.yaml`); it renders PreSync hooks
+  that hold the sync until the workbench image tag exists in the registry, so
+  rollouts never hit ImagePullBackOff while the Kaniko build is still running.
 - After merging, check the `build-<app>` application in ArgoCD: if the Kaniko
-  build fails, the app deployment will be stuck in ImagePullBackOff.
+  build fails, the consuming app's sync fails at the hook and the old pods keep
+  running.
 - `Chart.yaml` version stays `0.1.0` (never bumped) — the image tag is the
   release mechanism.
 

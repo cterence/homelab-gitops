@@ -18,17 +18,26 @@ spec:
     metadata:
       name: "{{ .path.basename }}"
       annotations:
-        argocd.argoproj.io/manifest-generate-paths: "."
+        argocd.argoproj.io/manifest-generate-paths: "/{{ .path.path }};/charts/image-wait"
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
         argocd.argoproj.io/compare-options:
           '{{ printf "%s=%s" "ServerSideDiff" (dig
           "serverSideDiff" "false" . | toString) }}'
     spec:
       project: default
-      source:
-        repoURL: git@github.com:cterence/homelab-gitops.git
-        targetRevision: HEAD
-        path: "{{ .path.path }}"
+      sources:
+        - repoURL: git@github.com:cterence/homelab-gitops.git
+          targetRevision: HEAD
+          path: "{{ .path.path }}"
+        - repoURL: git@github.com:cterence/homelab-gitops.git
+          targetRevision: HEAD
+          path: charts/image-wait
+          helm:
+            valueFiles:
+              - "$values/{{ .path.path }}/values.yaml"
+        - repoURL: git@github.com:cterence/homelab-gitops.git
+          targetRevision: HEAD
+          ref: values
       destination:
         name: in-cluster
         namespace: '{{ default .path.basename (dig "namespace" "" .) }}'

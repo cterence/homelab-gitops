@@ -1,0 +1,79 @@
+{{/* PreSync hooks: hold the app sync until each workbench image
+     (registry.terence.cloud/*) exists in the in-cluster registry, so rollouts
+     never start before the Kaniko build has pushed the tag. The ApplicationSet
+     renders this chart against each consuming app's own values.yaml. */}}
+{{- $at := index .Values "app-template" | default dict }}
+{{- range $ctrl, $c := dig "controllers" (dict) $at }}
+{{- range $name, $ctr := dig "containers" (dict) $c }}
+{{- $repo := dig "image" "repository" "" $ctr }}
+{{- if hasPrefix "registry.terence.cloud/" $repo }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-wait-{{ $ctrl }}-{{ $name }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      containers:
+        - name: wait
+          image: curlimages/curl:8.22.0@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
+          command: ["/bin/sh", "-c"]
+          env:
+            - name: REPO
+              value: {{ trimPrefix "registry.terence.cloud/" $repo | quote }}
+            - name: TAG
+              value: {{ dig "image" "tag" "" $ctr | quote }}
+          args:
+            - |
+              i=0
+              until curl -sf "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
+                i=$((i+1))
+                [ "$i" -ge 180 ] && { echo "timeout waiting for ${REPO}:${TAG}"; exit 1; }
+                sleep 10
+              done
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $ms := index .Values "mirrorSync" | default dict }}
+{{- if and (dig "enabled" false $ms) (dig "image" "repository" "" $ms) }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-wait-mirror-sync
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      containers:
+        - name: wait
+          image: curlimages/curl:8.22.0@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
+          command: ["/bin/sh", "-c"]
+          env:
+            - name: REPO
+              value: {{ dig "image" "repository" "" $ms | quote }}
+            - name: TAG
+              value: {{ dig "image" "tag" "" $ms | quote }}
+          args:
+            - |
+              i=0
+              until curl -sf "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
+                i=$((i+1))
+                [ "$i" -ge 180 ] && { echo "timeout waiting for ${REPO}:${TAG}"; exit 1; }
+                sleep 10
+              done
+{{- end }}
