@@ -501,10 +501,6 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		resumed, dpath, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
 
 		for err != nil && ctx.Err() == nil && time.Now().Before(deadline) {
-			if errors.Is(err, errPartialBusy) {
-				break // a pull is delivering this content: the storer already parks it
-			}
-
 			fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
 
 			select {
@@ -595,7 +591,7 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 	pathFn, stopPath := livePath(ctx, tunnelClient(id.StorerAddr, id.DialKey))
 	defer stopPath()
 
-	src := &progressReader{r: f, total: info.Size() - resumed, label: "depositing", every: time.Second, path: pathFn}
+	src := &progressReader{r: f, total: info.Size(), offset: resumed, label: "depositing", every: time.Second, path: pathFn}
 
 	plainSize, err := sealStream(id.Key, target.Key, rwc, src, shaHex, resumed)
 	src.close() // a failed write never reaches EOF: the line must not linger
@@ -678,7 +674,7 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 
 	_ = conn.SetDeadline(time.Now().Add(directStall))
 
-	if err := writeMsg(conn, msg{Op: opSend, Target: target.Name, FileName: filepath.Base(path), Size: info.Size(), SHA: shaHex}); err != nil {
+	if err := writeMsg(conn, msg{Op: opSend, Target: target.Name, From: id.Name, FileName: filepath.Base(path), Size: info.Size(), SHA: shaHex}); err != nil {
 		return 0, "", err
 	}
 
@@ -705,7 +701,7 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 		return 0, "", err
 	}
 
-	src := &progressReader{r: f, total: info.Size() - resumed, label: "sending", every: time.Second, path: pathFn, onTick: func(int64) {
+	src := &progressReader{r: f, total: info.Size(), offset: resumed, label: "sending", every: time.Second, path: pathFn, onTick: func(int64) {
 		_ = conn.SetDeadline(time.Now().Add(directStall)) // sliding: inactivity cap, not total
 	}}
 
@@ -906,6 +902,10 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 	dst := uniquePath(dir, m.FileName)
 
+	// Announce like the direct path: the app's live row names the
+	// file in flight — the one thing the ticks never say.
+	fmt.Fprintf(os.Stderr, "receiving %s from %s (%s%s)\n", m.FileName, m.From, humanBytes(it.Plain), resumedSuffix(have))
+
 	// A live path for the progress lines when the pull knows its
 	// client (tests pass nil).
 	var pathFn func() string
@@ -926,6 +926,12 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 	_ = f.Close()
 
 	if err != nil {
+		// An imperative cancel (Ctrl-C, the app's kill) leaves no
+		// partial behind; a network death keeps it for the resume.
+		if ctx.Err() != nil {
+			cleanup = true
+		}
+
 		return err
 	}
 

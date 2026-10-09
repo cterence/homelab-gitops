@@ -169,6 +169,8 @@
                     platform-tools
                     build-tools-35-0-0
                     platforms-android-36
+                    emulator
+                    system-images-android-36-default-arm64-v8a
                   ]
                 );
               in

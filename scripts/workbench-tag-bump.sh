@@ -30,10 +30,25 @@ for app in $APPS; do
     continue
   fi
 
-  old=$(awk '/^tag:/{gsub(/"/, "", $2); print $2}' "$build_yaml")
+  # $NF: the value, not the anchor some build.yamls set before it
+  # (tag: &version "23") — bumping must keep the anchor, or the
+  # buildArgs *version reference stops resolving.
+  old=$(awk '/^tag:/{v=$NF; gsub(/"/, "", v); print v}' "$build_yaml")
   new="$(( ${old#v} + 1 ))"
 
-  awk -v new="tag: \"$new\"" '/^tag:/{print new; next} {print}' "$build_yaml" > "$build_yaml.tmp"
+  awk -v new="\"$new\"" '
+    /^tag:/ {
+      line = $0
+      sub(/^tag:[ \t]*/, "", line)
+      if (match(line, /^&[A-Za-z0-9_]+[ \t]*/)) {
+        print "tag: " substr(line, RSTART, RLENGTH) new
+      } else {
+        print "tag: " new
+      }
+      next
+    }
+    { print }
+  ' "$build_yaml" > "$build_yaml.tmp"
   mv "$build_yaml.tmp" "$build_yaml"
 
   echo "bumped $app: $old -> $new"

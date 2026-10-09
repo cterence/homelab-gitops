@@ -75,10 +75,15 @@ catbox version
   content never interleave — the second declines, and the sender's
   fallback finds the item already parked. The file's
   SHA keys a deterministic per-file secret, so a resumed attempt
-  decrypts against the existing partial. Stale partials (7 days
+  decrypts against the existing partial. Stale partials (1 hour
   untouched) are swept at `recv` startup and hourly by `serve`; a
-  SHA mismatch deletes the partial outright. Output marks a resume
-  with `resumed from N`.
+  SHA mismatch deletes the partial outright, and so does an
+  imperative cancel (Ctrl-C, the app's cancel button) — only an
+  accidental interruption keeps the partial for the resume. Output
+  marks a resume with `resumed from N`. Both receive paths announce
+  before the bytes (`<peer> is sending <file> directly (size)` for
+  direct, `receiving <file> from <peer> (size)` per pulled file), so
+  the CLI log and the app's in-flight row always name the file.
 - `recv` without `--listen` pulls held files into the inbox dir (OS
   downloads + `/catbox` by default) — everything, or only the files
   named by id (see `catbox status`) — verifying each file's SHA-256

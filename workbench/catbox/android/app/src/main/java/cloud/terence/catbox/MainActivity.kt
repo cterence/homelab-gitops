@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -27,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
@@ -65,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,6 +90,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** A file in flight, announced by a child before the bytes. A pull
+ * transforms its own waiting row; a direct receive never parks and
+ * loads in the received zone instead. Path updates per tick: a
+ * transfer can upgrade DERP to direct. */
+data class LiveRecv(val from: String, val file: String, val detail: String, val direct: Boolean, val path: String? = null)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatboxApp() {
@@ -97,6 +106,7 @@ fun CatboxApp() {
     val busy = remember { mutableStateOf(false) } // an action (receive/send) is running
     val progress = remember { mutableStateOf<String?>(null) } // what busy is doing
     val progressFrac = remember { mutableStateOf<Float?>(null) } // parsed from the tick line: the real bar
+    val liveRecv = remember { mutableStateOf<LiveRecv?>(null) } // a direct send's announced row
     val cancelRequested = remember { mutableStateOf(false) } // user canceled the current action
     val ops = remember { kotlinx.coroutines.sync.Mutex() } // serializes all binary execs
     val pendingFiles = remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -126,10 +136,36 @@ fun CatboxApp() {
         // listener) drive the in-UI transfer indicator: the percent
         // feeds the real bar, the text keeps numbers, bandwidth, path.
         val t = line.trim()
+        // The announce lines: direct "macbook is sending f directly (378 MiB)",
+        // pull "receiving f from macbook (378 MiB)" — both feed the live row.
+        val ann = Regex("^(\\S+) is sending (.+) directly \\((.*)\\)$").find(t)
+        val pullAnn = Regex("^receiving (.+) from (\\S+) \\((.*)\\)$").find(t)
         when {
+            ann != null -> {
+                val m = ann.groupValues
+                liveRecv.value = LiveRecv(m[1], m[2], m[3], direct = true)
+                progress.value = null // ticks take over from here
+                progressFrac.value = null
+                lastTick.set(System.currentTimeMillis())
+                wakeLock.acquire(2 * 60 * 1000L)
+            }
+            pullAnn != null -> {
+                val m = pullAnn.groupValues
+                liveRecv.value = LiveRecv(m[2], m[1], m[3], direct = false)
+                progress.value = null // the row carries it
+                progressFrac.value = null
+                lastTick.set(System.currentTimeMillis())
+            }
             t.startsWith("sending ") || t.startsWith("received ") || t.startsWith("depositing ") -> {
                 progressFrac.value = Regex("\\((\\d+)%\\)").find(t)?.groupValues?.get(1)?.toFloat()?.div(100f)
-                progress.value = Regex("\\s*\\(\\d+%\\)").replace(t, "")
+                if (liveRecv.value == null) {
+                    // The path tail always overflows one line: it gets its own.
+                    progress.value = Regex("\\s*\\(\\d+%\\)").replace(t, "").replace(", path: ", "\npath: ").replaceFirstChar { it.uppercase() }
+                } else {
+                    // A live receive shows its own row; the tick only
+                    // feeds the bar and the row's path.
+                    liveRecv.value = liveRecv.value?.copy(path = Regex(", path: (.+)$").find(t)?.groupValues?.get(1))
+                }
                 lastTick.set(System.currentTimeMillis())
                 wakeLock.acquire(2 * 60 * 1000L)
             }
@@ -137,6 +173,7 @@ fun CatboxApp() {
                 t.startsWith("receive failed") -> {
                 progress.value = null
                 progressFrac.value = null
+                liveRecv.value = null
                 if (wakeLock.isHeld) wakeLock.release()
             }
         }
@@ -171,8 +208,8 @@ fun CatboxApp() {
         }
 
         when {
-            code != 0 && cancelRequested.value -> snackbar.showSnackbar("canceled")
-            code != 0 -> snackbar.showSnackbar("failed (exit $code)")
+            code != 0 && cancelRequested.value -> snackbar.showSnackbar("Canceled")
+            code != 0 -> snackbar.showSnackbar("Failed (exit $code)")
         }
 
         cancelRequested.value = false
@@ -201,11 +238,11 @@ fun CatboxApp() {
                         }
                         f
                     }
-                    progress.value = "sending $done/$total: ${tmp.name}"
+                    progress.value = "Sending $done/$total: ${tmp.name}"
                     progressFrac.value = null // staging: no percent yet
                     val code = withContext(Dispatchers.IO) { Catbox.run(context, ::append, "send", target, tmp.absolutePath) }
                     tmp.delete()
-                    if (code != 0 && !cancelRequested.value) problems += "send to $target failed (exit $code)"
+                    if (code != 0 && !cancelRequested.value) problems += "Send to $target failed (exit $code)"
                 }
             }
         } finally {
@@ -217,10 +254,10 @@ fun CatboxApp() {
         }
         // Snackbars only after busy clears: the bar never outlives the message.
         if (canceled) {
-            snackbar.showSnackbar("canceled")
+            snackbar.showSnackbar("Canceled")
         } else if (problems.isEmpty()) {
             val n = uris.size
-            snackbar.showSnackbar("sent ${if (n == 1) "1 file" else "$n files"} to ${targets.joinToString()}")
+            snackbar.showSnackbar("Sent ${if (n == 1) "1 file" else "$n files"} to ${targets.joinToString()}")
         } else {
             snackbar.showSnackbar(problems.joinToString(" · "))
         }
@@ -256,7 +293,7 @@ fun CatboxApp() {
         }
 
         if (uri == null) {
-            scope.launch { snackbar.showSnackbar("clipboard has nothing sendable") }
+            scope.launch { snackbar.showSnackbar("Clipboard has nothing sendable") }
             return
         }
 
@@ -281,9 +318,10 @@ fun CatboxApp() {
     LaunchedEffect(Unit) {
         while (true) {
             delay(5_000)
-            if (progress.value != null && System.currentTimeMillis() - lastTick.get() > 35_000) {
+            if ((progress.value != null || liveRecv.value != null) && System.currentTimeMillis() - lastTick.get() > 35_000) {
                 progress.value = null
                 progressFrac.value = null
+                liveRecv.value = null
                 if (wakeLock.isHeld) wakeLock.release()
             }
         }
@@ -309,6 +347,7 @@ fun CatboxApp() {
                         progressFrac.value = null
                         if (wakeLock.isHeld) wakeLock.release()
                     }
+                    liveRecv.value = null // the direct receive died with the listener
                 }
                 else -> {}
             }
@@ -323,14 +362,24 @@ fun CatboxApp() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("catbox") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(R.drawable.tailcat),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text("Catbox")
+                    }
+                },
                 actions = {
                     if (joined.value == true) {
                         // The status indicator lives in the header: the
                         // dot says everything, the word says the rest.
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
                             Text(
-                                if (status.value != null) "online" else "offline",
+                                if (status.value != null) "Online" else "Offline",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -347,15 +396,15 @@ fun CatboxApp() {
                             if (refreshing.value || status.value == null) {
                                 CircularProgressIndicator(Modifier.size(24.dp))
                             } else {
-                                Icon(Icons.Outlined.Refresh, "refresh")
+                                Icon(Icons.Outlined.Refresh, "Refresh")
                             }
                         }
                         IconButton(onClick = { menuOpen.value = true }) {
-                            Icon(Icons.Outlined.MoreVert, "menu")
+                            Icon(Icons.Outlined.MoreVert, "Menu")
                         }
                         DropdownMenu(expanded = menuOpen.value, onDismissRequest = { menuOpen.value = false }) {
                             DropdownMenuItem(
-                                text = { Text("invite a device") },
+                                text = { Text("Invite a device") },
                                 onClick = {
                                     menuOpen.value = false
                                     scope.launch {
@@ -364,7 +413,7 @@ fun CatboxApp() {
                                 },
                             )
                             DropdownMenuItem(
-                                text = { Text("about") },
+                                text = { Text("About") },
                                 onClick = {
                                     menuOpen.value = false
                                     scope.launch {
@@ -387,68 +436,62 @@ fun CatboxApp() {
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    // The indicator covers own actions and live
-                    // transfers (direct receives never flip busy).
-                    if (busy.value || progress.value != null) {
+                    // Own send actions only: receives — pull or direct —
+                    // live entirely on their file row in the list.
+                    if (busy.value && liveRecv.value == null) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            progress.value?.let {
-                                Text(
-                                    it,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 2, // two lines: the path tail of a tick line stays visible
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
+                            Text(
+                                progress.value ?: "Working…", // queued, hashing, or stalled: never a dark screen
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
                             if (progress.value != null) {
-                                TextButton(
-                                    onClick = {
-                                        scope.launch {
-                                            if (busy.value) {
-                                                // Cancel an own action (pull/send):
-                                                // kill the child; a pulled item was
-                                                // never acked and stays parked, its
-                                                // partial kept for the resume.
-                                                cancelRequested.value = true
-                                                Catbox.cancelAction()
-                                                progress.value = null
-                                            } else {
-                                                // Cancel a direct receive: bounce the
-                                                // listener — the transfer dies with the
-                                                // old child, the restart waits out its
-                                                // deregister so the roster address
-                                                // isn't wiped late. The partial stays
-                                                // for the resume; the binary sweeps
-                                                // stale ones by TTL.
-                                                Catbox.stopListener()
-                                                progress.value = null
-                                                delay(1500)
-                                                Catbox.startListener(context, ::append)
-                                            }
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        if (busy.value) {
+                                            // Cancel an own action (pull/send): kill the
+                                            // child; a pulled item was never acked and stays
+                                            // parked, its partial kept for the resume.
+                                            cancelRequested.value = true
+                                            Catbox.cancelAction()
+                                            progress.value = null
+                                        } else {
+                                            // Cancel a direct receive: bounce the
+                                            // listener — the transfer dies with the
+                                            // old child, the restart waits out its
+                                            // deregister so the roster address
+                                            // isn't wiped late. The partial stays
+                                            // for the resume; the binary sweeps
+                                            // stale ones by TTL.
+                                            Catbox.stopListener()
+                                            progress.value = null
+                                            progressFrac.value = null
+                                            liveRecv.value = null
+                                            if (wakeLock.isHeld) wakeLock.release()
+                                            delay(1500)
+                                            Catbox.startListener(context, ::append)
                                         }
-                                    },
-                                ) {
-                                    Text("cancel")
+                                    }
+                                }) {
+                                    Icon(Icons.Outlined.Close, contentDescription = "Cancel")
                                 }
                             }
                         }
-                        // The real bar: determinate when the tick
-                        // carries a percent, indeterminate otherwise
-                        // (staging lines, unknown totals).
-                        progressFrac.value?.let { f ->
-                            LinearProgressIndicator(progress = { f }, modifier = Modifier.fillMaxWidth())
-                        } ?: LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    ) {
                         Button(
                             onClick = { pickFiles.launch(arrayOf("*/*")) },
                             enabled = !busy.value,
-                            modifier = Modifier.weight(1f),
                         ) {
-                            Text("send")
+                            Text("Send")
                         }
                         IconButton(onClick = { sendClipboard() }, enabled = !busy.value) {
-                            Icon(Icons.Outlined.ContentPaste, contentDescription = "send clipboard")
+                            Icon(Icons.Outlined.ContentPaste, contentDescription = "Send clipboard")
                         }
                     }
                 }
@@ -458,7 +501,7 @@ fun CatboxApp() {
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             when (joined.value) {
                 null -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("checking…")
+                    Text("Checking…")
                 }
                 false -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     JoinCard { addr, name -> scope.launch { run("join", "--name", name, addr); refresh() } }
@@ -466,6 +509,32 @@ fun CatboxApp() {
                 else -> MainScreen(
                     status.value,
                     busy.value,
+                    liveRecv.value,
+                    progressFrac.value,
+                    onCancelRecv = {
+                        scope.launch {
+                            if (busy.value) {
+                                // Cancel a pull: kill the child; its ctx sweep
+                                // removes the partial, the item was never acked
+                                // and stays parked.
+                                cancelRequested.value = true
+                                Catbox.cancelAction()
+                            } else {
+                                // Cancel a direct receive: bounce the listener
+                                // and sweep the partials — with the listener
+                                // stopped nothing can be writing them, and a
+                                // canceled receive must leave nothing behind.
+                                Catbox.stopListener()
+                                Catbox.sweepPartials(context)
+                                delay(1500)
+                                Catbox.startListener(context, ::append)
+                            }
+                            progress.value = null
+                            progressFrac.value = null
+                            liveRecv.value = null
+                            if (wakeLock.isHeld) wakeLock.release()
+                        }
+                    },
                     onReceive = { id -> scope.launch { run("recv", "--dir", Catbox.inbox(context).absolutePath, id); refresh() } },
                     onReceiveAll = { scope.launch { run("recv", "--dir", Catbox.inbox(context).absolutePath); refresh() } },
                     onDismiss = { id -> scope.launch { run("dismiss", id); refresh() } },
@@ -476,7 +545,7 @@ fun CatboxApp() {
         // Step 2 of send: files picked, pick peers with checkboxes.
         if (pendingFiles.value.isNotEmpty()) {
             val me = Catbox.cachedName(context)
-            val peers = Catbox.cachedMembers(context).filter { it != me }
+            val peers = Catbox.cachedMembers(context).filter { it != me }.sorted()
             AlertDialog(
                 onDismissRequest = {
                     pendingFiles.value = emptyList()
@@ -486,16 +555,16 @@ fun CatboxApp() {
                     val n = pendingFiles.value.size
                     Text(
                         if (clipboardSend.value) {
-                            "send clipboard content to"
+                            "Send clipboard content to"
                         } else {
-                            "send ${if (n == 1) "file" else "$n files"} to"
+                            "Send ${if (n == 1) "file" else "$n files"} to"
                         },
                     )
                 },
                 text = {
                     Column {
                         if (peers.isEmpty()) {
-                            Text("no other members in the roster")
+                            Text("No other members in the roster")
                         }
                         peers.forEach { peer ->
                             ListItem(
@@ -527,7 +596,7 @@ fun CatboxApp() {
                             scope.launch { sendAll(files, targets) }
                         },
                     ) {
-                        Text("send")
+                        Text("Send")
                     }
                 },
                 dismissButton = {
@@ -537,7 +606,7 @@ fun CatboxApp() {
                             sendTargets.value = emptySet()
                         },
                     ) {
-                        Text("cancel")
+                        Text("Cancel")
                     }
                 },
             )
@@ -548,10 +617,10 @@ fun CatboxApp() {
         invite.value?.let { line ->
             AlertDialog(
                 onDismissRequest = { invite.value = null },
-                title = { Text("invite a device") },
+                title = { Text("Invite a device") },
                 text = {
                     if (line.isEmpty()) {
-                        Text("no identity yet — join first")
+                        Text("No identity yet — join first")
                     } else {
                         SelectionContainer {
                             Text(line, style = MaterialTheme.typography.bodyMedium)
@@ -570,12 +639,12 @@ fun CatboxApp() {
                             }
                             context.startActivity(android.content.Intent.createChooser(send, null))
                         }) {
-                            Text("share")
+                            Text("Share")
                         }
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { invite.value = null }) { Text("close") }
+                    TextButton(onClick = { invite.value = null }) { Text("Close") }
                 },
             )
         }
@@ -584,10 +653,10 @@ fun CatboxApp() {
         aboutOpen.value?.let { ver ->
             AlertDialog(
                 onDismissRequest = { aboutOpen.value = null },
-                title = { Text("about") },
+                title = { Text("About") },
                 text = { Text(ver) },
                 confirmButton = {
-                    TextButton(onClick = { aboutOpen.value = null }) { Text("close") }
+                    TextButton(onClick = { aboutOpen.value = null }) { Text("Close") }
                 },
             )
         }
@@ -610,7 +679,16 @@ fun Dot(online: Boolean) {
 }
 
 @Composable
-fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Unit, onReceiveAll: () -> Unit, onDismiss: (String) -> Unit) {
+fun MainScreen(
+    status: Catbox.Status?,
+    busy: Boolean,
+    liveRecv: LiveRecv?,
+    liveFrac: Float?,
+    onCancelRecv: () -> Unit,
+    onReceive: (String) -> Unit,
+    onReceiveAll: () -> Unit,
+    onDismiss: (String) -> Unit,
+) {
     val waiting = status?.waiting.orEmpty()
     val context = LocalContext.current
     var published by remember { mutableStateOf(emptyList<Catbox.Published>()) }
@@ -623,7 +701,10 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
         published = withContext(Dispatchers.IO) { Catbox.publish(context); Catbox.published(context) }
     }
 
-    LaunchedEffect(status, busy) { syncPublished() }
+    // A direct receive flips neither status nor busy: the live row's
+    // disappearance is the completion signal that publishes at once,
+    // instead of waiting out the 5s poll.
+    LaunchedEffect(status, busy, liveRecv) { syncPublished() }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -633,11 +714,11 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
     }
 
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (waiting.isEmpty() && published.isEmpty()) {
+        if (waiting.isEmpty() && published.isEmpty() && liveRecv == null) {
             // Nothing to scroll: no LazyColumn, so no nudgeable empty state.
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "nothing received yet",
+                    "Nothing received yet",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -645,50 +726,70 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
         } else {
             // The files: one scroll area, sections by state.
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                // A pull transforms its own waiting row in place, matched
+                // by name AND sender — same-name files from different
+                // senders must not steal each other's bar. A direct
+                // receive never parks — it loads in the received zone.
+                val liveIsWaiting = liveRecv != null && !liveRecv.direct &&
+                    waiting.any { it.fn == liveRecv.file && it.from == liveRecv.from }
                 if (waiting.isNotEmpty()) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            SectionLabel("waiting", Modifier.weight(1f))
+                            SectionLabel("Waiting", Modifier.weight(1f))
                             IconButton(onClick = onReceiveAll) {
-                                Icon(Icons.Outlined.Download, contentDescription = "receive all")
+                                Icon(Icons.Outlined.Download, contentDescription = "Receive all")
                             }
                         }
                     }
                     items(waiting, key = { it.id }) { f ->
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    f.fn,
-                                    maxLines = 1, // a long name ellipsizes, never wraps
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            },
-                            supportingContent = {
-                                Column {
-                                    Text("from ${f.from}")
-                                    Text(humanBytes(f.plain))
-                                }
-                            },
-                            trailingContent = {
-                                Row {
-                                    IconButton(onClick = { onReceive(f.id) }) {
-                                        Icon(Icons.Outlined.Download, contentDescription = "receive")
+                        if (liveIsWaiting && f.fn == liveRecv.file && f.from == liveRecv.from) {
+                            // In flight: the download/dismiss row becomes
+                            // the progress/cancel row, in place.
+                            LiveItem(f.fn, f.from, liveRecv.detail, liveRecv.path, liveFrac, onCancelRecv, Modifier.animateItem())
+                        } else {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        f.fn,
+                                        maxLines = 1, // a long name ellipsizes, never wraps
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                },
+                                supportingContent = {
+                                    Column {
+                                        Text("From ${f.from}")
+                                        Text(humanBytes(f.plain))
                                     }
-                                    IconButton(onClick = { dismissPending = f }) {
-                                        Icon(Icons.Outlined.Delete, contentDescription = "dismiss")
+                                },
+                                trailingContent = {
+                                    Row {
+                                        IconButton(onClick = { onReceive(f.id) }) {
+                                            Icon(Icons.Outlined.Download, contentDescription = "Receive")
+                                        }
+                                        IconButton(onClick = { dismissPending = f }) {
+                                            Icon(Icons.Outlined.Delete, contentDescription = "Dismiss")
+                                        }
                                     }
-                                }
-                            },
-                            modifier = Modifier.animateItem(),
-                        )
+                                },
+                                modifier = Modifier.animateItem(),
+                            )
+                        }
                     }
                 }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        SectionLabel("received", Modifier.weight(1f))
+                        SectionLabel("Received", Modifier.weight(1f))
                         IconButton(onClick = { openInFilesApp(context) }) {
-                            Icon(Icons.AutoMirrored.Outlined.ExitToApp, "open in Files")
+                            Icon(Icons.AutoMirrored.Outlined.ExitToApp, "Open in Files")
                         }
+                    }
+                }
+                // A direct receive loads right here: the file appears in
+                // the received zone, and on completion the published entry
+                // takes the row's place.
+                if (liveRecv != null && !liveIsWaiting) {
+                    item(key = "live-recv") {
+                        LiveItem(liveRecv.file, liveRecv.from, liveRecv.detail, liveRecv.path, liveFrac, onCancelRecv, Modifier.animateItem())
                     }
                 }
                 items(published, key = { it.uri.toString() }) { f ->
@@ -697,7 +798,7 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
                         supportingContent = { Text("${humanBytes(f.size)} · ${humanWhen(f.date)}") },
                         trailingContent = {
                             IconButton(onClick = { sharePublished(context, f) }) {
-                                Icon(Icons.Outlined.Share, "share")
+                                Icon(Icons.Outlined.Share, "Share")
                             }
                         },
                         modifier = Modifier.animateItem().clickable { openPublished(context, f) },
@@ -711,17 +812,17 @@ fun MainScreen(status: Catbox.Status?, busy: Boolean, onReceive: (String) -> Uni
     dismissPending?.let { f ->
         AlertDialog(
             onDismissRequest = { dismissPending = null },
-            title = { Text("dismiss file") },
+            title = { Text("Dismiss file") },
             text = {
                 Text(
                     "${f.fn} from ${f.from} (${humanBytes(f.plain)}) will be deleted at the storer without being received.",
                 )
             },
             confirmButton = {
-                TextButton(onClick = { onDismiss(f.id); dismissPending = null }) { Text("dismiss") }
+                TextButton(onClick = { onDismiss(f.id); dismissPending = null }) { Text("Dismiss") }
             },
             dismissButton = {
-                TextButton(onClick = { dismissPending = null }) { Text("cancel") }
+                TextButton(onClick = { dismissPending = null }) { Text("Cancel") }
             },
         )
     }
@@ -734,6 +835,39 @@ fun SectionLabel(text: String, modifier: Modifier) {
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.primary,
         modifier = modifier.padding(top = 8.dp),
+    )
+}
+
+/** One file being received — direct or pull: same row shape. */
+@Composable
+fun LiveItem(file: String, from: String, detail: String, path: String?, frac: Float?, onCancel: () -> Unit, modifier: Modifier = Modifier) {
+    ListItem(
+        headlineContent = {
+            Text(
+                file,
+                maxLines = 1, // a long name ellipsizes, never wraps
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        supportingContent = {
+            Column {
+                Text("From $from")
+                Text(
+                    if (path == null) detail else "$detail · $path",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                frac?.let { f ->
+                    LinearProgressIndicator(progress = { f }, modifier = Modifier.fillMaxWidth())
+                } ?: LinearProgressIndicator(Modifier.fillMaxWidth())
+            }
+        },
+        trailingContent = {
+            IconButton(onClick = onCancel) {
+                Icon(Icons.Outlined.Close, contentDescription = "Cancel")
+            }
+        },
+        modifier = modifier, // callers inside the list animate the item
     )
 }
 
@@ -838,20 +972,20 @@ fun JoinCard(onJoin: (String, String) -> Unit) {
             OutlinedTextField(
                 value = addr,
                 onValueChange = { addr = it },
-                label = { Text("storer address (tc…)") },
+                label = { Text("Storer address (tc…)") },
                 singleLine = true,
             )
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("this device's name") },
+                label = { Text("This device's name") },
                 singleLine = true,
             )
             Button(
                 onClick = { onJoin(addr.trim(), name.trim()) },
                 enabled = addr.isNotEmpty() && name.isNotEmpty(),
             ) {
-                Text("join")
+                Text("Join")
             }
         }
     }
