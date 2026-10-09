@@ -31,7 +31,7 @@ catbox addr
 catbox join   --name NAME <storer-addr>
 catbox rename <new-name>
 catbox remove --data DIR <member>   # runs on the storer
-catbox reset
+catbox reset --yes
 catbox invite
 catbox send   <member> <file> [<file>...]
 catbox recv   [--dir DIR] [--listen] [<id>...]
@@ -67,7 +67,7 @@ catbox version
   It rewrites the roster on disk and sweeps the spool; the running
   storer picks the edit up on its next message. This is the cleanup
   path for a device that reset while offline and left a ghost.
-- `reset` leaves the mesh and wipes this machine's identity: it
+- `reset --yes` leaves the mesh and wipes this machine's identity: it
   removes its own roster entry (the removal is bound to this device's
   dial key — a device can never reset or remove another member) and
   deletes the local identity and roster cache. When the storer is

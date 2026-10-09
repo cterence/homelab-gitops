@@ -686,7 +686,9 @@ fun CatboxApp() {
                         onClick = {
                             resetPending.value = false
                             Catbox.stopListener()
-                            scope.launch { run("reset"); refresh() }
+                            // The dialog is the confirmation: the
+                            // binary's --yes gate is satisfied here.
+                            scope.launch { run("reset", "--yes"); refresh() }
                         },
                     ) {
                         Text("Reset")
