@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F5F4F4" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The cardboard front of the box. -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#C9A06A" />
+        </shape>
+    </item>
+    <!-- Shipping tape down the middle, behind the opening. -->
+    <item android:gravity="center_horizontal" android:width="56dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#E3CBA0" />
+        </shape>
+    </item>
+</layer-list>
