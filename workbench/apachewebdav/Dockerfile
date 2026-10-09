@@ -1,7 +1,7 @@
 # Kaniko clones the repo into a scratch context and runs this Dockerfile
 # with the app directory as build context. The image layers a WebDAV
 # configuration and runtime entrypoint on top of the stock httpd image.
-FROM httpd:2.4.65-bookworm@sha256:fbc12199ccad031d8047e9c789d65aceee2d14f99ba90664cd3a3996867a5582
+FROM mirror.gcr.io/library/httpd:2.4.65-bookworm@sha256:fbc12199ccad031d8047e9c789d65aceee2d14f99ba90664cd3a3996867a5582
 
 # These variables are inherited from the httpd:alpine image:
 # ENV HTTPD_PREFIX /usr/local/apache2
