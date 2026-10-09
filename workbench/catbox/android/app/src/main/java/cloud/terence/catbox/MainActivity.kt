@@ -340,7 +340,7 @@ fun CatboxApp() {
                     if (joined.value == true) {
                         // The status indicator lives in the header: the
                         // dot says everything, the word says the rest.
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
                             Text(
                                 if (status.value != null) "Online" else "Offline",
                                 style = MaterialTheme.typography.labelMedium,
