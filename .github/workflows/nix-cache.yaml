@@ -1,0 +1,44 @@
+# Builds the flake's packages per system and pushes them to the niks3
+# binary cache (https://niks3.terence.cloud). Auth is GitHub Actions
+# OIDC: the audience/subject must be bound in k8s-apps/niks3/values.yaml.
+name: Nix cache
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: x86_64-linux
+            os: ubuntu-latest
+          - system: aarch64-darwin
+            os: macos-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.system }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+        with:
+          determinate: false
+      - name: Setup niks3 cache
+        uses: Mic92/niks3-action@f0743610fddd7d96239c78d9e457440fc15019e2 # v1.4.0
+        with:
+          server-url: https://niks3.terence.cloud
+      - name: Build
+        run: |
+          nix build --print-out-paths .#catbox .#catbox-android .#catbox-android-bin \
+            | tee -a "$GITHUB_STEP_SUMMARY"
