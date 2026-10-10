@@ -1,8 +1,8 @@
 package main
 
-// Storer and peer identities, created on first use, loaded forever after.
-// The storer identity is a tailcat.PrivateKey (node key, PSK, region);
-// the peer identity is a name, node key, and the storer address.
+// Stash and peer identities, created on first use, loaded forever after.
+// The stash identity is a tailcat.PrivateKey (node key, PSK, region);
+// the peer identity is a name, node key, and the stash address.
 
 import (
 	"context"
@@ -20,17 +20,17 @@ import (
 	"tailscale.com/types/key"
 )
 
-// peerID is a non-storer machine's identity. Key is the identity and
+// peerID is a non-stash machine's identity. Key is the identity and
 // listener engine key; DialKey drives client engines, which must never
 // share a node key with a concurrently running listener. PSK and
 // Region exist only once this peer has listened.
 type peerID struct {
-	Name       string               `json:"name"`
-	Key        key.NodePrivate      `json:"key"`
-	DialKey    key.NodePrivate      `json:"dial_key"`
-	PSK        tailcat.PresharedKey `json:"psk,omitempty"`
-	Region     int64                `json:"region,omitempty"`
-	StorerAddr tailcat.Addr         `json:"storer_addr"`
+	Name      string               `json:"name"`
+	Key       key.NodePrivate      `json:"key"`
+	DialKey   key.NodePrivate      `json:"dial_key"`
+	PSK       tailcat.PresharedKey `json:"psk,omitempty"`
+	Region    int64                `json:"region,omitempty"`
+	StashAddr tailcat.Addr         `json:"storer_addr"`
 }
 
 func peerDir() (string, error) {
@@ -70,7 +70,7 @@ func resolveDataDir(flagVal string) (string, error) {
 }
 
 // loadPeerID returns the peer identity, creating it on first use.
-func loadPeerID(name string, storer tailcat.Addr) (*peerID, bool, error) {
+func loadPeerID(name string, stash tailcat.Addr) (*peerID, bool, error) {
 	dir, err := peerDir()
 	if err != nil {
 		return nil, false, err
@@ -103,7 +103,7 @@ func loadPeerID(name string, storer tailcat.Addr) (*peerID, bool, error) {
 		return nil, false, fmt.Errorf("invalid member name %q: use a lowercase slug", name)
 	}
 
-	id := &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StorerAddr: storer}
+	id := &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StashAddr: stash}
 	if err := saveJSON(path, id); err != nil {
 		return nil, false, err
 	}
@@ -112,8 +112,8 @@ func loadPeerID(name string, storer tailcat.Addr) (*peerID, bool, error) {
 }
 
 // resetPeer deletes the local identity and roster cache: the device
-// is new again and can join a different storer. The old entry stays
-// in the storer's roster until a member runs `catbox remove`.
+// is new again and can join a different stash. The old entry stays
+// in the stash's roster until a member runs `catbox remove`.
 func resetPeer() error {
 	dir, err := peerDir()
 	if err != nil {
@@ -129,10 +129,10 @@ func resetPeer() error {
 	return nil
 }
 
-// loadStorerIdentity returns the storer identity, creating it on first
+// loadStashIdentity returns the stash identity, creating it on first
 // use. Region 0 probes the DERP map once; the choice is baked in so the
 // tailcat address never changes. A negative region never creates.
-func loadStorerIdentity(ctx context.Context, dataDir string, region int64) (*tailcat.PrivateKey, bool, error) {
+func loadStashIdentity(ctx context.Context, dataDir string, region int64) (*tailcat.PrivateKey, bool, error) {
 	path := filepath.Join(dataDir, "identity.json")
 	if b, err := os.ReadFile(path); err == nil {
 		id := new(tailcat.PrivateKey)

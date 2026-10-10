@@ -82,7 +82,7 @@ func run() error {
 			return err
 		}
 
-		id, _, err := loadStorerIdentity(ctx, dataDir, -1)
+		id, _, err := loadStashIdentity(ctx, dataDir, -1)
 		if err != nil {
 			return err
 		}
@@ -95,15 +95,15 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 2 {
-			return errors.New("join takes <name> <invite-token | storer-addr>")
+			return errors.New("join takes <name> <invite-token | stash-addr>")
 		}
 
 		// The second argument is the invite token when it decodes,
-		// else a bare storer address (the fresh-mesh bootstrap join).
+		// else a bare stash address (the fresh-mesh bootstrap join).
 		name, addr, code := fs.Arg(0), "", ""
 
 		if iv, err := parseInviteArg(fs.Arg(1)); err == nil {
-			addr, code = iv.Storer, iv.Code
+			addr, code = iv.Stash, iv.Code
 		} else {
 			addr = fs.Arg(1)
 		}
@@ -148,7 +148,7 @@ func run() error {
 		defer func() { _ = cl.Close() }()
 		defer func() { _ = conn.Close() }()
 
-		// The rename rides the join op: the storer validates the name
+		// The rename rides the join op: the stash validates the name
 		// and retargets parked files. Stop recv --listen first, or its
 		// registered listener address goes stale.
 		id.Name = fs.Arg(0)
@@ -167,7 +167,7 @@ func run() error {
 	case "recv":
 		fs := flag.NewFlagSet("recv", flag.ExitOnError)
 		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
-		listen := fs.Bool("listen", false, "listen for direct sends only, no storer pull (Ctrl-C to stop)")
+		listen := fs.Bool("listen", false, "listen for direct sends only, no stash pull (Ctrl-C to stop)")
 		_ = fs.Parse(os.Args[2:])
 
 		if *dir == "" {
@@ -206,7 +206,7 @@ func run() error {
 			return err
 		}
 
-		token, err := encodeInvite(inviteJSON{Code: code, Storer: string(id.StorerAddr)})
+		token, err := encodeInvite(inviteJSON{Code: code, Stash: string(id.StashAddr)})
 		if err != nil {
 			return err
 		}
@@ -275,7 +275,7 @@ func run() error {
 		for _, path := range fs.Args()[1:] {
 			// The SHA is known before sealing: it keys the
 			// deterministic file secret and the receiver's resume
-			// partial. The storer conn is clientSend's to dial, per
+			// partial. The stash conn is clientSend's to dial, per
 			// file: a long transfer starves its idle deadline, and
 			// the next file must not inherit a dead conn.
 			shaHex, err := fileSHA256(path)
@@ -326,14 +326,14 @@ func run() error {
 		return nil
 	case "remove":
 		fs := flag.NewFlagSet("remove", flag.ExitOnError)
-		data := fs.String("data", "", "storer data dir: run there to remove any member without being admin")
+		data := fs.String("data", "", "stash data dir: run there to remove any member without being admin")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
 			return errors.New("remove takes <member> (see catbox status)")
 		}
 
-		// The storer host is break-glass: it removes any member.
+		// The stash host is break-glass: it removes any member.
 		if *data != "" || os.Getenv("CATBOX_DATA") != "" {
 			dataDir, err := resolveDataDir(*data)
 			if err != nil {
@@ -379,12 +379,12 @@ func run() error {
 
 		return nil
 	case "admin":
-		// Runs on the storer host, like remove --data: the
+		// Runs on the stash host, like remove --data: the
 		// operator grants the first admin (or rescues an
 		// admin-less mesh). Admins mint invites and remove
 		// members over the wire.
 		fs := flag.NewFlagSet("admin", flag.ExitOnError)
-		data := fs.String("data", "", "storer data dir (defaults to CATBOX_DATA, else the host default)")
+		data := fs.String("data", "", "stash data dir (defaults to CATBOX_DATA, else the host default)")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
@@ -430,13 +430,13 @@ func run() error {
 				// The dial key binds the removal to this device:
 				// reset can never remove another member.
 				if rerr := clientRemove(conn, ""); rerr != nil {
-					fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove --data /data %s\" on the storer later\n", rerr, id.Name)
+					fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove --data /data %s\" on the stash later\n", rerr, id.Name)
 				}
 
 				_ = cl.Close()
 				_ = conn.Close()
 			} else {
-				fmt.Fprintf(os.Stderr, "catbox: could not reach the storer: %v; run \"catbox remove --data /data %s\" on the storer later\n", cerr, id.Name)
+				fmt.Fprintf(os.Stderr, "catbox: could not reach the stash: %v; run \"catbox remove --data /data %s\" on the stash later\n", cerr, id.Name)
 			}
 
 			release()
@@ -461,7 +461,7 @@ func run() error {
 	return nil
 }
 
-// runJoin registers this machine with the storer, creating the peer
+// runJoin registers this machine with the stash, creating the peer
 // identity on first use. A join that fails after creating the
 // identity rolls it back: a half-joined device would be locked out of
 // ever joining again.
@@ -504,26 +504,26 @@ func runJoin(ctx context.Context, name, addr, code string) (created bool, err er
 }
 
 func usage() {
-	fmt.Fprint(os.Stderr, `catbox: async file transfer over tailcat, one storer, daemonless peers
+	fmt.Fprint(os.Stderr, `catbox: async file transfer over tailcat, one stash, daemonless peers
 
 usage:
   catbox <command> [flags]
 
-storer commands:
-  serve     run the always-on storer; first boot creates its identity
+stash commands:
+  serve     run the always-on stash; first boot creates its identity
             [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
-  addr      print the storer's tailcat address from its data dir
+  addr      print the stash's tailcat address from its data dir
 
 membership commands:
   join      register this machine under a name
-            <name> <invite-token> | <name> <storer-addr> (fresh mesh)
+            <name> <invite-token> | <name> <stash-addr> (fresh mesh)
   invite    print a one-time invite token (admin)
   rename    change this member's name
             <new-name>
   remove    drop a member from the roster (admins over the wire,
-            anyone on the storer)
+            anyone on the stash)
             [<member>] | --data DIR <member>
-  admin     grant a member admin (runs on the storer)
+  admin     grant a member admin (runs on the stash)
             --data DIR <member>
   reset     leave the mesh (best effort) and wipe this machine's identity
             --yes

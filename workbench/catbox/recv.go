@@ -2,7 +2,7 @@ package main
 
 // The listener: an explicitly online peer that receives files
 // directly. Serves only sends addressed to itself; anything else the
-// sender falls back to the storer for.
+// sender falls back to the stash for.
 
 import (
 	"context"
@@ -20,9 +20,9 @@ import (
 	"tailscale.com/types/key"
 )
 
-// runRecv is the peer's two receive verbs: pull what the storer holds
+// runRecv is the peer's two receive verbs: pull what the stash holds
 // — everything, or the named ids only — or listen for direct sends.
-// Listening never pulls — files park at the storer until the peer
+// Listening never pulls — files park at the stash until the peer
 // asks for them.
 func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool, ids []string) error {
 	id, _, err := loadPeerID("", "")
@@ -82,7 +82,7 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 
 	// Close the server before deregistering: in-flight transfers die
 	// now, so a shut-down listener makes senders fall back to the
-	// storer immediately instead of stalling until their idle
+	// stash immediately instead of stalling until their idle
 	// deadline.
 	if err := srv.Close(); err != nil {
 		log.Warn("closing listener failed", "err", err)
@@ -99,7 +99,7 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 	return nil
 }
 
-// registerListener joins the storer, publishing (or clearing) our address.
+// registerListener joins the stash, publishing (or clearing) our address.
 func registerListener(ctx context.Context, id *peerID, addr tailcat.Addr) error {
 	conn, cl, err := clientConn(ctx, id)
 	if err != nil {
@@ -184,7 +184,7 @@ func (lc *listener) handleConn(conn net.Conn) {
 
 	// The direct send's silence cap, mirrored: a vanished sender ends
 	// the receive at the same cap the sender aborts at, instead of
-	// riding the storer paths' longer idle deadline.
+	// riding the stash paths' longer idle deadline.
 	_ = conn.SetDeadline(time.Now().Add(directStall))
 	lc.listenConn(conn)
 }
@@ -223,7 +223,7 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 
 	// One receiver per partial: a pull already delivering this exact
 	// content would interleave with ours into corruption. Decline, and
-	// the sender falls back to the storer where the identical item is
+	// the sender falls back to the stash where the identical item is
 	// already parked.
 	release, err := lockPartial(lc.inbox, m.SHA, m.Size)
 	if errors.Is(err, errPartialBusy) {

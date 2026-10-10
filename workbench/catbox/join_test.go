@@ -12,7 +12,7 @@ func TestJoinRollbackOnFailure(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	if _, err := runJoin(context.Background(), "emu", "bogus-addr", ""); err == nil {
-		t.Fatal("join with a bogus storer address should fail")
+		t.Fatal("join with a bogus stash address should fail")
 	}
 
 	if _, _, err := loadPeerID("", ""); err == nil {

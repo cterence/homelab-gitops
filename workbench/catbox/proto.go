@@ -17,21 +17,21 @@ import (
 
 const (
 	opJoin    = "join"    // peer: {Name} admit me
-	opJoined  = "joined"  // storer: {OK, Err, Members}
+	opJoined  = "joined"  // stash: {OK, Err, Members}
 	opSend    = "send"    // peer: {Target, FileName, Size, SHA} then sealed stream
 	opReady   = "ready"   // receiver: {OK, Err, Have, Members}
 	opSent    = "sent"    // peer: {SHA} stream finished
 	opDone    = "done"    // receiver: {OK, Err}
 	opPending = "pending" // peer: what's held for me
-	opItems   = "items"   // storer: {Items, Members}
+	opItems   = "items"   // stash: {Items, Members}
 	opFetch   = "fetch"   // peer: {ID, Have} pull from my chunk boundary
-	opFile    = "file"    // storer: {OK, FileName, SHA, From, Size} then sealed stream
+	opFile    = "file"    // stash: {OK, FileName, SHA, From, Size} then sealed stream
 	opAck     = "ack"     // peer: {ID} received and verified
-	opAcked   = "acked"   // storer: {OK, Err}
+	opAcked   = "acked"   // stash: {OK, Err}
 	opDismiss = "dismiss" // peer: {ID} refuse delivery of my own pending item
 	opRemove  = "remove"  // peer: {Target} drop a member from the roster
 	opInvite  = "invite"  // admin: mint a one-time join code
-	opInvited = "invited" // storer: {OK, Err, Code}
+	opInvited = "invited" // stash: {OK, Err, Code}
 )
 
 const msgMax = 1 << 20
@@ -39,19 +39,21 @@ const msgMax = 1 << 20
 // idleTimeout is the transfer inactivity cap: bytes flowing extend the
 // conn deadline (see the progress ticks), silence ends it — a vanished
 // peer or a dead network aborts a stuck transfer within this bound
-// instead of hanging until human intervention.
-const idleTimeout = 2 * time.Minute
+// instead of hanging until human intervention. It also bounds how
+// long a dead deposit can hold its spool partial's lock before a
+// retried deposit of the same content may resume it.
+var idleTimeout = 2 * time.Minute
 
 // directStall caps a direct transfer's silence tighter than the
-// storer paths: a vanished listener must be detected fast enough that
-// the storer fallback still helps, and a resume makes the abort
+// stash paths: a vanished listener must be detected fast enough that
+// the stash fallback still helps, and a resume makes the abort
 // cheap.
-const directStall = 30 * time.Second
+var directStall = 30 * time.Second
 
 // directRetryWindow bounds how long a failed direct attempt is
-// retried before the storer fallback: every redial resumes from the
+// retried before the stash fallback: every redial resumes from the
 // listener's partial, so a target that vanished mid-transfer and
-// comes back within it finishes direct with no storer bytes.
+// comes back within it finishes direct with no stash bytes.
 var directRetryWindow = 2 * time.Minute
 
 // directBackoff paces the direct redials inside the retry window.
@@ -69,13 +71,15 @@ var directRetryDial = 15 * time.Second
 
 func init() {
 	// Test seam: the integration test's helper children shrink the
-	// retry patience, so a dead listener falls back to the storer in
+	// retry patience, so a dead listener falls back to the stash in
 	// about a second instead of after the real window.
 	if os.Getenv("CATBOX_FAST_TIMERS") == "1" {
 		directRetryWindow = 500 * time.Millisecond
 		directBackoff = 100 * time.Millisecond
 		directDial = time.Second
 		directRetryDial = time.Second
+		directStall = 2 * time.Second
+		idleTimeout = 5 * time.Second
 	}
 }
 
@@ -101,7 +105,7 @@ type msg struct {
 	Members  []member `json:"members,omitempty"`
 }
 
-// item is one file held at the storer. Plain is for display; Size
+// item is one file held at the stash. Plain is for display; Size
 // (sealed) bounds the transfer.
 type item struct {
 	ID       string `json:"id"`
@@ -113,7 +117,7 @@ type item struct {
 }
 
 // member is one admitted machine. Key is the identity (and listener)
-// public key; DialKey is what the storer sees on connections. Addr is
+// public key; DialKey is what the stash sees on connections. Addr is
 // the listener's tailcat address, empty when not listening. Admin
 // members mint invites and remove other members.
 type member struct {

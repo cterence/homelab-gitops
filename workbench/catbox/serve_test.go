@@ -36,13 +36,13 @@ func testLogger() *slog.Logger {
 	return slog.New(slog.NewJSONHandler(io.Discard, nil))
 }
 
-func newTestStorer(t *testing.T) *storer {
+func newTestStash(t *testing.T) *stash {
 	t.Helper()
 	dir := t.TempDir()
 
 	// The stash identity: stash-host commands (admin, remove --data)
 	// refuse a dir without one.
-	if _, _, err := loadStorerIdentity(context.Background(), dir, 1); err != nil {
+	if _, _, err := loadStashIdentity(context.Background(), dir, 1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -51,7 +51,7 @@ func newTestStorer(t *testing.T) *storer {
 		t.Fatal(err)
 	}
 
-	return &storer{
+	return &stash{
 		dir:   dir,
 		log:   testLogger(),
 		max:   1 << 30,
@@ -61,7 +61,7 @@ func newTestStorer(t *testing.T) *storer {
 }
 
 // dial wires one client session to serveConn over net.Pipe.
-func dial(t *testing.T, st *storer, client *peerID) net.Conn {
+func dial(t *testing.T, st *stash, client *peerID) net.Conn {
 	t.Helper()
 
 	c, s := net.Pipe()
@@ -76,12 +76,12 @@ func dial(t *testing.T, st *storer, client *peerID) net.Conn {
 }
 
 func testPeerID(name string) *peerID {
-	return &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StorerAddr: "tcunused"}
+	return &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StashAddr: "tcunused"}
 }
 
 // dialMember wires a session for an already-joined member by its
 // roster dial key: tests hold the *peerID only for members they dial as.
-func dialMember(t *testing.T, st *storer, k key.NodePublic) net.Conn {
+func dialMember(t *testing.T, st *stash, k key.NodePublic) net.Conn {
 	t.Helper()
 
 	c, s := net.Pipe()
@@ -98,7 +98,7 @@ func dialMember(t *testing.T, st *storer, k key.NodePublic) net.Conn {
 // testInvite mints a join code from the roster's first member (the
 // first join bootstraps as admin); empty when the roster is empty —
 // the first join needs no code.
-func testInvite(t *testing.T, st *storer) string {
+func testInvite(t *testing.T, st *stash) string {
 	t.Helper()
 
 	members := st.members()
@@ -121,7 +121,7 @@ func TestJoinSendPull(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -191,7 +191,7 @@ func TestSendUnknownMemberRefreshesRoster(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -230,7 +230,7 @@ func TestSendToUnknownNameFails(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
@@ -255,7 +255,7 @@ func TestSendToUnknownNameFails(t *testing.T) {
 
 func TestJoinNameTaken(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	first := testPeerID("laptop")
 	squatter := testPeerID("laptop")
 
@@ -276,7 +276,7 @@ func TestJoinNameTaken(t *testing.T) {
 
 func TestRejoinUpdatesListenerAddr(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
@@ -311,7 +311,7 @@ func TestClientStatus(t *testing.T) {
 
 	directRetryWindow = 0
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -379,7 +379,7 @@ func TestSendToSelfFails(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
@@ -413,7 +413,7 @@ func TestSendToSelfFails(t *testing.T) {
 	_ = conn.Close()
 
 	if m.Op != opReady || m.OK || m.Err == "" {
-		t.Fatalf("storer should refuse self-send, got %+v", m)
+		t.Fatalf("stash should refuse self-send, got %+v", m)
 	}
 }
 
@@ -421,7 +421,7 @@ func TestDepositDedup(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -462,7 +462,7 @@ func TestClientStatusJSON(t *testing.T) {
 
 	directRetryWindow = 0
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -522,7 +522,7 @@ func TestClientStatusJSON(t *testing.T) {
 
 func TestStatusJSONEmptyWaiting(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
@@ -582,7 +582,7 @@ func TestPeerNameValidated(t *testing.T) {
 
 func TestNonMemberCannotSend(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	stranger := testPeerID("stranger")
 
 	conn := dial(t, st, stranger)
@@ -605,7 +605,7 @@ func TestNonMemberCannotSend(t *testing.T) {
 func TestDismissDestinedFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -659,7 +659,7 @@ func TestDismissDestinedFile(t *testing.T) {
 func TestDismissOnlyOwnItems(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -710,7 +710,7 @@ func TestDismissOnlyOwnItems(t *testing.T) {
 func TestRenameRetargetsSpool(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -773,7 +773,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 func TestRenameToTakenName(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -803,14 +803,14 @@ func TestRenameToTakenName(t *testing.T) {
 }
 
 // TestDepositResumesAfterInterruption pins the sender-side resume: an
-// interrupted deposit keeps a partial at the storer, the retry is
+// interrupted deposit keeps a partial at the stash, the retry is
 // advertised its chunk boundary, and the resumed deposit's frames line
 // up with the kept prefix.
 func TestDepositResumesAfterInterruption(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -863,7 +863,7 @@ func TestDepositResumesAfterInterruption(t *testing.T) {
 		t.Fatalf("interrupted deposit must not appear as a spool entry: %+v", metas)
 	}
 
-	// Retry: the storer advertises the partial's chunk boundary, the
+	// Retry: the stash advertises the partial's chunk boundary, the
 	// torn tail dropped.
 	conn = dial(t, st, laptop)
 	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "big.bin", Size: int64(len(payload)), SHA: sha}); err != nil {
@@ -925,7 +925,7 @@ func TestDepositResumesNearCap(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1027,7 +1027,7 @@ func TestPullAnnouncesFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1124,7 +1124,7 @@ func TestPullSelectedItems(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1228,7 +1228,7 @@ func TestPullSkipsBusyPartial(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1293,14 +1293,14 @@ func TestPullSkipsBusyPartial(t *testing.T) {
 }
 
 // TestDepositIdempotent pins the retried-deposit short-circuit: when
-// an identical file is already parked for the target, the storer
+// an identical file is already parked for the target, the stash
 // answers Have=Size, the sender sends no bytes, and the spool keeps
 // exactly one entry.
 func TestDepositIdempotent(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1373,8 +1373,8 @@ func TestDepositIdempotent(t *testing.T) {
 }
 
 // TestSendCachedRosterFirst: a cached listening address is dialed
-// before the storer is contacted at all — and once both the target
-// and the storer are unreachable, the send fails without a deposit.
+// before the stash is contacted at all — and once both the target
+// and the stash are unreachable, the send fails without a deposit.
 func TestSendCachedRosterFirst(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
@@ -1385,7 +1385,7 @@ func TestSendCachedRosterFirst(t *testing.T) {
 	directRetryWindow = 0
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1398,7 +1398,7 @@ func TestSendCachedRosterFirst(t *testing.T) {
 		_ = conn.Close()
 	}
 
-	// nas "listens" on a bogus address; both the storer roster and
+	// nas "listens" on a bogus address; both the stash roster and
 	// the shared cache carry it.
 	conn := dial(t, st, nas)
 	if err := joinReq(conn, nas, "tcbogus", ""); err != nil {
@@ -1412,7 +1412,7 @@ func TestSendCachedRosterFirst(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Watch stderr: the direct attempt must run before the storer is
+	// Watch stderr: the direct attempt must run before the stash is
 	// ever dialed.
 	capR, capW, err := os.Pipe()
 	if err != nil {
@@ -1422,8 +1422,8 @@ func TestSendCachedRosterFirst(t *testing.T) {
 	old := os.Stderr
 	os.Stderr = capW
 
-	// rwc nil and an undialable storer address: the cache-first
-	// direct attempt, then the send dies on the storer dial.
+	// rwc nil and an undialable stash address: the cache-first
+	// direct attempt, then the send dies on the stash dial.
 	err = clientSend(ctx, nil, laptop, "nas", src, mustSHA(t, src))
 
 	os.Stderr = old
@@ -1434,8 +1434,8 @@ func TestSendCachedRosterFirst(t *testing.T) {
 		t.Fatal(rerr)
 	}
 
-	if err == nil || !strings.Contains(err.Error(), "storer") {
-		t.Fatalf("send must fail on the storer dial, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "stash") {
+		t.Fatalf("send must fail on the stash dial, got %v", err)
 	}
 
 	if !strings.Contains(string(out), "dialing nas directly") {
@@ -1450,7 +1450,7 @@ func TestOpRemove(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop") // first join: the bootstrap admin
 	nas := testPeerID("nas")
 
@@ -1508,7 +1508,7 @@ func TestOpRemove(t *testing.T) {
 	}
 }
 
-// TestRemoveMemberLocal: the storer-side remove rewrites the roster on
+// TestRemoveMemberLocal: the stash-side remove rewrites the roster on
 // disk and sweeps the member's parked items.
 func TestRemoveMemberLocal(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
@@ -1516,9 +1516,9 @@ func TestRemoveMemberLocal(t *testing.T) {
 	dir := t.TempDir()
 	laptop, nas := testPeerID("laptop"), testPeerID("nas")
 
-	// The stash identity: the storer-side commands refuse a dir
+	// The stash identity: the stash-side commands refuse a dir
 	// without one.
-	if _, _, err := loadStorerIdentity(context.Background(), dir, 1); err != nil {
+	if _, _, err := loadStashIdentity(context.Background(), dir, 1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1574,12 +1574,12 @@ func TestRemoveMemberLocal(t *testing.T) {
 	}
 }
 
-// TestStorerReloadsExternalRosterEdit: a roster edited out of band (the
-// storer-side remove) takes effect without restarting serve.
-func TestStorerReloadsExternalRosterEdit(t *testing.T) {
+// TestStashReloadsExternalRosterEdit: a roster edited out of band (the
+// stash-side remove) takes effect without restarting serve.
+func TestStashReloadsExternalRosterEdit(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -1616,7 +1616,7 @@ func TestStorerReloadsExternalRosterEdit(t *testing.T) {
 func TestOpRemoveSelf(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 

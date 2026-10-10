@@ -1,6 +1,6 @@
 package main
 
-// The storer: one tailcat listener, the roster authority, the spool.
+// The stash: one tailcat listener, the roster authority, the spool.
 // Join is admission-controlled: the first member bootstraps as admin,
 // every join after that must present a one-time invite code an admin
 // minted (catbox invite).
@@ -25,7 +25,7 @@ import (
 // catboxPort is the single tailcat TCP port the protocol speaks on.
 const catboxPort = 2690
 
-type storer struct {
+type stash struct {
 	dir string
 	srv *tailcat.Server
 	log *slog.Logger
@@ -39,8 +39,44 @@ type storer struct {
 	spool     *spool
 }
 
+// bootRoster loads the stash's roster at serve boot: a corrupt file
+// is quarantined (<path>.corrupt) and serve starts empty — a
+// truncated write must not brick the stash. Members rejoin with
+// invites; the first rejoin bootstraps as admin again.
+func bootRoster(path string, log *slog.Logger) ([]member, error) {
+	roster, err := loadRoster(path)
+	if err == nil {
+		return roster, nil
+	}
+
+	if rerr := os.Rename(path, path+".corrupt"); rerr != nil {
+		return nil, fmt.Errorf("quarantining corrupt roster: %w", rerr)
+	}
+
+	log.Warn("corrupt roster quarantined; starting empty", "err", err)
+
+	return nil, nil
+}
+
+// bootInvites is loadRoster's twin for the invite store: corrupt codes
+// are quarantined and dropped rather than stopping the boot.
+func bootInvites(path string, log *slog.Logger) ([]invite, error) {
+	invites, err := loadInvites(path)
+	if err == nil {
+		return invites, nil
+	}
+
+	if rerr := os.Rename(path, path+".corrupt"); rerr != nil {
+		return nil, fmt.Errorf("quarantining corrupt invites: %w", rerr)
+	}
+
+	log.Warn("corrupt invites quarantined; starting empty", "err", err)
+
+	return nil, nil
+}
+
 func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int64, max int64, ttl time.Duration, healthAddr string) error {
-	id, created, err := loadStorerIdentity(ctx, dataDir, region)
+	id, created, err := loadStashIdentity(ctx, dataDir, region)
 	if err != nil {
 		return err
 	}
@@ -49,12 +85,12 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 		log.Info("identity created", "dir", dataDir)
 	}
 
-	roster, err := loadRoster(rosterPath(dataDir))
+	roster, err := bootRoster(rosterPath(dataDir), log)
 	if err != nil {
 		return err
 	}
 
-	invites, err := loadInvites(invitePath(dataDir))
+	invites, err := bootInvites(invitePath(dataDir), log)
 	if err != nil {
 		return err
 	}
@@ -64,7 +100,7 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 		return err
 	}
 
-	st := &storer{
+	st := &stash{
 		dir:     dataDir,
 		log:     log,
 		max:     max,
@@ -130,7 +166,7 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 }
 
 // sweepInvites prunes expired codes and persists the rest.
-func (st *storer) sweepInvites() error {
+func (st *stash) sweepInvites() error {
 	st.mu.Lock()
 	st.invites = pruneInvites(st.invites, time.Now().Unix())
 	invites := append([]invite(nil), st.invites...)
@@ -142,7 +178,7 @@ func (st *storer) sweepInvites() error {
 func spoolDir(dataDir string) string { return dataDir + "/spool" }
 
 // onTCP answers only the protocol port.
-func (st *storer) onTCP(port uint16) func(net.Conn) {
+func (st *stash) onTCP(port uint16) func(net.Conn) {
 	if port != catboxPort {
 		return nil
 	}
@@ -150,7 +186,7 @@ func (st *storer) onTCP(port uint16) func(net.Conn) {
 	return st.handleConn
 }
 
-func (st *storer) handleConn(conn net.Conn) {
+func (st *stash) handleConn(conn net.Conn) {
 	defer func() { _ = conn.Close() }()
 
 	peer, ok := st.srv.PeerKey(conn.RemoteAddr())
@@ -166,7 +202,7 @@ func (st *storer) handleConn(conn net.Conn) {
 
 // serveConn runs protocol ops on one connection until it closes; split
 // from handleConn so tests can drive it over a pipe.
-func (st *storer) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
+func (st *stash) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
 	for {
 		m, err := readMsg(rwc)
 		if err != nil {
@@ -201,9 +237,9 @@ func (st *storer) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
 	}
 }
 
-// reloadRoster picks up an out-of-band roster edit (the storer-side
+// reloadRoster picks up an out-of-band roster edit (the stash-side
 // remove): when roster.json moved, the file is the source of truth.
-func (st *storer) reloadRoster() {
+func (st *stash) reloadRoster() {
 	fi, err := os.Stat(rosterPath(st.dir))
 	if err != nil || !fi.ModTime().After(st.rosterMod) {
 		return
@@ -220,10 +256,10 @@ func (st *storer) reloadRoster() {
 	st.mu.Unlock()
 }
 
-// removeMemberLocal is the storer-side remove: rewrite the roster on
-// disk and sweep the member's parked items. The running storer picks
+// removeMemberLocal is the stash-side remove: rewrite the roster on
+// disk and sweep the member's parked items. The running stash picks
 // the edit up on its next message (reloadRoster).
-// ensureStorerDir refuses directories that are not a stash data dir:
+// ensureStashDir refuses directories that are not a stash data dir:
 // a peer's config dir also holds a roster.json, but it is a cache —
 // editing it would report success while changing nothing. The stash
 // is identified by its identity, the tailcat key serve creates on
@@ -231,8 +267,8 @@ func (st *storer) reloadRoster() {
 // not map, so it unmarshals to the zero key). The check catches
 // accidents, not adversaries: anyone able to write the dir can edit
 // the roster by hand and no in-binary check can prevent that.
-func ensureStorerDir(ctx context.Context, dataDir string) error {
-	id, _, err := loadStorerIdentity(ctx, dataDir, -1)
+func ensureStashDir(ctx context.Context, dataDir string) error {
+	id, _, err := loadStashIdentity(ctx, dataDir, -1)
 	if err != nil || id.Private.IsZero() {
 		return fmt.Errorf("%s is not a stash data dir: stash commands run where serve runs, on its --data dir", dataDir)
 	}
@@ -240,11 +276,11 @@ func ensureStorerDir(ctx context.Context, dataDir string) error {
 	return nil
 }
 
-// removeMemberLocal is the storer-side remove: rewrite the roster on
-// disk and sweep the member's parked items. The running storer picks
+// removeMemberLocal is the stash-side remove: rewrite the roster on
+// disk and sweep the member's parked items. The running stash picks
 // the edit up on its next message (reloadRoster).
 func removeMemberLocal(ctx context.Context, dataDir, name string, log *slog.Logger) error {
-	if err := ensureStorerDir(ctx, dataDir); err != nil {
+	if err := ensureStashDir(ctx, dataDir); err != nil {
 		return err
 	}
 
@@ -285,13 +321,13 @@ func removeMemberLocal(ctx context.Context, dataDir, name string, log *slog.Logg
 	return nil
 }
 
-// grantAdmin is the storer-side admin grant: rewrite the roster with
-// the member promoted. The running storer picks the edit up on its
+// grantAdmin is the stash-side admin grant: rewrite the roster with
+// the member promoted. The running stash picks the edit up on its
 // next message (reloadRoster). Break-glass for meshes that predate
 // admins, and the recovery path for an admin-less roster. It reports
 // whether the roster changed: granting an existing admin is a no-op.
 func grantAdmin(ctx context.Context, dataDir, name string) (bool, error) {
-	if err := ensureStorerDir(ctx, dataDir); err != nil {
+	if err := ensureStashDir(ctx, dataDir); err != nil {
 		return false, err
 	}
 
@@ -326,7 +362,7 @@ func grantAdmin(ctx context.Context, dataDir, name string) (bool, error) {
 	return true, nil
 }
 
-func (st *storer) lookupMember(k key.NodePublic) (m member, ok bool) {
+func (st *stash) lookupMember(k key.NodePublic) (m member, ok bool) {
 	st.mu.Lock()
 	defer st.mu.Unlock()
 
@@ -335,17 +371,20 @@ func (st *storer) lookupMember(k key.NodePublic) (m member, ok bool) {
 	return m, ok
 }
 
-func (st *storer) members() []member {
+func (st *stash) members() []member {
 	st.mu.Lock()
 	defer st.mu.Unlock()
 
 	return append([]member(nil), st.roster...)
 }
 
-func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member, isMember bool, m msg) {
+func (st *stash) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member, isMember bool, m msg) {
 	if isMember {
 		// Re-join refreshes the identity key and listener address; a
-		// different name is a rename.
+		// different name is a rename. The wire key is taken without
+		// proof the joiner holds its private half: harmless, because
+		// the dial key binds this entry to the device itself, and a
+		// wrong key only breaks that member's own sealed files.
 		newName := cur.Name
 
 		if m.Name != "" && m.Name != cur.Name {
@@ -437,7 +476,7 @@ func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member
 }
 
 // addInvite records a freshly minted code and persists the set.
-func (st *storer) addInvite(iv invite) {
+func (st *stash) addInvite(iv invite) {
 	st.mu.Lock()
 	st.invites = append(st.invites, iv)
 	invites := append([]invite(nil), st.invites...)
@@ -449,7 +488,7 @@ func (st *storer) addInvite(iv invite) {
 }
 
 // takeInvite validates and burns a join code: single use.
-func (st *storer) takeInvite(code string) bool {
+func (st *stash) takeInvite(code string) bool {
 	if code == "" {
 		return false
 	}
@@ -476,7 +515,7 @@ func (st *storer) takeInvite(code string) bool {
 }
 
 // opInvite mints a one-time join code; admins only.
-func (st *storer) opInvite(rwc io.ReadWriteCloser, me member) {
+func (st *stash) opInvite(rwc io.ReadWriteCloser, me member) {
 	if !me.Admin {
 		_ = writeMsg(rwc, msg{Op: opInvited, Err: "only an admin can invite"})
 
@@ -496,7 +535,7 @@ func (st *storer) opInvite(rwc io.ReadWriteCloser, me member) {
 	_ = writeMsg(rwc, msg{Op: opInvited, OK: true, Code: iv.Code})
 }
 
-func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
+func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	if m.Target == me.Name {
 		_ = writeMsg(rwc, msg{Op: opReady, Err: "can't send to yourself"})
 
@@ -586,7 +625,7 @@ func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 // parkedFor reports whether an identical sealed file is already
 // spooled for the target: a retried deposit needs no bytes.
-func (st *storer) parkedFor(target, sha string) bool {
+func (st *stash) parkedFor(target, sha string) bool {
 	if sha == "" {
 		return false
 	}
@@ -607,7 +646,7 @@ func (st *storer) parkedFor(target, sha string) bool {
 
 // retargetSpool repoints parked files from one member name to the
 // other, so a rename never orphans them.
-func (st *storer) retargetSpool(oldName, newName string) {
+func (st *stash) retargetSpool(oldName, newName string) {
 	metas, err := st.spool.items()
 	if err != nil {
 		st.log.Error("spool scan for rename", "err", err)
@@ -624,7 +663,7 @@ func (st *storer) retargetSpool(oldName, newName string) {
 
 // dedup deletes older spool entries with the same target and content
 // hash: identical deposits collapse to one file.
-func (st *storer) dedup(target, sha, keep string) {
+func (st *stash) dedup(target, sha, keep string) {
 	if sha == "" {
 		return
 	}
@@ -647,7 +686,7 @@ func (st *storer) dedup(target, sha, keep string) {
 }
 
 // patchMeta rewrites one sidecar field.
-func (st *storer) patchMeta(id string, f func(*spoolMeta)) {
+func (st *stash) patchMeta(id string, f func(*spoolMeta)) {
 	path := st.spool.metaPath(id)
 
 	sm := spoolMeta{}
@@ -660,7 +699,7 @@ func (st *storer) patchMeta(id string, f func(*spoolMeta)) {
 	_ = saveJSON(path, sm)
 }
 
-func (st *storer) opPending(rwc io.ReadWriteCloser, me member) {
+func (st *stash) opPending(rwc io.ReadWriteCloser, me member) {
 	metas, err := st.spool.items()
 	if err != nil {
 		_ = writeMsg(rwc, msg{Op: opItems, Err: "spool unavailable"})
@@ -681,7 +720,7 @@ func (st *storer) opPending(rwc io.ReadWriteCloser, me member) {
 	_ = writeMsg(rwc, msg{Op: opItems, OK: true, Items: items, Members: st.members()})
 }
 
-func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
+func (st *stash) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 	meta, blob, err := st.spool.open(m.ID)
 	if err != nil || meta.Target != me.Name {
 		_ = writeMsg(rwc, msg{Op: opFile, Err: "no such item"})
@@ -740,7 +779,7 @@ func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 	if err != nil || ack.Op != opAck || ack.ID != m.ID {
 		return
 	}
-	// The blob is sealed end-to-end: the storer cannot verify content,
+	// The blob is sealed end-to-end: the stash cannot verify content,
 	// so the receiver's post-decrypt SHA check is the delivery proof.
 	if err := st.spool.delete(m.ID); err != nil {
 		st.log.Warn("delete after ack failed", "id", m.ID, "err", err)
@@ -753,7 +792,7 @@ func (st *storer) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 
 // opDismiss deletes one of the requester's own pending items without
 // delivering it: the receiver's call, never the sender's.
-func (st *storer) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
+func (st *stash) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
 	meta, blob, err := st.spool.open(m.ID)
 	if err != nil || meta.Target != me.Name {
 		_ = writeMsg(rwc, msg{Op: opAcked, Err: "no such item"})
@@ -778,8 +817,8 @@ func (st *storer) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
 // opRemove is self-removal (reset's leave) plus admin removal of
 // another member; the dial key binds the requester, and their parked
 // items go with them. An admin-less mesh (the last admin resets) is
-// recovered by catbox admin --data DIR on the storer.
-func (st *storer) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
+// recovered by catbox admin --data DIR on the stash.
+func (st *stash) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
 	target := me.Name
 
 	if m.Target != "" && m.Target != me.Name {

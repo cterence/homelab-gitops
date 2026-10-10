@@ -329,7 +329,7 @@ fun CatboxApp() {
     }
 
     // The listener follows the app's visibility: direct sends are
-    // always welcome while catbox is on screen, while storer pulls
+    // always welcome while catbox is on screen, while stash pulls
     // wait behind each waiting file's receive button.
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(joined.value) {
@@ -513,7 +513,7 @@ fun CatboxApp() {
                 }
                 false -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     // Both forms are positional args: the token, or a
-                    // bare storer address on a fresh mesh.
+                    // bare stash address on a fresh mesh.
                     JoinCard { paste, name ->
                         scope.launch {
                             run("join", name, paste)
@@ -687,7 +687,7 @@ fun CatboxApp() {
                 title = { Text("Reset this device?") },
                 text = {
                     Text(
-                        "It leaves the roster when the storer is reachable, and its identity is wiped either way. It can join again afterwards.",
+                        "It leaves the roster when the stash is reachable, and its identity is wiped either way. It can join again afterwards.",
                     )
                 },
                 confirmButton = {
@@ -856,14 +856,14 @@ fun MainScreen(
         }
     }
 
-    // Refusing delivery: full info, then the storer drops it unread.
+    // Refusing delivery: full info, then the stash drops it unread.
     dismissPending?.let { f ->
         AlertDialog(
             onDismissRequest = { dismissPending = null },
             title = { Text("Dismiss file") },
             text = {
                 Text(
-                    "${f.fn} from ${f.from} (${humanBytes(f.plain)}) will be deleted at the storer without being received.",
+                    "${f.fn} from ${f.from} (${humanBytes(f.plain)}) will be deleted at the stash without being received.",
                 )
             },
             confirmButton = {
@@ -1016,14 +1016,14 @@ fun JoinCard(onJoin: (String, String) -> Unit) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Join a catbox", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Paste the invite from `catbox invite` on one of your machines (or the storer address on a fresh mesh), and pick this device's name.",
+                "Paste the invite from `catbox invite` on one of your machines (or the stash address on a fresh mesh), and pick this device's name.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedTextField(
                 value = invite,
                 onValueChange = { invite = it },
-                label = { Text("Invite token (or storer address)") },
+                label = { Text("Invite token (or stash address)") },
                 singleLine = true,
             )
             OutlinedTextField(
