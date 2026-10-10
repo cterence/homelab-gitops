@@ -977,6 +977,27 @@ func TestDepositResumesNearCap(t *testing.T) {
 
 	_ = conn.Close() // mid-deposit disconnect: the partial survives
 
+	// The abandoned deposit releases its admission asynchronously (its
+	// read fails on the closed conn): wait it out before the retry,
+	// which must be admitted against the released budget.
+	deadline := time.Now().Add(2 * time.Second)
+
+	for {
+		st.mu.Lock()
+		admitted := st.admitted
+		st.mu.Unlock()
+
+		if admitted == 0 {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("abandoned deposit still holds %d admitted bytes", admitted)
+		}
+
+		time.Sleep(time.Millisecond)
+	}
+
 	// Retry under the tightened cap: must be admitted with resume.
 	conn = dial(t, st, laptop)
 	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "big.bin", Size: int64(len(payload)), SHA: sha}); err != nil {
