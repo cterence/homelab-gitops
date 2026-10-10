@@ -52,6 +52,13 @@ func run(ctx context.Context) error {
 	})
 
 	for _, r := range cfg.Routes {
+		logger.Info("route loaded",
+			"path", r.Path,
+			"agent_id", r.AgentID,
+			"conversation_name", r.ConversationName,
+			"dedup_key", r.DedupKey,
+			"dedup_window", r.window.String(),
+		)
 		mux.Handle("POST "+r.Path, rl.handler(r))
 	}
 

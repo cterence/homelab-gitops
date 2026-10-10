@@ -56,5 +56,10 @@ Deduplicated requests also return `202` so Alertmanager does not retry them.
   detached from the request context. Failures are logged (`agent conversation
   failed`) and are not retried — callers such as Alertmanager already have
   their own delivery path for the raw alert.
+- The conversations API blocks until the whole conversation completes, so
+  the lifecycle logs are: `request accepted` (immediately), `starting agent
+  conversation` (right before the call), then `agent conversation completed`
+  with `conversation_id` and duration when the agent is done — several
+  minutes later is normal.
 - Dedup state is in-memory and per-pod; a restart can cause one extra
   invocation per key in the worst case.
