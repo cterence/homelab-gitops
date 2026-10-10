@@ -42,6 +42,33 @@ func peerDir() (string, error) {
 	return filepath.Join(conf, "catbox"), nil
 }
 
+// defaultDataDir is the stash data dir on a plain host: its own
+// subdir of the config root, so the stash identity never collides
+// with this machine's peer identity.
+func defaultDataDir() (string, error) {
+	dir, err := peerDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, "stash"), nil
+}
+
+// resolveDataDir picks the data dir: the explicit flag, else the
+// CATBOX_DATA env, else the host default (~/.config/catbox/stash on
+// Linux, ~/Library/Application Support/catbox/stash on macOS).
+func resolveDataDir(flagVal string) (string, error) {
+	if flagVal != "" {
+		return flagVal, nil
+	}
+
+	if v := os.Getenv("CATBOX_DATA"); v != "" {
+		return v, nil
+	}
+
+	return defaultDataDir()
+}
+
 // loadPeerID returns the peer identity, creating it on first use.
 func loadPeerID(name string, storer tailcat.Addr) (*peerID, bool, error) {
 	dir, err := peerDir()
@@ -174,9 +201,9 @@ func pickRegion(ctx context.Context) (int64, error) {
 	return int64(id), nil
 }
 
-// saveJSON atomically writes v as 0600 JSON.
+// saveJSON atomically writes v as minified 0600 JSON.
 func saveJSON(path string, v any) error {
-	b, err := json.MarshalIndent(v, "", "  ")
+	b, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("marshal %s: %w", path, err)
 	}

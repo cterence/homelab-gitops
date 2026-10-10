@@ -56,7 +56,7 @@ func run() error {
 	switch os.Args[1] {
 	case "serve":
 		fs := flag.NewFlagSet("serve", flag.ExitOnError)
-		data := fs.String("data", envOr("CATBOX_DATA", "."), "data dir for identity, roster, and spool")
+		data := fs.String("data", "", "data dir for identity, roster, and spool (defaults to CATBOX_DATA, else the host default)")
 		region := fs.Int64("region", 0, "DERP region ID; 0 probes once on first boot")
 		max := fs.String("max", "100G", "spool capacity cap")
 		ttl := fs.Duration("ttl", 30*24*time.Hour, "spool retention")
@@ -68,10 +68,21 @@ func run() error {
 			return err
 		}
 
-		return runServe(ctx, log, *data, *region, maxN, *ttl, *health)
+		dataDir, err := resolveDataDir(*data)
+		if err != nil {
+			return err
+		}
+
+		return runServe(ctx, log, dataDir, *region, maxN, *ttl, *health)
 	case "addr":
-		// Reads the same dir serve uses: CATBOX_DATA env, else ".".
-		id, _, err := loadStorerIdentity(ctx, envOr("CATBOX_DATA", "."), -1)
+		// Reads the same dir serve uses: --data is not offered, the
+		// resolution matches (CATBOX_DATA, else the host default).
+		dataDir, err := resolveDataDir("")
+		if err != nil {
+			return err
+		}
+
+		id, _, err := loadStorerIdentity(ctx, dataDir, -1)
 		if err != nil {
 			return err
 		}
@@ -323,8 +334,13 @@ func run() error {
 		}
 
 		// The storer host is break-glass: it removes any member.
-		if *data != "" {
-			if err := removeMemberLocal(*data, fs.Arg(0), log); err != nil {
+		if *data != "" || os.Getenv("CATBOX_DATA") != "" {
+			dataDir, err := resolveDataDir(*data)
+			if err != nil {
+				return err
+			}
+
+			if err := removeMemberLocal(ctx, dataDir, fs.Arg(0), log); err != nil {
 				return err
 			}
 
@@ -368,22 +384,28 @@ func run() error {
 		// admin-less mesh). Admins mint invites and remove
 		// members over the wire.
 		fs := flag.NewFlagSet("admin", flag.ExitOnError)
-		data := fs.String("data", "", "storer data dir: the storer, not a peer, grants admin")
+		data := fs.String("data", "", "storer data dir (defaults to CATBOX_DATA, else the host default)")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
 			return errors.New("admin takes <member>")
 		}
 
-		if *data == "" {
-			return errors.New("granting admin runs on the storer: catbox admin --data DIR <member>")
-		}
-
-		if err := grantAdmin(*data, fs.Arg(0)); err != nil {
+		dataDir, err := resolveDataDir(*data)
+		if err != nil {
 			return err
 		}
 
-		fmt.Printf("%s is now an admin\n", fs.Arg(0))
+		changed, err := grantAdmin(ctx, dataDir, fs.Arg(0))
+		if err != nil {
+			return err
+		}
+
+		if changed {
+			fmt.Printf("%s is now an admin\n", fs.Arg(0))
+		} else {
+			fmt.Printf("%s is already an admin\n", fs.Arg(0))
+		}
 
 		return nil
 	case "reset":
@@ -519,14 +541,6 @@ transfer commands:
 other commands:
   version   print the build version
 `)
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-
-	return def
 }
 
 // parseSize parses "100", "10K", "100G", "1.5T" into bytes.

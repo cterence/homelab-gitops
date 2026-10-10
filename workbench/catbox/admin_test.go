@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -180,10 +182,12 @@ func TestInviteStoreRoundtrip(t *testing.T) {
 }
 
 // TestGrantAdmin: the storer-side grant promotes a member on disk,
-// and the running storer picks it up on its next message.
+// granting an existing admin is a no-op, and the running storer picks
+// the edit up on its next message.
 func TestGrantAdmin(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
+	ctx := context.Background()
 	st := newTestStorer(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
@@ -197,11 +201,18 @@ func TestGrantAdmin(t *testing.T) {
 		_ = conn.Close()
 	}
 
-	if err := grantAdmin(st.dir, "nas"); err != nil {
-		t.Fatalf("grant: %v", err)
+	changed, err := grantAdmin(ctx, st.dir, "nas")
+	if err != nil || !changed {
+		t.Fatalf("grant = %v, %v; want changed", changed, err)
 	}
 
-	if err := grantAdmin(st.dir, "ghost"); err == nil {
+	// Granting an admin again changes nothing and reports so.
+	changed, err = grantAdmin(ctx, st.dir, "nas")
+	if err != nil || changed {
+		t.Fatalf("re-grant = %v, %v; want a no-op", changed, err)
+	}
+
+	if _, err := grantAdmin(ctx, st.dir, "ghost"); err == nil {
 		t.Fatal("granting an unknown member must fail")
 	}
 
@@ -211,5 +222,39 @@ func TestGrantAdmin(t *testing.T) {
 
 	if _, err := clientInvite(conn); err != nil {
 		t.Fatalf("granted admin cannot invite: %v", err)
+	}
+}
+
+// TestStorerDirGuard: stash-host commands refuse a directory that is
+// not a stash data dir — a peer's config dir holds a roster.json too,
+// but it is a cache, and editing it would report success while
+// changing nothing.
+func TestStorerDirGuard(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+
+	// A plausible peer config dir: a peer identity and a roster cache.
+	dir := t.TempDir()
+	if err := saveJSON(filepath.Join(dir, "identity.json"), testPeerID("laptop")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := saveRoster(rosterPath(dir), []member{{Name: "nas"}}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := grantAdmin(ctx, dir, "nas"); err == nil || !strings.Contains(err.Error(), "not a stash data dir") {
+		t.Fatalf("grant on a peer config dir = %v; want refusal", err)
+	}
+
+	if err := removeMemberLocal(ctx, dir, "nas", testLogger()); err == nil || !strings.Contains(err.Error(), "not a stash data dir") {
+		t.Fatalf("remove on a peer config dir = %v; want refusal", err)
+	}
+
+	// The cache must be untouched.
+	kept, err := loadRoster(rosterPath(dir))
+	if err != nil || len(kept) != 1 {
+		t.Fatalf("refused commands must not touch the cache: %v %+v", err, kept)
 	}
 }
