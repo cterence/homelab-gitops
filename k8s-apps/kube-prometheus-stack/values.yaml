@@ -286,13 +286,19 @@ kube-prometheus-stack:
                 {{- end }}
                 {{ end }}
                 <a href="{{ .ExternalURL }}">View in Alertmanager</a>
+      inhibit_rules:
+        - source_matchers:
+            - alertname="JellyfinSocketSpam"
+          target_matchers:
+            - alertname="TraefikHigh5xxRate"
+          equal: ["service", "context"]
       route:
         group_by: ["alertname"]
         group_wait: 0s
         receiver: telegram
         routes:
           - matchers:
-              - alertname=~"CNPGClusterHA.*|CNPGClusterLowDiskSpace.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog|InfoInhibitor"
+              - alertname=~"CNPGClusterHA.*|CNPGClusterLowDiskSpace.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog|InfoInhibitor|JellyfinSocketSpam"
             receiver: empty
 
     ingress:

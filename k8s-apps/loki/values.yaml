@@ -96,6 +96,21 @@ loki:
                     summary: "IP {{ "{{ $labels.ip }}" }} banned by traefik-jail (ban #{{ "{{ $labels.banCount }}" }}, {{ "{{ $labels.duration }}" }})"
                     description: "IP {{ "{{ $labels.ip }}" }} was banned after exceeding the 4xx error threshold. This is ban #{{ "{{ $labels.banCount }}" }} with duration {{ "{{ $labels.duration }}" }}."
 
+        jellyfin.yaml: |
+          groups:
+            - name: jellyfin
+              rules:
+                - alert: JellyfinSocketSpam
+                  expr: |
+                    sum by (service) (count_over_time({k8s_namespace_name="traefik", k8s_container_name="traefik"} |= "GET /socket" |= " 500 " | regexp "websecure-(?P<service>arr-stack-arr-stack-jellyfin-[0-9]+@kubernetes)" [10m])) > 50
+                  for: 2m
+                  labels:
+                    severity: info
+                    context: traefik
+                  annotations:
+                    summary: "Jellyfin WebSocket /socket spam on {{ `{{ $labels.service }}` }}"
+                    description: "A client is retry-looping GET /socket with an invalid or revoked token, returning HTTP 500. This is a known jellyfin-web bug and does not affect playback."
+
         velero.yaml: |
           groups:
             - name: velero
