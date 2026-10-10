@@ -71,7 +71,7 @@ app-template:
               dedup_key: alerts.0.labels.alertname
               dedup_window: 15m
 
-  volumes:
+  persistence:
     config:
       enabled: true
       type: configMap
