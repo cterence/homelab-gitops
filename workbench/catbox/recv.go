@@ -215,6 +215,12 @@ func (lc *listener) listenConn(rwc io.ReadWriteCloser) {
 // receive takes one sealed stream to the inbox, resuming from this
 // transfer's partial when there is one.
 func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
+	if !validSHA(m.SHA) {
+		_ = writeMsg(rwc, msg{Op: opReady, Err: "sha must be empty or 64 lowercase hex chars"})
+
+		return
+	}
+
 	if err := os.MkdirAll(lc.inbox, 0o755); err != nil {
 		_ = writeMsg(rwc, msg{Op: opDone, Err: err.Error()})
 
@@ -293,16 +299,17 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 		}
 	}
 
-	// The stream ends at its terminator; no size bound needed here.
-	// Ticks print progress (the app's log pane sees plain stderr) and
-	// slide the conn deadline.
+	// The stream ends at its terminator, but the bytes are bounded by
+	// the claimed size: a buggy sender looping past its claim must
+	// hit the budget, not fill the disk. Ticks print progress (the
+	// app's log pane sees plain stderr) and slide the conn deadline.
 	src := &progressReader{r: rwc, total: m.Size, offset: have, label: "received", every: time.Second, path: pathFn, onTick: func(int64) {
 		if c, ok := rwc.(net.Conn); ok {
 			_ = c.SetDeadline(time.Now().Add(directStall)) // sliding: inactivity cap, like the sender's
 		}
 	}}
 
-	sender, plainSize, sha, err := openStream(lc.id.Key, src, f, have, h)
+	sender, plainSize, sha, err := openStream(lc.id.Key, src, &budgetWriter{w: f, max: m.Size - have}, have, h)
 	src.close() // sealed streams self-terminate: no EOF ever reaches the reader
 
 	_ = f.Close()

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"tailscale.com/types/key"
 )
@@ -217,5 +218,91 @@ func TestListenerShaMismatch(t *testing.T) {
 
 	if len(entries) != 0 {
 		t.Fatalf("inbox should be empty: %v", entries)
+	}
+}
+
+// A malformed SHA on a direct send must be refused before it keys a
+// partial or names a path, not crash the listener.
+func TestListenerRefusesBadSHA(t *testing.T) {
+	nas := testPeerID("nas")
+
+	for _, sha := range []string{"abc", strings.Repeat("a/", 32)} {
+		lc, c := testListener(t, nas)
+		if err := writeMsg(c, msg{Op: opSend, Target: "nas", FileName: "x", Size: 5, SHA: sha}); err != nil {
+			t.Fatal(err)
+		}
+
+		m, err := readMsg(c)
+		_ = c.Close()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if m.OK || m.Err == "" {
+			t.Fatalf("malformed SHA %q must be refused, got %+v", sha, m)
+		}
+
+		entries, err := os.ReadDir(lc.inbox)
+		if err != nil || len(entries) != 0 {
+			t.Fatalf("refused send must not write files: %v %v", err, entries)
+		}
+	}
+}
+
+// A sender streaming more than it claimed is cut off by the receive
+// budget, not written to disk until the terminator.
+func TestListenerBoundsOversizeSend(t *testing.T) {
+	nas := testPeerID("nas")
+
+	lc, c := testListener(t, nas)
+	defer func() { _ = c.Close() }()
+
+	if err := writeMsg(c, msg{Op: opSend, Target: "nas", FileName: "liar.txt", Size: 5}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || !m.OK {
+		t.Fatalf("ready = %+v", m)
+	}
+
+	payload := bytes.Repeat([]byte("x"), 100)
+
+	go func() {
+		_, _ = sealStream(key.NewNode(), nas.Key.Public(), c, bytes.NewReader(payload), shaHexOf(payload), 0)
+	}()
+
+	m, err = readMsg(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opDone || m.OK || m.Err == "" {
+		t.Fatalf("oversize send must fail, got %+v", m)
+	}
+
+	// The refusal precedes the handler's deferred temp cleanup: poll.
+	deadline := time.Now().Add(2 * time.Second)
+
+	for {
+		entries, err := os.ReadDir(lc.inbox)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(entries) == 0 {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("oversize send must not deliver: %v", entries)
+		}
+
+		time.Sleep(time.Millisecond)
 	}
 }

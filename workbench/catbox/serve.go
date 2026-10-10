@@ -36,6 +36,7 @@ type stash struct {
 	roster    []member
 	rosterMod time.Time // roster.json mtime at last load: external edits reload
 	invites   []invite
+	admitted  int64 // deposit bytes admitted but unfinished: concurrent deposits share the cap
 	spool     *spool
 }
 
@@ -536,6 +537,12 @@ func (st *stash) opInvite(rwc io.ReadWriteCloser, me member) {
 }
 
 func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
+	if !validSHA(m.SHA) {
+		_ = writeMsg(rwc, msg{Op: opReady, Err: "sha must be empty or 64 lowercase hex chars"})
+
+		return
+	}
+
 	if m.Target == me.Name {
 		_ = writeMsg(rwc, msg{Op: opReady, Err: "can't send to yourself"})
 
@@ -565,12 +572,28 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	}
 
 	// A resumed deposit's partial is already inside usage: only the
-	// missing bytes count against the cap.
-	if usage+m.Size-have > st.max {
+	// missing bytes count against the cap. Admitted-unfinished bytes
+	// count too, so concurrent deposits each see the shared budget
+	// instead of the whole remaining space.
+	st.mu.Lock()
+
+	if usage+st.admitted+m.Size-have > st.max {
+		st.mu.Unlock()
+
 		_ = writeMsg(rwc, msg{Op: opReady, Err: "spool full"})
 
 		return
 	}
+
+	st.admitted += m.Size - have
+	budget := st.max - usage - st.admitted + (m.Size - have)
+	st.mu.Unlock()
+
+	defer func() {
+		st.mu.Lock()
+		st.admitted -= m.Size - have
+		st.mu.Unlock()
+	}()
 
 	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Members: st.members(), Have: have}); err != nil {
 		return
@@ -601,7 +624,7 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	// Newest deposit wins: a retry evicts a stalled attempt's conn
 	// instead of waiting out idleTimeout behind its partial lock.
 	st.spool.claim(m.SHA, m.Size, rwc)
-	meta, err = st.spool.put(src, meta, st.max-usage, have)
+	meta, err = st.spool.put(src, meta, budget, have)
 	st.spool.release(m.SHA, m.Size, rwc)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
@@ -620,9 +643,15 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		return
 	}
 
-	st.patchMeta(meta.ID, func(sm *spoolMeta) { sm.SHA = done.SHA })
+	// The sender's done message carries the plaintext SHA for the
+	// receiver. A malformed one never reaches the sidecar: pulls key
+	// partials by it, so a lying SHA must not be recorded.
 	st.log.Info("deposited", "id", meta.ID, "target", target.Name, "bytes", meta.Size)
-	st.dedup(target.Name, done.SHA, meta.ID)
+
+	if validSHA(done.SHA) {
+		st.patchMeta(meta.ID, func(sm *spoolMeta) { sm.SHA = done.SHA })
+		st.dedup(target.Name, me.Name, done.SHA, meta.ID)
+	}
 
 	_ = writeMsg(rwc, msg{Op: opDone, OK: true})
 }
@@ -665,9 +694,12 @@ func (st *stash) retargetSpool(oldName, newName string) {
 	}
 }
 
-// dedup deletes older spool entries with the same target and content
-// hash: identical deposits collapse to one file.
-func (st *stash) dedup(target, sha, keep string) {
+// dedup deletes the sender's older spool entries with the same
+// target and content hash: identical deposits collapse to one file.
+// Only the sender's own entries collapse — the SHA is sender-claimed,
+// so matching another member's entry would delete their delivery on
+// a lie.
+func (st *stash) dedup(target, from, sha, keep string) {
 	if sha == "" {
 		return
 	}
@@ -681,7 +713,7 @@ func (st *stash) dedup(target, sha, keep string) {
 	}
 
 	for _, sm := range metas {
-		if sm.ID != keep && sm.Target == target && sm.SHA == sha {
+		if sm.ID != keep && sm.Target == target && sm.From == from && sm.SHA == sha {
 			if err := st.spool.delete(sm.ID); err == nil {
 				st.log.Info("deduped identical deposit", "id", sm.ID, "target", target)
 			}
