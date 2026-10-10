@@ -223,7 +223,31 @@ func (st *storer) reloadRoster() {
 // removeMemberLocal is the storer-side remove: rewrite the roster on
 // disk and sweep the member's parked items. The running storer picks
 // the edit up on its next message (reloadRoster).
-func removeMemberLocal(dataDir, name string, log *slog.Logger) error {
+// ensureStorerDir refuses directories that are not a stash data dir:
+// a peer's config dir also holds a roster.json, but it is a cache —
+// editing it would report success while changing nothing. The stash
+// is identified by its identity, the tailcat key serve creates on
+// first boot; a peer identity does not parse as one (its fields do
+// not map, so it unmarshals to the zero key). The check catches
+// accidents, not adversaries: anyone able to write the dir can edit
+// the roster by hand and no in-binary check can prevent that.
+func ensureStorerDir(ctx context.Context, dataDir string) error {
+	id, _, err := loadStorerIdentity(ctx, dataDir, -1)
+	if err != nil || id.Private.IsZero() {
+		return fmt.Errorf("%s is not a stash data dir: stash commands run where serve runs, on its --data dir", dataDir)
+	}
+
+	return nil
+}
+
+// removeMemberLocal is the storer-side remove: rewrite the roster on
+// disk and sweep the member's parked items. The running storer picks
+// the edit up on its next message (reloadRoster).
+func removeMemberLocal(ctx context.Context, dataDir, name string, log *slog.Logger) error {
+	if err := ensureStorerDir(ctx, dataDir); err != nil {
+		return err
+	}
+
 	roster, err := loadRoster(rosterPath(dataDir))
 	if err != nil {
 		return fmt.Errorf("loading roster: %w", err)
@@ -264,31 +288,42 @@ func removeMemberLocal(dataDir, name string, log *slog.Logger) error {
 // grantAdmin is the storer-side admin grant: rewrite the roster with
 // the member promoted. The running storer picks the edit up on its
 // next message (reloadRoster). Break-glass for meshes that predate
-// admins, and the recovery path for an admin-less roster.
-func grantAdmin(dataDir, name string) error {
+// admins, and the recovery path for an admin-less roster. It reports
+// whether the roster changed: granting an existing admin is a no-op.
+func grantAdmin(ctx context.Context, dataDir, name string) (bool, error) {
+	if err := ensureStorerDir(ctx, dataDir); err != nil {
+		return false, err
+	}
+
 	roster, err := loadRoster(rosterPath(dataDir))
 	if err != nil {
-		return fmt.Errorf("loading roster: %w", err)
+		return false, fmt.Errorf("loading roster: %w", err)
 	}
 
 	found := false
 
 	for i := range roster {
-		if roster[i].Name == name {
-			roster[i].Admin = true
-			found = true
+		if roster[i].Name != name {
+			continue
 		}
+
+		if roster[i].Admin {
+			return false, nil // already an admin
+		}
+
+		roster[i].Admin = true
+		found = true
 	}
 
 	if !found {
-		return fmt.Errorf("unknown member %s", name)
+		return false, fmt.Errorf("unknown member %s", name)
 	}
 
 	if err := saveRoster(rosterPath(dataDir), roster); err != nil {
-		return fmt.Errorf("saving roster: %w", err)
+		return false, fmt.Errorf("saving roster: %w", err)
 	}
 
-	return nil
+	return true, nil
 }
 
 func (st *storer) lookupMember(k key.NodePublic) (m member, ok bool) {

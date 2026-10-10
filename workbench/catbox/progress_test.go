@@ -204,9 +204,9 @@ func TestProgressReaderRewritesOnTerminal(t *testing.T) {
 	}
 }
 
-// Concurrent client commands queue behind the lock and take it in
-// arrival order; a canceled wait never runs.
-func TestLockPeerQueue(t *testing.T) {
+// The lock is mutual exclusion: a second command waits until the
+// holder releases, and a canceled wait never runs.
+func TestLockPeer(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
@@ -216,24 +216,14 @@ func TestLockPeerQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Two waiters queue behind the holder, in arrival order.
-	type turn struct {
-		n       int
-		release func()
-	}
+	got := make(chan func(), 1)
 
-	got := make(chan turn, 2)
-
-	for i := range 2 {
-		go func(n int) {
-			r, err := lockPeer(ctx)
-			if err == nil {
-				got <- turn{n, r}
-			}
-		}(i)
-
-		time.Sleep(50 * time.Millisecond) // arrival order = entry order
-	}
+	go func() {
+		r, err := lockPeer(ctx)
+		if err == nil {
+			got <- r
+		}
+	}()
 
 	select {
 	case <-got:
@@ -243,19 +233,12 @@ func TestLockPeerQueue(t *testing.T) {
 
 	release()
 
-	first := <-got
-	if first.n != 0 {
-		t.Fatalf("the first waiter must go first, got %d", first.n)
+	select {
+	case rel := <-got:
+		rel()
+	case <-time.After(5 * time.Second):
+		t.Fatal("the waiter never took the released lock")
 	}
-
-	first.release()
-
-	second := <-got
-	if second.n != 1 {
-		t.Fatalf("the second waiter must go second, got %d", second.n)
-	}
-
-	second.release()
 
 	// A canceled wait never takes the lock.
 	cctx, cancel := context.WithCancel(context.Background())
@@ -274,8 +257,8 @@ func TestLockPeerQueue(t *testing.T) {
 	again()
 }
 
-// A queued command says so: a silent stall looks like a hang.
-func TestLockPeerQueuedLog(t *testing.T) {
+// A waiting command says so: a silent stall looks like a hang.
+func TestLockPeerWaitingLog(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -318,8 +301,8 @@ func TestLockPeerQueuedLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(got), "another catbox command is running, queued") {
-		t.Fatalf("no queued note: %q", got)
+	if !strings.Contains(string(got), "another catbox command is running, waiting") {
+		t.Fatalf("no waiting note: %q", got)
 	}
 
 	cancel()

@@ -23,66 +23,24 @@ import (
 	"tailscale.com/types/key"
 )
 
-// lockPeer serializes one-shot client commands: tailcat allows one
-// tunnel per peer key per server, so concurrent commands queue in
-// client.queue and take the lock in arrival order (or give up with
-// ctx). Both the lock and every queue slot is an flock — a crashed
-// process releases them by dying, so a stale lock or a reused pid can
-// never jam the queue.
+// lockPeer serializes one-shot client commands. tailcat's server
+// acks a second meow from the same peer key instead of refusing it,
+// and the two tunnels then flap the WireGuard endpoint between
+// themselves, starving both transfers — so concurrent commands on
+// this machine take turns. The lock is an flock: the kernel
+// releases it when the holder dies, so a crashed command can never
+// jam the next one. No queue: waiters poll, roughly in arrival
+// order, which is all a single-human tool needs.
 func lockPeer(ctx context.Context) (release func(), err error) {
 	dir := peerConfigDir()
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return func() {}, nil // no config dir: proceed unlocked
 	}
 
-	queue := filepath.Join(dir, "client.queue")
-	if err := os.MkdirAll(queue, 0o700); err != nil {
-		return func() {}, nil // cannot queue: proceed unlocked
+	f, err := os.OpenFile(filepath.Join(dir, "client.lock"), os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return func() {}, nil // cannot lock: proceed unlocked
 	}
-
-	// The queue slot: nanosecond names put waiters in arrival order,
-	// and its flock is the waiter's liveness — death releases it.
-	var (
-		entry string
-		slot  *os.File
-	)
-
-	for slot == nil {
-		name := fmt.Sprintf("%d-%d", time.Now().UnixNano(), os.Getpid())
-
-		f, err := os.OpenFile(filepath.Join(queue, name), os.O_CREATE|os.O_EXCL|os.O_RDWR, 0o600)
-		if os.IsExist(err) {
-			continue // same-nanosecond collision: take the next nanosecond
-		}
-
-		if err != nil {
-			return func() {}, nil // cannot queue: proceed unlocked
-		}
-
-		if ferr := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); ferr != nil {
-			_ = f.Close()
-			_ = os.Remove(filepath.Join(queue, name))
-
-			return func() {}, nil // cannot queue: proceed unlocked
-		}
-
-		slot = f
-		entry = name
-	}
-
-	if err := ctx.Err(); err != nil {
-		_ = slot.Close()
-		_ = os.Remove(filepath.Join(queue, entry))
-
-		return nil, err // a canceled command never runs
-	}
-
-	giveUp := func() {
-		_ = slot.Close()
-		_ = os.Remove(filepath.Join(queue, entry))
-	}
-
-	lockPath := filepath.Join(dir, "client.lock")
 
 	tick := time.NewTicker(200 * time.Millisecond)
 	defer tick.Stop()
@@ -90,102 +48,31 @@ func lockPeer(ctx context.Context) (release func(), err error) {
 	var logged bool
 
 	for {
-		head, ahead := queueState(queue, entry)
-		if head == entry {
-			if lf, ok := takeLock(lockPath); ok {
-				_ = slot.Close()
-				_ = os.Remove(filepath.Join(queue, entry))
+		if err := ctx.Err(); err != nil {
+			_ = f.Close()
 
-				return func() { _ = lf.Close() }, nil
-			}
+			return nil, err // a canceled command never runs
+		}
+
+		if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err == nil {
+			return func() { _ = f.Close() }, nil
 		}
 
 		// Waiting must say so: a silent stall looks like a hang.
 		if !logged {
-			note := "another catbox command is running, queued"
-			if ahead > 0 {
-				note = fmt.Sprintf("%s (%d ahead)", note, ahead)
-			}
-
-			fmt.Fprintln(os.Stderr, note)
+			fmt.Fprintln(os.Stderr, "another catbox command is running, waiting")
 
 			logged = true
 		}
 
 		select {
 		case <-ctx.Done():
-			giveUp()
+			_ = f.Close()
 
-			return nil, ctx.Err()
+			return nil, ctx.Err() // a canceled command never runs
 		case <-tick.C:
 		}
 	}
-}
-
-// takeLock claims the client lock: an flock on client.lock, held by
-// the returned file until it closes — the holder's death releases it.
-func takeLock(path string) (*os.File, bool) {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
-	if err != nil {
-		return nil, false
-	}
-
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		_ = f.Close()
-
-		return nil, false
-	}
-
-	return f, true
-}
-
-// queueState reports the first live queue entry and how many live
-// ones sit ahead of ours. A slot's flock is its waiter's liveness:
-// a probe that locks the slot means its waiter is gone — the slot is
-// removed — so a crashed waiter never jams the queue.
-func queueState(queue, ours string) (head string, ahead int) {
-	des, err := os.ReadDir(queue)
-	if err != nil {
-		return ours, 0 // unreadable queue: fall through to the lock claim
-	}
-
-	names := make([]string, 0, len(des))
-	for _, de := range des {
-		names = append(names, de.Name())
-	}
-
-	slices.Sort(names)
-
-	for _, name := range names {
-		if name == ours {
-			break // ours: everything live ahead of it is counted
-		}
-
-		f, err := os.OpenFile(filepath.Join(queue, name), os.O_RDWR, 0o600)
-		if err != nil {
-			continue
-		}
-
-		if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-			_ = f.Close() // held: its waiter lives
-			ahead++
-
-			if head == "" {
-				head = name
-			}
-
-			continue
-		}
-
-		_ = f.Close() // the probe took it: the waiter is dead
-		_ = os.Remove(filepath.Join(queue, name))
-	}
-
-	if head == "" {
-		head = ours // nothing live ahead: our turn
-	}
-
-	return head, ahead
 }
 
 // clientConn opens a tailcat tunnel to the storer and dials the

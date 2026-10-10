@@ -15,8 +15,9 @@ daemonless peers, everything end-to-end encrypted.
   pulls parked files; `catbox recv --listen` receives direct sends
   while online (it never pulls); senders try the listener first and
   always fall back to the storer. tailcat allows one tunnel per peer
-  key, so concurrent client commands queue on the local lock and run
-  one at a time, in arrival order.
+  key, so concurrent client commands serialize on a local lock and
+  run one at a time; the lock is an flock, so a crashed command
+  releases it by dying.
 - Files are sealed to the recipient's node key: 64 KiB
   XChaCha20-Poly1305 chunks under a per-file key wrapped in a sealed
   box (age's STREAM construction). The storer relays ciphertext only.
@@ -46,9 +47,13 @@ catbox version
 ```
 
 - `serve` runs the storer. First boot creates the identity (node key,
-  pre-shared key, DERP region baked in) in `--data`; the tailcat
-  address is stable for the life of that directory. Logs never contain
-  the address or any key material.
+  pre-shared key, DERP region baked in) in the data dir — resolved
+  from `--data`, else `CATBOX_DATA`, else the host default
+  (`~/.config/catbox/stash` on Linux,
+  `~/Library/Application Support/catbox/stash` on macOS; separate
+  from the peer files in the config root, so the two identities
+  never collide); the tailcat address is stable for the life of that
+  directory. Logs never contain the address or any key material.
 - `addr` prints the storer's tailcat address from its data dir:
   `kubectl -n catbox exec catbox-0 -- catbox addr`. Run inside the
   cluster; the address is a bearer capability, treat it like a
@@ -71,17 +76,22 @@ catbox version
   Stop `recv --listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
 - `remove <member>` drops another member from the roster, parked
-  items and all — admin only, over the wire. `remove --data DIR
-  <member>` is the storer-host form: it removes any member without
-  being admin, the cleanup path for a device that reset while
-  offline and left a ghost. Run it inside the cluster:
-  `kubectl -n catbox exec catbox-0 -- catbox remove --data /data <member>`.
-  Both rewrite the roster and sweep the spool; the running storer
-  picks the edit up on its next message.
-- `admin --data DIR <member>` grants admin on the storer host: the
-  bootstrap for meshes that predate admins, and the recovery path
-  when the last admin reset (an admin-less mesh admits no joins until
-  someone runs it).
+  items and all — admin only, over the wire. `remove --data
+  [DIR] <member>` is the storer-host form: it removes any member
+  without being admin, the cleanup path for a device that reset while
+  offline and left a ghost (a bare `remove <member>` also takes the
+  storer-host form when `CATBOX_DATA` is set, as in the catbox pod).
+  `--data` resolves from the flag, else `CATBOX_DATA`, else the host
+  default. Both rewrite the roster and sweep the spool; the running
+  storer picks the edit up on its next message.
+- `admin <member>` grants admin on the storer host: the bootstrap
+  for meshes that predate admins, and the recovery path when the
+  last admin reset (an admin-less mesh admits no joins until someone
+  runs it). `--data` resolves like `serve`'s, and granting an
+  existing admin reports it instead of pretending. The stash-dir
+  commands (`admin`, `remove --data`) refuse a directory that is not
+  a stash data dir: a peer's config dir holds a roster cache too,
+  and editing it would report success while changing nothing.
 - `reset --yes` leaves the mesh and wipes this machine's identity: it
   removes its own roster entry (the removal is bound to this device's
   dial key — a device can never reset or remove another member) and

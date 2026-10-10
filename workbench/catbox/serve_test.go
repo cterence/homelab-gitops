@@ -40,6 +40,12 @@ func newTestStorer(t *testing.T) *storer {
 	t.Helper()
 	dir := t.TempDir()
 
+	// The stash identity: stash-host commands (admin, remove --data)
+	// refuse a dir without one.
+	if _, _, err := loadStorerIdentity(context.Background(), dir, 1); err != nil {
+		t.Fatal(err)
+	}
+
 	sp, err := openSpool(spoolDir(dir), testLogger())
 	if err != nil {
 		t.Fatal(err)
@@ -1510,6 +1516,12 @@ func TestRemoveMemberLocal(t *testing.T) {
 	dir := t.TempDir()
 	laptop, nas := testPeerID("laptop"), testPeerID("nas")
 
+	// The stash identity: the storer-side commands refuse a dir
+	// without one.
+	if _, _, err := loadStorerIdentity(context.Background(), dir, 1); err != nil {
+		t.Fatal(err)
+	}
+
 	members := []member{
 		{Name: "laptop", Key: laptop.Key.Public(), DialKey: laptop.DialKey.Public(), Joined: 1},
 		{Name: "nas", Key: nas.Key.Public(), DialKey: nas.DialKey.Public(), Joined: 2},
@@ -1535,7 +1547,7 @@ func TestRemoveMemberLocal(t *testing.T) {
 		}
 	}
 
-	if err := removeMemberLocal(dir, "nas", testLogger()); err != nil {
+	if err := removeMemberLocal(context.Background(), dir, "nas", testLogger()); err != nil {
 		t.Fatalf("remove: %v", err)
 	}
 
@@ -1557,7 +1569,7 @@ func TestRemoveMemberLocal(t *testing.T) {
 		t.Fatalf("parked items = %+v", metas)
 	}
 
-	if err := removeMemberLocal(dir, "ghost", testLogger()); err == nil {
+	if err := removeMemberLocal(context.Background(), dir, "ghost", testLogger()); err == nil {
 		t.Fatal("removing an unknown member should fail")
 	}
 }
