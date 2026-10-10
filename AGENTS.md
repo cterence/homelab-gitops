@@ -12,7 +12,7 @@ If using git worktrees:
 
 The root `flake.nix` provides the tool shell and pre-commit checks for the workbench apps.
 
-- `nix develop` — tool shell (go 1.26, golangci-lint, gotools, gitleaks, uv). Entering it installs the prek hooks into `.git/hooks/pre-commit`.
+- `nix develop` — tool shell (go 1.27, golangci-lint, gotools, gitleaks, uv). Entering it installs the prek hooks into `.git/hooks/pre-commit`.
 - Hooks run at commit time: gitleaks (secrets), gofmt (all `workbench/**.go`), and per-app `golangci-lint run` + `go vet ./...` for each Go module under `workbench/`. Hook entries are absolute nix store paths, so they also work from environments without the dev shell on PATH (e.g. VS Code git).
 - `nix flake check` — runs the full hook set over the repo; run it before pushing.
 - After changing hooks in `flake.nix`, re-enter `nix develop` once to refresh the installed config.
@@ -93,7 +93,7 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 
 - Flat `package main` layout — no subpackages, no `internal/` directory.
 - Module path: `github.com/cterence/homelab-gitops/workbench/<app>`.
-- Go version: 1.26 (set in `go.mod`).
+- Go version: 1.27.1 (set in `go.mod`).
 - `main()` calls a `run() error` function; on error print to stderr and `os.Exit(1)`.
 - Imports grouped in three blocks separated by blank lines: stdlib, third-party, local (local not needed yet since everything is `package main`).
 - Error handling: wrap with context using `fmt.Errorf("doing X: %w", err)`. Never both log and return an error — pick one.
@@ -112,7 +112,7 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 
 ### Dockerfiles
 
-- Multi-stage build: `golang:1.26-alpine` (or pinned by digest) as build stage, `scratch` or `gcr.io/distroless/static-debian12:nonroot` as final.
+- Multi-stage build: `golang:1.27-alpine` (or pinned by digest) as build stage, `scratch` or `gcr.io/distroless/static-debian12:nonroot` as final.
 - Build flags: `CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w"`.
 - No Makefiles. Build is entirely Dockerfile-based; Kaniko builds in-cluster.
 

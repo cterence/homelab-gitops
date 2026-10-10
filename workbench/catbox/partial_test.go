@@ -4,9 +4,35 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
+
+// A wire SHA must be empty or 64 lowercase hex chars: anything else
+// must be refused before it keys a partial (slice panic) or names a
+// path (directory escape).
+func TestValidSHA(t *testing.T) {
+	tests := []struct {
+		sha  string
+		want bool
+	}{
+		{"", true},
+		{strings.Repeat("a", 64), true},
+		{strings.Repeat("0123456789abcdef", 4), true},
+		{"abc", false},
+		{strings.Repeat("A", 64), false},
+		{strings.Repeat("a/", 32), false},
+		{strings.Repeat("a", 63), false},
+		{strings.Repeat("a", 65), false},
+	}
+
+	for _, tt := range tests {
+		if got := validSHA(tt.sha); got != tt.want {
+			t.Errorf("validSHA(%q) = %v, want %v", tt.sha, got, tt.want)
+		}
+	}
+}
 
 // One receiver per partial at a time, across processes: the listener
 // and a pull appending the same file would interleave into corruption.

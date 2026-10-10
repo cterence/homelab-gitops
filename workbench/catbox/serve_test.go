@@ -1656,3 +1656,148 @@ func TestOpRemoveSelf(t *testing.T) {
 		t.Fatalf("reset member still served: %+v", m)
 	}
 }
+
+// TestSendBadSHARefused pins the wire boundary: a malformed SHA must
+// be refused with an error reply, never sliced into a partial name or
+// joined into a path.
+func TestSendBadSHARefused(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	st := newTestStash(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	for _, sha := range []string{"abc", strings.Repeat("A", 64), strings.Repeat("a/", 32)} {
+		conn := dial(t, st, laptop)
+		if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "f.txt", Size: 5, SHA: sha}); err != nil {
+			t.Fatal(err)
+		}
+
+		m, err := readMsg(conn)
+		_ = conn.Close()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if m.Op != opReady || m.OK || m.Err == "" {
+			t.Fatalf("malformed SHA %q must be refused, got %+v", sha, m)
+		}
+	}
+}
+
+// TestDedupScopedToSender pins that dedup only collapses the sender's
+// own duplicate deposits: another member's identical parked file for
+// the same target survives.
+func TestDedupScopedToSender(t *testing.T) {
+	st := newTestStash(t)
+	sha := strings.Repeat("ab", 32)
+
+	for _, from := range []string{"laptop", "phone"} {
+		m := spoolMeta{ID: from, FileName: "f.txt", From: from, Target: "nas", Plain: 5, Size: 40, SHA: sha, At: 1}
+		if err := saveJSON(st.spool.metaPath(m.ID), m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	st.dedup("nas", "phone", sha, "phone2")
+
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 || metas[0].From != "laptop" {
+		t.Fatalf("dedup deleted another member's parked file: %+v", metas)
+	}
+}
+
+// TestSpoolCapCountsAdmitted pins the cap guard: bytes admitted to
+// unfinished deposits count against the cap for concurrent deposits,
+// and a finished deposit releases its admission.
+func TestSpoolCapCountsAdmitted(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStash(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	st.max = 500
+
+	// An in-flight deposit holds the whole budget: a second deposit
+	// must be refused even though usage() still reports zero.
+	st.mu.Lock()
+	st.admitted = 500
+	st.mu.Unlock()
+
+	conn := dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "nas", FileName: "f.txt", Size: 100, SHA: strings.Repeat("a", 64)}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	_ = conn.Close()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || m.OK || m.Err != "spool full" {
+		t.Fatalf("deposit must be refused against admitted bytes, got %+v", m)
+	}
+
+	// A finished deposit releases its admission.
+	st.mu.Lock()
+	st.admitted = 0
+	st.mu.Unlock()
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("hello"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn = dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	// The handler releases its admission after replying: poll for it.
+	deadline := time.Now().Add(2 * time.Second)
+
+	for {
+		st.mu.Lock()
+		admitted := st.admitted
+		st.mu.Unlock()
+
+		if admitted == 0 {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("admitted = %d after a finished deposit, want 0", admitted)
+		}
+
+		time.Sleep(time.Millisecond)
+	}
+}

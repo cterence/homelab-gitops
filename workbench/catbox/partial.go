@@ -77,6 +77,29 @@ func fileSHA256(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+// validSHA reports whether a wire-claimed SHA is safe to key a
+// partial with: empty, or 64 lowercase hex chars. Anything else must
+// be refused before partialPath slices or joins it.
+func validSHA(sha string) bool {
+	if sha == "" {
+		return true
+	}
+
+	if len(sha) != 64 {
+		return false
+	}
+
+	for _, c := range sha {
+		if c >= '0' && c <= '9' || c >= 'a' && c <= 'f' {
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
 // partialPath names a transfer's resume file: content-keyed, so a
 // retry over any path finds it.
 func partialPath(dir, shaHex string, size int64) string {
