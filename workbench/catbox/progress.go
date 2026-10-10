@@ -13,6 +13,20 @@ import (
 	"time"
 )
 
+// transferPace, when non-zero, sleeps this long after each chunk of
+// sealed-stream bytes read — a test seam (CATBOX_PACE): transfer
+// duration becomes chunks × pace, deterministic on any network, so
+// the integration kill windows do not depend on payload size.
+var transferPace time.Duration
+
+func init() {
+	if v := os.Getenv("CATBOX_PACE"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			transferPace = d
+		}
+	}
+}
+
 type progressReader struct {
 	r      io.Reader
 	total  int64         // 0 = unknown: no percentage, no ETA
@@ -30,11 +44,24 @@ type progressReader struct {
 
 	n, lastN int64
 	last     time.Time
+	paced    int64 // bytes counted toward the next transferPace sleep
 }
 
 func (p *progressReader) Read(b []byte) (int, error) {
 	n, err := p.r.Read(b)
 	p.n += int64(n)
+
+	// The pacing seam: a fixed per-chunk sleep makes the transfer's
+	// duration deterministic on any network.
+	if transferPace > 0 {
+		p.paced += int64(n)
+
+		for p.paced >= chunkSize {
+			p.paced -= chunkSize
+
+			time.Sleep(transferPace)
+		}
+	}
 
 	// Counters start at the first byte so connection setup doesn't
 	// skew the rate.

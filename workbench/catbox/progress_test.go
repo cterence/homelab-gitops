@@ -311,3 +311,25 @@ func TestLockPeerWaitingLog(t *testing.T) {
 		t.Fatal("the canceled waiter must give up")
 	}
 }
+
+// The pacing seam: with transferPace set, reading two chunks takes at
+// least two paces — transfer duration is deterministic, not network
+// bound.
+func TestProgressReaderPace(t *testing.T) {
+	defer func(d time.Duration) { transferPace = d }(transferPace)
+
+	transferPace = 20 * time.Millisecond
+
+	src := bytes.NewReader(bytes.Repeat([]byte("x"), 2*chunkSize+1))
+	p := &progressReader{r: src}
+
+	start := time.Now()
+
+	if _, err := io.ReadAll(p); err != nil {
+		t.Fatal(err)
+	}
+
+	if elapsed := time.Since(start); elapsed < 2*transferPace {
+		t.Fatalf("two paced chunks read in %v, want >= %v", elapsed, 2*transferPace)
+	}
+}

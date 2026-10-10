@@ -86,9 +86,11 @@ func newNode(t *testing.T, name string) *node {
 }
 
 // env is the node's environment: its own HOME isolates the peer
-// identity (peerDir is under os.UserConfigDir).
+// identity (peerDir is under os.UserConfigDir). Transfers are paced
+// per chunk: the mid-transfer kill windows become deterministic
+// regardless of how fast the runner's network is.
 func (n *node) env(extra map[string]string) []string {
-	out := []string{"HOME=" + n.dir, "CATBOX_HELPER=1", "CATBOX_FAST_TIMERS=1"}
+	out := []string{"HOME=" + n.dir, "CATBOX_HELPER=1", "CATBOX_FAST_TIMERS=1", "CATBOX_PACE=100ms"}
 	for k, v := range extra {
 		out = append(out, k+"="+v)
 	}
@@ -354,10 +356,10 @@ func TestIntegrationResume(t *testing.T) {
 		joinMesh(t, n, milo, addr)
 	}
 
-	// Puma never listens: the file rides the spool. The payload must
-	// be big enough that the killed pull is still running when its
-	// partial appears — the kill window is the transfer itself.
-	big := writeFile(t, "big.bin", 8<<20)
+	// Puma never listens: the file rides the spool. CATBOX_PACE makes
+	// the pull last a known 16 chunks × 100ms — the kill window does
+	// not depend on payload size or network speed.
+	big := writeFile(t, "big.bin", 1<<20)
 
 	out := milo.cat(nil, "send", "puma", big)
 	if !strings.Contains(out, "sent big.bin to puma via stash") {
@@ -437,9 +439,9 @@ func TestIntegrationDirectResume(t *testing.T) {
 		joinMesh(t, n, milo, addr)
 	}
 
-	// The payload must outlast the kill poll: the window is the
-	// transfer itself.
-	big := writeFile(t, "big.bin", 8<<20)
+	// CATBOX_PACE makes the direct send last a known 16 chunks ×
+	// 100ms — the kill window does not depend on network speed.
+	big := writeFile(t, "big.bin", 1<<20)
 
 	// First send: direct, killed mid-transfer once the partial exists.
 	ready := puma.listen()
@@ -538,9 +540,9 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 		joinMesh(t, n, milo, addr)
 	}
 
-	// The payload must outlast the kill poll: the SIGINT window is
-	// the deposit itself.
-	big := writeFile(t, "big.bin", 8<<20)
+	// CATBOX_PACE makes the deposit last a known 16 chunks × 100ms —
+	// the SIGINT window does not depend on network speed.
+	big := writeFile(t, "big.bin", 1<<20)
 
 	// Puma's listener is up, then killed without deregistering: the
 	// roster keeps a stale address, exactly like a locked phone.

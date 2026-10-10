@@ -155,6 +155,10 @@ catbox version
 - `version` prints the build stamp baked in via `-ldflags
   "-X main.version=…"`: the git short rev in nix builds, the image tag
   in Docker builds, `dev` otherwise.
+- `CATBOX_PACE=<duration>` (unset in production) sleeps per 64 KiB
+  chunk of any sealed transfer: a test seam making transfer duration
+  deterministic — the integration suite uses it for its mid-transfer
+  kill windows.
 - Received files never overwrite: a name collision in the inbox
   becomes `name(1).ext`, `name(2).ext`, and so on.
 
