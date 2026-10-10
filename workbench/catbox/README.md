@@ -31,7 +31,8 @@ daemonless peers, everything end-to-end encrypted.
 ```
 catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
 catbox addr
-catbox join   --name NAME [--code CODE] <storer-addr>
+catbox join   <name> <invite-token>   # admitted join
+catbox join   <name> <storer-addr>     # fresh mesh: the bootstrap admin
 catbox rename <new-name>
 catbox invite
 catbox remove [<member>] | --data DIR <member>
@@ -52,17 +53,19 @@ catbox version
   `kubectl -n catbox exec catbox-0 -- catbox addr`. Run inside the
   cluster; the address is a bearer capability, treat it like a
   password. It never creates the identity — only `serve` does.
-- `join` registers this machine under a lowercase-slug name. Run once
-  per machine; the identity lives in the OS config dir
-  (`~/.config/catbox` or `~/Library/Application Support/catbox`). A
-  join that fails after creating the identity rolls it back — a
-  half-joined device is never locked out of joining again. The first
-  join on an empty mesh needs no code and bootstraps as admin; later
-  joins present the code from `catbox invite`.
+- `join <name> <token>` registers this machine under a lowercase-slug
+  name. The token is the invite from `catbox invite` — a base64 blob
+  carrying the one-time code and naming the storer; a bare storer
+  address instead is the fresh-mesh form, no code needed, and the
+  first member bootstraps as admin. Run once per machine; the identity
+  lives in the OS config dir (`~/.config/catbox` or
+  `~/Library/Application Support/catbox`). A join that fails after
+  creating the identity rolls it back — a half-joined device is
+  never locked out of joining again.
 - `invite` (admin) mints a one-time join code (24h TTL, single use,
-  survives a storer restart) and prints the whole join line:
-  `catbox join --name <name> --code <code> '<storer-addr>'`. The
-  Android app's join card accepts the whole line or the parts.
+  survives a storer restart) and prints it as one base64 token, ready
+  to hand to the joiner. The Android app's join card takes the token
+  as a paste.
 - `rename <new-name>` changes this member's name in the roster; parked
   files follow the new name, and a taken or invalid name is rejected.
   Stop `recv --listen` first: renaming re-registers without the
@@ -158,9 +161,9 @@ carries its own receive action, and the waiting header receives
 everything at once; parked files can be refused per file with a
 confirming dialog. The overflow menu's Reset leaves the mesh and wipes
 the app's identity (the binary's `reset`, confirmation dialog first);
-the join card accepts the full
-`catbox join` invite line, pulling the storer address and the invite
-code out of a paste. Its server engine (identity key) never conflicts
+the join card takes the
+invite token as a paste (or a bare storer address on a fresh mesh).
+Its server engine (identity key) never conflicts
 with one-shot client execs (dial key). While an own-action transfer
 is in flight the app holds a bounded partial wake lock, so screen-off
 does not suspend it mid-transfer; a listener receive ends with the

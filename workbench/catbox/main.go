@@ -81,23 +81,31 @@ func run() error {
 		return nil
 	case "join":
 		fs := flag.NewFlagSet("join", flag.ExitOnError)
-		name := fs.String("name", "", "this machine's member name")
-		code := fs.String("code", "", "one-time invite code from catbox invite")
 		_ = fs.Parse(os.Args[2:])
 
-		if fs.NArg() != 1 {
-			return errors.New("join takes one storer address argument")
+		if fs.NArg() != 2 {
+			return errors.New("join takes <name> <invite-token | storer-addr>")
 		}
 
-		created, err := runJoin(ctx, *name, fs.Arg(0), *code)
+		// The second argument is the invite token when it decodes,
+		// else a bare storer address (the fresh-mesh bootstrap join).
+		name, addr, code := fs.Arg(0), "", ""
+
+		if iv, err := parseInviteArg(fs.Arg(1)); err == nil {
+			addr, code = iv.Storer, iv.Code
+		} else {
+			addr = fs.Arg(1)
+		}
+
+		created, err := runJoin(ctx, name, addr, code)
 		if err != nil {
 			return err
 		}
 
 		if created {
-			fmt.Printf("joined as %s\n", *name)
+			fmt.Printf("joined as %s\n", name)
 		} else {
-			fmt.Printf("already joined as %s (roster refreshed)\n", *name)
+			fmt.Printf("already joined as %s (roster refreshed)\n", name)
 		}
 
 		return nil
@@ -187,7 +195,12 @@ func run() error {
 			return err
 		}
 
-		fmt.Printf("catbox join --name <name> --code %s '%s'\n", code, id.StorerAddr)
+		token, err := encodeInvite(inviteJSON{Code: code, Storer: string(id.StorerAddr)})
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(token)
 
 		return nil
 	case "status":
@@ -489,8 +502,8 @@ storer commands:
 
 membership commands:
   join      register this machine under a name
-            --name NAME --code CODE <storer-addr>
-  invite    mint a one-time join code (admin) and print the join line
+            <name> <invite-token> | <name> <storer-addr> (fresh mesh)
+  invite    print a one-time invite token (admin)
   rename    change this member's name
             <new-name>
   remove    drop a member from the roster (admins over the wire,

@@ -6,6 +6,50 @@ import (
 	"time"
 )
 
+// TestInviteToken: the invite travels as one base64url token; a
+// join argument that does not decode is not a token (the caller
+// falls back to treating it as a storer address).
+func TestInviteToken(t *testing.T) {
+	iv := inviteJSON{Code: "cafebabe", Storer: "tcpGFwWCAXS"}
+
+	token, err := encodeInvite(iv)
+	if err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+
+	got, err := parseInviteArg(token)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+
+	if got != iv {
+		t.Fatalf("roundtrip = %+v, want %+v", got, iv)
+	}
+
+	// A storer address is base64url-safe but decodes to garbage that
+	// is not JSON: never mistaken for a token.
+	addr := "tcpGFwWCAXS-S1N1Y2y0DpHWfUAZbI13E5cLRkx5UqVaDL-5fsFmFrWCBGWhipGRdz2hpK7aRmRTSS94-BEeSAX6cwJyr-s_PQRGFxWCASMcfx6PMu0JwMeiLki-m5EFdek1hhKdesmR9oH28gT2FpGQEv"
+	if _, err := parseInviteArg(addr); err == nil {
+		t.Fatal("a storer address must not parse as a token")
+	}
+
+	for _, bad := range []string{"", "not-a-token!", "!!!"} {
+		if _, err := parseInviteArg(bad); err == nil {
+			t.Fatalf("%q must not parse as a token", bad)
+		}
+	}
+
+	// A token missing fields is refused.
+	empty, err := encodeInvite(inviteJSON{Code: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := parseInviteArg(empty); err == nil {
+		t.Fatal("a token without a storer must be refused")
+	}
+}
+
 // TestJoinAdmission pins the whole admission flow: the first member
 // bootstraps as admin without a code, later joins need a live
 // one-time code an admin minted, and a burned or expired code is

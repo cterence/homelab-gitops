@@ -170,27 +170,17 @@ func (n *node) stop() {
 }
 
 // joinMesh joins n to the storer at addr. The mesh's first node
-// bootstraps as admin and joins free; every later node presents a
-// one-time invite code minted by admin.
+// bootstraps as admin and joins by address; every later node presents
+// the invite token minted by admin.
 func joinMesh(t *testing.T, n, admin *node, addr string) {
 	t.Helper()
 
-	args := []string{"join", "--name", n.name}
-
+	token := addr
 	if n != admin {
-		out := admin.cat(nil, "invite")
-
-		// The line is: catbox join --name <name> --code <code> '<addr>'
-		_, rest, ok := strings.Cut(out, "--code ")
-		if !ok {
-			t.Fatalf("node %s: invite output: %q", admin.name, out)
-		}
-
-		code, _, _ := strings.Cut(rest, " ")
-		args = append(args, "--code", code)
+		token = strings.TrimSpace(admin.cat(nil, "invite"))
 	}
 
-	out := n.cat(nil, append(args, addr)...)
+	out := n.cat(nil, "join", n.name, token)
 	if !strings.Contains(out, "joined as "+n.name) {
 		t.Fatalf("node %s: join output: %q", n.name, out)
 	}

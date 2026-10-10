@@ -6,7 +6,9 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -22,6 +24,46 @@ const inviteTTL = 24 * time.Hour
 type invite struct {
 	Code    string `json:"code"`
 	Expires int64  `json:"expires"` // unix seconds
+}
+
+// inviteJSON is what `catbox invite` prints and `join` takes: the
+// one-time code and the storer it was minted on.
+type inviteJSON struct {
+	Code   string `json:"code"`
+	Storer string `json:"storer"`
+}
+
+// encodeInvite renders the invite JSON as one base64url token: a
+// single paste with no braces or quotes to fight.
+func encodeInvite(iv inviteJSON) (string, error) {
+	b, err := json.Marshal(iv)
+	if err != nil {
+		return "", fmt.Errorf("marshaling invite: %w", err)
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+// parseInviteArg decodes a join argument that is an invite token.
+// Anything else — a storer address, a typo — is an error; the caller
+// falls back to treating it as an address.
+func parseInviteArg(s string) (inviteJSON, error) {
+	var iv inviteJSON
+
+	b, err := base64.RawURLEncoding.DecodeString(s)
+	if err != nil {
+		return iv, errors.New("not an invite token")
+	}
+
+	if err := json.Unmarshal(b, &iv); err != nil {
+		return iv, errors.New("not an invite token")
+	}
+
+	if iv.Code == "" || iv.Storer == "" {
+		return iv, errors.New("invite needs a code and a storer address")
+	}
+
+	return iv, nil
 }
 
 func invitePath(dir string) string { return filepath.Join(dir, "invites.json") }

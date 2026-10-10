@@ -168,10 +168,9 @@ object Catbox {
         }
     }
 
-    /** The invite line for enrolling another device; the binary's
+    /** The invite token for enrolling another device; the binary's
      *  error (no identity, not an admin, stash unreachable) when it
-     *  fails — the caller tells them apart by the "catbox join"
-     *  prefix. */
+     *  fails — the caller tells them apart by shape. */
     fun invite(context: Context): String {
         val p = builder(context, "invite").start()
         val out = StringBuilder()
@@ -184,8 +183,7 @@ object Catbox {
         if (p.waitFor() != 0) {
             return err.toString().lineSequence().firstOrNull { it.isNotBlank() } ?: "invite failed"
         }
-        return out.toString().lineSequence().firstOrNull { it.startsWith("catbox join") }
-            ?: "invite failed"
+        return out.toString().lineSequence().firstOrNull { it.isNotBlank() } ?: "invite failed"
     }
 
     private fun readCache(context: Context, name: String): String? = try {
