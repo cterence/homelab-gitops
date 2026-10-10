@@ -31,9 +31,34 @@ type spoolMeta struct {
 }
 
 type spool struct {
-	dir   string
-	log   *slog.Logger
-	putMu sync.Map // partial path → *sync.Mutex: same-content deposits serialize
+	dir    string
+	log    *slog.Logger
+	putMu  sync.Map // partial path → *sync.Mutex: same-content deposits serialize
+	active sync.Map // partial path → io.Closer: the deposit writing it; the next one evicts
+}
+
+// claim marks c as the deposit writing this content's partial; the
+// next deposit of the same content closes it instead of waiting out
+// the partial lock behind a dead stream.
+func (s *spool) claim(shaHex string, plain int64, c io.Closer) {
+	if shaHex == "" {
+		return
+	}
+
+	if prev, loaded := s.active.Swap(partialPath(s.dir, shaHex, plain), c); loaded {
+		if old, ok := prev.(io.Closer); ok {
+			_ = old.Close()
+		}
+	}
+}
+
+// release forgets a claim; a replaced deposit is a no-op.
+func (s *spool) release(shaHex string, plain int64, c io.Closer) {
+	if shaHex == "" {
+		return
+	}
+
+	s.active.CompareAndDelete(partialPath(s.dir, shaHex, plain), c)
 }
 
 // errSpoolFull marks deposits that exceed the spool's remaining byte budget.
