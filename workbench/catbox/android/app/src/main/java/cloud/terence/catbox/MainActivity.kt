@@ -512,7 +512,15 @@ fun CatboxApp() {
                     Text("Checking…")
                 }
                 false -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    JoinCard { addr, name -> scope.launch { run("join", "--name", name, addr); refresh() } }
+                    JoinCard { addr, name, code ->
+                        scope.launch {
+                            // An empty code joins a fresh mesh (bootstrap);
+                            // a mesh with members requires one.
+                            if (code.isEmpty()) run("join", "--name", name, addr)
+                            else run("join", "--name", name, "--code", code, addr)
+                            refresh()
+                        }
+                    }
                 }
                 else -> MainScreen(
                     status.value,
@@ -913,7 +921,14 @@ fun LiveItem(file: String, from: String, detail: String, path: String?, frac: Fl
 /** The paste is often the whole invite line; keep only its address. */
 fun storerAddressOf(paste: String): String {
     val t = paste.trim()
-    return if (t.startsWith("catbox join ")) t.split(Regex("\\s+")).last() else t
+    return if (t.startsWith("catbox join ")) t.split(Regex("\\s+")).last().trim('\'') else t
+}
+
+/** The invite line also carries the one-time code; pull it out. */
+fun inviteCodeOf(paste: String): String {
+    val t = paste.trim()
+    if (!t.startsWith("catbox join ")) return ""
+    return Regex("--code (\\S+)").find(t)?.groupValues?.get(1) ?: ""
 }
 
 fun humanBytes(n: Long): String = when {
@@ -1003,14 +1018,15 @@ fun sharePublished(context: android.content.Context, f: Catbox.Published) {
 }
 
 @Composable
-fun JoinCard(onJoin: (String, String) -> Unit) {
+fun JoinCard(onJoin: (String, String, String) -> Unit) {
     var addr by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf("") }
     ElevatedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Join a catbox", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Paste the storer address from `catbox invite` on one of your machines, and pick this device's name.",
+                "Paste the join line from `catbox invite` on one of your machines, and pick this device's name.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1026,8 +1042,16 @@ fun JoinCard(onJoin: (String, String) -> Unit) {
                 label = { Text("This device's name") },
                 singleLine = true,
             )
+            OutlinedTextField(
+                value = code,
+                onValueChange = { code = it },
+                label = { Text("Invite code (in the join line)") },
+                singleLine = true,
+            )
             Button(
-                onClick = { onJoin(storerAddressOf(addr), name.trim()) },
+                // The code field may hold a pasted code; the address
+                // field may hold the whole join line with its code.
+                onClick = { onJoin(storerAddressOf(addr), name.trim(), code.ifBlank { inviteCodeOf(addr) }.trim()) },
                 enabled = addr.isNotEmpty() && name.isNotEmpty(),
             ) {
                 Text("Join")

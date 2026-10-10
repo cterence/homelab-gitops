@@ -82,13 +82,14 @@ func run() error {
 	case "join":
 		fs := flag.NewFlagSet("join", flag.ExitOnError)
 		name := fs.String("name", "", "this machine's member name")
+		code := fs.String("code", "", "one-time invite code from catbox invite")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
 			return errors.New("join takes one storer address argument")
 		}
 
-		created, err := runJoin(ctx, *name, fs.Arg(0))
+		created, err := runJoin(ctx, *name, fs.Arg(0), *code)
 		if err != nil {
 			return err
 		}
@@ -133,7 +134,7 @@ func run() error {
 		// registered listener address goes stale.
 		id.Name = fs.Arg(0)
 
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", ""); err != nil {
 			return err
 		}
 
@@ -166,7 +167,27 @@ func run() error {
 			return err
 		}
 
-		fmt.Printf("catbox join --name <name> '%s'\n", id.StorerAddr)
+		release, err := lockPeer(ctx)
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		code, err := clientInvite(conn)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("catbox join --name <name> --code %s '%s'\n", code, id.StorerAddr)
 
 		return nil
 	case "status":
@@ -289,22 +310,75 @@ func run() error {
 		return nil
 	case "remove":
 		fs := flag.NewFlagSet("remove", flag.ExitOnError)
-		data := fs.String("data", "", "storer data dir: the storer, not a peer, removes members")
+		data := fs.String("data", "", "storer data dir: run there to remove any member without being admin")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
 			return errors.New("remove takes <member> (see catbox status)")
 		}
 
-		if *data == "" {
-			return errors.New("removing a member runs on the storer: catbox remove --data DIR <member> (a peer can only reset itself)")
+		// The storer host is break-glass: it removes any member.
+		if *data != "" {
+			if err := removeMemberLocal(*data, fs.Arg(0), log); err != nil {
+				return err
+			}
+
+			fmt.Printf("removed %s\n", fs.Arg(0))
+
+			return nil
 		}
 
-		if err := removeMemberLocal(*data, fs.Arg(0), log); err != nil {
+		// Over the wire: an admin removes any member, anyone
+		// removes themselves.
+		id, _, err := loadPeerID("", "")
+		if err != nil {
+			return err
+		}
+
+		release, err := lockPeer(ctx)
+		if err != nil {
+			return err
+		}
+
+		defer release()
+
+		conn, cl, err := clientConn(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer func() { _ = cl.Close() }()
+		defer func() { _ = conn.Close() }()
+
+		if err := clientRemove(conn, fs.Arg(0)); err != nil {
 			return err
 		}
 
 		fmt.Printf("removed %s\n", fs.Arg(0))
+
+		return nil
+	case "admin":
+		// Runs on the storer host, like remove --data: the
+		// operator grants the first admin (or rescues an
+		// admin-less mesh). Admins mint invites and remove
+		// members over the wire.
+		fs := flag.NewFlagSet("admin", flag.ExitOnError)
+		data := fs.String("data", "", "storer data dir: the storer, not a peer, grants admin")
+		_ = fs.Parse(os.Args[2:])
+
+		if fs.NArg() != 1 {
+			return errors.New("admin takes <member>")
+		}
+
+		if *data == "" {
+			return errors.New("granting admin runs on the storer: catbox admin --data DIR <member>")
+		}
+
+		if err := grantAdmin(*data, fs.Arg(0)); err != nil {
+			return err
+		}
+
+		fmt.Printf("%s is now an admin\n", fs.Arg(0))
 
 		return nil
 	case "reset":
@@ -364,7 +438,7 @@ func run() error {
 // identity on first use. A join that fails after creating the
 // identity rolls it back: a half-joined device would be locked out of
 // ever joining again.
-func runJoin(ctx context.Context, name, addr string) (created bool, err error) {
+func runJoin(ctx context.Context, name, addr, code string) (created bool, err error) {
 	id, created, err := loadPeerID(name, tailcat.Addr(addr))
 	if err != nil {
 		return false, err
@@ -393,7 +467,7 @@ func runJoin(ctx context.Context, name, addr string) (created bool, err error) {
 	defer func() { _ = cl.Close() }()
 	defer func() { _ = conn.Close() }()
 
-	if err := joinReq(conn, id, ""); err != nil {
+	if err := joinReq(conn, id, "", code); err != nil {
 		return created, err
 	}
 
@@ -415,11 +489,14 @@ storer commands:
 
 membership commands:
   join      register this machine under a name
-            --name NAME <storer-addr>
-  invite    print the join line for enrolling another peer
+            --name NAME --code CODE <storer-addr>
+  invite    mint a one-time join code (admin) and print the join line
   rename    change this member's name
             <new-name>
-  remove    drop a member from the roster (runs on the storer)
+  remove    drop a member from the roster (admins over the wire,
+            anyone on the storer)
+            [<member>] | --data DIR <member>
+  admin     grant a member admin (runs on the storer)
             --data DIR <member>
   reset     leave the mesh (best effort) and wipe this machine's identity
             --yes

@@ -30,6 +30,8 @@ const (
 	opAcked   = "acked"   // storer: {OK, Err}
 	opDismiss = "dismiss" // peer: {ID} refuse delivery of my own pending item
 	opRemove  = "remove"  // peer: {Target} drop a member from the roster
+	opInvite  = "invite"  // admin: mint a one-time join code
+	opInvited = "invited" // storer: {OK, Err, Code}
 )
 
 const msgMax = 1 << 20
@@ -79,12 +81,13 @@ func init() {
 
 // msg is the wire message; Op dispatches. Size means plaintext bytes
 // for send. Key and Addr carry the joiner's identity public key and
-// listener address.
+// listener address. Code carries the join's one-time invite.
 type msg struct {
 	Op       string   `json:"op"`
 	Name     string   `json:"name,omitempty"`
 	Key      string   `json:"key,omitempty"`
 	Addr     string   `json:"addr,omitempty"`
+	Code     string   `json:"code,omitempty"`
 	Target   string   `json:"target,omitempty"`
 	FileName string   `json:"fn,omitempty"`
 	ID       string   `json:"id,omitempty"`
@@ -111,12 +114,14 @@ type item struct {
 
 // member is one admitted machine. Key is the identity (and listener)
 // public key; DialKey is what the storer sees on connections. Addr is
-// the listener's tailcat address, empty when not listening.
+// the listener's tailcat address, empty when not listening. Admin
+// members mint invites and remove other members.
 type member struct {
 	Name    string         `json:"name"`
 	Key     key.NodePublic `json:"key"`
 	DialKey key.NodePublic `json:"dial_key"`
 	Addr    tailcat.Addr   `json:"addr,omitempty"`
+	Admin   bool           `json:"admin,omitempty"`
 	Joined  int64          `json:"joined"` // unix seconds
 }
 

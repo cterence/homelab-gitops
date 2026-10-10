@@ -213,14 +213,15 @@ func clientConn(ctx context.Context, id *peerID) (net.Conn, *tailcat.Client, err
 }
 
 // joinReq joins the mesh (idempotent) and caches the roster. addr is
-// this peer's listener address, empty when not listening.
-func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr) error {
+// this peer's listener address, empty when not listening. code is the
+// one-time invite, required whenever the roster is non-empty.
+func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr, code string) error {
 	pub, err := id.Key.Public().MarshalText()
 	if err != nil {
 		return err
 	}
 
-	if err := writeMsg(rwc, msg{Op: opJoin, Name: id.Name, Key: string(pub), Addr: string(addr)}); err != nil {
+	if err := writeMsg(rwc, msg{Op: opJoin, Name: id.Name, Key: string(pub), Addr: string(addr), Code: code}); err != nil {
 		return err
 	}
 
@@ -276,8 +277,13 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 
 	for _, mem := range m.Members {
 		marker := ""
+
+		if mem.Admin {
+			marker += " [admin]"
+		}
+
 		if mem.Name == id.Name {
-			marker = " [you]"
+			marker += " [you]"
 		}
 
 		if mem.Addr != "" {
@@ -755,9 +761,27 @@ func clientDismiss(rwc io.ReadWriter, id string) error {
 	return nil
 }
 
-// clientRemove is the wire form of the member's leave: an empty name
-// removes the requester, bound to its dial key. A named target is
-// refused — that is the storer's call (kept here to test the refusal).
+// clientInvite mints a one-time join code from the storer; the
+// requester must be an admin.
+func clientInvite(rwc io.ReadWriter) (string, error) {
+	if err := writeMsg(rwc, msg{Op: opInvite}); err != nil {
+		return "", err
+	}
+
+	m, err := readMsg(rwc)
+	if err != nil {
+		return "", err
+	}
+
+	if m.Op != opInvited || !m.OK {
+		return "", fmt.Errorf("invite: %s", m.Err)
+	}
+
+	return m.Code, nil
+}
+
+// clientRemove leaves the mesh (empty name: the requester, bound to
+// its dial key) or, for admins, drops the named member.
 func clientRemove(rwc io.ReadWriter, name string) error {
 	if err := writeMsg(rwc, msg{Op: opRemove, Target: name}); err != nil {
 		return err

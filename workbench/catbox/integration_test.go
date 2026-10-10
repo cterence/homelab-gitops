@@ -169,6 +169,33 @@ func (n *node) stop() {
 	}
 }
 
+// joinMesh joins n to the storer at addr. The mesh's first node
+// bootstraps as admin and joins free; every later node presents a
+// one-time invite code minted by admin.
+func joinMesh(t *testing.T, n, admin *node, addr string) {
+	t.Helper()
+
+	args := []string{"join", "--name", n.name}
+
+	if n != admin {
+		out := admin.cat(nil, "invite")
+
+		// The line is: catbox join --name <name> --code <code> '<addr>'
+		_, rest, ok := strings.Cut(out, "--code ")
+		if !ok {
+			t.Fatalf("node %s: invite output: %q", admin.name, out)
+		}
+
+		code, _, _ := strings.Cut(rest, " ")
+		args = append(args, "--code", code)
+	}
+
+	out := n.cat(nil, append(args, addr)...)
+	if !strings.Contains(out, "joined as "+n.name) {
+		t.Fatalf("node %s: join output: %q", n.name, out)
+	}
+}
+
 // cat runs one real CLI command as this node and returns its stdout.
 func (n *node) cat(extra map[string]string, args ...string) string {
 	n.t.Helper()
@@ -247,10 +274,7 @@ func TestIntegrationEndToEnd(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	// The storer writes the roster before replying to a join, so the
@@ -333,10 +357,7 @@ func TestIntegrationResume(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	// Puma never listens: the file rides the spool.
@@ -415,10 +436,7 @@ func TestIntegrationDirectResume(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	big := writeFile(t, "big.bin", 8<<20)
@@ -515,10 +533,7 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	big := writeFile(t, "big.bin", 8<<20)

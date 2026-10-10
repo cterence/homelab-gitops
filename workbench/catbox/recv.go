@@ -110,7 +110,7 @@ func registerListener(ctx context.Context, id *peerID, addr tailcat.Addr) error 
 
 	defer func() { _ = conn.Close() }()
 
-	return joinReq(conn, id, addr)
+	return joinReq(conn, id, addr, "")
 }
 
 // ensureListenerIdentity bakes in a PSK and DERP region on first listen.
