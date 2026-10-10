@@ -409,7 +409,7 @@ fun CatboxApp() {
                                 onClick = {
                                     menuOpen.value = false
                                     scope.launch {
-                                        invite.value = withContext(Dispatchers.IO) { Catbox.invite(context) } ?: ""
+                                        invite.value = withContext(Dispatchers.IO) { Catbox.invite(context) }
                                     }
                                 },
                             )
@@ -635,16 +635,18 @@ fun CatboxApp() {
                 onDismissRequest = { invite.value = null },
                 title = { Text("Invite a device") },
                 text = {
-                    if (line.isEmpty()) {
-                        Text("No identity yet — join first")
-                    } else {
+                    if (line.startsWith("catbox join")) {
                         SelectionContainer {
                             Text(line, style = MaterialTheme.typography.bodyMedium)
                         }
+                    } else {
+                        // The binary's error: no identity, not an
+                        // admin, or the stash unreachable.
+                        Text(line)
                     }
                 },
                 confirmButton = {
-                    if (line.isNotEmpty()) {
+                    if (line.startsWith("catbox join")) {
                         TextButton(onClick = {
                             val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                                 type = "text/plain"
