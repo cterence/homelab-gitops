@@ -47,6 +47,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 <!-- BEGIN deployed-apps -->
 | App | Description |
 | --- | --- |
+| [agent-relay](./scripts/../k8s-apps/agent-relay) | Generic webhook to Mistral agent relay |
 | [anubis](./scripts/../k8s-apps/anubis) | Weighs the soul of incoming HTTP requests to stop AI crawlers |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes |
 | [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack |
