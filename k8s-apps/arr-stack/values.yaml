@@ -1428,6 +1428,8 @@ app-template:
 
   configMaps:
     tunnel-monitor-config:
+      includeChecksumInControllers:
+        - qbittorrent
       data:
         blackbox.yml: |
           modules:
@@ -1438,6 +1440,8 @@ app-template:
                 preferred_ip_protocol: ip4
 
     configarr-config:
+      includeChecksumInControllers:
+        - configarr
       data:
         config.yml: |
           trashGuideUrl: https://github.com/TRaSH-Guides/Guides
@@ -1451,34 +1455,38 @@ app-template:
               quality_definition:
                 type: series
 
-              include:
-                - template: sonarr-quality-definition-series
-                - template: sonarr-v4-quality-profile-web-1080p
-                - template: sonarr-v4-custom-formats-web-1080p
-                - template: sonarr-v4-quality-profile-bluray-web-1080p-french-vostfr
-                - template: sonarr-v4-custom-formats-bluray-web-1080p-french-vostfr
+              delete_unmanaged_custom_formats:
+                enabled: true
 
-              custom_formats: []
+              include:
+                # [French MULTi.VO] HD Bluray + WEB (1080p)
+                # french-multi-vo score set: FR Scene +1500, dual audio +500, FR LQ/FastSUB -10000
+                - template: 4c48f506c1116a3a57ae33f12346bd15
+                  source: TRASH
 
           radarr:
             movies:
               base_url: http://arr-stack-radarr:7878
               api_key: !secret RADARR_API_KEY
 
-              include:
-                - template: radarr-quality-definition-movie
-                - template: radarr-quality-profile-hd-bluray-web
-                - template: radarr-custom-formats-hd-bluray-web
-                - template: radarr-quality-profile-remux-web-1080p
-                - template: radarr-custom-formats-remux-web-1080p
-                - template: radarr-quality-profile-hd-bluray-web-french-vostfr
-                - template: radarr-custom-formats-hd-bluray-web-french-vostfr
-                - template: radarr-quality-profile-hd-remux-web-french-vostfr
-                - template: radarr-custom-formats-hd-remux-web-french-vostfr
+              quality_definition:
+                type: movie
 
-              custom_formats: []
+              delete_unmanaged_custom_formats:
+                enabled: true
+
+              include:
+                # [French MULTi.VO] HD Bluray + WEB
+                - template: 2572ce3ea4eef1c19d59e0e20ed1cea7
+                  source: TRASH
+                # [French MULTi.VO] HD Remux (1080p)
+                - template: c6460a102b312200c095a2d0982e0461
+                  source: TRASH
+
 
     filebrowser-quantum-config:
+      includeChecksumInControllers:
+        - filebrowser-quantum
       data:
         config.yaml: |
           server:
@@ -1504,6 +1512,8 @@ app-template:
                 download: true
 
     soularr-script:
+      includeChecksumInControllers:
+        - soularr
       data:
         run-soularr.sh: |
           #!/bin/bash
