@@ -56,30 +56,58 @@ func (rl *relay) handler(r route) http.Handler {
 			return
 		}
 
+		dedupKey := ""
+
 		if r.window > 0 && r.DedupKey != "" {
 			key, ok := jsonPath(payload, r.DedupKey)
 			if !ok {
 				rl.logger.Warn("dedup key missing, forwarding without dedup", "route", r.Path, "key_path", r.DedupKey)
-			} else if !rl.claim(r.Path+"\x00"+key, r.window, time.Now()) {
-				rl.logger.Info("deduplicated request", "route", r.Path, "key", key)
-				w.WriteHeader(http.StatusAccepted)
+			} else {
+				dedupKey = key
+				if !rl.claim(r.Path+"\x00"+key, r.window, time.Now()) {
+					rl.logger.Info("deduplicated request", "route", r.Path, "key", key)
+					w.WriteHeader(http.StatusAccepted)
 
-				return
+					return
+				}
 			}
 		}
+
+		rl.logger.Info("request accepted",
+			"route", r.Path,
+			"dedup_key", dedupKey,
+			"payload_bytes", len(body),
+		)
 
 		// Detached from the request: the conversation may outlive it.
 		bgCtx, cancel := context.WithTimeout(context.WithoutCancel(req.Context()), invokeTimeout)
 		go func() {
 			defer cancel()
 
+			rl.logger.Info("starting agent conversation",
+				"route", r.Path,
+				"agent_id", r.AgentID,
+				"conversation_name", r.ConversationName,
+			)
+
+			start := time.Now()
+
 			convID, err := rl.invoker(bgCtx, rl.apiKey, r.AgentID, r.ConversationName, prompt.String())
 			if err != nil {
-				rl.logger.Error("agent conversation failed", "route", r.Path, "err", err)
+				rl.logger.Error("agent conversation failed",
+					"route", r.Path,
+					"dur_s", time.Since(start).Seconds(),
+					"err", err,
+				)
+
 				return
 			}
 
-			rl.logger.Info("agent conversation started", "route", r.Path, "conversation_id", convID)
+			rl.logger.Info("agent conversation completed",
+				"route", r.Path,
+				"conversation_id", convID,
+				"dur_s", time.Since(start).Seconds(),
+			)
 		}()
 
 		w.WriteHeader(http.StatusAccepted)
