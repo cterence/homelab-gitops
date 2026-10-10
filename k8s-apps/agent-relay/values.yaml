@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        main:
+          image:
+            repository: registry.terence.cloud/agent-relay
+            tag: "1"
+            pullPolicy: IfNotPresent
+          env:
+            TZ: Europe/Paris
+          envFrom:
+            - secretRef:
+                name: credentials
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
+  configMaps:
+    config:
+      enabled: true
+      data:
+        config.yaml: |
+          routes:
+            - path: /alerts
+              agent_id: ag_01a126f3dfc577829a32d2fd28156cad
+              conversation_name: alert-triage
+              prompt: |
+                An Alertmanager alert fired. Payload:
+
+                {{.JSON}}
+
+                Investigate per your instructions and send your report via Telegram.
+              dedup_key: alerts.0.labels.alertname
+              dedup_window: 15m
+
+  volumes:
+    config:
+      enabled: true
+      type: configMap
+      identifier: config
+      globalMounts:
+        - path: /config
+
+  rawResources:
+    credentials:
+      enabled: true
+      forceRename: "credentials"
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: openbao-secret-store
+          target:
+            name: "credentials"
+            creationPolicy: Owner
+          dataFrom:
+            - extract:
+                key: agent-relay/credentials
+                conversionStrategy: Default
+                decodingStrategy: None
+                metadataPolicy: None
+                nullBytePolicy: Ignore

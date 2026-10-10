@@ -286,6 +286,10 @@ kube-prometheus-stack:
                 {{- end }}
                 {{ end }}
                 <a href="{{ .ExternalURL }}">View in Alertmanager</a>
+        - name: agent-relay
+          webhook_configs:
+            - url: http://agent-relay.agent-relay:8080/alerts
+              send_resolved: false
       inhibit_rules:
         - source_matchers:
             - alertname="JellyfinSocketSpam"
@@ -300,6 +304,17 @@ kube-prometheus-stack:
           - matchers:
               - alertname=~"CNPGClusterHA.*|CNPGClusterLowDiskSpace.*|KubeCPUOvercommit|KubeMemoryOvercommit|Watchdog|InfoInhibitor|JellyfinSocketSpam"
             receiver: empty
+          # Warning/critical alerts trigger both the agent investigation (via
+          # the relay) and the raw Telegram notification. continue lets them
+          # fall through to the telegram route below; other severities only
+          # hit the parent telegram receiver.
+          - matchers:
+              - severity=~"warning|critical"
+            receiver: agent-relay
+            continue: true
+          - matchers:
+              - severity=~"warning|critical"
+            receiver: telegram
 
     ingress:
       enabled: true
