@@ -15,8 +15,9 @@ daemonless peers, everything end-to-end encrypted.
   pulls parked files; `catbox recv --listen` receives direct sends
   while online (it never pulls); senders try the listener first and
   always fall back to the storer. tailcat allows one tunnel per peer
-  key, so concurrent client commands queue on the local lock and run
-  one at a time, in arrival order.
+  key, so concurrent client commands serialize on a local lock and
+  run one at a time; the lock is an flock, so a crashed command
+  releases it by dying.
 - Files are sealed to the recipient's node key: 64 KiB
   XChaCha20-Poly1305 chunks under a per-file key wrapped in a sealed
   box (age's STREAM construction). The storer relays ciphertext only.
