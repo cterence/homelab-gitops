@@ -11,7 +11,7 @@ import (
 func TestJoinRollbackOnFailure(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	if _, err := runJoin(context.Background(), "emu", "bogus-addr"); err == nil {
+	if _, err := runJoin(context.Background(), "emu", "bogus-addr", ""); err == nil {
 		t.Fatal("join with a bogus storer address should fail")
 	}
 

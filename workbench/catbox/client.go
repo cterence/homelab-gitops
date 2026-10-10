@@ -213,14 +213,15 @@ func clientConn(ctx context.Context, id *peerID) (net.Conn, *tailcat.Client, err
 }
 
 // joinReq joins the mesh (idempotent) and caches the roster. addr is
-// this peer's listener address, empty when not listening.
-func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr) error {
+// this peer's listener address, empty when not listening. code is the
+// one-time invite, required whenever the roster is non-empty.
+func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr, code string) error {
 	pub, err := id.Key.Public().MarshalText()
 	if err != nil {
 		return err
 	}
 
-	if err := writeMsg(rwc, msg{Op: opJoin, Name: id.Name, Key: string(pub), Addr: string(addr)}); err != nil {
+	if err := writeMsg(rwc, msg{Op: opJoin, Name: id.Name, Key: string(pub), Addr: string(addr), Code: code}); err != nil {
 		return err
 	}
 
@@ -276,8 +277,13 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 
 	for _, mem := range m.Members {
 		marker := ""
+
+		if mem.Admin {
+			marker += " [admin]"
+		}
+
 		if mem.Name == id.Name {
-			marker = " [you]"
+			marker += " [you]"
 		}
 
 		if mem.Addr != "" {
@@ -475,8 +481,63 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 
 	defer func() { _ = f.Close() }()
 
-	// The cached roster may lag a listener that just came online; the
-	// storer is the authority, and the tunnel is already open.
+	// Conns this send dialed itself are closed on return; a
+	// caller-provided rwc stays the caller's to close.
+	var dialed []io.ReadWriteCloser
+
+	defer func() {
+		for _, c := range dialed {
+			_ = c.Close()
+		}
+	}()
+
+	dialStorer := func() (io.ReadWriteCloser, error) {
+		c, err := storerConn(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+
+		dialed = append(dialed, c)
+
+		return c, nil
+	}
+
+	// The cached roster first: a listening target is served without
+	// the storer, whose 3s dial timeout doubles as the staleness
+	// check on the cached address.
+	cached, _ := loadRoster(rosterPath(peerConfigDir()))
+	target, cachedOK := memberByName(cached, targetName)
+
+	tried := ""
+	directTried := false
+
+	if cachedOK && target.Addr != "" {
+		tried = string(target.Addr)
+
+		resumed, dpath, derr := tryDirect(ctx, id, target, f, info, path, shaHex)
+		if derr == nil {
+			fmt.Printf("sent %s to %s directly (%s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), resumedSuffix(resumed), pathSuffix(dpath))
+
+			return nil
+		} else if ctx.Err() != nil {
+			return ctx.Err() // Ctrl-C: the raw error is just the closed conn
+		}
+
+		directTried = true
+
+		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", derr)
+	}
+
+	// The storer is the authority: required for unknown targets,
+	// fresh listener addresses, and deposits.
+	if rwc == nil {
+		var err error
+
+		if rwc, err = dialStorer(); err != nil {
+			return fmt.Errorf("target unreachable and the storer is down: %w", err)
+		}
+	}
+
 	roster, err := refreshRoster(rwc)
 	if err != nil {
 		return err
@@ -489,52 +550,30 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		return fmt.Errorf("no member named %q", targetName)
 	}
 
-	if target.Addr != "" {
-		fmt.Fprintf(os.Stderr, "dialing %s directly...\n", targetName)
-
-		// A failed direct attempt is retried within a short window
-		// before the storer fallback: each redial resumes from the
-		// listener's partial, so a target that vanished mid-transfer
-		// and came back finishes with no storer bytes.
-		deadline := time.Now().Add(directRetryWindow)
-
-		resumed, dpath, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
-
-		for err != nil && ctx.Err() == nil && time.Now().Before(deadline) {
-			fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(directBackoff):
-			}
-
-			// A restarted listener has the same address but fresh
-			// peer state: it only re-adds us on a new meow
-			// handshake, which the cached client never redoes
-			// (its up flag is sticky) — so the retry dials on a
-			// fresh, uncached client, patient enough for the
-			// re-handshake.
-			rc := &tailcat.Client{Server: target.Addr, Key: id.DialKey, Logf: func(string, ...any) {}}
-			resumed, dpath, err = directSend(ctx, rc, directRetryDial, id, target, f, info, path, shaHex)
-			_ = rc.Close()
-		}
-
-		if err == nil {
+	// A fresh address after the cached one failed: one more direct
+	// attempt before the deposit.
+	if target.Addr != "" && string(target.Addr) != tried {
+		resumed, dpath, derr := tryDirect(ctx, id, target, f, info, path, shaHex)
+		if derr == nil {
 			fmt.Printf("sent %s to %s directly (%s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), resumedSuffix(resumed), pathSuffix(dpath))
 
 			return nil
 		} else if ctx.Err() != nil {
 			return ctx.Err() // Ctrl-C: the raw error is just the closed conn
 		}
-		// Target unreachable: fall through to the storer. The failed
-		// direct attempt burned rwc's idle deadline, so try to redial
-		// on the warm engine — through storerConn, whose watcher
-		// keeps Ctrl-C able to abort the deposit. A failed redial
-		// still deposits on the old conn.
-		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", err)
 
+		directTried = true
+
+		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", derr)
+	}
+
+	// The direct attempt burned rwc's idle deadline, so try to redial
+	// on the warm engine — through storerConn, whose watcher keeps
+	// Ctrl-C able to abort the deposit. A failed redial still
+	// deposits on the old conn.
+	if directTried {
 		if fresh, ferr := storerConn(ctx, id); ferr == nil {
+			dialed = append(dialed, fresh)
 			_ = rwc.Close()
 
 			rwc = fresh
@@ -642,6 +681,40 @@ func tunnelClient(addr tailcat.Addr, dialKey key.NodePrivate) *tailcat.Client {
 	return c.(*tailcat.Client)
 }
 
+// tryDirect sends straight to the target's listener, retrying within
+// a short window: each redial resumes from the listener's partial,
+// so a target that vanished mid-transfer and came back finishes with
+// no storer bytes. It returns the resume offset and network path of
+// the transfer.
+func tryDirect(ctx context.Context, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, string, error) {
+	fmt.Fprintf(os.Stderr, "dialing %s directly...\n", target.Name)
+
+	deadline := time.Now().Add(directRetryWindow)
+
+	resumed, dpath, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
+
+	for err != nil && ctx.Err() == nil && time.Now().Before(deadline) {
+		fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
+
+		select {
+		case <-ctx.Done():
+			return 0, "", ctx.Err()
+		case <-time.After(directBackoff):
+		}
+
+		// A restarted listener has the same address but fresh peer
+		// state: it only re-adds us on a new meow handshake, which
+		// the cached client never redoes (its up flag is sticky) —
+		// so the retry dials on a fresh, uncached client, patient
+		// enough for the re-handshake.
+		rc := &tailcat.Client{Server: target.Addr, Key: id.DialKey, Logf: func(string, ...any) {}}
+		resumed, dpath, err = directSend(ctx, rc, directRetryDial, id, target, f, info, path, shaHex)
+		_ = rc.Close()
+	}
+
+	return resumed, dpath, err
+}
+
 // directSend dials the target's listener and hands it the sealed
 // file, resuming from the listener's advertised chunk boundary. It
 // returns the offset it resumed from and the network path the
@@ -689,6 +762,12 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 		}
 
 		return 0, "", fmt.Errorf("target refused: %s", m.Err)
+	}
+
+	// The listener's opReady carries its roster view: the cache stays
+	// fresh on the direct path without storer contact.
+	if len(m.Members) > 0 {
+		_ = saveRoster(rosterPath(peerConfigDir()), m.Members)
 	}
 
 	// The listener's partial decides where the stream continues; only
@@ -755,9 +834,27 @@ func clientDismiss(rwc io.ReadWriter, id string) error {
 	return nil
 }
 
-// clientRemove is the wire form of the member's leave: an empty name
-// removes the requester, bound to its dial key. A named target is
-// refused — that is the storer's call (kept here to test the refusal).
+// clientInvite mints a one-time join code from the storer; the
+// requester must be an admin.
+func clientInvite(rwc io.ReadWriter) (string, error) {
+	if err := writeMsg(rwc, msg{Op: opInvite}); err != nil {
+		return "", err
+	}
+
+	m, err := readMsg(rwc)
+	if err != nil {
+		return "", err
+	}
+
+	if m.Op != opInvited || !m.OK {
+		return "", fmt.Errorf("invite: %s", m.Err)
+	}
+
+	return m.Code, nil
+}
+
+// clientRemove leaves the mesh (empty name: the requester, bound to
+// its dial key) or, for admins, drops the named member.
 func clientRemove(rwc io.ReadWriter, name string) error {
 	if err := writeMsg(rwc, msg{Op: opRemove, Target: name}); err != nil {
 		return err

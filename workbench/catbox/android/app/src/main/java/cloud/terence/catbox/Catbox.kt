@@ -168,16 +168,22 @@ object Catbox {
         }
     }
 
-    /** The invite line for enrolling another device, or null. */
-    fun invite(context: Context): String? {
+    /** The invite token for enrolling another device; the binary's
+     *  error (no identity, not an admin, stash unreachable) when it
+     *  fails — the caller tells them apart by shape. */
+    fun invite(context: Context): String {
         val p = builder(context, "invite").start()
         val out = StringBuilder()
+        val err = StringBuilder()
         try {
             p.inputStream.bufferedReader().forEachLine { out.appendLine(it) }
+            p.errorStream.bufferedReader().forEachLine { err.appendLine(it) }
         } catch (_: java.io.IOException) {
         }
-        if (p.waitFor() != 0) return null
-        return out.toString().lineSequence().firstOrNull { it.startsWith("catbox join") }
+        if (p.waitFor() != 0) {
+            return err.toString().lineSequence().firstOrNull { it.isNotBlank() } ?: "invite failed"
+        }
+        return out.toString().lineSequence().firstOrNull { it.isNotBlank() } ?: "invite failed"
     }
 
     private fun readCache(context: Context, name: String): String? = try {

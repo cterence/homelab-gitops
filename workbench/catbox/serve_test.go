@@ -73,6 +73,44 @@ func testPeerID(name string) *peerID {
 	return &peerID{Name: name, Key: key.NewNode(), DialKey: key.NewNode(), StorerAddr: "tcunused"}
 }
 
+// dialMember wires a session for an already-joined member by its
+// roster dial key: tests hold the *peerID only for members they dial as.
+func dialMember(t *testing.T, st *storer, k key.NodePublic) net.Conn {
+	t.Helper()
+
+	c, s := net.Pipe()
+
+	go func() {
+		defer func() { _ = s.Close() }()
+
+		st.serveConn(s, k)
+	}()
+
+	return c
+}
+
+// testInvite mints a join code from the roster's first member (the
+// first join bootstraps as admin); empty when the roster is empty —
+// the first join needs no code.
+func testInvite(t *testing.T, st *storer) string {
+	t.Helper()
+
+	members := st.members()
+	if len(members) == 0 {
+		return ""
+	}
+
+	conn := dialMember(t, st, members[0].DialKey)
+	defer func() { _ = conn.Close() }()
+
+	code, err := clientInvite(conn)
+	if err != nil {
+		t.Fatalf("invite: %v", err)
+	}
+
+	return code
+}
+
 func TestJoinSendPull(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
@@ -83,7 +121,7 @@ func TestJoinSendPull(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -153,7 +191,7 @@ func TestSendUnknownMemberRefreshesRoster(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -190,7 +228,7 @@ func TestSendToUnknownNameFails(t *testing.T) {
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
-	if err := joinReq(conn, laptop, ""); err != nil {
+	if err := joinReq(conn, laptop, "", testInvite(t, st)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -216,14 +254,14 @@ func TestJoinNameTaken(t *testing.T) {
 	squatter := testPeerID("laptop")
 
 	conn := dial(t, st, first)
-	if err := joinReq(conn, first, ""); err != nil {
+	if err := joinReq(conn, first, "", testInvite(t, st)); err != nil {
 		t.Fatal(err)
 	}
 
 	_ = conn.Close()
 
 	conn = dial(t, st, squatter)
-	if err := joinReq(conn, squatter, ""); err == nil {
+	if err := joinReq(conn, squatter, "", ""); err == nil {
 		t.Fatal("duplicate name should be rejected")
 	}
 
@@ -236,7 +274,7 @@ func TestRejoinUpdatesListenerAddr(t *testing.T) {
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
-	if err := joinReq(conn, laptop, ""); err != nil {
+	if err := joinReq(conn, laptop, "", testInvite(t, st)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -245,7 +283,7 @@ func TestRejoinUpdatesListenerAddr(t *testing.T) {
 	// Register a listener address, then clear it on shutdown.
 	for _, addr := range []string{"tcregistered", ""} {
 		conn = dial(t, st, laptop)
-		if err := joinReq(conn, laptop, tailcat.Addr(addr)); err != nil {
+		if err := joinReq(conn, laptop, tailcat.Addr(addr), ""); err != nil {
 			t.Fatalf("rejoin with %q: %v", addr, err)
 		}
 
@@ -273,7 +311,7 @@ func TestClientStatus(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -282,7 +320,7 @@ func TestClientStatus(t *testing.T) {
 
 	// Register laptop as listening, then check the status output.
 	conn := dial(t, st, laptop)
-	if err := joinReq(conn, laptop, "tclistening"); err != nil {
+	if err := joinReq(conn, laptop, "tclistening", ""); err != nil {
 		t.Fatal(err)
 	}
 
@@ -315,7 +353,7 @@ func TestClientStatus(t *testing.T) {
 		"inbox: 1 waiting (5 B)",
 		"  f.txt from nas (5 B), id ",
 		"members: 2",
-		"laptop [you] (listening)",
+		"laptop [admin] [you] (listening)",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("status output missing %q:\n%s", want, got)
@@ -323,7 +361,7 @@ func TestClientStatus(t *testing.T) {
 	}
 
 	membersAt := strings.Index(got, "members: 2")
-	laptopAt := strings.Index(got, "laptop [you] (listening)")
+	laptopAt := strings.Index(got, "laptop [admin] [you] (listening)")
 
 	nasAt := strings.Index(got, "  nas\n")
 	if membersAt < 0 || laptopAt < 0 || nasAt < 0 || (membersAt >= laptopAt || laptopAt >= nasAt) {
@@ -339,7 +377,7 @@ func TestSendToSelfFails(t *testing.T) {
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
-	if err := joinReq(conn, laptop, ""); err != nil {
+	if err := joinReq(conn, laptop, "", testInvite(t, st)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -383,7 +421,7 @@ func TestDepositDedup(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -424,7 +462,7 @@ func TestClientStatusJSON(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -482,7 +520,7 @@ func TestStatusJSONEmptyWaiting(t *testing.T) {
 	laptop := testPeerID("laptop")
 
 	conn := dial(t, st, laptop)
-	if err := joinReq(conn, laptop, ""); err != nil {
+	if err := joinReq(conn, laptop, "", testInvite(t, st)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -567,7 +605,7 @@ func TestDismissDestinedFile(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -621,7 +659,7 @@ func TestDismissOnlyOwnItems(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -672,7 +710,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -696,7 +734,7 @@ func TestRenameRetargetsSpool(t *testing.T) {
 	nas.Name = "nas2"
 
 	conn = dial(t, st, nas)
-	if err := joinReq(conn, nas, ""); err != nil {
+	if err := joinReq(conn, nas, "", ""); err != nil {
 		t.Fatalf("rename: %v", err)
 	}
 
@@ -735,7 +773,7 @@ func TestRenameToTakenName(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -746,7 +784,7 @@ func TestRenameToTakenName(t *testing.T) {
 	nas.Name = "laptop"
 
 	conn := dial(t, st, nas)
-	if err := joinReq(conn, nas, ""); err == nil {
+	if err := joinReq(conn, nas, "", ""); err == nil {
 		t.Fatal("rename to a taken name should fail")
 	}
 
@@ -772,7 +810,7 @@ func TestDepositResumesAfterInterruption(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -891,7 +929,7 @@ func TestDepositResumesNearCap(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -989,7 +1027,7 @@ func TestPullAnnouncesFile(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -1086,7 +1124,7 @@ func TestPullSelectedItems(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -1190,7 +1228,7 @@ func TestPullSkipsBusyPartial(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -1262,7 +1300,7 @@ func TestDepositIdempotent(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -1328,10 +1366,17 @@ func TestDepositIdempotent(t *testing.T) {
 	}
 }
 
-// TestOpRemove: a member can never remove another — the wire op is
-// self-removal only (reset's leave); the roster is the storer's call.
-func TestOpRemove(t *testing.T) {
+// TestSendCachedRosterFirst: a cached listening address is dialed
+// before the storer is contacted at all — and once both the target
+// and the storer are unreachable, the send fails without a deposit.
+func TestSendCachedRosterFirst(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+
+	// The bogus listener address must fail fast, not crawl the retry
+	// window.
+	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+
+	directRetryWindow = 0
 
 	ctx := context.Background()
 	st := newTestStorer(t)
@@ -1340,7 +1385,72 @@ func TestOpRemove(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// nas "listens" on a bogus address; both the storer roster and
+	// the shared cache carry it.
+	conn := dial(t, st, nas)
+	if err := joinReq(conn, nas, "tcbogus", ""); err != nil {
+		t.Fatalf("listener rejoin: %v", err)
+	}
+
+	_ = conn.Close()
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Watch stderr: the direct attempt must run before the storer is
+	// ever dialed.
+	capR, capW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	old := os.Stderr
+	os.Stderr = capW
+
+	// rwc nil and an undialable storer address: the cache-first
+	// direct attempt, then the send dies on the storer dial.
+	err = clientSend(ctx, nil, laptop, "nas", src, mustSHA(t, src))
+
+	os.Stderr = old
+	_ = capW.Close()
+
+	out, rerr := io.ReadAll(capR)
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+
+	if err == nil || !strings.Contains(err.Error(), "storer") {
+		t.Fatalf("send must fail on the storer dial, got %v", err)
+	}
+
+	if !strings.Contains(string(out), "dialing nas directly") {
+		t.Fatalf("the cached address must be dialed first, stderr:\n%s", out)
+	}
+}
+
+// TestOpRemove: over the wire, self-removal is anyone's; removing
+// another member is admin-only, and the admin's remove sweeps the
+// target's parked items.
+func TestOpRemove(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop") // first join: the bootstrap admin
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -1357,35 +1467,38 @@ func TestOpRemove(t *testing.T) {
 		t.Fatalf("send to nas: %v", err)
 	}
 
-	if err := clientRemove(conn, "nas"); err == nil {
-		t.Fatal("a member removed another member")
+	_ = conn.Close()
+
+	// nas is a plain member: removing laptop is not nas's call.
+	nasConn := dial(t, st, nas)
+	if err := clientRemove(nasConn, "laptop"); err == nil {
+		t.Fatal("a non-admin removed another member")
+	}
+
+	_ = nasConn.Close()
+
+	if metas, _ := st.spool.items(); len(metas) != 1 || metas[0].Target != "nas" {
+		t.Fatalf("non-admin remove touched the spool: %+v", metas)
+	}
+
+	if _, ok := memberByName(st.members(), "laptop"); !ok {
+		t.Fatalf("non-admin remove dropped laptop: %+v", st.members())
+	}
+
+	// The admin removes nas: roster and spool both swept.
+	conn = dial(t, st, laptop)
+	if err := clientRemove(conn, "nas"); err != nil {
+		t.Fatalf("admin remove: %v", err)
 	}
 
 	_ = conn.Close()
 
-	if metas, _ := st.spool.items(); len(metas) != 1 || metas[0].Target != "nas" {
-		t.Fatalf("cross-member remove touched the spool: %+v", metas)
+	if _, ok := memberByName(st.members(), "nas"); ok {
+		t.Fatalf("nas still in roster: %+v", st.members())
 	}
 
-	for _, m := range st.members() {
-		if m.Name != "laptop" && m.Name != "nas" {
-			t.Fatalf("roster changed by a cross-member remove: %+v", st.members())
-		}
-	}
-
-	// The named member is still a member.
-	nasConn := dial(t, st, nas)
-	if err := writeMsg(nasConn, msg{Op: opPending}); err != nil {
-		t.Fatal(err)
-	}
-
-	m, err := readMsg(nasConn)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !m.OK {
-		t.Fatalf("cross-member remove booted the target: %+v", m)
+	if metas, _ := st.spool.items(); len(metas) != 0 {
+		t.Fatalf("admin remove left parked items: %+v", metas)
 	}
 }
 
@@ -1460,7 +1573,7 @@ func TestStorerReloadsExternalRosterEdit(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 
@@ -1497,7 +1610,7 @@ func TestOpRemoveSelf(t *testing.T) {
 
 	for _, id := range []*peerID{laptop, nas} {
 		conn := dial(t, st, id)
-		if err := joinReq(conn, id, ""); err != nil {
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
 			t.Fatalf("join %s: %v", id.Name, err)
 		}
 

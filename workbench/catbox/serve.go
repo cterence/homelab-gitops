@@ -1,8 +1,9 @@
 package main
 
 // The storer: one tailcat listener, the roster authority, the spool.
-// Join is authenticated by address possession: anyone who can open a
-// tunnel (PeerKey) and isn't yet a member may join with a fresh name.
+// Join is admission-controlled: the first member bootstraps as admin,
+// every join after that must present a one-time invite code an admin
+// minted (catbox invite).
 
 import (
 	"context"
@@ -13,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -33,6 +35,7 @@ type storer struct {
 	mu        sync.Mutex
 	roster    []member
 	rosterMod time.Time // roster.json mtime at last load: external edits reload
+	invites   []invite
 	spool     *spool
 }
 
@@ -51,18 +54,24 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 		return err
 	}
 
+	invites, err := loadInvites(invitePath(dataDir))
+	if err != nil {
+		return err
+	}
+
 	sp, err := openSpool(spoolDir(dataDir), log)
 	if err != nil {
 		return err
 	}
 
 	st := &storer{
-		dir:    dataDir,
-		log:    log,
-		max:    max,
-		ttl:    ttl,
-		roster: roster,
-		spool:  sp,
+		dir:     dataDir,
+		log:     log,
+		max:     max,
+		ttl:     ttl,
+		roster:  roster,
+		invites: invites,
+		spool:   sp,
 	}
 
 	st.srv = &tailcat.Server{
@@ -95,6 +104,10 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 
 	sweepPartials(spoolDir(dataDir)) // interrupted deposits: their sender gave up after the TTL
 
+	if err := st.sweepInvites(); err != nil {
+		log.Warn("invite sweep failed", "err", err)
+	}
+
 	ticker := time.NewTicker(time.Hour)
 	defer ticker.Stop()
 
@@ -108,8 +121,22 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 			}
 
 			sweepPartials(spoolDir(dataDir))
+
+			if err := st.sweepInvites(); err != nil {
+				log.Warn("invite sweep failed", "err", err)
+			}
 		}
 	}
+}
+
+// sweepInvites prunes expired codes and persists the rest.
+func (st *storer) sweepInvites() error {
+	st.mu.Lock()
+	st.invites = pruneInvites(st.invites, time.Now().Unix())
+	invites := append([]invite(nil), st.invites...)
+	st.mu.Unlock()
+
+	return saveInvites(invitePath(st.dir), invites)
 }
 
 func spoolDir(dataDir string) string { return dataDir + "/spool" }
@@ -166,6 +193,8 @@ func (st *storer) serveConn(rwc io.ReadWriteCloser, peer key.NodePublic) {
 			st.opDismiss(rwc, me, m)
 		case m.Op == opRemove:
 			st.opRemove(rwc, me, m)
+		case m.Op == opInvite:
+			st.opInvite(rwc, me)
 		default:
 			_ = writeMsg(rwc, msg{Op: opDone, Err: "unknown op " + m.Op})
 		}
@@ -227,6 +256,36 @@ func removeMemberLocal(dataDir, name string, log *slog.Logger) error {
 		if err := sp.delete(meta.ID); err != nil {
 			log.Warn("remove delete failed", "id", meta.ID, "err", err)
 		}
+	}
+
+	return nil
+}
+
+// grantAdmin is the storer-side admin grant: rewrite the roster with
+// the member promoted. The running storer picks the edit up on its
+// next message (reloadRoster). Break-glass for meshes that predate
+// admins, and the recovery path for an admin-less roster.
+func grantAdmin(dataDir, name string) error {
+	roster, err := loadRoster(rosterPath(dataDir))
+	if err != nil {
+		return fmt.Errorf("loading roster: %w", err)
+	}
+
+	found := false
+
+	for i := range roster {
+		if roster[i].Name == name {
+			roster[i].Admin = true
+			found = true
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("unknown member %s", name)
+	}
+
+	if err := saveRoster(rosterPath(dataDir), roster); err != nil {
+		return fmt.Errorf("saving roster: %w", err)
 	}
 
 	return nil
@@ -318,8 +377,18 @@ func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member
 		return
 	}
 
+	// Admission: an empty roster bootstraps its admin — the first
+	// member ever joins without a code. Every join after that must
+	// present a live one-time invite an admin minted.
+	admin := len(st.members()) == 0
+	if !admin && !st.takeInvite(m.Code) {
+		_ = writeMsg(rwc, msg{Op: opJoined, Err: "join requires an invite code; ask an admin to run catbox invite"})
+
+		return
+	}
+
 	st.mu.Lock()
-	st.roster = append(st.roster, member{Name: m.Name, Key: ident, DialKey: peer, Addr: tailcat.Addr(m.Addr), Joined: time.Now().Unix()})
+	st.roster = append(st.roster, member{Name: m.Name, Key: ident, DialKey: peer, Addr: tailcat.Addr(m.Addr), Admin: admin, Joined: time.Now().Unix()})
 	members := append([]member(nil), st.roster...)
 	st.mu.Unlock()
 
@@ -327,9 +396,69 @@ func (st *storer) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member
 		st.log.Error("saving roster", "err", err)
 	}
 
-	st.log.Info("member joined", "name", m.Name, "listening", m.Addr != "")
+	st.log.Info("member joined", "name", m.Name, "admin", admin, "listening", m.Addr != "")
 
 	_ = writeMsg(rwc, msg{Op: opJoined, OK: true, Members: members})
+}
+
+// addInvite records a freshly minted code and persists the set.
+func (st *storer) addInvite(iv invite) {
+	st.mu.Lock()
+	st.invites = append(st.invites, iv)
+	invites := append([]invite(nil), st.invites...)
+	st.mu.Unlock()
+
+	if err := saveInvites(invitePath(st.dir), invites); err != nil {
+		st.log.Error("saving invites", "err", err)
+	}
+}
+
+// takeInvite validates and burns a join code: single use.
+func (st *storer) takeInvite(code string) bool {
+	if code == "" {
+		return false
+	}
+
+	st.mu.Lock()
+
+	for i, iv := range st.invites {
+		if iv.Code == code && iv.Expires > time.Now().Unix() {
+			st.invites = slices.Delete(st.invites, i, i+1)
+			invites := append([]invite(nil), st.invites...)
+			st.mu.Unlock()
+
+			if err := saveInvites(invitePath(st.dir), invites); err != nil {
+				st.log.Error("saving invites", "err", err)
+			}
+
+			return true
+		}
+	}
+
+	st.mu.Unlock()
+
+	return false
+}
+
+// opInvite mints a one-time join code; admins only.
+func (st *storer) opInvite(rwc io.ReadWriteCloser, me member) {
+	if !me.Admin {
+		_ = writeMsg(rwc, msg{Op: opInvited, Err: "only an admin can invite"})
+
+		return
+	}
+
+	iv, err := mintInvite(time.Now())
+	if err != nil {
+		_ = writeMsg(rwc, msg{Op: opInvited, Err: err.Error()})
+
+		return
+	}
+
+	st.addInvite(iv)
+	st.log.Info("invite minted", "by", me.Name)
+
+	_ = writeMsg(rwc, msg{Op: opInvited, OK: true, Code: iv.Code})
 }
 
 func (st *storer) opSend(rwc io.ReadWriteCloser, me member, m msg) {
@@ -611,18 +740,28 @@ func (st *storer) opDismiss(rwc io.ReadWriteCloser, me member, m msg) {
 	_ = writeMsg(rwc, msg{Op: opAcked, OK: true})
 }
 
-// opRemove is self-removal only (reset's leave): the dial key binds
-// it to the requester, and their parked items go with them. A member
-// can never remove another — that is the storer's call (catbox
-// remove --data DIR, or kubectl exec on the storer).
+// opRemove is self-removal (reset's leave) plus admin removal of
+// another member; the dial key binds the requester, and their parked
+// items go with them. An admin-less mesh (the last admin resets) is
+// recovered by catbox admin --data DIR on the storer.
 func (st *storer) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
-	if m.Target != "" && m.Target != me.Name {
-		_ = writeMsg(rwc, msg{Op: opAcked, Err: "a member can only remove itself; run catbox remove on the storer"})
-
-		return
-	}
-
 	target := me.Name
+
+	if m.Target != "" && m.Target != me.Name {
+		if !me.Admin {
+			_ = writeMsg(rwc, msg{Op: opAcked, Err: "only an admin can remove another member"})
+
+			return
+		}
+
+		if _, ok := memberByName(st.members(), m.Target); !ok {
+			_ = writeMsg(rwc, msg{Op: opAcked, Err: "unknown member " + m.Target})
+
+			return
+		}
+
+		target = m.Target
+	}
 
 	st.mu.Lock()
 

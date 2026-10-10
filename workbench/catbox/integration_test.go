@@ -169,6 +169,23 @@ func (n *node) stop() {
 	}
 }
 
+// joinMesh joins n to the storer at addr. The mesh's first node
+// bootstraps as admin and joins by address; every later node presents
+// the invite token minted by admin.
+func joinMesh(t *testing.T, n, admin *node, addr string) {
+	t.Helper()
+
+	token := addr
+	if n != admin {
+		token = strings.TrimSpace(admin.cat(nil, "invite"))
+	}
+
+	out := n.cat(nil, "join", n.name, token)
+	if !strings.Contains(out, "joined as "+n.name) {
+		t.Fatalf("node %s: join output: %q", n.name, out)
+	}
+}
+
 // cat runs one real CLI command as this node and returns its stdout.
 func (n *node) cat(extra map[string]string, args ...string) string {
 	n.t.Helper()
@@ -247,10 +264,7 @@ func TestIntegrationEndToEnd(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	// The storer writes the roster before replying to a join, so the
@@ -333,10 +347,7 @@ func TestIntegrationResume(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	// Puma never listens: the file rides the spool.
@@ -415,10 +426,7 @@ func TestIntegrationDirectResume(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	big := writeFile(t, "big.bin", 8<<20)
@@ -515,10 +523,7 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 
 	puma := newNode(t, "puma")
 	for _, n := range []*node{milo, puma} {
-		out := n.cat(nil, "join", "--name", n.name, addr)
-		if !strings.Contains(out, "joined as "+n.name) {
-			t.Fatalf("node %s: join output: %q", n.name, out)
-		}
+		joinMesh(t, n, milo, addr)
 	}
 
 	big := writeFile(t, "big.bin", 8<<20)
@@ -631,6 +636,53 @@ depositing:
 
 	assertFile(t, puma, "big.bin", big)
 	assertSpoolLen(t, storer, 0)
+}
+
+// TestIntegrationStorerlessDirect: with the storer dead, a send to a
+// listening peer rides the cached roster alone — the stash is a
+// convenience for sends, not a dependency (catbox #902 P1).
+func TestIntegrationStorerlessDirect(t *testing.T) {
+	if os.Getenv("CATBOX_INTEGRATION") != "1" {
+		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
+	}
+
+	storer := newNode(t, "storer")
+	if err := storer.start(); err != nil {
+		t.Fatalf("starting storer: %v", err)
+	}
+
+	addr := storer.addr()
+
+	milo := newNode(t, "milo")
+
+	puma := newNode(t, "puma")
+	for _, n := range []*node{milo, puma} {
+		joinMesh(t, n, milo, addr)
+	}
+
+	// puma listens; milo's status caches its address.
+	ready := puma.listen()
+
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered")
+	}
+
+	if st := milo.cat(nil, "status"); !strings.Contains(st, "listening") {
+		t.Fatalf("milo status does not show puma listening: %q", st)
+	}
+
+	storer.stop()
+
+	src := writeFile(t, "derp.txt", 128*1024)
+
+	out := milo.cat(nil, "send", "puma", src)
+	if !strings.Contains(out, "sent derp.txt to puma directly") {
+		t.Fatalf("storerless send output: %q", out)
+	}
+
+	assertFile(t, puma, "derp.txt", src)
 }
 
 // ---- helpers ----

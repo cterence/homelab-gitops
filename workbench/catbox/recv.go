@@ -110,7 +110,7 @@ func registerListener(ctx context.Context, id *peerID, addr tailcat.Addr) error 
 
 	defer func() { _ = conn.Close() }()
 
-	return joinReq(conn, id, addr)
+	return joinReq(conn, id, addr, "")
 }
 
 // ensureListenerIdentity bakes in a PSK and DERP region on first listen.
@@ -274,7 +274,11 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 
 	fmt.Fprintf(os.Stderr, "%s is sending %s directly (%s%s)\n", from, m.FileName, humanBytes(m.Size), resumedSuffix(have))
 
-	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Have: have}); err != nil {
+	// The sender's cache rides the direct path: hand it our roster
+	// view so it stays fresh without stash contact.
+	members, _ := loadRoster(rosterPath(peerConfigDir()))
+
+	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Have: have, Members: members}); err != nil {
 		return
 	}
 

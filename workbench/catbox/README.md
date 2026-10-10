@@ -20,19 +20,24 @@ daemonless peers, everything end-to-end encrypted.
 - Files are sealed to the recipient's node key: 64 KiB
   XChaCha20-Poly1305 chunks under a per-file key wrapped in a sealed
   box (age's STREAM construction). The storer relays ciphertext only.
-- Joining is codeless: possessing the storer's tailcat address *is*
-  the membership capability (it embeds the WireGuard pre-shared key).
+- Membership is admin-controlled. The first member to join an empty
+  mesh bootstraps as admin; every join after that must present a
+  one-time invite code an admin minted (`catbox invite`, 24h TTL).
+  Admins can also remove other members over the wire; the storer
+  address alone is no longer a membership capability.
 
 ## Commands
 
 ```
 catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
 catbox addr
-catbox join   --name NAME <storer-addr>
+catbox join   <name> <invite-token>   # admitted join
+catbox join   <name> <storer-addr>     # fresh mesh: the bootstrap admin
 catbox rename <new-name>
-catbox remove --data DIR <member>   # runs on the storer
-catbox reset --yes
 catbox invite
+catbox remove [<member>] | --data DIR <member>
+catbox admin  --data DIR <member>
+catbox reset --yes
 catbox send   <member> <file> [<file>...]
 catbox recv   [--dir DIR] [--listen] [<id>...]
 catbox dismiss <id>
@@ -48,25 +53,35 @@ catbox version
   `kubectl -n catbox exec catbox-0 -- catbox addr`. Run inside the
   cluster; the address is a bearer capability, treat it like a
   password. It never creates the identity — only `serve` does.
-- `join` registers this machine under a lowercase-slug name. Run once
-  per machine; the identity lives in the OS config dir
-  (`~/.config/catbox` or `~/Library/Application Support/catbox`). A
-  join that fails after creating the identity rolls it back — a
-  half-joined device is never locked out of joining again.
-- `invite` prints the join line (with the cached storer address) for
-  enrolling another machine. The Android app's join card accepts the
-  whole line or the bare address.
+- `join <name> <token>` registers this machine under a lowercase-slug
+  name. The token is the invite from `catbox invite` — a base64 blob
+  carrying the one-time code and naming the storer; a bare storer
+  address instead is the fresh-mesh form, no code needed, and the
+  first member bootstraps as admin. Run once per machine; the identity
+  lives in the OS config dir (`~/.config/catbox` or
+  `~/Library/Application Support/catbox`). A join that fails after
+  creating the identity rolls it back — a half-joined device is
+  never locked out of joining again.
+- `invite` (admin) mints a one-time join code (24h TTL, single use,
+  survives a storer restart) and prints it as one base64 token, ready
+  to hand to the joiner. The Android app's join card takes the token
+  as a paste.
 - `rename <new-name>` changes this member's name in the roster; parked
   files follow the new name, and a taken or invalid name is rejected.
   Stop `recv --listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
-- `remove --data DIR <member>` drops a member from the roster, parked
-  items and all — storer only: a cat can never remove another cat.
-  Run it inside the cluster:
+- `remove <member>` drops another member from the roster, parked
+  items and all — admin only, over the wire. `remove --data DIR
+  <member>` is the storer-host form: it removes any member without
+  being admin, the cleanup path for a device that reset while
+  offline and left a ghost. Run it inside the cluster:
   `kubectl -n catbox exec catbox-0 -- catbox remove --data /data <member>`.
-  It rewrites the roster on disk and sweeps the spool; the running
-  storer picks the edit up on its next message. This is the cleanup
-  path for a device that reset while offline and left a ghost.
+  Both rewrite the roster and sweep the spool; the running storer
+  picks the edit up on its next message.
+- `admin --data DIR <member>` grants admin on the storer host: the
+  bootstrap for meshes that predate admins, and the recovery path
+  when the last admin reset (an admin-less mesh admits no joins until
+  someone runs it).
 - `reset --yes` leaves the mesh and wipes this machine's identity: it
   removes its own roster entry (the removal is bound to this device's
   dial key — a device can never reset or remove another member) and
@@ -74,9 +89,11 @@ catbox version
   unreachable the reset still completes; clean up the leftover entry
   later with `remove` on the storer.
 - `send` seals and ships each named file (one member, one or more
-  files per command): direct to the target's listener
-  when it is online (3s dial timeout), otherwise deposited at the
-  storer until the target pulls. Direct transfers abort after 30
+  files per command): direct to the target's listener when it is
+  online — the local roster cache is tried first, so a send to an
+  online target works without the storer, which is only dialed for
+  unknown targets, stale caches, and deposits (3s dial timeout),
+  otherwise deposited at the storer until the target pulls. Direct transfers abort after 30
   seconds of silence; a failed direct attempt is retried every few
   seconds for two minutes before the fallback — each redial resumes
   from the listener's partial, so a phone that locks and comes back
@@ -114,10 +131,10 @@ catbox version
   lists the ids of everything waiting for you.
 - `status` asks the storer who's in the mesh: files and bytes waiting
   for you there (each with its id, sender, and size), and every member
-  with `[you]` and `(listening)` markers. The roster comes straight
-  from the authority, never from the local cache. `--json` emits one
-  machine-readable object (name, waiting items, members) for the
-  Android app.
+  with `[admin]`, `[you]`, and `(listening)` markers. The roster comes
+  straight from the authority, never from the local cache. `--json`
+  emits one machine-readable object (name, waiting items, members)
+  for the Android app.
 - `version` prints the build stamp baked in via `-ldflags
   "-X main.version=…"`: the git short rev in nix builds, the image tag
   in Docker builds, `dev` otherwise.
@@ -146,27 +163,29 @@ carries its own receive action, and the waiting header receives
 everything at once; parked files can be refused per file with a
 confirming dialog. The overflow menu's Reset leaves the mesh and wipes
 the app's identity (the binary's `reset`, confirmation dialog first);
-the join card accepts the full `catbox join` invite line as the storer
-address. Its server engine (identity key) never conflicts
+the join card takes the
+invite token as a paste (or a bare storer address on a fresh mesh).
+Its server engine (identity key) never conflicts
 with one-shot client execs (dial key). While an own-action transfer
 is in flight the app holds a bounded partial wake lock, so screen-off
 does not suspend it mid-transfer; a listener receive ends with the
 screen, its partial resuming wherever the next attempt picks up.
 
 Build (hermetic, offline gradle, pinned debug keystore dedicated to
-catbox):
+catbox) — run from this directory:
 
     make catbox-apk        # → result.apk, ready for adb install
 
 Iterating on the Kotlin in the devshell:
 
-    nix develop .#android
+    nix develop ../..#android
     ./android/build-native.sh   # the catbox binary into jniLibs
     cd android && gradle assembleDebug
 
 ## v1 limits
 
-Member removal is storer-only (`remove --data`), self-removal
-(`reset`) aside — a peer cannot touch another peer's roster entry. No
-renames beyond `rename`, one storer. Losing the storer's data dir
-means a new identity and re-joining every peer.
+Admins mint invites and remove members; there is no demote, transfer,
+or second-admin promotion over the wire — `admin --data DIR` on the
+storer covers those. No renames beyond `rename`, one storer. Losing
+the storer's data dir means a new identity and re-joining every peer
+(invites too: they live in the data dir alongside the roster).
