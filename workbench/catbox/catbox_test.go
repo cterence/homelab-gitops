@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -331,6 +332,77 @@ func sealedStreamOf(t *testing.T, size int) *bytes.Buffer {
 	}
 
 	return &sealed
+}
+
+func TestSpoolNewestDepositorWins(t *testing.T) {
+	// A retried deposit of the same content must not wait out the
+	// stalled attempt's conn deadline behind the partial's lock.
+	dir := t.TempDir()
+
+	sp, err := openSpool(dir, testLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sha := shaHexOf([]byte("payload"))
+	plain := int64(10)
+
+	stalled, stalledW := io.Pipe()
+	defer func() { _ = stalledW.Close() }()
+
+	first := make(chan error, 1)
+
+	go func() {
+		sp.claim(sha, plain, stalled)
+		defer sp.release(sha, plain, stalled)
+
+		_, err := sp.put(stalled, spoolMeta{FileName: "f.bin", SHA: sha, Plain: plain}, 1<<20, 0)
+		first <- err
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+
+	for {
+		if _, ok := sp.active.Load(partialPath(dir, sha, plain)); ok {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatal("stalled deposit never claimed the partial")
+		}
+
+		time.Sleep(time.Millisecond)
+	}
+
+	fresh := sealedStreamOf(t, 1)
+	closer := io.NopCloser(fresh)
+
+	retry := make(chan error, 1)
+
+	go func() {
+		sp.claim(sha, plain, closer)
+		defer sp.release(sha, plain, closer)
+
+		_, err := sp.put(fresh, spoolMeta{FileName: "f.bin", SHA: sha, Plain: plain}, 1<<20, 0)
+		retry <- err
+	}()
+
+	select {
+	case err := <-retry:
+		if err != nil {
+			t.Fatalf("retried deposit failed: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("retry stalled behind the dead deposit's partial lock")
+	}
+
+	if err := <-first; err == nil {
+		t.Fatal("evicted deposit should have failed, not succeeded")
+	}
+
+	if items, _ := sp.items(); len(items) != 1 {
+		t.Fatalf("items = %+v, want the retried deposit only", items)
+	}
 }
 
 func TestSpoolPutEnforcesByteBudget(t *testing.T) {

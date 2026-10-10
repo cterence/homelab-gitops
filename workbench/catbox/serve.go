@@ -598,7 +598,11 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 	// The claimed size admitted the deposit; the transfer itself is bounded
 	// by the remaining budget, so a lying sender cannot fill the disk.
+	// Newest deposit wins: a retry evicts a stalled attempt's conn
+	// instead of waiting out idleTimeout behind its partial lock.
+	st.spool.claim(m.SHA, m.Size, rwc)
 	meta, err = st.spool.put(src, meta, st.max-usage, have)
+	st.spool.release(m.SHA, m.Size, rwc)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
 	if err != nil {

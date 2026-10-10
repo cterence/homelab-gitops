@@ -23,7 +23,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/catbox
-            tag: "30"
+            tag: "31"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
