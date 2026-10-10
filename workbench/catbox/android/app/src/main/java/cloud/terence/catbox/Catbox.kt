@@ -63,7 +63,7 @@ object Catbox {
     /**
      * Kills the running one-shot action: a pull or send aborts
      * mid-flight. A pulled item was never acked, so it stays parked
-     * at the storer.
+     * at the stash.
      */
     fun cancelAction() {
         current.getAndSet(null)?.destroy()
@@ -148,7 +148,7 @@ object Catbox {
 
     /**
      * Member names from the roster cache the binary maintains —
-     * available even when the storer is unreachable.
+     * available even when the stash is unreachable.
      */
     fun cachedMembers(context: Context): List<String> = readCache(context, "roster.json")?.let { text ->
         try {

@@ -75,16 +75,16 @@ func lockPeer(ctx context.Context) (release func(), err error) {
 	}
 }
 
-// clientConn opens a tailcat tunnel to the storer and dials the
+// clientConn opens a tailcat tunnel to the stash and dials the
 // protocol port. Close both when done.
 func clientConn(ctx context.Context, id *peerID) (net.Conn, *tailcat.Client, error) {
-	c := &tailcat.Client{Server: id.StorerAddr, Key: id.DialKey, Logf: func(string, ...any) {}}
+	c := &tailcat.Client{Server: id.StashAddr, Key: id.DialKey, Logf: func(string, ...any) {}}
 
 	conn, err := c.DialTCPPort(ctx, catboxPort)
 	if err != nil {
 		_ = c.Close()
 
-		return nil, nil, fmt.Errorf("connecting to storer: %w", err)
+		return nil, nil, fmt.Errorf("connecting to stash: %w", err)
 	}
 
 	// A blocked write ignores the context: closing the conn is the
@@ -127,7 +127,7 @@ func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr, code string) erro
 }
 
 // clientStatus prints the roster and this peer's pending items, straight
-// from the storer, to out.
+// from the stash, to out.
 func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
 		return err
@@ -192,7 +192,7 @@ func peerConfigDir() string {
 	return dir
 }
 
-// refreshRoster asks the storer for the roster via a pending query.
+// refreshRoster asks the stash for the roster via a pending query.
 func refreshRoster(rwc io.ReadWriter) ([]member, error) {
 	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
 		return nil, err
@@ -271,12 +271,12 @@ func resumedSuffix(offset int64) string {
 	return ", resumed from " + humanBytes(offset)
 }
 
-// storerConn dials a fresh storer connection on the shared engine.
+// stashConn dials a fresh stash connection on the shared engine.
 // Ctrl-C must close the conn to unblock a stuck write.
-func storerConn(ctx context.Context, id *peerID) (io.ReadWriteCloser, error) {
-	conn, err := tunnelClient(id.StorerAddr, id.DialKey).DialTCPPort(ctx, catboxPort)
+func stashConn(ctx context.Context, id *peerID) (io.ReadWriteCloser, error) {
+	conn, err := tunnelClient(id.StashAddr, id.DialKey).DialTCPPort(ctx, catboxPort)
 	if err != nil {
-		return nil, fmt.Errorf("connecting to storer: %w", err)
+		return nil, fmt.Errorf("connecting to stash: %w", err)
 	}
 
 	go func() {
@@ -346,9 +346,9 @@ func livePath(ctx context.Context, c *tailcat.Client) (get func() string, stop f
 }
 
 // clientSend seals file to target: directly when the target is
-// listening, else deposited at the storer. Direct is tried first with
-// a short timeout; the storer is always the fallback. An interrupted
-// deposit resumes at the chunk boundary the storer advertises.
+// listening, else deposited at the stash. Direct is tried first with
+// a short timeout; the stash is always the fallback. An interrupted
+// deposit resumes at the chunk boundary the stash advertises.
 // shaHex is the file's pre-computed SHA: it keys the deterministic
 // file secret and the receiver's resume partial.
 func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetName, path, shaHex string) error {
@@ -378,8 +378,8 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		}
 	}()
 
-	dialStorer := func() (io.ReadWriteCloser, error) {
-		c, err := storerConn(ctx, id)
+	dialStash := func() (io.ReadWriteCloser, error) {
+		c, err := stashConn(ctx, id)
 		if err != nil {
 			return nil, err
 		}
@@ -390,7 +390,7 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 	}
 
 	// The cached roster first: a listening target is served without
-	// the storer, whose 3s dial timeout doubles as the staleness
+	// the stash, whose 3s dial timeout doubles as the staleness
 	// check on the cached address.
 	cached, _ := loadRoster(rosterPath(peerConfigDir()))
 	target, cachedOK := memberByName(cached, targetName)
@@ -412,16 +412,16 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 
 		directTried = true
 
-		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", derr)
+		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the stash\n", derr)
 	}
 
-	// The storer is the authority: required for unknown targets,
+	// The stash is the authority: required for unknown targets,
 	// fresh listener addresses, and deposits.
 	if rwc == nil {
 		var err error
 
-		if rwc, err = dialStorer(); err != nil {
-			return fmt.Errorf("target unreachable and the storer is down: %w", err)
+		if rwc, err = dialStash(); err != nil {
+			return fmt.Errorf("target unreachable and the stash is down: %w", err)
 		}
 	}
 
@@ -451,15 +451,15 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 
 		directTried = true
 
-		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the storer\n", derr)
+		fmt.Fprintf(os.Stderr, "direct send failed (%v), depositing at the stash\n", derr)
 	}
 
 	// The direct attempt burned rwc's idle deadline, so try to redial
-	// on the warm engine — through storerConn, whose watcher keeps
+	// on the warm engine — through stashConn, whose watcher keeps
 	// Ctrl-C able to abort the deposit. A failed redial still
 	// deposits on the old conn.
 	if directTried {
-		if fresh, ferr := storerConn(ctx, id); ferr == nil {
+		if fresh, ferr := stashConn(ctx, id); ferr == nil {
 			dialed = append(dialed, fresh)
 			_ = rwc.Close()
 
@@ -477,14 +477,14 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 	}
 
 	if m.Op != opReady || !m.OK {
-		return fmt.Errorf("storer refused: %s", m.Err)
+		return fmt.Errorf("stash refused: %s", m.Err)
 	}
 
 	if len(m.Members) > 0 {
 		_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
 	}
 
-	// Have as big as the file: the storer already parks this exact
+	// Have as big as the file: the stash already parks this exact
 	// content — the deposit is idempotent, no bytes to move.
 	if info.Size() > 0 && m.Have >= info.Size() {
 		if err := writeMsg(rwc, msg{Op: opSent, SHA: shaHex}); err != nil {
@@ -499,12 +499,12 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 			return fmt.Errorf("deposit failed: %s", m.Err)
 		}
 
-		fmt.Printf("sent %s to %s via storer (already parked, sha256 %s)\n", filepath.Base(path), targetName, shaHex[:12])
+		fmt.Printf("sent %s to %s via stash (already parked, sha256 %s)\n", filepath.Base(path), targetName, shaHex[:12])
 
 		return nil
 	}
 
-	// The storer may hold an interrupted deposit's partial: resume at
+	// The stash may hold an interrupted deposit's partial: resume at
 	// its chunk boundary like the direct path.
 	resumed := resumeOffset(m.Have, info.Size())
 
@@ -512,9 +512,9 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "depositing %s at the storer%s...\n", humanBytes(info.Size()-resumed), resumedSuffix(resumed))
+	fmt.Fprintf(os.Stderr, "depositing %s at the stash%s...\n", humanBytes(info.Size()-resumed), resumedSuffix(resumed))
 
-	pathFn, stopPath := livePath(ctx, tunnelClient(id.StorerAddr, id.DialKey))
+	pathFn, stopPath := livePath(ctx, tunnelClient(id.StashAddr, id.DialKey))
 	defer stopPath()
 
 	src := &progressReader{r: f, total: info.Size(), offset: resumed, label: "depositing", every: time.Second, path: pathFn}
@@ -547,12 +547,12 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		return fmt.Errorf("deposit failed: %s", m.Err)
 	}
 
-	p := discoPath(ctx, tunnelClient(id.StorerAddr, id.DialKey))
+	p := discoPath(ctx, tunnelClient(id.StashAddr, id.DialKey))
 	if s := pathFn(); s != "" {
 		p = s // the poller watched this transfer's actual path
 	}
 
-	fmt.Printf("sent %s to %s via storer (%s, sha256 %s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), shaHex[:12], resumedSuffix(resumed), pathSuffix(p))
+	fmt.Printf("sent %s to %s via stash (%s, sha256 %s%s%s)\n", filepath.Base(path), targetName, humanBytes(info.Size()), shaHex[:12], resumedSuffix(resumed), pathSuffix(p))
 
 	return nil
 }
@@ -571,7 +571,7 @@ func tunnelClient(addr tailcat.Addr, dialKey key.NodePrivate) *tailcat.Client {
 // tryDirect sends straight to the target's listener, retrying within
 // a short window: each redial resumes from the listener's partial,
 // so a target that vanished mid-transfer and came back finishes with
-// no storer bytes. It returns the resume offset and network path of
+// no stash bytes. It returns the resume offset and network path of
 // the transfer.
 func tryDirect(ctx context.Context, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, string, error) {
 	fmt.Fprintf(os.Stderr, "dialing %s directly...\n", target.Name)
@@ -610,7 +610,7 @@ func tryDirect(ctx context.Context, id *peerID, target member, f *os.File, info 
 func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duration, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, string, error) {
 	// A live listener answers its handshake in well under a second;
 	// anything longer is a stale roster address — fail fast and let
-	// the caller fall back to the storer.
+	// the caller fall back to the stash.
 	dialCtx, cancel := context.WithTimeout(ctx, dialTimeout)
 	defer cancel()
 
@@ -652,7 +652,7 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 	}
 
 	// The listener's opReady carries its roster view: the cache stays
-	// fresh on the direct path without storer contact.
+	// fresh on the direct path without stash contact.
 	if len(m.Members) > 0 {
 		_ = saveRoster(rosterPath(peerConfigDir()), m.Members)
 	}
@@ -702,7 +702,7 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 	return resumed, pathFn(), nil
 }
 
-// clientDismiss refuses delivery of one pending item: the storer
+// clientDismiss refuses delivery of one pending item: the stash
 // deletes it without ever transferring the bytes.
 func clientDismiss(rwc io.ReadWriter, id string) error {
 	if err := writeMsg(rwc, msg{Op: opDismiss, ID: id}); err != nil {
@@ -721,7 +721,7 @@ func clientDismiss(rwc io.ReadWriter, id string) error {
 	return nil
 }
 
-// clientInvite mints a one-time join code from the storer; the
+// clientInvite mints a one-time join code from the stash; the
 // requester must be an admin.
 func clientInvite(rwc io.ReadWriter) (string, error) {
 	if err := writeMsg(rwc, msg{Op: opInvite}); err != nil {
@@ -759,7 +759,7 @@ func clientRemove(rwc io.ReadWriter, name string) error {
 	return nil
 }
 
-// clientInbox pulls what the storer holds for this peer into dir: the
+// clientInbox pulls what the stash holds for this peer into dir: the
 // named ids only, or everything when ids is empty. cl, when non-nil,
 // lets each pull report its network path.
 func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client, id *peerID, dir string, ids []string) error {
@@ -891,7 +891,7 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 		return fmt.Errorf("fetch %s: %s", it.ID, m.Err)
 	}
 
-	// The storer arbitrates the resume: a rejected Have means the
+	// The stash arbitrates the resume: a rejected Have means the
 	// partial cannot be trusted (or no longer matches) — start over.
 	offered := have
 	have = m.Have
@@ -985,7 +985,7 @@ type statusJSON struct {
 	Members []member `json:"members"`
 }
 
-// clientStatusJSON writes the storer's answer as one JSON object.
+// clientStatusJSON writes the stash's answer as one JSON object.
 func clientStatusJSON(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
 		return err

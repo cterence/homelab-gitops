@@ -27,10 +27,10 @@ type invite struct {
 }
 
 // inviteJSON is what `catbox invite` prints and `join` takes: the
-// one-time code and the storer it was minted on.
+// one-time code and the stash it was minted on.
 type inviteJSON struct {
-	Code   string `json:"code"`
-	Storer string `json:"storer"`
+	Code  string `json:"code"`
+	Stash string `json:"stash"`
 }
 
 // encodeInvite renders the invite JSON as one base64url token: a
@@ -45,7 +45,7 @@ func encodeInvite(iv inviteJSON) (string, error) {
 }
 
 // parseInviteArg decodes a join argument that is an invite token.
-// Anything else — a storer address, a typo — is an error; the caller
+// Anything else — a stash address, a typo — is an error; the caller
 // falls back to treating it as an address.
 func parseInviteArg(s string) (inviteJSON, error) {
 	var iv inviteJSON
@@ -59,8 +59,8 @@ func parseInviteArg(s string) (inviteJSON, error) {
 		return iv, errors.New("not an invite token")
 	}
 
-	if iv.Code == "" || iv.Storer == "" {
-		return iv, errors.New("invite needs a code and a storer address")
+	if iv.Code == "" || iv.Stash == "" {
+		return iv, errors.New("invite needs a code and a stash address")
 	}
 
 	return iv, nil

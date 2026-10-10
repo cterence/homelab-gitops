@@ -4,10 +4,10 @@ package main
 // app. The test binary doubles as the catbox CLI (the helper-process
 // trick: a CATBOX_HELPER=1 re-exec of os.Args[0] runs the real command
 // and exits), so this file needs no bash glue and no in-process wiring:
-// every step is the real CLI driving a real storer process, with real
+// every step is the real CLI driving a real stash process, with real
 // pairing over the real DERP network.
 //
-// The protocol is request-reply: the storer writes the roster, spool
+// The protocol is request-reply: the stash writes the roster, spool
 // entry, or deletion before it replies, and a listener verifies and
 // writes a file before its opDone — so a command's successful return
 // is the synchronization point, asserted directly with no polling. The
@@ -59,8 +59,8 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// node is one real catbox: a HOME of its own plus a storer process
-// running from it, with the storer's logs kept for failure reports.
+// node is one real catbox: a HOME of its own plus a stash process
+// running from it, with the stash's logs kept for failure reports.
 type node struct {
 	t      *testing.T
 	name   string
@@ -96,7 +96,7 @@ func (n *node) env(extra map[string]string) []string {
 	return out
 }
 
-// start runs the node's storer as a real subprocess and returns once
+// start runs the node's stash as a real subprocess and returns once
 // its health endpoint answers. It returns errors instead of failing
 // the test so the test goroutine stays in charge.
 func (n *node) start() error {
@@ -115,7 +115,7 @@ func (n *node) start() error {
 	n.mu.Unlock()
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("node %s: starting storer: %w", n.name, err)
+		return fmt.Errorf("node %s: starting stash: %w", n.name, err)
 	}
 
 	n.t.Cleanup(func() { n.stop() })
@@ -124,7 +124,7 @@ func (n *node) start() error {
 }
 
 // stop terminates the node's subprocess, waiting for a graceful exit:
-// the storer shuts down, the listener deregisters its address. Once
+// the stash shuts down, the listener deregisters its address. Once
 // the test has failed, the process gets a SIGQUIT first: the Go
 // runtime dumps every goroutine's stack, which makes a wedged process
 // post-mortem readable straight from the test output.
@@ -165,11 +165,11 @@ func (n *node) stop() {
 		n.mu.Lock()
 		logs := n.logs.String()
 		n.mu.Unlock()
-		n.t.Logf("node %s storer logs:\n%s", n.name, tail(logs, 60000))
+		n.t.Logf("node %s stash logs:\n%s", n.name, tail(logs, 60000))
 	}
 }
 
-// joinMesh joins n to the storer at addr. The mesh's first node
+// joinMesh joins n to the stash at addr. The mesh's first node
 // bootstraps as admin and joins by address; every later node presents
 // the invite token minted by admin.
 func joinMesh(t *testing.T, n, admin *node, addr string) {
@@ -192,7 +192,7 @@ func (n *node) cat(extra map[string]string, args ...string) string {
 	return cat(n.t, n.env(extra), args...)
 }
 
-// addr prints the storer's tailcat address: a bearer capability, only
+// addr prints the stash's tailcat address: a bearer capability, only
 // ever handled inside the test.
 func (n *node) addr() string {
 	n.t.Helper()
@@ -242,8 +242,8 @@ func (n *node) listen() <-chan struct{} {
 }
 
 // TestIntegrationEndToEnd is the full user story against a real
-// storer process and the real DERP network: two peers join with the
-// storer's printed address, two files are sent directly to a listening
+// stash process and the real DERP network: two peers join with the
+// stash's printed address, two files are sent directly to a listening
 // peer in one command, then a third file rides the spool while the
 // target is offline, and the target pulls it with recv. Asserts the
 // files' contents, never internal state, and never sleeps: the CLI's
@@ -255,12 +255,12 @@ func TestIntegrationEndToEnd(t *testing.T) {
 
 	t.Parallel()
 
-	storer := newNode(t, "storer")
-	if err := storer.start(); err != nil {
-		t.Fatalf("starting storer: %v", err)
+	stash := newNode(t, "stash")
+	if err := stash.start(); err != nil {
+		t.Fatalf("starting stash: %v", err)
 	}
 
-	addr := storer.addr()
+	addr := stash.addr()
 
 	milo := newNode(t, "milo")
 
@@ -269,7 +269,7 @@ func TestIntegrationEndToEnd(t *testing.T) {
 		joinMesh(t, n, milo, addr)
 	}
 
-	// The storer writes the roster before replying to a join, so the
+	// The stash writes the roster before replying to a join, so the
 	// joins returning is the sync: both sides must see both members.
 	if st := milo.cat(nil, "status"); !strings.Contains(st, "puma") {
 		t.Fatalf("milo status does not show puma: %q", st)
@@ -313,21 +313,21 @@ func TestIntegrationEndToEnd(t *testing.T) {
 	src3 := writeFile(t, "nap3.txt", 128*1024)
 
 	out = milo.cat(nil, "send", "puma", src3)
-	if !strings.Contains(out, "sent nap3.txt to puma via storer") {
+	if !strings.Contains(out, "sent nap3.txt to puma via stash") {
 		t.Fatalf("spool send output: %q", out)
 	}
 
-	assertSpoolLen(t, storer, 1)
+	assertSpoolLen(t, stash, 1)
 
 	// Back online, an explicit recv pulls the held file and acks it;
-	// the storer deletes the spool entry before the ack reply.
+	// the stash deletes the spool entry before the ack reply.
 	out = puma.cat(nil, "recv", "--dir", puma.inbox)
 	if !strings.Contains(out, "got nap3.txt from milo") {
 		t.Fatalf("pull output: %q", out)
 	}
 
 	assertFile(t, puma, "nap3.txt", src3)
-	assertSpoolLen(t, storer, 0)
+	assertSpoolLen(t, stash, 0)
 }
 
 // TestIntegrationResume pins the resume story: a pull is killed
@@ -340,12 +340,12 @@ func TestIntegrationResume(t *testing.T) {
 
 	t.Parallel()
 
-	storer := newNode(t, "storer")
-	if err := storer.start(); err != nil {
-		t.Fatalf("starting storer: %v", err)
+	stash := newNode(t, "stash")
+	if err := stash.start(); err != nil {
+		t.Fatalf("starting stash: %v", err)
 	}
 
-	addr := storer.addr()
+	addr := stash.addr()
 
 	milo := newNode(t, "milo")
 
@@ -358,7 +358,7 @@ func TestIntegrationResume(t *testing.T) {
 	big := writeFile(t, "big.bin", 1<<20)
 
 	out := milo.cat(nil, "send", "puma", big)
-	if !strings.Contains(out, "sent big.bin to puma via storer") {
+	if !strings.Contains(out, "sent big.bin to puma via stash") {
 		t.Fatalf("spool send output: %q", out)
 	}
 
@@ -399,7 +399,7 @@ partial:
 
 	_ = pull.Wait()
 
-	// The next pull resumes: the storer serves from the partial's
+	// The next pull resumes: the stash serves from the partial's
 	// chunk boundary and the receiver finishes the file.
 	out = puma.cat(nil, "recv", "--dir", puma.inbox)
 	if !strings.Contains(out, "resumed from") {
@@ -407,7 +407,7 @@ partial:
 	}
 
 	assertFile(t, puma, "big.bin", big)
-	assertSpoolLen(t, storer, 0)
+	assertSpoolLen(t, stash, 0)
 }
 
 // TestIntegrationDirectResume pins the direct-path resume: a listener
@@ -421,12 +421,12 @@ func TestIntegrationDirectResume(t *testing.T) {
 
 	t.Parallel()
 
-	storer := newNode(t, "storer")
-	if err := storer.start(); err != nil {
-		t.Fatalf("starting storer: %v", err)
+	stash := newNode(t, "stash")
+	if err := stash.start(); err != nil {
+		t.Fatalf("starting stash: %v", err)
 	}
 
-	addr := storer.addr()
+	addr := stash.addr()
 
 	milo := newNode(t, "milo")
 
@@ -483,9 +483,9 @@ partial:
 
 	_ = send.Wait()
 
-	// The sender fell back to the storer: the file is parked, the
+	// The sender fell back to the stash: the file is parked, the
 	// partial is kept.
-	assertSpoolLen(t, storer, 1)
+	assertSpoolLen(t, stash, 1)
 
 	// Second send: the listener is back, and the direct path must
 	// continue from the partial.
@@ -503,16 +503,16 @@ partial:
 
 	assertFile(t, puma, "big.bin", big)
 
-	// The first send's fallback copy stays parked at the storer: a
+	// The first send's fallback copy stays parked at the stash: a
 	// direct delivery does not ack spool items.
-	assertSpoolLen(t, storer, 1)
+	assertSpoolLen(t, stash, 1)
 }
 
 // TestIntegrationInterruptedDeposit pins the locked-phone story: a
 // listener vanishes without deregistering (SIGKILL, like a locked
-// phone), the sender falls back to the storer, and SIGINT during the
+// phone), the sender falls back to the stash, and SIGINT during the
 // fallback deposit must abort the command instead of riding it out —
-// then a re-send resumes at the storer's chunk boundary, not from zero.
+// then a re-send resumes at the stash's chunk boundary, not from zero.
 func TestIntegrationInterruptedDeposit(t *testing.T) {
 	if os.Getenv("CATBOX_INTEGRATION") != "1" {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
@@ -520,12 +520,12 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 
 	t.Parallel()
 
-	storer := newNode(t, "storer")
-	if err := storer.start(); err != nil {
-		t.Fatalf("starting storer: %v", err)
+	stash := newNode(t, "stash")
+	if err := stash.start(); err != nil {
+		t.Fatalf("starting stash: %v", err)
 	}
 
-	addr := storer.addr()
+	addr := stash.addr()
 
 	milo := newNode(t, "milo")
 
@@ -561,7 +561,7 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 	_, _ = listener.Process.Wait()
 
 	// The send: direct dial fails on the stale address, the deposit
-	// at the storer starts, and SIGINT must land mid-deposit.
+	// at the stash starts, and SIGINT must land mid-deposit.
 	send := exec.Command(os.Args[0], "send", "puma", big)
 	send.Env = milo.env(nil)
 
@@ -574,7 +574,7 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 		t.Fatalf("starting send: %v", err)
 	}
 
-	spoolDir := filepath.Join(storer.dir, "spool")
+	spoolDir := filepath.Join(stash.dir, "spool")
 
 	// The dead listener is retried before the fallback: the deposit
 	// starts after the retry window, so the poll waits it out.
@@ -625,16 +625,16 @@ depositing:
 	}
 
 	// No spool entry: an aborted deposit stays a partial.
-	assertSpoolLen(t, storer, 0)
+	assertSpoolLen(t, stash, 0)
 
-	// Re-send: the storer holds the partial, so the deposit resumes at
+	// Re-send: the stash holds the partial, so the deposit resumes at
 	// its chunk boundary instead of starting over.
 	out := milo.cat(nil, "send", "puma", big)
 	if !strings.Contains(out, "resumed from") {
 		t.Fatalf("re-send did not resume the interrupted deposit: %q", out)
 	}
 
-	assertSpoolLen(t, storer, 1)
+	assertSpoolLen(t, stash, 1)
 
 	// The parked file pulls clean: both attempts' frames line up.
 	out = puma.cat(nil, "recv", "--dir", puma.inbox)
@@ -643,25 +643,25 @@ depositing:
 	}
 
 	assertFile(t, puma, "big.bin", big)
-	assertSpoolLen(t, storer, 0)
+	assertSpoolLen(t, stash, 0)
 }
 
-// TestIntegrationStorerlessDirect: with the storer dead, a send to a
+// TestIntegrationStashlessDirect: with the stash dead, a send to a
 // listening peer rides the cached roster alone — the stash is a
 // convenience for sends, not a dependency (catbox #902 P1).
-func TestIntegrationStorerlessDirect(t *testing.T) {
+func TestIntegrationStashlessDirect(t *testing.T) {
 	if os.Getenv("CATBOX_INTEGRATION") != "1" {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
 	}
 
 	t.Parallel()
 
-	storer := newNode(t, "storer")
-	if err := storer.start(); err != nil {
-		t.Fatalf("starting storer: %v", err)
+	stash := newNode(t, "stash")
+	if err := stash.start(); err != nil {
+		t.Fatalf("starting stash: %v", err)
 	}
 
-	addr := storer.addr()
+	addr := stash.addr()
 
 	milo := newNode(t, "milo")
 
@@ -683,13 +683,13 @@ func TestIntegrationStorerlessDirect(t *testing.T) {
 		t.Fatalf("milo status does not show puma listening: %q", st)
 	}
 
-	storer.stop()
+	stash.stop()
 
 	src := writeFile(t, "derp.txt", 128*1024)
 
 	out := milo.cat(nil, "send", "puma", src)
 	if !strings.Contains(out, "sent derp.txt to puma directly") {
-		t.Fatalf("storerless send output: %q", out)
+		t.Fatalf("stashless send output: %q", out)
 	}
 
 	assertFile(t, puma, "derp.txt", src)
@@ -741,7 +741,7 @@ func (n *node) waitHealthy() error {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	return fmt.Errorf("node %s: storer never became healthy on %s", n.name, n.health)
+	return fmt.Errorf("node %s: stash never became healthy on %s", n.name, n.health)
 }
 
 // assertFile pins the node's inbox holding name with exactly the
@@ -764,7 +764,7 @@ func assertFile(t *testing.T, n *node, name, srcPath string) {
 	}
 }
 
-// assertSpoolLen pins the storer's held-item count (one .json meta
+// assertSpoolLen pins the stash's held-item count (one .json meta
 // per item): deposits and post-ack deletions happen before the
 // client's reply, so the count is settled by the return.
 func assertSpoolLen(t *testing.T, n *node, want int) {

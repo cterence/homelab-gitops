@@ -146,7 +146,7 @@ func TestListenerRefusesOtherTargets(t *testing.T) {
 
 // A locked partial — a pull is already delivering this exact content —
 // must be refused before any bytes move: the sender falls back to the
-// storer instead of interleaving two receivers into corruption.
+// stash instead of interleaving two receivers into corruption.
 func TestListenerDeclinesBusyPartial(t *testing.T) {
 	nas := testPeerID("nas")
 	sha := shaHexOf([]byte("hello"))

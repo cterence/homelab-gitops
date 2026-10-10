@@ -1,6 +1,6 @@
 package main
 
-// The storer's spool: sealed blobs plus JSON sidecars, written
+// The stash's spool: sealed blobs plus JSON sidecars, written
 // atomically, swept by TTL, capped by total bytes.
 
 import (

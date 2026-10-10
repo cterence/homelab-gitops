@@ -1,7 +1,7 @@
 package main
 
-// Roster: the storer is the single writer of the member list; peers
-// overwrite their cache from every storer response.
+// Roster: the stash is the single writer of the member list; peers
+// overwrite their cache from every stash response.
 
 import (
 	"encoding/json"
@@ -41,7 +41,7 @@ func memberByName(members []member, name string) (member, bool) {
 }
 
 // memberByDialKey finds the member a connection belongs to; the dial
-// key is what the storer sees via PeerKey.
+// key is what the stash sees via PeerKey.
 func memberByDialKey(members []member, k key.NodePublic) (member, bool) {
 	for _, m := range members {
 		if m.DialKey == k {

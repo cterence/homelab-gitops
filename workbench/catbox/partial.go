@@ -2,7 +2,7 @@ package main
 
 // Resume state: interrupted transfers keep their received bytes in
 // content-keyed partials (`.part-<sha12>-<size>`), so a retry — direct
-// or via the storer — continues at its chunk boundary instead of
+// or via the stash — continues at its chunk boundary instead of
 // starting over. The partial's mtime is the liveness signal: bytes
 // flowing refresh it, and a stale partial is swept by TTL.
 
@@ -26,7 +26,7 @@ import (
 var errPartialBusy = errors.New("another receive is already writing this partial")
 
 // busyRefusal is the listener's wire form of errPartialBusy: the
-// sender stops its direct retries and falls back to the storer,
+// sender stops its direct retries and falls back to the stash,
 // where the identical item is already parked.
 const busyRefusal = "partial busy"
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -10,9 +11,9 @@ import (
 
 // TestInviteToken: the invite travels as one base64url token; a
 // join argument that does not decode is not a token (the caller
-// falls back to treating it as a storer address).
+// falls back to treating it as a stash address).
 func TestInviteToken(t *testing.T) {
-	iv := inviteJSON{Code: "cafebabe", Storer: "tcpGFwWCAXS"}
+	iv := inviteJSON{Code: "cafebabe", Stash: "tcpGFwWCAXS"}
 
 	token, err := encodeInvite(iv)
 	if err != nil {
@@ -28,11 +29,11 @@ func TestInviteToken(t *testing.T) {
 		t.Fatalf("roundtrip = %+v, want %+v", got, iv)
 	}
 
-	// A storer address is base64url-safe but decodes to garbage that
+	// A stash address is base64url-safe but decodes to garbage that
 	// is not JSON: never mistaken for a token.
 	addr := "tcpGFwWCAXS-S1N1Y2y0DpHWfUAZbI13E5cLRkx5UqVaDL-5fsFmFrWCBGWhipGRdz2hpK7aRmRTSS94-BEeSAX6cwJyr-s_PQRGFxWCASMcfx6PMu0JwMeiLki-m5EFdek1hhKdesmR9oH28gT2FpGQEv"
 	if _, err := parseInviteArg(addr); err == nil {
-		t.Fatal("a storer address must not parse as a token")
+		t.Fatal("a stash address must not parse as a token")
 	}
 
 	for _, bad := range []string{"", "not-a-token!", "!!!"} {
@@ -48,7 +49,7 @@ func TestInviteToken(t *testing.T) {
 	}
 
 	if _, err := parseInviteArg(empty); err == nil {
-		t.Fatal("a token without a storer must be refused")
+		t.Fatal("a token without a stash must be refused")
 	}
 }
 
@@ -59,7 +60,7 @@ func TestInviteToken(t *testing.T) {
 func TestJoinAdmission(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 	phone := testPeerID("phone")
@@ -138,7 +139,7 @@ func TestJoinAdmission(t *testing.T) {
 func TestInviteRequiresAdmin(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -181,14 +182,14 @@ func TestInviteStoreRoundtrip(t *testing.T) {
 	}
 }
 
-// TestGrantAdmin: the storer-side grant promotes a member on disk,
-// granting an existing admin is a no-op, and the running storer picks
+// TestGrantAdmin: the stash-side grant promotes a member on disk,
+// granting an existing admin is a no-op, and the running stash picks
 // the edit up on its next message.
 func TestGrantAdmin(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
-	st := newTestStorer(t)
+	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
 
@@ -225,11 +226,58 @@ func TestGrantAdmin(t *testing.T) {
 	}
 }
 
-// TestStorerDirGuard: stash-host commands refuse a directory that is
+// TestBootQuarantine: a corrupt roster or invite file must not brick
+// serve — it is moved aside and the boot starts empty.
+func TestBootQuarantine(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	dir := t.TempDir()
+
+	if err := os.WriteFile(rosterPath(dir), []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	roster, err := bootRoster(rosterPath(dir), testLogger())
+	if err != nil || len(roster) != 0 {
+		t.Fatalf("bootRoster = %v, %v; want empty", roster, err)
+	}
+
+	if _, err := os.Stat(rosterPath(dir) + ".corrupt"); err != nil {
+		t.Fatalf("corrupt roster not quarantined: %v", err)
+	}
+
+	if err := os.WriteFile(invitePath(dir), []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	invites, err := bootInvites(invitePath(dir), testLogger())
+	if err != nil || len(invites) != 0 {
+		t.Fatalf("bootInvites = %v, %v; want empty", invites, err)
+	}
+
+	if _, err := os.Stat(invitePath(dir) + ".corrupt"); err != nil {
+		t.Fatalf("corrupt invites not quarantined: %v", err)
+	}
+
+	// A healthy file loads normally, quarantine or not.
+	if err := saveRoster(rosterPath(dir), []member{{Name: "nas"}}); err != nil {
+		t.Fatal(err)
+	}
+
+	roster, err = bootRoster(rosterPath(dir), testLogger())
+	if err != nil || len(roster) != 1 || roster[0].Name != "nas" {
+		t.Fatalf("bootRoster = %v, %v; want nas", roster, err)
+	}
+}
+
 // not a stash data dir — a peer's config dir holds a roster.json too,
 // but it is a cache, and editing it would report success while
 // changing nothing.
-func TestStorerDirGuard(t *testing.T) {
+// TestStashDirGuard: stash-host commands refuse a directory that is
+// not a stash data dir — a peer's config dir holds a roster.json too,
+// but it is a cache, and editing it would report success while
+// changing nothing.
+func TestStashDirGuard(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	ctx := context.Background()
