@@ -1428,6 +1428,8 @@ app-template:
 
   configMaps:
     tunnel-monitor-config:
+      includeChecksumInControllers:
+        - qbittorrent
       data:
         blackbox.yml: |
           modules:
@@ -1438,6 +1440,8 @@ app-template:
                 preferred_ip_protocol: ip4
 
     configarr-config:
+      includeChecksumInControllers:
+        - configarr
       data:
         config.yml: |
           trashGuideUrl: https://github.com/TRaSH-Guides/Guides
@@ -1481,6 +1485,8 @@ app-template:
 
 
     filebrowser-quantum-config:
+      includeChecksumInControllers:
+        - filebrowser-quantum
       data:
         config.yaml: |
           server:
@@ -1506,6 +1512,8 @@ app-template:
                 download: true
 
     soularr-script:
+      includeChecksumInControllers:
+        - soularr
       data:
         run-soularr.sh: |
           #!/bin/bash
