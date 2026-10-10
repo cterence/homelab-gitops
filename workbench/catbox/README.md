@@ -167,13 +167,13 @@ does not suspend it mid-transfer; a listener receive ends with the
 screen, its partial resuming wherever the next attempt picks up.
 
 Build (hermetic, offline gradle, pinned debug keystore dedicated to
-catbox):
+catbox) — run from this directory:
 
     make catbox-apk        # → result.apk, ready for adb install
 
 Iterating on the Kotlin in the devshell:
 
-    nix develop .#android
+    nix develop ../..#android
     ./android/build-native.sh   # the catbox binary into jniLibs
     cd android && gradle assembleDebug
 
