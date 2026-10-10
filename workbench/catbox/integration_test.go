@@ -253,6 +253,8 @@ func TestIntegrationEndToEnd(t *testing.T) {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
 	}
 
+	t.Parallel()
+
 	storer := newNode(t, "storer")
 	if err := storer.start(); err != nil {
 		t.Fatalf("starting storer: %v", err)
@@ -336,6 +338,8 @@ func TestIntegrationResume(t *testing.T) {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
 	}
 
+	t.Parallel()
+
 	storer := newNode(t, "storer")
 	if err := storer.start(); err != nil {
 		t.Fatalf("starting storer: %v", err)
@@ -351,7 +355,7 @@ func TestIntegrationResume(t *testing.T) {
 	}
 
 	// Puma never listens: the file rides the spool.
-	big := writeFile(t, "big.bin", 8<<20)
+	big := writeFile(t, "big.bin", 1<<20)
 
 	out := milo.cat(nil, "send", "puma", big)
 	if !strings.Contains(out, "sent big.bin to puma via storer") {
@@ -415,6 +419,8 @@ func TestIntegrationDirectResume(t *testing.T) {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
 	}
 
+	t.Parallel()
+
 	storer := newNode(t, "storer")
 	if err := storer.start(); err != nil {
 		t.Fatalf("starting storer: %v", err)
@@ -429,7 +435,7 @@ func TestIntegrationDirectResume(t *testing.T) {
 		joinMesh(t, n, milo, addr)
 	}
 
-	big := writeFile(t, "big.bin", 8<<20)
+	big := writeFile(t, "big.bin", 1<<20)
 
 	// First send: direct, killed mid-transfer once the partial exists.
 	ready := puma.listen()
@@ -512,6 +518,8 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
 	}
 
+	t.Parallel()
+
 	storer := newNode(t, "storer")
 	if err := storer.start(); err != nil {
 		t.Fatalf("starting storer: %v", err)
@@ -526,7 +534,7 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 		joinMesh(t, n, milo, addr)
 	}
 
-	big := writeFile(t, "big.bin", 8<<20)
+	big := writeFile(t, "big.bin", 1<<20)
 
 	// Puma's listener is up, then killed without deregistering: the
 	// roster keeps a stale address, exactly like a locked phone.
@@ -645,6 +653,8 @@ func TestIntegrationStorerlessDirect(t *testing.T) {
 	if os.Getenv("CATBOX_INTEGRATION") != "1" {
 		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
 	}
+
+	t.Parallel()
 
 	storer := newNode(t, "storer")
 	if err := storer.start(); err != nil {

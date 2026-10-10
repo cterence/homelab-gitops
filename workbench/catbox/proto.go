@@ -39,14 +39,16 @@ const msgMax = 1 << 20
 // idleTimeout is the transfer inactivity cap: bytes flowing extend the
 // conn deadline (see the progress ticks), silence ends it — a vanished
 // peer or a dead network aborts a stuck transfer within this bound
-// instead of hanging until human intervention.
-const idleTimeout = 2 * time.Minute
+// instead of hanging until human intervention. It also bounds how
+// long a dead deposit can hold its spool partial's lock before a
+// retried deposit of the same content may resume it.
+var idleTimeout = 2 * time.Minute
 
 // directStall caps a direct transfer's silence tighter than the
 // storer paths: a vanished listener must be detected fast enough that
 // the storer fallback still helps, and a resume makes the abort
 // cheap.
-const directStall = 30 * time.Second
+var directStall = 30 * time.Second
 
 // directRetryWindow bounds how long a failed direct attempt is
 // retried before the storer fallback: every redial resumes from the
@@ -76,6 +78,8 @@ func init() {
 		directBackoff = 100 * time.Millisecond
 		directDial = time.Second
 		directRetryDial = time.Second
+		directStall = 2 * time.Second
+		idleTimeout = 5 * time.Second
 	}
 }
 
