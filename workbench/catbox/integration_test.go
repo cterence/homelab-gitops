@@ -638,6 +638,53 @@ depositing:
 	assertSpoolLen(t, storer, 0)
 }
 
+// TestIntegrationStorerlessDirect: with the storer dead, a send to a
+// listening peer rides the cached roster alone — the stash is a
+// convenience for sends, not a dependency (catbox #902 P1).
+func TestIntegrationStorerlessDirect(t *testing.T) {
+	if os.Getenv("CATBOX_INTEGRATION") != "1" {
+		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
+	}
+
+	storer := newNode(t, "storer")
+	if err := storer.start(); err != nil {
+		t.Fatalf("starting storer: %v", err)
+	}
+
+	addr := storer.addr()
+
+	milo := newNode(t, "milo")
+
+	puma := newNode(t, "puma")
+	for _, n := range []*node{milo, puma} {
+		joinMesh(t, n, milo, addr)
+	}
+
+	// puma listens; milo's status caches its address.
+	ready := puma.listen()
+
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered")
+	}
+
+	if st := milo.cat(nil, "status"); !strings.Contains(st, "listening") {
+		t.Fatalf("milo status does not show puma listening: %q", st)
+	}
+
+	storer.stop()
+
+	src := writeFile(t, "derp.txt", 128*1024)
+
+	out := milo.cat(nil, "send", "puma", src)
+	if !strings.Contains(out, "sent derp.txt to puma directly") {
+		t.Fatalf("storerless send output: %q", out)
+	}
+
+	assertFile(t, puma, "derp.txt", src)
+}
+
 // ---- helpers ----
 
 // cat runs the catbox binary as a helper subprocess with the given

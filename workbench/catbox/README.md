@@ -89,9 +89,11 @@ catbox version
   unreachable the reset still completes; clean up the leftover entry
   later with `remove` on the storer.
 - `send` seals and ships each named file (one member, one or more
-  files per command): direct to the target's listener
-  when it is online (3s dial timeout), otherwise deposited at the
-  storer until the target pulls. Direct transfers abort after 30
+  files per command): direct to the target's listener when it is
+  online — the local roster cache is tried first, so a send to an
+  online target works without the storer, which is only dialed for
+  unknown targets, stale caches, and deposits (3s dial timeout),
+  otherwise deposited at the storer until the target pulls. Direct transfers abort after 30
   seconds of silence; a failed direct attempt is retried every few
   seconds for two minutes before the fallback — each redial resumes
   from the listener's partial, so a phone that locks and comes back

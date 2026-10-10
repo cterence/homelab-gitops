@@ -274,7 +274,11 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 
 	fmt.Fprintf(os.Stderr, "%s is sending %s directly (%s%s)\n", from, m.FileName, humanBytes(m.Size), resumedSuffix(have))
 
-	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Have: have}); err != nil {
+	// The sender's cache rides the direct path: hand it our roster
+	// view so it stays fresh without stash contact.
+	members, _ := loadRoster(rosterPath(peerConfigDir()))
+
+	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Have: have, Members: members}); err != nil {
 		return
 	}
 

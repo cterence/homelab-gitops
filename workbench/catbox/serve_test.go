@@ -1366,6 +1366,77 @@ func TestDepositIdempotent(t *testing.T) {
 	}
 }
 
+// TestSendCachedRosterFirst: a cached listening address is dialed
+// before the storer is contacted at all — and once both the target
+// and the storer are unreachable, the send fails without a deposit.
+func TestSendCachedRosterFirst(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	// The bogus listener address must fail fast, not crawl the retry
+	// window.
+	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+
+	directRetryWindow = 0
+
+	ctx := context.Background()
+	st := newTestStorer(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// nas "listens" on a bogus address; both the storer roster and
+	// the shared cache carry it.
+	conn := dial(t, st, nas)
+	if err := joinReq(conn, nas, "tcbogus", ""); err != nil {
+		t.Fatalf("listener rejoin: %v", err)
+	}
+
+	_ = conn.Close()
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Watch stderr: the direct attempt must run before the storer is
+	// ever dialed.
+	capR, capW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	old := os.Stderr
+	os.Stderr = capW
+
+	// rwc nil and an undialable storer address: the cache-first
+	// direct attempt, then the send dies on the storer dial.
+	err = clientSend(ctx, nil, laptop, "nas", src, mustSHA(t, src))
+
+	os.Stderr = old
+	_ = capW.Close()
+
+	out, rerr := io.ReadAll(capR)
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+
+	if err == nil || !strings.Contains(err.Error(), "storer") {
+		t.Fatalf("send must fail on the storer dial, got %v", err)
+	}
+
+	if !strings.Contains(string(out), "dialing nas directly") {
+		t.Fatalf("the cached address must be dialed first, stderr:\n%s", out)
+	}
+}
+
 // TestOpRemove: over the wire, self-removal is anyone's; removing
 // another member is admin-only, and the admin's remove sweeps the
 // target's parked items.

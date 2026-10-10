@@ -262,25 +262,17 @@ func run() error {
 		defer release()
 
 		for _, path := range fs.Args()[1:] {
-			// One storer conn per file: a long transfer starves the
-			// storer's idle deadline, and the next file must not
-			// inherit a dead conn. The SHA is known before sealing:
-			// it keys the deterministic file secret and the
-			// receiver's resume partial.
+			// The SHA is known before sealing: it keys the
+			// deterministic file secret and the receiver's resume
+			// partial. The storer conn is clientSend's to dial, per
+			// file: a long transfer starves its idle deadline, and
+			// the next file must not inherit a dead conn.
 			shaHex, err := fileSHA256(path)
 			if err != nil {
 				return fmt.Errorf("hashing %s: %w", path, err)
 			}
 
-			conn, err := storerConn(ctx, id)
-			if err != nil {
-				return err
-			}
-
-			err = clientSend(ctx, conn, id, fs.Arg(0), path, shaHex)
-			_ = conn.Close()
-
-			if err != nil {
+			if err := clientSend(ctx, nil, id, fs.Arg(0), path, shaHex); err != nil {
 				return fmt.Errorf("sending %s: %w", path, err)
 			}
 		}
