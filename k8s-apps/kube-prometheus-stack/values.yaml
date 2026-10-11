@@ -49,6 +49,12 @@ kube-prometheus-stack:
               requests:
                 storage: 10Gi
 
+      # Host-level exporters outside the cluster (NixOS machines).
+      additionalScrapeConfigs:
+        - job_name: smartctl-homelab3
+          static_configs:
+            - targets: ["192.168.1.141:9633"]
+
       thanos: {}
         # objectStorageConfig:
         #   key: objstore.yml
@@ -168,6 +174,9 @@ kube-prometheus-stack:
         # The "default" provider is defined below.
         cloudnativepg:
           gnetId: 20417
+          datasource: Prometheus
+        smartctl:
+          gnetId: 22604
           datasource: Prometheus
       extra: {}
         # pihole-overview:
@@ -337,6 +346,63 @@ kube-prometheus-stack:
 
   kubeControllerManager:
     enabled: false
+
+  # Host-level SMART alerts, fed by the smartctl exporter on homelab3
+  # (scraped via additionalScrapeConfigs).
+  additionalPrometheusRulesMap:
+    smartctl:
+      groups:
+        - name: smartctl
+          rules:
+            - alert: SmartDeviceFailing
+              expr: smartctl_device_smart_status == 0
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "SMART failing on {{ $labels.device }} ({{ $labels.hostname }})"
+                description: >-
+                  SMART overall health status is FAILED on device {{ $labels.device }}.
+                  Back up and replace the disk.
+            - alert: SmartDeviceHighTemperature
+              expr: smartctl_device_temperature > 60
+              for: 10m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High temperature on {{ $labels.device }} ({{ $labels.hostname }})"
+                description: >-
+                  Disk temperature is {{ $value }}C, above 60C for 10 minutes.
+            - alert: SmartReallocatedSectors
+              expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"} > 0
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "Reallocated sectors on {{ $labels.device }} ({{ $labels.hostname }})"
+                description: >-
+                  {{ $value }} reallocated sectors. The disk has remapped bad
+                  sectors; watch it and plan replacement.
+            - alert: SmartPendingSectors
+              expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector",attribute_value_type="raw"} > 0
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "Pending sectors on {{ $labels.device }} ({{ $labels.hostname }})"
+                description: >-
+                  {{ $value }} sectors are waiting to be remapped. Often a
+                  precursor to reallocated sectors.
+            - alert: SmartctlExporterDown
+              expr: absent(smartctl_device_smart_status)
+              for: 10m
+              labels:
+                severity: warning
+              annotations:
+                summary: smartctl exporter on homelab3 unreachable
+                description: >-
+                  No smartctl metrics scraped from homelab3 for 10 minutes.
+                  The exporter or the host may be down.
 
   kubeEtcd:
     enabled: false
