@@ -190,7 +190,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -272,7 +272,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -362,7 +362,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -444,7 +444,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -634,7 +634,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -716,7 +716,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -798,7 +798,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -880,7 +880,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -970,7 +970,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -1198,20 +1198,6 @@
       "fiscalYearStartMonth": 0
     },
     "title": "Disk usage",
-    "variables": [
-      {
-        "kind": "ConstantVariable",
-        "spec": {
-          "name": "max_capacity",
-          "query": "1967847152828",
-          "current": {
-            "text": "1967847152828",
-            "value": "1967847152828"
-          },
-          "hide": "hideVariable",
-          "skipUrlSync": true
-        }
-      }
-    ]
+    "variables": []
   }
 }
