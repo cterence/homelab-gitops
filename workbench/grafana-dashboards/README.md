@@ -18,8 +18,8 @@ go run . [-out <dir>]
 ## Adding a dashboard
 
 1. Add a builder function returning `*dashboardv2.DashboardBuilder`.
-2. Register it in the `dashboards` slice in `main.go` with a stable UID
-   (keep existing UIDs so dashboard URLs survive) and a filename.
+2. Register it in the `dashboards` slice in `main.go` with a readable, stable
+   UID (it becomes the dashboard URL slug) and a filename.
 3. `go run .` and commit the generated JSON together with the code.
 
 Output files are CRD-wrapped (`apiVersion: dashboard.grafana.app/v2`,

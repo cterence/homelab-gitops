@@ -2,7 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "te9zcsz"
+    "name": "disk-usage"
   },
   "spec": {
     "annotations": [
