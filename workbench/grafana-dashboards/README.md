@@ -1,0 +1,27 @@
+# grafana-dashboards
+
+Generates Grafana dashboards as code with the
+[Grafana Foundation SDK](https://grafana.com/docs/grafana/latest/as-code/observability-as-code/foundation-sdk/)
+(v2 schema) and writes them into `k8s-apps/kube-prometheus-stack/dashboards/`.
+The umbrella chart packages that directory into the `grafana-gitops-dashboards`
+ConfigMap, which the Grafana pod mounts at the `gitops` dashboard provider path
+(`allowUiUpdates: false` — the generated file always wins).
+
+## Usage
+
+```sh
+go run . [-out <dir>]
+```
+
+`-out` defaults to `../../k8s-apps/kube-prometheus-stack/dashboards`.
+
+## Adding a dashboard
+
+1. Add a builder function returning `*dashboardv2.DashboardBuilder`.
+2. Register it in the `dashboards` slice in `main.go` with a stable UID
+   (keep existing UIDs so dashboard URLs survive) and a filename.
+3. `go run .` and commit the generated JSON together with the code.
+
+Output files are CRD-wrapped (`apiVersion: dashboard.grafana.app/v2`,
+`kind: Dashboard`, `metadata.name` = UID), the format Grafana file
+provisioning expects for v2 dashboards.
