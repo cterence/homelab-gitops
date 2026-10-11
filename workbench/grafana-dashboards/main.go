@@ -23,6 +23,7 @@ type dashboard struct {
 
 var dashboards = []dashboard{
 	{uid: "disk-usage", filename: "disk-usage.json", build: diskUsage},
+	{uid: "smartctl", filename: "smartctl.json", build: smartctl},
 }
 
 func run(ctx context.Context, outDir string) error {
