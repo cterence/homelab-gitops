@@ -316,7 +316,10 @@ func TestLockPeerWaitingLog(t *testing.T) {
 // A lock that cannot be set up must fail the command: proceeding
 // unlocked silently disables the serialization the lock exists for.
 func TestLockPeerSetupFails(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	// XDG_CONFIG_HOME overrides HOME for UserConfigDir on Linux.
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", home)
 
 	// client.lock as a directory: OpenFile can never succeed.
 	if err := os.MkdirAll(filepath.Join(peerConfigDir(), "client.lock"), 0o700); err != nil {
