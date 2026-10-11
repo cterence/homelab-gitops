@@ -86,7 +86,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -172,7 +172,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -262,7 +262,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -348,7 +348,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {
@@ -434,7 +434,7 @@
                   ]
                 },
                 "percentChangeColorMode": "standard",
-                "orientation": ""
+                "orientation": "auto"
               },
               "fieldConfig": {
                 "defaults": {

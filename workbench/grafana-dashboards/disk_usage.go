@@ -14,6 +14,10 @@ import (
 
 const promDatasource = "prometheus"
 
+// Total capacity of the storage pool, used as the bargauge scale so bar
+// length reads as share-of-pool. Update when the pool is resized.
+const poolCapacityBytes = 1967847137280
+
 // grafanaQuery is the built-in "-- Grafana --" annotation query, which has no
 // typed builder in the SDK.
 type grafanaQuery struct{}
@@ -110,7 +114,7 @@ func topUsagePanel() *dashboardv2.PanelBuilder {
 			Transformation(renameByRegex(`.+\/pvc-[\d\w\-]+_(.+)`))).
 		Visualization(bargauge.NewVisualizationV2Builder().
 			Unit("bytes").
-			Max(1967847137280).
+			Max(poolCapacityBytes).
 			ColorScheme(dashboardv2.NewFieldColorBuilder().Mode(dashboardv2.FieldColorModeIdThresholds)).
 			Thresholds(thresholds(thresholdStep("green", 0))).
 			DisplayMode(common.BarGaugeDisplayModeBasic).
@@ -138,6 +142,7 @@ func statPanel(id float64, title, expr, unit string, graphMode common.BigValueGr
 			Thresholds(thresholds(steps...)).
 			ColorMode(common.BigValueColorModeValue).
 			GraphMode(graphMode).
+			Orientation(common.VizOrientationAuto).
 			ReduceOptions(lastNotNull()).
 			WideLayout(true))
 }
@@ -217,13 +222,5 @@ func diskUsage() *dashboardv2.DashboardBuilder {
 			AutoRefreshIntervals([]string{"5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"}).
 			Timezone("browser").
 			FiscalYearStartMonth(0).
-			HideTimepicker(false)).
-		ConstantVariable(dashboardv2.NewConstantVariableBuilder("max_capacity").
-			Query("1967847152828").
-			Current(dashboardv2.VariableOption{
-				Text:  dashboardv2.StringOrArrayOfString{String: cog.ToPtr("1967847152828")},
-				Value: dashboardv2.StringOrArrayOfString{String: cog.ToPtr("1967847152828")},
-			}).
-			Hide(dashboardv2.VariableHideHideVariable).
-			SkipUrlSync(true))
+			HideTimepicker(false))
 }

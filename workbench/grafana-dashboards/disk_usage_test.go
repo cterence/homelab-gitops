@@ -57,7 +57,7 @@ func TestDiskUsageManifest(t *testing.T) {
 		{"row count", len(spec["layout"].(map[string]any)["spec"].(map[string]any)["rows"].([]any)), 4},
 		{"timezone", spec["timeSettings"].(map[string]any)["timezone"], "browser"},
 		{"refresh", spec["timeSettings"].(map[string]any)["autoRefresh"], "30s"},
-		{"variable count", len(spec["variables"].([]any)), 1},
+		{"variable count", len(spec["variables"].([]any)), 0},
 	}
 
 	for _, tt := range tests {
@@ -103,6 +103,44 @@ func TestDiskUsagePanelQueries(t *testing.T) {
 			expr := query.(map[string]any)["spec"].(map[string]any)["query"].(map[string]any)["spec"].(map[string]any)["expr"]
 			if expr != tt.expr {
 				t.Errorf("expr: got %v, want %v", expr, tt.expr)
+			}
+		})
+	}
+}
+
+func TestDiskUsageTransformations(t *testing.T) {
+	m := buildManifest(t, diskUsage())
+	elements := m["spec"].(map[string]any)["elements"].(map[string]any)
+
+	tests := []struct {
+		key   string
+		regex string
+	}{
+		{"panel-1", `\/data\/pvc-[\d\w\-]+_(.+)`},
+		{"panel-4", `.+\/pvc-[\d\w\-]+_(.+)`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.key, func(t *testing.T) {
+			panel := elements[tt.key].(map[string]any)["spec"].(map[string]any)
+
+			transformations := panel["data"].(map[string]any)["spec"].(map[string]any)["transformations"].([]any)
+			if len(transformations) != 1 {
+				t.Fatalf("transformation count: got %d, want 1", len(transformations))
+			}
+
+			tr := transformations[0].(map[string]any)
+			if tr["group"] != "renameByRegex" {
+				t.Errorf("group: got %v, want renameByRegex", tr["group"])
+			}
+
+			options := tr["spec"].(map[string]any)["options"].(map[string]any)
+			if options["regex"] != tt.regex {
+				t.Errorf("regex: got %v, want %v", options["regex"], tt.regex)
+			}
+
+			if options["renamePattern"] != "$1" {
+				t.Errorf("renamePattern: got %v, want $1", options["renamePattern"])
 			}
 		})
 	}
