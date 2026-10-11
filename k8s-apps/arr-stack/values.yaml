@@ -1447,6 +1447,29 @@ app-template:
           trashGuideUrl: https://github.com/TRaSH-Guides/Guides
           recyclarrConfigUrl: https://github.com/recyclarr/config-templates
 
+          customFormatDefinitions:
+            # c411 names dual-audio releases "MULTi.VFF/VF2"; radarr parses those
+            # as French, so TRaSH "Language: Not Original" blocks every MULTi
+            # release. Zero it and block real dub-only titles by name instead.
+            - trash_id: fr-dub-only-not-multi
+              trash_scores:
+                default: -10000
+              name: "FR: Dub-Only (no MULTi)"
+              includeCustomFormatWhenRenaming: false
+              specifications:
+                - name: not MULTi
+                  implementation: ReleaseTitleSpecification
+                  negate: true
+                  required: true
+                  fields:
+                    value: "\bMULT[Ii]\b"
+                - name: french dub token
+                  implementation: ReleaseTitleSpecification
+                  negate: false
+                  required: false
+                  fields:
+                    value: "\b(VFF|VFI|VFQ|VF2|VF|TRUEFRENCH|FRENCH)\b"
+
           sonarr:
             series:
               base_url: http://arr-stack-sonarr:8989
@@ -1463,6 +1486,18 @@ app-template:
                 # french-multi-vo score set: FR Scene +1500, dual audio +500, FR LQ/FastSUB -10000
                 - template: 4c48f506c1116a3a57ae33f12346bd15
                   source: TRASH
+
+              custom_formats:
+                - trash_ids:
+                    - ae575f95ab639ba5d15f663bf019e3e8 # Language: Not Original
+                  assign_scores_to:
+                    - name: "[French MULTi.VO] HD Bluray + WEB (1080p)"
+                      score: 0
+                - trash_ids:
+                    - fr-dub-only-not-multi
+                  assign_scores_to:
+                    - name: "[French MULTi.VO] HD Bluray + WEB (1080p)"
+                      score: -10000
 
           radarr:
             movies:
@@ -1482,6 +1517,22 @@ app-template:
                 # [French MULTi.VO] HD Remux (1080p)
                 - template: c6460a102b312200c095a2d0982e0461
                   source: TRASH
+
+              custom_formats:
+                - trash_ids:
+                    - d6e9318c875905d6cfb5bee961afcea9 # Language: Not Original
+                  assign_scores_to:
+                    - name: "[French MULTi.VO] HD Bluray + WEB"
+                      score: 0
+                    - name: "[French MULTi.VO] HD Remux (1080p)"
+                      score: 0
+                - trash_ids:
+                    - fr-dub-only-not-multi
+                  assign_scores_to:
+                    - name: "[French MULTi.VO] HD Bluray + WEB"
+                      score: -10000
+                    - name: "[French MULTi.VO] HD Remux (1080p)"
+                      score: -10000
 
 
     filebrowser-quantum-config:
