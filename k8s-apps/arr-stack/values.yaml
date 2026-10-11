@@ -1538,19 +1538,24 @@ app-template:
                     - name: "[French MULTi.VO] HD Remux (1080p)"
                       score: -10000
 
-
     filebrowser-quantum-config:
       includeChecksumInControllers:
         - filebrowser-quantum
       data:
         config.yaml: |
           server:
-            port: 8080
-            database: "/home/filebrowser/data/database/database.db"
+            database:
+              path: "/home/filebrowser/data/database/filebrowser.sqlite"
+              migrateFrom: "/home/filebrowser/data/database/database.db.old"
             sources:
-              - path: /data
-              - path: /data-pool
-              - path: /music
+              - path: "/data"
+                config: {}
+              - path: "/data-pool"
+                config: {}
+              - path: "/music"
+                config: {}
+          http:
+            port: 8080
           auth:
             methods:
               noauth: true
@@ -1559,12 +1564,8 @@ app-template:
               permissions:
                 api: true
                 admin: true
-                modify: true
                 share: true
                 realtime: true
-                delete: true
-                create: true
-                download: true
 
     soularr-script:
       includeChecksumInControllers:
