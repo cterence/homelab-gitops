@@ -175,9 +175,6 @@ kube-prometheus-stack:
         cloudnativepg:
           gnetId: 20417
           datasource: Prometheus
-        smartctl:
-          gnetId: 22604
-          datasource: Prometheus
       extra: {}
         # pihole-overview:
         #   gnetId: 10176

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smartctl-dashboard
+  labels:
+    grafana_dashboard: "1"
+data:
+  smartctl.json: |-
+{{ .Files.Get "dashboards/smartctl.json" | indent 4 }}
