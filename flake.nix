@@ -53,6 +53,7 @@
       goApps = [
         "catbox"
         "go-healthcheck"
+        "grafana-dashboards"
         "lastfm-scrobble-deduplicator"
         "rangemusique"
       ];
