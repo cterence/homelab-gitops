@@ -1514,6 +1514,14 @@ app-template:
                 - template: c6460a102b312200c095a2d0982e0461
                   source: TRASH
 
+              # profile language must be Any: the default "Original" rejects
+              # every c411 title, since MULTi/VFx parses as French
+              quality_profiles:
+                - name: "[French MULTi.VO] HD Bluray + WEB"
+                  language: Any
+                - name: "[French MULTi.VO] HD Remux (1080p)"
+                  language: Any
+
               custom_formats:
                 - trash_ids:
                     - d6e9318c875905d6cfb5bee961afcea9 # Language: Not Original
