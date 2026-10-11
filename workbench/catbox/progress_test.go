@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -309,6 +310,24 @@ func TestLockPeerWaitingLog(t *testing.T) {
 
 	if err := <-done; err == nil {
 		t.Fatal("the canceled waiter must give up")
+	}
+}
+
+// A lock that cannot be set up must fail the command: proceeding
+// unlocked silently disables the serialization the lock exists for.
+func TestLockPeerSetupFails(t *testing.T) {
+	// XDG_CONFIG_HOME overrides HOME for UserConfigDir on Linux.
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", home)
+
+	// client.lock as a directory: OpenFile can never succeed.
+	if err := os.MkdirAll(filepath.Join(peerConfigDir(), "client.lock"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := lockPeer(context.Background()); err == nil {
+		t.Fatal("an unusable lock file must fail, not proceed unlocked")
 	}
 }
 
