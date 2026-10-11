@@ -34,12 +34,12 @@ import (
 func lockPeer(ctx context.Context) (release func(), err error) {
 	dir := peerConfigDir()
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return func() {}, nil // no config dir: proceed unlocked
+		return nil, fmt.Errorf("creating config dir: %w", err)
 	}
 
 	f, err := os.OpenFile(filepath.Join(dir, "client.lock"), os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
-		return func() {}, nil // cannot lock: proceed unlocked
+		return nil, fmt.Errorf("opening lock file: %w", err)
 	}
 
 	tick := time.NewTicker(200 * time.Millisecond)
