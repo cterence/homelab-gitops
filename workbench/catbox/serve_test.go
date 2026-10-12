@@ -1471,12 +1471,10 @@ func TestDirectRetryCap(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
 	// The count, not the clock, ends the retries: shrink the dials
-	// and the backoff so the loop is milliseconds either way.
-	defer func(d, r, b time.Duration) {
-		directDial, directRetryDial, directBackoff = d, r, b
-	}(directDial, directRetryDial, directBackoff)
+	// so the loop is milliseconds either way.
+	defer func(d, r time.Duration) { directDial, directRetryDial = d, r }(directDial, directRetryDial)
 
-	directDial, directRetryDial, directBackoff = 10*time.Millisecond, 10*time.Millisecond, time.Millisecond
+	directDial, directRetryDial = 10*time.Millisecond, 10*time.Millisecond
 
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")

@@ -57,9 +57,6 @@ var directStall = 30 * time.Second
 // the stash.
 var directRetries = 2
 
-// directBackoff paces the direct redials inside the retry window.
-var directBackoff = 5 * time.Second
-
 // directDial bounds the first direct dial: a live listener answers
 // its handshake in well under a second, so this is the stale-address
 // detector.
@@ -75,7 +72,6 @@ func init() {
 	// retry patience, so a dead listener falls back to the stash in
 	// about a second instead of after the real window.
 	if os.Getenv("CATBOX_FAST_TIMERS") == "1" {
-		directBackoff = 100 * time.Millisecond
 		directDial = time.Second
 		directRetryDial = time.Second
 		directStall = 2 * time.Second

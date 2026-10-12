@@ -581,12 +581,6 @@ func tryDirect(ctx context.Context, id *peerID, target member, f *os.File, info 
 	for attempt := 1; err != nil && ctx.Err() == nil && attempt <= directRetries; attempt++ {
 		fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
 
-		select {
-		case <-ctx.Done():
-			return 0, "", ctx.Err()
-		case <-time.After(directBackoff):
-		}
-
 		// A restarted listener has the same address but fresh peer
 		// state: it only re-adds us on a new meow handshake, which
 		// the cached client never redoes (its up flag is sticky) —

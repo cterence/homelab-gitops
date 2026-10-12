@@ -112,7 +112,7 @@ catbox version
   unknown targets, stale caches, and deposits (3s dial timeout),
   otherwise deposited at the stash until the target pulls. Direct transfers abort after 30
   seconds of silence; a failed direct attempt is redialed at most twice
-  (5s backoff) before the fallback — each redial resumes
+  before the fallback — each redial resumes
   from the listener's partial, so a phone that locks and comes back
   finishes direct with no stash bytes. Stash-path transfers abort
   after two minutes; Ctrl-C aborts instantly.
