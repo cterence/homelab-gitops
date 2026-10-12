@@ -568,19 +568,17 @@ func tunnelClient(addr tailcat.Addr, dialKey key.NodePrivate) *tailcat.Client {
 	return c.(*tailcat.Client)
 }
 
-// tryDirect sends straight to the target's listener, retrying within
-// a short window: each redial resumes from the listener's partial,
-// so a target that vanished mid-transfer and came back finishes with
-// no stash bytes. It returns the resume offset and network path of
-// the transfer.
+// tryDirect sends straight to the target's listener, redialing a
+// bounded number of times: each redial resumes from the listener's
+// partial, so a target that vanished mid-transfer and came back
+// finishes with no stash bytes. It returns the resume offset and
+// network path of the transfer.
 func tryDirect(ctx context.Context, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, string, error) {
 	fmt.Fprintf(os.Stderr, "dialing %s directly...\n", target.Name)
 
-	deadline := time.Now().Add(directRetryWindow)
-
 	resumed, dpath, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
 
-	for err != nil && ctx.Err() == nil && time.Now().Before(deadline) {
+	for attempt := 1; err != nil && ctx.Err() == nil && attempt <= directRetries; attempt++ {
 		fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
 
 		select {

@@ -305,11 +305,11 @@ func TestRejoinUpdatesListenerAddr(t *testing.T) {
 func TestClientStatus(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	// Direct retries would crawl through the real retry window on the
+	// Direct retries would crawl through the real redials on the
 	// bogus listener address: this test only exercises the deposit.
-	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+	defer func(n int) { directRetries = n }(directRetries)
 
-	directRetryWindow = 0
+	directRetries = 0
 
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")
@@ -456,11 +456,11 @@ func TestDepositDedup(t *testing.T) {
 func TestClientStatusJSON(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	// Direct retries would crawl through the real retry window on the
+	// Direct retries would crawl through the real redials on the
 	// bogus listener address: this test only exercises the deposit.
-	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+	defer func(n int) { directRetries = n }(directRetries)
 
-	directRetryWindow = 0
+	directRetries = 0
 
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")
@@ -1399,11 +1399,11 @@ func TestDepositIdempotent(t *testing.T) {
 func TestSendCachedRosterFirst(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	// The bogus listener address must fail fast, not crawl the retry
-	// window.
-	defer func(w time.Duration) { directRetryWindow = w }(directRetryWindow)
+	// The bogus listener address must fail fast, not crawl the
+	// redials.
+	defer func(n int) { directRetries = n }(directRetries)
 
-	directRetryWindow = 0
+	directRetries = 0
 
 	ctx := context.Background()
 	st := newTestStash(t)
@@ -1461,6 +1461,81 @@ func TestSendCachedRosterFirst(t *testing.T) {
 
 	if !strings.Contains(string(out), "dialing nas directly") {
 		t.Fatalf("the cached address must be dialed first, stderr:\n%s", out)
+	}
+}
+
+// TestDirectRetryCap: a dead listener is redialed at most twice
+// before the send gives up on direct and deposits at the stash —
+// no minutes-long retry window.
+func TestDirectRetryCap(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	// The count, not the clock, ends the retries: shrink the dials
+	// and the backoff so the loop is milliseconds either way.
+	defer func(d, r, b time.Duration) {
+		directDial, directRetryDial, directBackoff = d, r, b
+	}(directDial, directRetryDial, directBackoff)
+
+	directDial, directRetryDial, directBackoff = 10*time.Millisecond, 10*time.Millisecond, time.Millisecond
+
+	st := newTestStash(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	// nas "listens" on a bogus address no dial can reach.
+	conn := dial(t, st, nas)
+	if err := joinReq(conn, nas, "tcbogus", ""); err != nil {
+		t.Fatalf("listener rejoin: %v", err)
+	}
+
+	_ = conn.Close()
+
+	src := filepath.Join(t.TempDir(), "f.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// The sender's live stash session: the deposit lands on it once
+	// direct gives up.
+	conn = dial(t, st, laptop)
+
+	capR, capW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	old := os.Stderr
+	os.Stderr = capW
+
+	err = clientSend(context.Background(), conn, laptop, "nas", src, mustSHA(t, src))
+
+	os.Stderr = old
+	_ = capW.Close()
+
+	out, rerr := io.ReadAll(capR)
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+
+	if err != nil {
+		t.Fatalf("the deposit at the stash must complete the send, got %v", err)
+	}
+
+	if n := strings.Count(string(out), "retrying..."); n != directRetries {
+		t.Fatalf("a dead listener must be redialed %d times, saw %d\nstderr:\n%s", directRetries, n, out)
+	}
+
+	if !strings.Contains(string(out), "depositing at the stash") {
+		t.Fatalf("the stash fallback must run, stderr:\n%s", out)
 	}
 }
 

@@ -584,9 +584,9 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 
 	spoolDir := filepath.Join(stash.dir, "spool")
 
-	// The dead listener is retried before the fallback: the deposit
-	// starts after the retry window, so the poll waits it out.
-	deadline := time.Now().Add(directRetryWindow + 90*time.Second)
+	// The dead listener is redialed before the fallback: the deposit
+	// starts after the redials, so the poll waits them out.
+	deadline := time.Now().Add(90 * time.Second)
 	for time.Now().Before(deadline) {
 		if des, err := os.ReadDir(spoolDir); err == nil {
 			for _, de := range des {
