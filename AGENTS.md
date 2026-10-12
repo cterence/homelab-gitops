@@ -46,19 +46,19 @@ Never git add things in docs/superpowers forcefully.
 
 ## Versioning
 
-When modifying code under `workbench/<app>/`, bump both the build tag and the image tag:
+Never bump image tags in PRs. Tags are bumped by CI on main after merge:
 
-- `workbench/<app>/build.yaml` — increment `tag`
-- `k8s-apps/<app>/values.yaml` — update the image `tag` to match. For images
-  consumed as sidecars by other apps (rangemusique, apachewebdav,
-  gitea-mirror-sync), update the tag in the consuming app's values.yaml
-  instead — CI's tag-bump finds all references automatically.
-
-Both bumps must land in the same commit/PR. The pipeline is:
-
-1. On merge, the `build-<app>` ArgoCD application runs a Kaniko build in-cluster.
-2. Kaniko pushes `registry.terence.cloud/<app>:<tag>` to the in-cluster registry.
-3. ArgoCD syncs `k8s-apps/<app>` to the new tag and rolls the Deployment.
+1. A PR changes `workbench/<app>/` code; the image tag is not touched.
+2. On merge, the `workbench-tag-bump` workflow diffs the merge against the
+   previous tip and, for each changed app without a tag bump, commits
+   `<app>: bump image tag to <n>` on main: `workbench/<app>/build.yaml` plus
+   the image tag in the consuming `k8s-apps/<app>/values.yaml`. Sidecar
+   consumers (rangemusique, apachewebdav, gitea-mirror-sync) are updated in
+   the consuming app's values.yaml — the bump script finds all references.
+3. The bump commit makes the `build-<app>` ArgoCD application run a Kaniko
+   build in-cluster, pushing `registry.terence.cloud/<app>:<tag>` to the
+   in-cluster registry.
+4. ArgoCD syncs `k8s-apps/<app>` to the new tag and rolls the Deployment.
 
 Caveats:
 
@@ -71,6 +71,9 @@ Caveats:
 - After merging, check the `build-<app>` application in ArgoCD: if the Kaniko
   build fails, the consuming app's sync fails at the hook and the old pods keep
   running.
+- Kaniko rebuilds only happen when the tag changes: the Job name embeds the
+  tag and completed Jobs are kept (ArgoCD prunes the old-tag Job on the next
+  bump), so no same-tag rebuild ever re-runs.
 - `Chart.yaml` version stays `0.1.0` (never bumped) — the image tag is the
   release mechanism.
 
@@ -138,5 +141,6 @@ Renovate uses the `fix:` conventional-commit prefix.
 
 - `update-deployed-apps.yaml` — regenerates the deployed apps table in README.md on push to main.
 - `pr-argo-diff.yaml` — runs `argocd app diff` per changed app on PRs touching `k8s-apps/**` and posts the diff as a PR comment.
-- `workbench-ci.yaml` — on PRs touching `workbench/**`: runs `go vet`/`go test`/golangci-lint per changed Go app, pytest per changed Python app, and a no-push docker build mirroring the Kaniko context. A changed Go app with an `integration_test.go` also runs it gated with `<APP>_INTEGRATION=1` (helper-process e2e; needs the DERP network, available on hosted runners). Its `tag-bump` job auto-bumps `build.yaml` (and the matching `k8s-apps` image tag) when a PR modifies a workbench app without bumping its tag; idempotent per PR (merge-base diff), works on Renovate PRs too.
+- `workbench-ci.yaml` — on PRs touching `workbench/**`: runs `go vet`/`go test`/golangci-lint per changed Go app, pytest per changed Python app, and a no-push docker build mirroring the Kaniko context. A changed Go app with an `integration_test.go` also runs it gated with `<APP>_INTEGRATION=1` (helper-process e2e; needs the DERP network, available on hosted runners).
+- `workbench-tag-bump.yaml` — on push to main touching `workbench/**`: bumps `build.yaml` (and the matching `k8s-apps` image tag) when a merge modified a workbench app without bumping its tag. Idempotent (any `+tag:` line in the merge window skips the bump), runs serialized, works with Renovate merges too.
 - Image builds still happen in-cluster via Kaniko on merge to main; CI builds are validation only.
