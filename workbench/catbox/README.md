@@ -186,6 +186,9 @@ confirming dialog. The overflow menu's Reset leaves the mesh and wipes
 the app's identity (the binary's `reset`, confirmation dialog first);
 the join card takes the
 invite token as a paste (or a bare stash address on a fresh mesh).
+The app is a share target (`ACTION_SEND`/`SEND_MULTIPLE`, any type):
+shared files open straight in the peer picker, shared text is
+staged as a clipboard file.
 Its server engine (identity key) never conflicts
 with one-shot client execs (dial key). While an own-action transfer
 is in flight the app holds a bounded partial wake lock, so screen-off
