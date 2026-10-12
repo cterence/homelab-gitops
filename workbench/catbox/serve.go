@@ -420,6 +420,8 @@ func (st *stash) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member,
 
 			if err := saveRoster(rosterPath(st.dir), members); err != nil {
 				st.log.Error("saving roster", "err", err)
+
+				_ = writeMsg(rwc, msg{Op: opJoined, Err: "saving the roster failed; join again"})
 			}
 		}
 
@@ -469,6 +471,10 @@ func (st *stash) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member,
 
 	if err := saveRoster(rosterPath(st.dir), members); err != nil {
 		st.log.Error("saving roster", "err", err)
+
+		_ = writeMsg(rwc, msg{Op: opJoined, Err: "saving the roster failed; join again"})
+
+		return
 	}
 
 	st.log.Info("member joined", "name", m.Name, "admin", admin, "listening", m.Addr != "")

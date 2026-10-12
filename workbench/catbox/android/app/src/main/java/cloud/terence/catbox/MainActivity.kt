@@ -259,11 +259,18 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
 
                     done++
                     val tmp = withContext(Dispatchers.IO) {
-                        val f = File(context.cacheDir, displayName(context, uri))
-                        context.contentResolver.openInputStream(uri)!!.use { input ->
-                            f.outputStream().use { input.copyTo(it) }
+                        val input = context.contentResolver.openInputStream(uri)
+                        if (input == null) {
+                            null // the provider vanished: a deleted or unmounted file
+                        } else {
+                            val f = File(context.cacheDir, displayName(context, uri))
+                            input.use { src -> f.outputStream().use { src.copyTo(it) } }
+                            f
                         }
-                        f
+                    }
+                    if (tmp == null) {
+                        problems += "Send to $target failed: ${displayName(context, uri)} is unreadable"
+                        continue
                     }
                     progress.value = "Sending $done/$total: ${tmp.name}"
                     progressFrac.value = null // staging: no percent yet
