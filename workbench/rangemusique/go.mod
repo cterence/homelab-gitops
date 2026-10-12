@@ -6,7 +6,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/michiwend/gomusicbrainz v0.0.0-20181012083520-6c07e13dd396
 	github.com/urfave/cli/v3 v3.14.0
-	go.senan.xyz/taglib v0.14.0
+	go.senan.xyz/taglib v0.15.0
 )
 
 require (
