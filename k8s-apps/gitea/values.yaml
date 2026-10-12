@@ -655,7 +655,7 @@ mirrorSync:
   image:
     registry: registry.terence.cloud
     repository: gitea-mirror-sync
-    tag: "7"
+    tag: "8"
   defaultOwner: terence
   ownerFromURL: true
   mirrors:
