@@ -144,8 +144,10 @@ catbox version
   an error. `listen` only receives direct sends: it publishes its tailcat
   address in the roster and clears it again on shutdown (Ctrl-C);
   pulling stays an explicit decision.
-- `dismiss <id>` refuses delivery of one of your own pending items:
-  the stash deletes it without the bytes ever transferring. `status`
+- `dismiss <id | name>` refuses delivery of one of your own pending
+  items: the stash deletes it without the bytes ever transferring.
+  A file name works when it is unique among your waiting items;
+  an ambiguous or foreign name is refused. `status`
   lists the ids of everything waiting for you.
 - `status` asks the stash who's in the mesh: files and bytes waiting
   for you there (each with its id, sender, and size), and every member

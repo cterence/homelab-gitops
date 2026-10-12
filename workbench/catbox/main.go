@@ -308,7 +308,7 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
-			return errors.New("dismiss takes <id> (see catbox status)")
+			return errors.New("dismiss takes <id or file name> (see catbox status)")
 		}
 
 		id, _, err := loadPeerID("", "")
@@ -331,11 +331,23 @@ func run() error {
 		defer func() { _ = cl.Close() }()
 		defer func() { _ = conn.Close() }()
 
-		if err := clientDismiss(conn, fs.Arg(0)); err != nil {
+		// Resolve against this peer's own waiting items first: a
+		// name must be unambiguous, and only ever one's own files.
+		pend, err := clientPending(conn)
+		if err != nil {
 			return err
 		}
 
-		fmt.Printf("dismissed %s\n", fs.Arg(0))
+		did, err := resolveDismiss(pend.Items, fs.Arg(0))
+		if err != nil {
+			return err
+		}
+
+		if err := clientDismiss(conn, did); err != nil {
+			return err
+		}
+
+		fmt.Printf("dismissed %s\n", did)
 
 		return nil
 	case "remove":
@@ -552,7 +564,7 @@ transfer commands:
   listen    receive direct sends (Ctrl-C to stop)
             [--dir DIR]
   dismiss   refuse delivery of one held item
-            <id>
+            <id | name>
 
 other commands:
   version   print the build version

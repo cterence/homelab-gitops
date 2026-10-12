@@ -126,20 +126,31 @@ func joinReq(rwc io.ReadWriter, id *peerID, addr tailcat.Addr, code string) erro
 	return nil
 }
 
-// clientStatus prints the roster and this peer's pending items, straight
-// from the stash, to out.
-func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
+// clientPending fetches the stash's answer to opPending: the
+// requester's waiting items and the roster.
+func clientPending(rwc io.ReadWriter) (msg, error) {
 	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
-		return err
+		return msg{}, err
 	}
 
 	m, err := readMsg(rwc)
 	if err != nil {
-		return err
+		return msg{}, err
 	}
 
 	if m.Op != opItems || !m.OK {
-		return fmt.Errorf("status: %s", m.Err)
+		return msg{}, fmt.Errorf("status: %s", m.Err)
+	}
+
+	return m, nil
+}
+
+// clientStatus prints the roster and this peer's pending items, straight
+// from the stash, to out.
+func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
+	m, err := clientPending(rwc)
+	if err != nil {
+		return err
 	}
 
 	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
@@ -696,6 +707,38 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 
 // clientDismiss refuses delivery of one pending item: the stash
 // deletes it without ever transferring the bytes.
+// resolveDismiss maps a dismiss argument to one waiting item's id:
+// an id match wins, a file name must be unique among the requester's
+// own items — ambiguous or unknown names refuse. Only the requester's
+// items are ever considered, and the stash re-validates ownership.
+func resolveDismiss(items []item, arg string) (string, error) {
+	for _, it := range items {
+		if it.ID == arg {
+			return arg, nil
+		}
+	}
+
+	id := ""
+
+	for _, it := range items {
+		if it.FileName != arg {
+			continue
+		}
+
+		if id != "" {
+			return "", fmt.Errorf("%q is ambiguous: waiting from several senders; dismiss by id (see catbox status)", arg)
+		}
+
+		id = it.ID
+	}
+
+	if id == "" {
+		return "", fmt.Errorf("no waiting file with id or name %q", arg)
+	}
+
+	return id, nil
+}
+
 func clientDismiss(rwc io.ReadWriter, id string) error {
 	if err := writeMsg(rwc, msg{Op: opDismiss, ID: id}); err != nil {
 		return err

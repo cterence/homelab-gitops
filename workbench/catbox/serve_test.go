@@ -602,6 +602,50 @@ func TestNonMemberCannotSend(t *testing.T) {
 	}
 }
 
+// TestResolveDismiss: dismiss takes an id or a file name — an id
+// always wins, a name must be unique among the requester's own
+// waiting items, and the resolution never sees anyone else's.
+func TestResolveDismiss(t *testing.T) {
+	items := []item{
+		{ID: "aaa", FileName: "notes.md", From: "zenfone"},
+		{ID: "bbb", FileName: "notes.md", From: "macbook"},
+		{ID: "ccc", FileName: "unique.bin", From: "nas"},
+	}
+
+	tests := []struct {
+		name    string
+		arg     string
+		wantID  string
+		wantErr string
+	}{
+		{"id wins over same-named file", "bbb", "bbb", ""},
+		{"unique file name", "unique.bin", "ccc", ""},
+		{"ambiguous file name", "notes.md", "", "ambiguous"},
+		{"neither id nor name", "nope.bin", "", "no waiting"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			id, err := resolveDismiss(items, tt.arg)
+			if tt.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("resolveDismiss(%q) error = %v, want it to say %q", tt.arg, err, tt.wantErr)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("resolveDismiss(%q): %v", tt.arg, err)
+			}
+
+			if id != tt.wantID {
+				t.Fatalf("resolveDismiss(%q) = %q, want %q", tt.arg, id, tt.wantID)
+			}
+		})
+	}
+}
+
 func TestDismissDestinedFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
