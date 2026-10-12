@@ -12,6 +12,7 @@ data:
 {{- $cfg := dict "mirrors" .Values.mirrorSync.mirrors -}}
 {{- if .Values.mirrorSync.defaultOwner -}}{{- $_ := set $cfg "defaultOwner" .Values.mirrorSync.defaultOwner -}}{{- end -}}
 {{- if .Values.mirrorSync.defaultMirrorInterval -}}{{- $_ := set $cfg "defaultMirrorInterval" .Values.mirrorSync.defaultMirrorInterval -}}{{- end -}}
+{{- if .Values.mirrorSync.ownerFromURL -}}{{- $_ := set $cfg "ownerFromURL" true -}}{{- end -}}
 {{- toYaml $cfg | nindent 4 }}
 ---
 apiVersion: batch/v1

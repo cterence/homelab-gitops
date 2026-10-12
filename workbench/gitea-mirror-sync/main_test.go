@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -35,6 +36,36 @@ func TestRepoNameFromURL(t *testing.T) {
 
 			if got != tt.expected {
 				t.Errorf("repoNameFromURL(%q) = %q, want %q", tt.cloneAddr, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRepoOwnerFromURL(t *testing.T) {
+	tests := []struct {
+		name      string
+		cloneAddr string
+		expected  string
+		wantErr   bool
+	}{
+		{"https with .git", "https://github.com/cterence/homelab-gitops.git", "cterence", false},
+		{"uppercase owner is lowercased", "https://github.com/Sm64pc/sm64ex.git", "sm64pc", false},
+		{"trailing slash", "https://github.com/cterence/homelab-gitops.git/", "cterence", false},
+		{"ssh url", "ssh://git@github.com/cterence/homelab-gitops.git", "cterence", false},
+		{"host only", "https://github.com", "", true},
+		{"single path segment", "https://git.example.com/repo.git", "", true},
+		{"empty", "", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repoOwnerFromURL(tt.cloneAddr)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("repoOwnerFromURL(%q) error = %v, wantErr %v", tt.cloneAddr, err, tt.wantErr)
+			}
+
+			if got != tt.expected {
+				t.Errorf("repoOwnerFromURL(%q) = %q, want %q", tt.cloneAddr, got, tt.expected)
 			}
 		})
 	}
@@ -106,6 +137,117 @@ func TestLoadConfigDuplicateCaseInsensitive(t *testing.T) {
 
 	if _, err := loadConfig(file); err == nil {
 		t.Error("loadConfig expected duplicate error for entries differing only in case")
+	}
+}
+
+func TestLoadConfigOwnerFromURL(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "mirrors.yaml")
+	yaml := `ownerFromURL: true
+defaultOwner: terence
+mirrors:
+  - clone_addr: https://github.com/sm64pc/sm64ex.git
+  - clone_addr: https://github.com/cterence/homelab-gitops.git
+    owner: explicit
+  - clone_addr: https://git.example.com/repo.git
+`
+
+	if err := os.WriteFile(file, []byte(yaml), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := loadConfig(file)
+	if err != nil {
+		t.Fatalf("loadConfig unexpected error: %v", err)
+	}
+
+	want := []string{"sm64pc", "explicit", "terence"} // last entry: no owner segment, falls back to defaultOwner
+	for i, w := range want {
+		if got := cfg.Mirrors[i].Owner; got != w {
+			t.Errorf("mirrors[%d].Owner = %q, want %q", i, got, w)
+		}
+	}
+
+	yaml = `defaultOwner: terence
+mirrors:
+  - clone_addr: https://github.com/sm64pc/sm64ex.git
+`
+
+	if err := os.WriteFile(file, []byte(yaml), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err = loadConfig(file)
+	if err != nil {
+		t.Fatalf("loadConfig unexpected error: %v", err)
+	}
+
+	if got := cfg.Mirrors[0].Owner; got != "terence" {
+		t.Errorf("ownerFromURL unset keeps defaultOwner, got %q", got)
+	}
+}
+
+func TestEnsureOwner(t *testing.T) {
+	tests := []struct {
+		name       string
+		owner      string
+		userFound  bool
+		orgFound   bool
+		wantCreate bool
+	}{
+		{"existing user", "terence", true, false, false},
+		{"existing org", "sm64pc", false, true, false},
+		{"missing owner creates org", "morluto", false, false, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			created := false
+
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet {
+					found := (strings.HasSuffix(r.URL.Path, "/users/"+tt.owner) && tt.userFound) ||
+						(strings.HasSuffix(r.URL.Path, "/orgs/"+tt.owner) && tt.orgFound)
+
+					if found {
+						w.WriteHeader(http.StatusOK)
+					} else {
+						w.WriteHeader(http.StatusNotFound)
+					}
+
+					return
+				}
+
+				if r.Method == http.MethodPost && r.URL.Path == "/api/v1/orgs" {
+					var body map[string]any
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+						t.Errorf("decode request body: %v", err)
+					}
+
+					if body["username"] != tt.owner {
+						t.Errorf("create org username = %v, want %q", body["username"], tt.owner)
+					}
+
+					created = true
+
+					w.WriteHeader(http.StatusCreated)
+
+					return
+				}
+
+				t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			}))
+			defer srv.Close()
+
+			c := newClient(srv.URL, "user", "pass")
+			if err := c.ensureOwner(context.Background(), tt.owner); err != nil {
+				t.Fatalf("ensureOwner unexpected error: %v", err)
+			}
+
+			if created != tt.wantCreate {
+				t.Errorf("org created = %v, want %v", created, tt.wantCreate)
+			}
+		})
 	}
 }
 

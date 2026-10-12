@@ -657,6 +657,7 @@ mirrorSync:
     repository: gitea-mirror-sync
     tag: "7"
   defaultOwner: terence
+  ownerFromURL: true
   mirrors:
     - clone_addr: https://github.com/cterence/homelab-gitops
     - clone_addr: https://github.com/cterence/nixos-config
