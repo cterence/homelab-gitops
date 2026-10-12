@@ -54,29 +54,40 @@ PRUNE=false DRY_RUN=false go run .
 
 The mirrors file is a YAML document with a default owner, a default mirror
 interval, and a list of mirrors. Only `clone_addr` is required per entry;
-`name` is derived from the URL and `owner` falls back to `defaultOwner`.
+`name` is derived from the URL and `owner` falls back to `defaultOwner`
+(or to the URL's owner segment when `ownerFromURL` is set).
+
+With `ownerFromURL: true`, each mirror is placed under an org named after
+the upstream owner (`https://github.com/sm64pc/sm64ex.git` ->
+org `sm64pc`, lowercased to satisfy Gitea's org-name rules), so mirrors
+keep the original author in name. Missing orgs are created automatically
+before migrating. Entries whose URL has no owner segment, and entries with
+an explicit `owner`, still use the fallback / override.
 
 ```yaml
-defaultOwner: mirrors
+defaultOwner: terence
+ownerFromURL: true
 defaultMirrorInterval: 8h
 mirrors:
   - clone_addr: https://github.com/cterence/homelab-gitops.git
     private: false
     wiki: true
-  - owner: personal
-    clone_addr: https://github.com/golang/go.git
-    name: go                    # override derived name
+  - clone_addr: https://github.com/golang/go.git
     mirror_interval: 1h
+  - owner: personal
+    clone_addr: https://git.example.com/repo.git
+    name: repo                 # override derived name
 ```
 
 | Field | Default | Description |
 |-------|---------|-------------|
 | `clone_addr` | (required) | Upstream URL to mirror. |
-| `owner` | `defaultOwner` | Gitea owner (user or org) for the mirror. |
+| `owner` | derived from URL | Gitea owner (user or org) for the mirror. With `ownerFromURL`, derived from the URL's owner segment; otherwise `defaultOwner`. |
 | `name` | derived from URL | Repository name. |
 | `mirror_interval` | `defaultMirrorInterval` | Gitea mirror pull interval (e.g. `8h`). |
 | `private` | unset | Tri-state: unset leaves the repo's visibility untouched on update (Gitea's default on create); `true`/`false` enforces it. |
 | `wiki` | `false` | Whether to mirror the wiki. |
+| `ownerFromURL` | `false` | Derive each mirror's owner from the clone URL's owner segment and auto-create missing orgs. |
 
 ## Deployment
 
@@ -86,7 +97,8 @@ Deployment is handled by the **Gitea Helm chart** at `k8s-apps/gitea/`, under
 the `mirrorSync` values key (`templates/mirror-sync.yaml`). It renders:
 
 - A **ConfigMap** holding `mirrors.yaml`, generated from
-  `mirrorSync.mirrors` / `defaultOwner` / `defaultMirrorInterval`.
+  `mirrorSync.mirrors` / `defaultOwner` / `defaultMirrorInterval` /
+  `ownerFromURL`.
 - A **CronJob** (schedule `0 */6 * * *`, `concurrencyPolicy: Forbid`) that
   mounts the ConfigMap at `/etc/mirrors`, reads Gitea credentials from the
   `gitea-admin-credentials` Secret, and runs the reconciler.

@@ -23,6 +23,7 @@ import (
 type Config struct {
 	DefaultOwner          string   `yaml:"defaultOwner"`
 	DefaultMirrorInterval string   `yaml:"defaultMirrorInterval"`
+	OwnerFromURL          bool     `yaml:"ownerFromURL"`
 	Mirrors               []Mirror `yaml:"mirrors"`
 }
 
@@ -160,6 +161,46 @@ func (c *client) migrate(ctx context.Context, m Mirror) (err error) {
 	return nil
 }
 
+// ensureOwner checks that owner exists as a Gitea user or org so migrate can
+// target it; creates an org when it matches neither.
+func (c *client) ensureOwner(ctx context.Context, owner string) (err error) {
+	for _, endpoint := range []string{"users", "orgs"} {
+		resp, err := c.do(ctx, http.MethodGet, fmt.Sprintf("/api/v1/%s/%s", endpoint, owner), nil)
+		if err != nil {
+			return err
+		}
+
+		code := resp.StatusCode
+		_ = resp.Body.Close()
+
+		if code == http.StatusOK {
+			return nil
+		}
+
+		if code != http.StatusNotFound {
+			return fmt.Errorf("checking owner %s: %s", owner, resp.Status)
+		}
+	}
+
+	resp, err := c.do(ctx, http.MethodPost, "/api/v1/orgs", map[string]any{"username": owner})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("create org %s: %s", owner, bodyText(resp))
+	}
+
+	fmt.Printf("created org %s\n", owner)
+
+	return nil
+}
+
 // updateRepo patches mirror_interval / private on an existing mirror.
 // Private is only sent when the config sets it, so an omitted key can no
 // longer flip a private repo to public.
@@ -291,6 +332,23 @@ func repoNameFromURL(cloneAddr string) (string, error) {
 	return name, nil
 }
 
+// repoOwnerFromURL derives a mirror owner from the clone URL's owner path
+// segment, lowercased because Gitea org names disallow uppercase. For
+// example "https://github.com/Sm64pc/sm64ex.git" -> "sm64pc".
+func repoOwnerFromURL(cloneAddr string) (string, error) {
+	u, err := url.Parse(cloneAddr)
+	if err != nil {
+		return "", fmt.Errorf("parse clone_addr %q: %w", cloneAddr, err)
+	}
+
+	owner := strings.ToLower(strings.TrimPrefix(path.Dir(strings.TrimSuffix(u.Path, "/")), "/"))
+	if owner == "" || owner == "." || owner == ".." || owner == ".git" {
+		return "", fmt.Errorf("could not derive owner from %q", cloneAddr)
+	}
+
+	return owner, nil
+}
+
 func loadConfig(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -324,11 +382,20 @@ func loadConfig(path string) (*Config, error) {
 		}
 
 		if m.Owner == "" {
-			if cfg.DefaultOwner == "" {
-				return nil, fmt.Errorf("entry %d: owner is required (set defaultOwner or owner)", i)
+			if cfg.OwnerFromURL {
+				owner, err := repoOwnerFromURL(m.CloneAddr)
+				if err == nil {
+					m.Owner = owner
+				}
 			}
 
-			m.Owner = cfg.DefaultOwner
+			if m.Owner == "" {
+				if cfg.DefaultOwner == "" {
+					return nil, fmt.Errorf("entry %d: owner is required (set defaultOwner or owner)", i)
+				}
+
+				m.Owner = cfg.DefaultOwner
+			}
 		}
 
 		if m.MirrorInterval == "" {
@@ -402,6 +469,10 @@ func run() error {
 			fmt.Printf("create mirror %s <- %s\n", key, m.CloneAddr)
 
 			if !dryRun {
+				if err := c.ensureOwner(ctx, m.Owner); err != nil {
+					return err
+				}
+
 				if err := c.migrate(ctx, m); err != nil {
 					return err
 				}
