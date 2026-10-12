@@ -14,7 +14,8 @@ repoURL: github.com/cterence/homelab-gitops
 branch: main
 kanikoImage: ghcr.io/osscontainertools/kaniko:v1.28.5@sha256:738807f0e31daf07743f89260a95956dcc6ee4f62553f4f6344c990cabab8675
 backoffLimit: 2
-ttlSecondsAfterFinished: 86400
+# No ttlSecondsAfterFinished: keeping completed Jobs is what stops ArgoCD's
+# selfHeal from recreating (and re-running Kaniko for) an already-built tag.
 
 # Kaniko container resources (overridable per build).
 resources:

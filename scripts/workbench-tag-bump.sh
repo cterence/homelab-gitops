@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Bumps workbench/<app>/build.yaml image tags — and the matching image tag in
-# every k8s-apps values file that references the app's image — when a PR
-# modifies an app without bumping its tag. References are found by scanning
+# every k8s-apps values file that references the app's image — when a merge to
+# main modifies an app without bumping its tag. References are found by scanning
 # k8s-apps/*/values.yaml for the app's repository line, either as
 # "repository: registry.terence.cloud/<app>" (app-template) or as a bare
 # "repository: <app>" with a separate registry key (e.g. gitea mirrorSync),
 # so images consumed as sidecars by other apps are updated too.
-# Idempotent per PR: the check is a diff against the merge base, so once a
-# PR contains a tag change, later runs and commits never bump again.
+# Idempotent per merge window: the check is a diff against the pre-merge tip,
+# so once a window contains a tag change, later runs never bump again.
 #
 # Usage: workbench-tag-bump.sh <base-ref> [--dry-run]
 # Commits per app as "<app>: bump image tag to <new>"; push is left to CI.

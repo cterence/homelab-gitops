@@ -1,0 +1,46 @@
+name: Workbench tag bump
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - workbench/**
+
+# Serializes runs: each bumps on top of the previous run's bump commits.
+concurrency:
+  group: workbench-tag-bump
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  bump:
+    name: Bump image tags for newly merged workbench changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.WORKBUMP_APP_ID }}
+          private-key: ${{ secrets.WORKBUMP_PRIVATE_KEY }}
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+      - name: Bump
+        run: |
+          git config user.name "homelab-workbench-bump[bot]"
+          git config user.email "${{ secrets.WORKBUMP_APP_ID }}+homelab-workbench-bump[bot]@users.noreply.github.com"
+          bash scripts/workbench-tag-bump.sh "${{ github.event.before }}"
+      - name: Push bump commits
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then
+            echo "no bumps needed"
+            exit 0
+          fi
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
