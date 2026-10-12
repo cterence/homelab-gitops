@@ -12,7 +12,7 @@ daemonless peers, everything end-to-end encrypted.
   keeps the member roster, and hands out pending files on pull.
   Sealed files are opaque to it.
 - **peers**: one-shot commands, no resident process. `catbox recv`
-  pulls parked files; `catbox recv --listen` receives direct sends
+  pulls parked files; `catbox listen` receives direct sends
   while online (it never pulls); senders try the listener first and
   always fall back to the stash. tailcat allows one tunnel per peer
   key, so concurrent client commands serialize on a local lock and
@@ -40,7 +40,8 @@ catbox remove [<member>] | --data DIR <member>
 catbox admin  --data DIR <member>
 catbox reset --yes
 catbox send   <member> <file> [<file>...]
-catbox recv   [--dir DIR] [--listen] [<id>...]
+catbox recv   [--dir DIR] [<id>...]
+catbox listen [--dir DIR]
 catbox dismiss <id>
 catbox status
 catbox version
@@ -80,7 +81,7 @@ catbox version
   member's identity key from the wire without proof the joiner holds
   it — harmless: the dial key binds the entry to the device itself,
   and a wrong key only breaks that member's own sealed files.
-  Stop `recv --listen` first: renaming re-registers without the
+  Stop `listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
 - `remove <member>` drops another member from the roster, parked
   items and all — admin only, over the wire. `remove --data
@@ -136,11 +137,11 @@ catbox version
   before the bytes (`<peer> is sending <file> directly (size)` for
   direct, `receiving <file> from <peer> (size)` per pulled file), so
   the CLI log and the app's in-flight row always name the file.
-- `recv` without `--listen` pulls held files into the inbox dir (OS
+- `recv` pulls held files into the inbox dir (OS
   downloads + `/catbox` by default) — everything, or only the files
   named by id (see `catbox status`) — verifying each file's SHA-256
   and acknowledging so the stash deletes its copy; an unknown id is
-  an error. `recv --listen` only listens: it publishes its tailcat
+  an error. `listen` only receives direct sends: it publishes its tailcat
   address in the roster and clears it again on shutdown (Ctrl-C);
   pulling stays an explicit decision.
 - `dismiss <id>` refuses delivery of one of your own pending items:
@@ -178,7 +179,7 @@ binary: cross-compiled `GOOS=android` as `libcatbox.so`, exec'd as a
 child process with `HOME` pointed at the app's private storage (the
 identity lives there) and the inbox at the app's external files dir
 via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
-`dismiss` and holds a long-lived `recv --listen` child whenever it is
+`dismiss` and holds a long-lived `listen` child whenever it is
 on screen — direct sends are always welcome, every waiting file
 carries its own receive action, and the waiting header receives
 everything at once; parked files can be refused per file with a

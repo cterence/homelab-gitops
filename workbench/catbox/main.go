@@ -149,7 +149,7 @@ func run() error {
 		defer func() { _ = conn.Close() }()
 
 		// The rename rides the join op: the stash validates the name
-		// and retargets parked files. Stop recv --listen first, or its
+		// and retargets parked files. Stop listen first, or its
 		// registered listener address goes stale.
 		id.Name = fs.Arg(0)
 
@@ -167,7 +167,6 @@ func run() error {
 	case "recv":
 		fs := flag.NewFlagSet("recv", flag.ExitOnError)
 		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
-		listen := fs.Bool("listen", false, "listen for direct sends only, no stash pull (Ctrl-C to stop)")
 		_ = fs.Parse(os.Args[2:])
 
 		if *dir == "" {
@@ -179,7 +178,22 @@ func run() error {
 			}
 		}
 
-		return runRecv(ctx, log, *dir, *listen, fs.Args())
+		return runRecv(ctx, log, *dir, fs.Args())
+	case "listen":
+		fs := flag.NewFlagSet("listen", flag.ExitOnError)
+		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
+		_ = fs.Parse(os.Args[2:])
+
+		if *dir == "" {
+			var err error
+
+			*dir, err = downloadDir()
+			if err != nil {
+				return err
+			}
+		}
+
+		return runListen(ctx, log, *dir)
 	case "invite":
 		id, _, err := loadPeerID("", "")
 		if err != nil {
@@ -533,8 +547,10 @@ membership commands:
 transfer commands:
   send      seal and ship files to a member
             <member> <file> [<file>...]
-  recv      pull held files, or listen for direct sends
-            [--dir DIR] [--listen] [<id>...]
+  recv      pull held files into the inbox dir
+            [--dir DIR] [<id>...]
+  listen    receive direct sends (Ctrl-C to stop)
+            [--dir DIR]
   dismiss   refuse delivery of one held item
             <id>
 

@@ -24,7 +24,10 @@ import (
 // — everything, or the named ids only — or listen for direct sends.
 // Listening never pulls — files park at the stash until the peer
 // asks for them.
-func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool, ids []string) error {
+// runRecv pulls held files from the stash — everything, or only the
+// ids named. Listening is a separate command: a pull is an explicit
+// decision.
+func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, ids []string) error {
 	id, _, err := loadPeerID("", "")
 	if err != nil {
 		return err
@@ -32,24 +35,33 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 
 	sweepPartials(inboxDir)
 
-	if !listen {
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		return clientInbox(ctx, conn, cl, id, inboxDir, ids)
+	release, err := lockPeer(ctx)
+	if err != nil {
+		return err
 	}
+
+	defer release()
+
+	conn, cl, err := clientConn(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = cl.Close() }()
+	defer func() { _ = conn.Close() }()
+
+	return clientInbox(ctx, conn, cl, id, inboxDir, ids)
+}
+
+// runListen receives direct sends only: it publishes its tailcat
+// address in the roster and clears it again on shutdown (Ctrl-C).
+func runListen(ctx context.Context, log *slog.Logger, inboxDir string) error {
+	id, _, err := loadPeerID("", "")
+	if err != nil {
+		return err
+	}
+
+	sweepPartials(inboxDir)
 
 	if err := ensureListenerIdentity(ctx, id); err != nil {
 		return err
@@ -76,7 +88,9 @@ func runRecv(ctx context.Context, log *slog.Logger, inboxDir string, listen bool
 		return err
 	}
 
-	log.Info("listening", "port", catboxPort, "inbox", inboxDir) // no address: it's a capability
+	// No port either: catboxPort is the fixed in-tunnel port every
+	// sender dials, not a host socket — printing it just misleads.
+	log.Info("listening", "inbox", inboxDir)
 
 	<-ctx.Done()
 
