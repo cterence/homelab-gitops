@@ -1,5 +1,6 @@
 package cloud.terence.catbox
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -71,6 +72,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -84,11 +86,35 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val shared = sharedUris()
         setContent {
-            CatboxTheme { CatboxApp() }
+            CatboxTheme { CatboxApp(shared) }
         }
     }
+
+    /** The share sheet's staging: streams pass through as-is, plain
+     *  text via the clipboard staging file. */
+    private fun sharedUris(): Shared =
+        when (intent?.action) {
+            Intent.ACTION_SEND ->
+                Shared(listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)))
+            Intent.ACTION_SEND_MULTIPLE ->
+                Shared(IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java).orEmpty())
+            else -> Shared(emptyList())
+        }.takeIf { it.uris.isNotEmpty() } ?: run {
+            val text = intent?.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString() ?: return Shared(emptyList())
+            val stamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+            val f = File(File(cacheDir, "clipboard"), "clipboard-$stamp.txt")
+            f.parentFile!!.mkdirs()
+            f.writeText(text)
+            val uri = androidx.core.content.FileProvider.getUriForFile(this, packageName + ".files", f)
+            Shared(listOf(uri), text = true)
+        }
 }
+
+/** Files arriving from the system share sheet. */
+data class Shared(val uris: List<Uri>, val text: Boolean = false)
 
 /** A file in flight, announced by a child before the bytes. A pull
  * transforms its own waiting row; a direct receive never parks and
@@ -98,7 +124,7 @@ data class LiveRecv(val from: String, val file: String, val detail: String, val 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CatboxApp() {
+fun CatboxApp(shared: Shared = Shared(emptyList())) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val status = remember { mutableStateOf<Catbox.Status?>(null) }
@@ -109,8 +135,8 @@ fun CatboxApp() {
     val liveRecv = remember { mutableStateOf<LiveRecv?>(null) } // a direct send's announced row
     val cancelRequested = remember { mutableStateOf(false) } // user canceled the current action
     val ops = remember { kotlinx.coroutines.sync.Mutex() } // serializes all binary execs
-    val pendingFiles = remember { mutableStateOf<List<Uri>>(emptyList()) }
-    val clipboardSend = remember { mutableStateOf(false) } // pendingFiles came from the clipboard
+    val pendingFiles = remember { mutableStateOf(shared.uris) } // from the share sheet or the in-app picker
+    val clipboardSend = remember { mutableStateOf(shared.text) } // pendingFiles came from the clipboard
     val sendTargets = remember { mutableStateOf(setOf<String>()) }
     val invite = remember { mutableStateOf<String?>(null) } // open invite dialog
     val aboutOpen = remember { mutableStateOf<String?>(null) } // open about dialog: the version line
