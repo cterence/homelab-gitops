@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * The bridge to the catbox binary (libcatbox.so in nativeLibraryDir):
  * one-shot execs for join/status/send/recv and one long-lived process
- * for recv --listen. The app is a second CLI, not a daemon fork.
+ * for listen. The app is a second CLI, not a daemon fork.
  */
 object Catbox {
 
@@ -269,7 +269,7 @@ object Catbox {
     }
 
     /**
-     * Starts recv --listen as a long-lived child (killed by
+     * Starts listen as a long-lived child (killed by
      * stopListener). Its server engine (identity key) never conflicts
      * with one-shot client ops (dial key).
      */
@@ -277,7 +277,7 @@ object Catbox {
         if (listener.get() != null) return
         val p = builder(
             context,
-            "recv", "--dir", inbox(context).absolutePath, "--listen",
+            "listen", "--dir", inbox(context).absolutePath,
         ).start()
         listener.set(p)
         Thread {

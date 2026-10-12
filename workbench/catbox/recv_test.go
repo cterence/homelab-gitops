@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log/slog"
 	"net"
@@ -304,5 +305,16 @@ func TestListenerBoundsOversizeSend(t *testing.T) {
 		}
 
 		time.Sleep(time.Millisecond)
+	}
+}
+
+// TestListenRequiresIdentity: listen is its own command — pure
+// listener, never a pull — so it demands an identity like the rest.
+func TestListenRequiresIdentity(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	err := runListen(context.Background(), slog.New(slog.NewTextHandler(io.Discard, nil)), t.TempDir())
+	if err == nil || !strings.Contains(err.Error(), "run join with --name") {
+		t.Fatalf("listen without identity: err = %v, want the join hint", err)
 	}
 }

@@ -201,7 +201,7 @@ func (n *node) addr() string {
 	return strings.TrimSpace(n.cat(map[string]string{"CATBOX_DATA": n.dir}, "addr"))
 }
 
-// listen runs `recv --listen` as a long-lived subprocess and returns a
+// listen runs the listen command as a long-lived subprocess and returns a
 // channel that closes when the process itself reports registered: its
 // "listening" log line, read live off stderr. The scanner keeps
 // draining so the child never blocks on a full pipe.
@@ -209,7 +209,7 @@ func (n *node) listen() <-chan struct{} {
 	n.t.Helper()
 
 	ready := make(chan struct{})
-	cmd := exec.Command(os.Args[0], "recv", "--dir", n.inbox, "--listen")
+	cmd := exec.Command(os.Args[0], "listen", "--dir", n.inbox)
 	cmd.Env = n.env(nil)
 
 	pr, pw := io.Pipe()
