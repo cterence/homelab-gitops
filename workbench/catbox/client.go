@@ -205,17 +205,9 @@ func peerConfigDir() string {
 
 // refreshRoster asks the stash for the roster via a pending query.
 func refreshRoster(rwc io.ReadWriter) ([]member, error) {
-	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
-		return nil, err
-	}
-
-	m, err := readMsg(rwc)
+	m, err := clientPending(rwc)
 	if err != nil {
 		return nil, err
-	}
-
-	if m.Op != opItems || !m.OK {
-		return nil, fmt.Errorf("roster refresh: %s", m.Err)
 	}
 
 	return m.Members, nil
@@ -798,17 +790,9 @@ func clientRemove(rwc io.ReadWriter, name string) error {
 // named ids only, or everything when ids is empty. cl, when non-nil,
 // lets each pull report its network path.
 func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client, id *peerID, dir string, ids []string) error {
-	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
-		return err
-	}
-
-	m, err := readMsg(rwc)
+	m, err := clientPending(rwc)
 	if err != nil {
 		return err
-	}
-
-	if m.Op != opItems || !m.OK {
-		return fmt.Errorf("pending: %s", m.Err)
 	}
 
 	if len(m.Members) > 0 {
@@ -939,8 +923,6 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 		h.Reset()
 	}
 
-	dst := uniquePath(dir, m.FileName)
-
 	// Announce like the direct path: the app's live row names the
 	// file in flight — the one thing the ticks never say.
 	fmt.Fprintf(os.Stderr, "receiving %s from %s (%s%s)\n", m.FileName, m.From, humanBytes(it.Plain), resumedSuffix(have))
@@ -979,6 +961,10 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 
 		return fmt.Errorf("%s: sha mismatch (got %s, want %s)", m.FileName, sha, m.SHA)
 	}
+
+	// The destination resolves now, not before the bytes: a file that
+	// landed in the inbox mid-transfer must not be overwritten.
+	dst := uniquePath(dir, m.FileName)
 
 	if err := os.Rename(f.Name(), dst); err != nil {
 		return err
@@ -1022,17 +1008,9 @@ type statusJSON struct {
 
 // clientStatusJSON writes the stash's answer as one JSON object.
 func clientStatusJSON(rwc io.ReadWriter, out io.Writer, id *peerID) error {
-	if err := writeMsg(rwc, msg{Op: opPending}); err != nil {
-		return err
-	}
-
-	m, err := readMsg(rwc)
+	m, err := clientPending(rwc)
 	if err != nil {
 		return err
-	}
-
-	if m.Op != opItems || !m.OK {
-		return fmt.Errorf("status: %s", m.Err)
 	}
 
 	_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only

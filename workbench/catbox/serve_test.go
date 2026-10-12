@@ -646,6 +646,30 @@ func TestResolveDismiss(t *testing.T) {
 	}
 }
 
+// TestJoinRefusedWhenRosterSaveFails: reporting a successful join
+// while the roster write failed would brick the member at the next
+// stash restart — the join must be refused instead.
+func TestJoinRefusedWhenRosterSaveFails(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	st := newTestStash(t)
+
+	// A directory where roster.json must go: every atomic save fails.
+	if err := os.Mkdir(rosterPath(st.dir), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	laptop := testPeerID("laptop")
+
+	conn := dial(t, st, laptop)
+	defer func() { _ = conn.Close() }()
+
+	err := joinReq(conn, laptop, "", testInvite(t, st))
+	if err == nil || !strings.Contains(err.Error(), "roster") {
+		t.Fatalf("join must be refused when the roster save fails, got %v", err)
+	}
+}
+
 func TestDismissDestinedFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
@@ -1185,6 +1209,85 @@ func TestPullCancelSweepsPartial(t *testing.T) {
 // TestPullSelectedItems pins the id-filtered pull: recv with ids
 // delivers only those items, the rest stay parked, and an unknown id
 // is an error.
+// TestPullResolvesNameAtRename: the pull picks its destination name
+// only at the rename, not before the bytes — a file landing in the
+// inbox mid-transfer must never be overwritten by the received one.
+func TestPullResolvesNameAtRename(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	nas := testPeerID("nas")
+	laptop := testPeerID("laptop")
+
+	src := filepath.Join(t.TempDir(), "plain.bin")
+
+	plain := bytes.Repeat([]byte("x"), 150_000)
+	if err := os.WriteFile(src, plain, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	shaHex := mustSHA(t, src)
+
+	var sealed bytes.Buffer
+	if _, err := sealStream(laptop.Key, nas.Key.Public(), &sealed, bytes.NewReader(plain), shaHex, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	it := item{ID: "x", FileName: "f.txt", From: "laptop", SHA: shaHex, Plain: int64(len(plain)), Size: int64(sealed.Len())}
+	dir := t.TempDir()
+
+	// The pace makes the pull last ~300ms: enough window to drop a
+	// same-named file into the inbox while it runs.
+	defer func(p time.Duration) { transferPace = p }(transferPace)
+
+	transferPace = 100 * time.Millisecond
+
+	c, s := net.Pipe()
+
+	go func() {
+		defer func() { _ = s.Close() }()
+
+		if m, err := readMsg(s); err != nil || m.Op != opFetch {
+			return
+		}
+
+		if err := writeMsg(s, msg{Op: opFile, OK: true, FileName: it.FileName, From: it.From, SHA: shaHex, Size: it.Size, Have: 0}); err != nil {
+			return
+		}
+
+		if _, err := io.Copy(s, &sealed); err != nil {
+			return
+		}
+
+		if m, err := readMsg(s); err != nil || m.Op != opAck {
+			return
+		}
+
+		_ = writeMsg(s, msg{Op: opAcked, OK: true})
+	}()
+
+	go func() {
+		time.Sleep(150 * time.Millisecond)
+
+		if err := os.WriteFile(filepath.Join(dir, "f.txt"), []byte("sentinel"), 0o600); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	if err := clientFetch(context.Background(), c, nil, nas, it, dir); err != nil {
+		t.Fatalf("pull: %v", err)
+	}
+
+	_ = c.Close()
+
+	if b, err := os.ReadFile(filepath.Join(dir, "f.txt")); err != nil || string(b) != "sentinel" {
+		t.Fatalf("mid-transfer file must survive: content = %q, err = %v", b, err)
+	}
+
+	if b, err := os.ReadFile(filepath.Join(dir, "f(1).txt")); err != nil || !bytes.Equal(b, plain) {
+		t.Fatalf("received file must land on f(1).txt, err = %v", err)
+	}
+}
+
 func TestPullSelectedItems(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 

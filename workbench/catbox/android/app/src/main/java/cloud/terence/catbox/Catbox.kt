@@ -210,6 +210,13 @@ object Catbox {
             val staged = inbox(context).listFiles()?.filter { !it.name.startsWith(".part-") } ?: return
             if (staged.isEmpty()) return
             val resolver = context.contentResolver
+            // A crash mid-publish leaves an invisible pending row:
+            // sweep any still pending after a day.
+            resolver.delete(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                "${MediaStore.Downloads.RELATIVE_PATH} = ? AND ${MediaStore.Downloads.IS_PENDING} = 1 AND ${MediaStore.Downloads.DATE_ADDED} < ?",
+                arrayOf("Download/Catbox/", (System.currentTimeMillis() / 1000 - 86_400).toString()),
+            )
             for (f in staged) {
                 val values = ContentValues().apply {
                     put(MediaStore.Downloads.DISPLAY_NAME, f.name)
