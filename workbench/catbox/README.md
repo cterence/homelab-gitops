@@ -155,7 +155,7 @@ catbox version
   lists the ids of everything waiting for you.
 - `status` asks the stash who's in the mesh: files and bytes waiting
   for you there (each with its id, sender, and size), and every member
-  with `[admin]`, `[you]`, and `(listening)` markers. The roster comes
+  with `[admin]` and `[you]` markers. The roster comes
   straight from the authority, never from the local cache. `--json`
   emits one machine-readable object (name, waiting items, members)
   for the Android app.
