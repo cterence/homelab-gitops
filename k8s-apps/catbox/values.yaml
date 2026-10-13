@@ -70,3 +70,11 @@ app-template:
       size: 110Gi
       globalMounts:
         - path: /data
+
+  # Scrape the stash's /metrics gauges on the health port.
+  podMonitor:
+    main:
+      enabled: true
+      podMetricsEndpoints:
+        - port: http
+          path: /metrics

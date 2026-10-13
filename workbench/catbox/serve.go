@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -126,7 +127,7 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 
 	log.Info("listening", "port", catboxPort, "members", len(st.roster)) // no address: it's a capability
 
-	health := startHealth(log, healthAddr)
+	health := startHealth(log, healthAddr, st)
 
 	defer func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -972,12 +973,54 @@ func (st *stash) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
 	_ = writeMsg(rwc, msg{Op: opAcked, OK: true, Members: st.members()})
 }
 
-// startHealth serves /healthz for probes.
-func startHealth(log *slog.Logger, addr string) *http.Server {
+// metrics renders the stash's gauges in Prometheus text format: how
+// full the spool is against its cap, what waits in it, and the mesh
+// size. Only members is in-memory state; the spool is read from disk.
+func (st *stash) metrics() ([]byte, error) {
+	metas, err := st.spool.items()
+	if err != nil {
+		return nil, fmt.Errorf("reading spool: %w", err)
+	}
+
+	used, err := st.spool.usage()
+	if err != nil {
+		return nil, fmt.Errorf("spool usage: %w", err)
+	}
+
+	var b strings.Builder
+	for _, g := range []struct {
+		name, help string
+		v          int64
+	}{
+		{"catbox_spool_items", "Deliveries parked in the spool.", int64(len(metas))},
+		{"catbox_spool_bytes", "Sealed bytes parked in the spool, sidecars and partials included.", used},
+		{"catbox_spool_cap_bytes", "The spool's byte cap.", st.max},
+		{"catbox_members", "Members in the roster.", int64(len(st.members()))},
+	} {
+		fmt.Fprintf(&b, "# HELP %s %s\n# TYPE %s gauge\n%s %d\n", g.name, g.help, g.name, g.name, g.v)
+	}
+
+	return []byte(b.String()), nil
+}
+
+// startHealth serves /healthz for probes and /metrics for Prometheus.
+func startHealth(log *slog.Logger, addr string, st *stash) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
+	})
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
+		b, err := st.metrics()
+		if err != nil {
+			log.Warn("metrics scrape failed", "err", err)
+			http.Error(w, "metrics unavailable", http.StatusInternalServerError)
+
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+		_, _ = w.Write(b)
 	})
 
 	srv := &http.Server{
