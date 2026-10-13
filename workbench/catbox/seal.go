@@ -40,20 +40,25 @@ func sealedOffset(k int64) int64 {
 	return headerLen + k*chunkFrameLen
 }
 
+// bodyOffset returns the byte offset of chunk k's frame in a
+// headerless body: the spool parks one shared body per content and
+// keeps the per-recipient headers in the sidecars.
+func bodyOffset(k int64) int64 {
+	return k * chunkFrameLen
+}
+
 // fileSecret derives the per-file key and nonce prefix instead of
 // generating them at random: a resumed attempt must decrypt the
-// receiver's existing partial, so the same (sender, recipient, file)
-// must always produce the same secret. Overlapping chunk counters
-// across attempts reuse nonces for identical plaintext; that equality
-// is visible only to the recipient, who already holds the plaintext.
-func fileSecret(sender key.NodePrivate, recipient key.NodePublic, shaHex string) [fileKeyLen + prefixLen]byte {
+// receiver's existing partial, so the same (sender, file) must
+// always produce the same secret. The recipient is deliberately not
+// an input — the body ciphertext is shared across targets, and only
+// the sealed-box header carrying this secret is per-recipient.
+func fileSecret(sender key.NodePrivate, shaHex string) [fileKeyLen + prefixLen]byte {
 	senderRaw := sender.Raw32()
-	recipientRaw := recipient.AppendTo(nil)
 
 	h := sha512.New()
-	h.Write([]byte("catbox file secret v1"))
+	h.Write([]byte("catbox file secret v2"))
 	h.Write(senderRaw[:])
-	h.Write(recipientRaw)
 	h.Write([]byte(shaHex))
 
 	var secret [fileKeyLen + prefixLen]byte
@@ -69,27 +74,41 @@ var (
 	errCorrupt   = errors.New("corrupt or truncated sealed stream")
 )
 
+// sealHeader builds the per-recipient header: the sender's key plus
+// a sealed box over the file secret — the only recipient-specific
+// part of a sealed stream.
+func sealHeader(sender key.NodePrivate, recipient key.NodePublic, shaHex string) ([]byte, error) {
+	secret := fileSecret(sender, shaHex)
+
+	senderRaw, err := tailcat.NodePublic{NodePublic: sender.Public()}.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("encoding sender key: %w", err)
+	}
+
+	header := append(senderRaw, sender.SealTo(recipient, secret[:])...)
+	if len(header) != headerLen {
+		return nil, fmt.Errorf("header is %d bytes, want %d", len(header), headerLen)
+	}
+
+	return header, nil
+}
+
 // sealStream seals src to dst for recipient, continuing at plaintext
 // offset — a resumed attempt's chunk counter. src must already be
 // positioned at that offset. shaHex keys the deterministic file
 // secret. It returns the total plaintext size (offset plus what it
 // sealed).
 func sealStream(sender key.NodePrivate, recipient key.NodePublic, dst io.Writer, src io.Reader, shaHex string, offset int64) (int64, error) {
-	secret := fileSecret(sender, recipient, shaHex)
-
-	aead, err := chacha20poly1305.NewX(secret[:fileKeyLen])
+	header, err := sealHeader(sender, recipient, shaHex)
 	if err != nil {
 		return 0, err
 	}
 
-	senderRaw, err := tailcat.NodePublic{NodePublic: sender.Public()}.MarshalBinary()
-	if err != nil {
-		return 0, fmt.Errorf("encoding sender key: %w", err)
-	}
+	secret := fileSecret(sender, shaHex)
 
-	header := append(senderRaw, sender.SealTo(recipient, secret[:])...)
-	if len(header) != headerLen {
-		return 0, fmt.Errorf("header is %d bytes, want %d", len(header), headerLen)
+	aead, err := chacha20poly1305.NewX(secret[:fileKeyLen])
+	if err != nil {
+		return 0, err
 	}
 
 	if _, err := dst.Write(header); err != nil {
@@ -247,29 +266,34 @@ func openStream(recipient key.NodePrivate, src io.Reader, dst io.Writer, offset 
 // relaySealed copies one sealed stream from src to dst without
 // decrypting: the fixed header, then frames until the terminator.
 func relaySealed(dst io.Writer, src io.Reader) (int64, error) {
-	return relaySealedAt(dst, src, 0)
-}
-
-// relaySealedAt is relaySealed resumed at plaintext offset have: the
-// deterministic header is consumed from src either way and kept only
-// when the copy starts at zero; frames continue at the offset's chunk.
-func relaySealedAt(dst io.Writer, src io.Reader, have int64) (int64, error) {
 	header := make([]byte, headerLen)
 	if _, err := io.ReadFull(src, header); err != nil {
 		return 0, fmt.Errorf("%w: header cut short", errCorrupt)
 	}
 
-	var total int64
+	if _, err := dst.Write(header); err != nil {
+		return 0, err
+	}
 
-	if have == 0 {
-		if _, err := dst.Write(header); err != nil {
-			return 0, err
-		}
+	n, err := relayFrames(dst, src, 0)
+	if err != nil {
+		return 0, err
+	}
 
-		total = headerLen
+	return headerLen + n, nil
+}
+
+// relayFrames copies the frame section of one sealed stream —
+// everything past the fixed header — from src to dst, resumed at
+// plaintext offset have. It returns the sealed bytes written.
+func relayFrames(dst io.Writer, src io.Reader, have int64) (int64, error) {
+	if have%chunkSize != 0 {
+		return 0, fmt.Errorf("%w: resume offset %d not chunk-aligned", errCorrupt, have)
 	}
 
 	var frame [4]byte
+
+	var total int64
 
 	buf := make([]byte, chunkSize+chacha20poly1305.Overhead)
 

@@ -569,11 +569,18 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		return
 	}
 
-	have := st.spool.resumeHave(m.SHA, m.Size)
+	have := st.spool.resumeHave(me.Name, m.SHA, m.Size)
 
 	// An identical item is already parked for this target: the
 	// deposit is idempotent — no bytes needed.
 	if st.parkedFor(target.Name, m.SHA) {
+		have = m.Size
+	}
+
+	// The sender's body is parked from another target's deposit:
+	// only this target's header is missing.
+	hdrOnly := have < m.Size && st.spool.bodyParked(me.Name, m.SHA, m.Size)
+	if hdrOnly {
 		have = m.Size
 	}
 
@@ -601,11 +608,11 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 		st.mu.Unlock()
 	}()
 
-	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Members: st.members(), Have: have}); err != nil {
+	if err := writeMsg(rwc, msg{Op: opReady, OK: true, Members: st.members(), Have: have, Hdr: hdrOnly}); err != nil {
 		return
 	}
 
-	if have > 0 && have == m.Size {
+	if have > 0 && have == m.Size && !hdrOnly {
 		if done, err := readMsg(rwc); err != nil || done.Op != opSent {
 			return
 		}
@@ -616,6 +623,45 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	}
 
 	meta := spoolMeta{FileName: m.FileName, From: me.Name, Target: target.Name, Plain: m.Size, SHA: m.SHA}
+
+	if hdrOnly {
+		if c, ok := rwc.(net.Conn); ok {
+			_ = c.SetDeadline(time.Now().Add(idleTimeout)) // the header is all that is left to move
+		}
+
+		am, aerr := st.spool.attach(rwc, meta)
+		if aerr != nil {
+			st.log.Warn("deposit failed", "err", aerr)
+
+			_ = writeMsg(rwc, msg{Op: opDone, Err: "deposit failed: " + aerr.Error()})
+
+			return
+		}
+
+		done, err := readMsg(rwc)
+		if err != nil || done.Op != opSent {
+			return // the header was not a header: nothing is persisted
+		}
+
+		if validSHA(done.SHA) {
+			am.SHA = done.SHA
+		}
+
+		if err := saveJSON(st.spool.metaPath(am.ID), am); err != nil {
+			st.log.Warn("deposit failed", "err", err)
+
+			_ = writeMsg(rwc, msg{Op: opDone, Err: "deposit failed: " + err.Error()})
+
+			return
+		}
+
+		st.log.Info("deposited", "id", am.ID, "target", target.Name, "bytes", headerLen)
+		st.dedup(target.Name, me.Name, am.SHA, am.ID)
+
+		_ = writeMsg(rwc, msg{Op: opDone, OK: true})
+
+		return
+	}
 
 	src := &progressReader{r: rwc, total: m.Size, label: "relayed", every: time.Second, onTick: func(int64) {
 		// Sliding deadline: bytes flowing extend the hour, so big
@@ -629,9 +675,9 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	// by the remaining budget, so a lying sender cannot fill the disk.
 	// Newest deposit wins: a retry evicts a stalled attempt's conn
 	// instead of waiting out idleTimeout behind its partial lock.
-	st.spool.claim(m.SHA, m.Size, rwc)
+	st.spool.claim(me.Name, m.SHA, m.Size, rwc)
 	meta, err = st.spool.put(src, meta, budget, have)
-	st.spool.release(m.SHA, m.Size, rwc)
+	st.spool.release(me.Name, m.SHA, m.Size, rwc)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
 	if err != nil {
@@ -785,7 +831,19 @@ func (st *stash) opFetch(rwc io.ReadWriteCloser, me member, m msg) {
 
 	// A resumed stream still opens with the header, then continues at
 	// the receiver's chunk boundary.
-	if have > 0 {
+	if meta.Header != nil {
+		if _, err := rwc.Write(meta.Header); err != nil {
+			return
+		}
+
+		if have > 0 {
+			if _, err := blob.Seek(bodyOffset(have/chunkSize), io.SeekStart); err != nil {
+				st.log.Warn("resume seek failed", "id", m.ID, "err", err)
+
+				return
+			}
+		}
+	} else if have > 0 {
 		hdr := make([]byte, headerLen)
 		if _, err := io.ReadFull(io.NewSectionReader(blob, 0, headerLen), hdr); err != nil {
 			st.log.Warn("resume header read failed", "id", m.ID, "err", err)
