@@ -447,19 +447,19 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                                 },
                             )
                             DropdownMenuItem(
+                                text = { Text("Reset") },
+                                onClick = {
+                                    menuOpen.value = false
+                                    resetPending.value = true
+                                },
+                            )
+                            DropdownMenuItem(
                                 text = { Text("About") },
                                 onClick = {
                                     menuOpen.value = false
                                     scope.launch {
                                         aboutOpen.value = withContext(Dispatchers.IO) { Catbox.version(context) }
                                     }
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Reset") },
-                                onClick = {
-                                    menuOpen.value = false
-                                    resetPending.value = true
                                 },
                             )
                         }
