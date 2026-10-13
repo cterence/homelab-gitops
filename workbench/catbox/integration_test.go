@@ -21,6 +21,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -687,8 +688,22 @@ func TestIntegrationStashlessDirect(t *testing.T) {
 		t.Fatalf("puma listener never reported itself registered")
 	}
 
-	if st := milo.cat(nil, "status"); !strings.Contains(st, "listening") {
-		t.Fatalf("milo status does not show puma listening: %q", st)
+	var st statusJSON
+
+	if err := json.Unmarshal([]byte(milo.cat(nil, "status", "--json")), &st); err != nil {
+		t.Fatalf("milo status json: %v", err)
+	}
+
+	pumaAddr := ""
+
+	for _, m := range st.Members {
+		if m.Name == "puma" {
+			pumaAddr = string(m.Addr)
+		}
+	}
+
+	if pumaAddr == "" {
+		t.Fatalf("milo status does not show puma's address: %+v", st.Members)
 	}
 
 	stash.stop()

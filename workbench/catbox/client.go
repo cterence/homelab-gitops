@@ -184,10 +184,6 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 			marker += " [you]"
 		}
 
-		if mem.Addr != "" {
-			marker += " (listening)"
-		}
-
 		_, _ = fmt.Fprintf(out, "  %s%s\n", mem.Name, marker)
 	}
 

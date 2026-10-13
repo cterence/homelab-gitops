@@ -523,7 +523,7 @@ func TestClientStatus(t *testing.T) {
 		"inbox: 1 waiting (5 B)",
 		"  f.txt from nas (5 B), id ",
 		"members: 2",
-		"laptop [admin] [you] (listening)",
+		"laptop [admin] [you]",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("status output missing %q:\n%s", want, got)
@@ -531,7 +531,7 @@ func TestClientStatus(t *testing.T) {
 	}
 
 	membersAt := strings.Index(got, "members: 2")
-	laptopAt := strings.Index(got, "laptop [admin] [you] (listening)")
+	laptopAt := strings.Index(got, "laptop [admin] [you]\n")
 
 	nasAt := strings.Index(got, "  nas\n")
 	if membersAt < 0 || laptopAt < 0 || nasAt < 0 || (membersAt >= laptopAt || laptopAt >= nasAt) {
