@@ -40,6 +40,14 @@ carries per-app flags: `namespace`, `serverSideApply`, `serverSideDiff`,
 
 Tool/API documentation for workbench apps lives in each app's `README.md` — update it whenever an app's interface (tool arguments, endpoints, env vars) changes.
 
+## Grafana dashboards
+
+Dashboards are code: builders live in `workbench/grafana-dashboards/` (one
+file per dashboard, registered in `main.go`). Add a builder, run `go run .`
+from that directory, and commit the regenerated JSON in
+`k8s-apps/kube-prometheus-stack/dashboards/` together with the code. That
+app's README has the full workflow.
+
 ## Superpowers
 
 Never git add things in docs/superpowers forcefully.
