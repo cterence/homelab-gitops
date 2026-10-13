@@ -97,6 +97,7 @@ type msg struct {
 	Size     int64    `json:"size,omitempty"`
 	Have     int64    `json:"have,omitempty"` // chunk-aligned plaintext bytes the receiver already holds
 	OK       bool     `json:"ok,omitempty"`
+	Hdr      bool     `json:"hdr,omitempty"` // the body is parked: send only the sealed header
 	Items    []item   `json:"items,omitempty"`
 	Members  []member `json:"members,omitempty"`
 }

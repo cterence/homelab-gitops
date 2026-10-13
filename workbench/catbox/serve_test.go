@@ -187,6 +187,169 @@ func TestJoinSendPull(t *testing.T) {
 	}
 }
 
+// TestSharedBodyTwoTargets pins the spool's footprint: the same file
+// deposited for two targets parks one shared body, the second
+// deposit moves only the sealed header, and the body survives the
+// first target's pull until the last one acks.
+func TestSharedBodyTwoTargets(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	ctx := context.Background()
+	st := newTestStash(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+	phone := testPeerID("phone")
+
+	for _, id := range []*peerID{laptop, nas, phone} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	payload := bytes.Repeat([]byte("shared body\n"), 2*chunkSize/12+2)[:2*chunkSize+5]
+
+	src := filepath.Join(t.TempDir(), "photos.tar")
+	if err := os.WriteFile(src, payload, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	sha := mustSHA(t, src)
+
+	// First deposit: the full body.
+	conn := dial(t, st, laptop)
+	if err := clientSend(ctx, conn, laptop, "nas", src, sha); err != nil {
+		t.Fatalf("send to nas: %v", err)
+	}
+
+	_ = conn.Close()
+
+	bodies := func() int {
+		des, err := os.ReadDir(spoolDir(st.dir))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		n := 0
+
+		for _, de := range des {
+			if strings.HasSuffix(de.Name(), ".body") {
+				n++
+			}
+		}
+
+		return n
+	}
+
+	if bodies() != 1 {
+		t.Fatalf("bodies = %d, want 1", bodies())
+	}
+
+	usageAfterFirst, err := st.spool.usage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Second deposit: only the header may move.
+	conn = dial(t, st, laptop)
+	if err := writeMsg(conn, msg{Op: opSend, Target: "phone", FileName: "photos.tar", Size: int64(len(payload)), SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := readMsg(conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Op != opReady || !m.OK || !m.Hdr || m.Have != int64(len(payload)) {
+		t.Fatalf("second opReady = %+v, want header-only deposit", m)
+	}
+
+	hdr, err := sealHeader(laptop.Key, phone.Key.Public(), sha)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := conn.Write(hdr); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := writeMsg(conn, msg{Op: opSent, SHA: sha}); err != nil {
+		t.Fatal(err)
+	}
+
+	if m, err = readMsg(conn); err != nil || m.Op != opDone || !m.OK {
+		t.Fatalf("second deposit done = %+v err = %v", m, err)
+	}
+
+	_ = conn.Close()
+
+	if bodies() != 1 {
+		t.Fatalf("second deposit parked another body: %d", bodies())
+	}
+
+	usageAfterSecond, err := st.spool.usage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if growth := usageAfterSecond - usageAfterFirst; growth > 4*headerLen {
+		t.Fatalf("second deposit grew the spool by %d bytes, want only a header", growth)
+	}
+
+	// Both targets hold a pending item over the same body.
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 2 {
+		t.Fatalf("metas = %+v, want one per target", metas)
+	}
+
+	// The first pull must not reclaim the shared body.
+	inbox := t.TempDir()
+
+	conn = dial(t, st, nas)
+	if err := clientInbox(ctx, conn, nil, nas, inbox, nil); err != nil {
+		t.Fatalf("nas inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if bodies() != 1 {
+		t.Fatal("shared body reclaimed while phone's delivery is pending")
+	}
+
+	if got, err := os.ReadFile(filepath.Join(inbox, "photos.tar")); err != nil || !bytes.Equal(got, payload) {
+		t.Fatalf("nas content = %d bytes err = %v", len(got), err)
+	}
+
+	// The last pull reclaims it.
+	inbox = t.TempDir()
+
+	conn = dial(t, st, phone)
+	if err := clientInbox(ctx, conn, nil, phone, inbox, nil); err != nil {
+		t.Fatalf("phone inbox: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if got, err := os.ReadFile(filepath.Join(inbox, "photos.tar")); err != nil || !bytes.Equal(got, payload) {
+		t.Fatalf("phone content = %d bytes err = %v", len(got), err)
+	}
+
+	if metas, _ = st.spool.items(); len(metas) != 0 {
+		t.Fatalf("spool not emptied: %+v", metas)
+	}
+
+	if bodies() != 0 {
+		t.Fatal("shared body leaked after the last delivery")
+	}
+}
+
 func TestSendUnknownMemberRefreshesRoster(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 

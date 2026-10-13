@@ -70,8 +70,8 @@ func TestSealOpenRoundTrip(t *testing.T) {
 }
 
 // TestSealDeterministic pins the resume invariant: the same
-// (sender, recipient, file) always seals to the same ciphertext —
-// the header's sealed box re-randomizes per call, but the chunks a
+// (sender, file) always seals to the same body ciphertext — the
+// header's sealed box re-randomizes per call, but the chunks a
 // resumed attempt re-sends must decrypt against the receiver's partial.
 func TestSealDeterministic(t *testing.T) {
 	sender := key.NewNode()
@@ -92,6 +92,36 @@ func TestSealDeterministic(t *testing.T) {
 
 	if !bytes.Equal(a.Bytes()[headerLen:], b.Bytes()[headerLen:]) {
 		t.Fatal("same file sealed twice differs: resume would break")
+	}
+}
+
+// TestSealBodySharedAcrossRecipients pins the spool's sharing
+// premise: the body ciphertext is recipient-independent — only the
+// sealed-box header differs per target, so one parked body serves
+// every target of the same file.
+func TestSealBodySharedAcrossRecipients(t *testing.T) {
+	sender := key.NewNode()
+	a := key.NewNode()
+	b := key.NewNode()
+
+	plain := make([]byte, chunkSize+31)
+	shaHex := shaHexOf(plain)
+
+	var sa, sb bytes.Buffer
+	if _, err := sealStream(sender, a.Public(), &sa, bytes.NewReader(plain), shaHex, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := sealStream(sender, b.Public(), &sb, bytes.NewReader(plain), shaHex, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(sa.Bytes()[headerLen:], sb.Bytes()[headerLen:]) {
+		t.Fatal("body ciphertext differs per recipient: sharing is impossible")
+	}
+
+	if bytes.Equal(sa.Bytes()[:headerLen], sb.Bytes()[:headerLen]) {
+		t.Fatal("headers must differ per recipient")
 	}
 }
 

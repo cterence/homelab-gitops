@@ -353,17 +353,17 @@ func TestSpoolNewestDepositorWins(t *testing.T) {
 	first := make(chan error, 1)
 
 	go func() {
-		sp.claim(sha, plain, stalled)
-		defer sp.release(sha, plain, stalled)
+		sp.claim("laptop", sha, plain, stalled)
+		defer sp.release("laptop", sha, plain, stalled)
 
-		_, err := sp.put(stalled, spoolMeta{FileName: "f.bin", SHA: sha, Plain: plain}, 1<<20, 0)
+		_, err := sp.put(stalled, spoolMeta{FileName: "f.bin", From: "laptop", SHA: sha, Plain: plain}, 1<<20, 0)
 		first <- err
 	}()
 
 	deadline := time.Now().Add(2 * time.Second)
 
 	for {
-		if _, ok := sp.active.Load(partialPath(dir, sha, plain)); ok {
+		if _, ok := sp.active.Load(spoolPartialPath(dir, "laptop", sha, plain)); ok {
 			break
 		}
 
@@ -380,10 +380,10 @@ func TestSpoolNewestDepositorWins(t *testing.T) {
 	retry := make(chan error, 1)
 
 	go func() {
-		sp.claim(sha, plain, closer)
-		defer sp.release(sha, plain, closer)
+		sp.claim("laptop", sha, plain, closer)
+		defer sp.release("laptop", sha, plain, closer)
 
-		_, err := sp.put(fresh, spoolMeta{FileName: "f.bin", SHA: sha, Plain: plain}, 1<<20, 0)
+		_, err := sp.put(fresh, spoolMeta{FileName: "f.bin", From: "laptop", SHA: sha, Plain: plain}, 1<<20, 0)
 		retry <- err
 	}()
 
@@ -402,6 +402,30 @@ func TestSpoolNewestDepositorWins(t *testing.T) {
 
 	if items, _ := sp.items(); len(items) != 1 {
 		t.Fatalf("items = %+v, want the retried deposit only", items)
+	}
+}
+
+// TestSpoolSweepReclaimsOrphanBodies pins the crash recovery: a
+// body whose sidecar never landed is the spool's biggest leak.
+func TestSpoolSweepReclaimsOrphanBodies(t *testing.T) {
+	dir := t.TempDir()
+
+	sp, err := openSpool(dir, testLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := spoolBodyPath(dir, "laptop", shaHexOf([]byte("x")), 1)
+	if err := os.WriteFile(body, []byte("frames"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := sp.sweep(24 * time.Hour); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(body); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("orphan body survived: %v", err)
 	}
 }
 

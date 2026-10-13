@@ -21,6 +21,10 @@ daemonless peers, everything end-to-end encrypted.
 - Files are sealed to the recipient's node key: 64 KiB
   XChaCha20-Poly1305 chunks under a per-file key wrapped in a sealed
   box (age's STREAM construction). The stash relays ciphertext only.
+- One file sent to N peers parks one shared body at the stash: the
+  per-recipient sealed header rides the sidecar, so a second target's
+  deposit moves ~117 bytes and each copy disappears as its target
+  pulls.
 - Membership is admin-controlled. The first member to join an empty
   mesh bootstraps as admin; every join after that must present a
   one-time invite code an admin minted (`catbox invite`, 24h TTL).

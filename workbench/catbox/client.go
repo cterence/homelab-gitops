@@ -487,9 +487,24 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 		_ = saveRoster(rosterPath(peerConfigDir()), m.Members) // cache only
 	}
 
-	// Have as big as the file: the stash already parks this exact
-	// content — the deposit is idempotent, no bytes to move.
+	// Have as big as the file: the stash already parks this content.
+	// Hdr means the shared body is parked for another target — only
+	// this target's sealed header is missing; without it the item is
+	// already parked for this very target and nothing moves.
 	if info.Size() > 0 && m.Have >= info.Size() {
+		hdrOnly := m.Hdr
+
+		if hdrOnly {
+			hdr, err := sealHeader(id.Key, target.Key, shaHex)
+			if err != nil {
+				return err
+			}
+
+			if _, err := rwc.Write(hdr); err != nil {
+				return err
+			}
+		}
+
 		if err := writeMsg(rwc, msg{Op: opSent, SHA: shaHex}); err != nil {
 			return err
 		}
@@ -502,7 +517,12 @@ func clientSend(ctx context.Context, rwc io.ReadWriteCloser, id *peerID, targetN
 			return fmt.Errorf("deposit failed: %s", m.Err)
 		}
 
-		fmt.Printf("sent %s to %s via stash (already parked, sha256 %s)\n", filepath.Base(path), targetName, shaHex[:12])
+		note := "already parked"
+		if hdrOnly {
+			note = "body already parked, sent header"
+		}
+
+		fmt.Printf("sent %s to %s via stash (%s, sha256 %s)\n", filepath.Base(path), targetName, note, shaHex[:12])
 
 		return nil
 	}
