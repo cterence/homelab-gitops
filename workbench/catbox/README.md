@@ -174,7 +174,11 @@ catbox version
 Deployed as the `catbox` umbrella chart (`k8s-apps/catbox`):
 statefulset, one PVC at `/data` (identity, roster, spool — the only
 irreplaceable file is `identity.json`), health on `:8081` at
-`/healthz`. Image built in-cluster by Kaniko as
+`/healthz`. The health listener also serves Prometheus gauges at
+`/metrics`: `catbox_spool_items`, `catbox_spool_bytes`,
+`catbox_spool_cap_bytes`, `catbox_members`. A PodMonitor
+(`podMonitor.main` in the chart's values) scrapes them. Image
+built in-cluster by Kaniko as
 `registry.terence.cloud/catbox:<tag>`; bump `build.yaml` and the
 chart's image tag together, never reusing a tag.
 

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net"
@@ -2203,5 +2204,44 @@ func TestSpoolCapCountsAdmitted(t *testing.T) {
 		}
 
 		time.Sleep(time.Millisecond)
+	}
+}
+
+func TestMetrics(t *testing.T) {
+	st := newTestStash(t)
+	st.roster = []member{{Name: "alice"}, {Name: "bob"}}
+
+	m := spoolMeta{
+		ID: newID(), FileName: "f.bin", SHA: "abc", From: "alice", Target: "bob",
+		Plain: 10, Size: 10, At: time.Now().Unix(), Header: []byte("hdr"),
+	}
+	if err := saveJSON(st.spool.metaPath(m.ID), m); err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := st.metrics()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out := string(b)
+	for _, want := range []struct {
+		name, line string
+	}{
+		{"items", "catbox_spool_items 1"},
+		{"bytes", "catbox_spool_bytes "},
+		{"cap", "catbox_spool_cap_bytes 1073741824"},
+		{"members", "catbox_members 2"},
+		{"type", "# TYPE catbox_spool_bytes gauge"},
+	} {
+		if !strings.Contains(out, want.line) {
+			t.Errorf("%s: metrics output missing %q:\n%s", want.name, want.line, out)
+		}
+	}
+
+	if used, err := st.spool.usage(); err == nil && used > 0 {
+		if !strings.Contains(out, fmt.Sprintf("catbox_spool_bytes %d", used)) {
+			t.Errorf("bytes gauge does not match usage():\n%s", out)
+		}
 	}
 }
