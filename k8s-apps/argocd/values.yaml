@@ -65,7 +65,7 @@ argo-cd:
 
     initContainers:
       - name: helm-plugin-install
-        image: alpine/helm:4@sha256:a6cf54599ccb99d90cf0712b30f03fdb3cab062e6b94e0418cc4db7e8a1464b2
+        image: alpine/helm:4@sha256:e3f8d5c462d75470fbb1fce79ad5c20063657096d1f98c0fcea869e2600e2e5e
         command: ["/bin/sh", "-c"]
         args:
           - |
