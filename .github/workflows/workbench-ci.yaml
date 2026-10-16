@@ -1,9 +1,9 @@
 name: Workbench CI
 
 on:
+  # Runs on every PR so the "Workbench CI result" check is always reported
+  # (it is a required status check on main); per-app jobs skip when unused.
   pull_request:
-    paths:
-      - workbench/**
 
 concurrency:
   group: workbench-ci-${{ github.event.pull_request.number }}
@@ -92,3 +92,20 @@ jobs:
       - name: Build (no push, mirrors Kaniko context-sub-path)
         run: docker build -t ci/${{ matrix.app }}:pr .
         working-directory: workbench/${{ matrix.app }}
+
+  # Stable aggregate check, required by branch protection on main: the
+  # matrix jobs above have per-app check names that cannot be required.
+  result:
+    name: Workbench CI result
+    needs: [changes, test-go, build-image]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed
+        run: |
+          for r in ${{ join(needs.*.result, ' ') }}; do
+            if [ "$r" != "success" ] && [ "$r" != "skipped" ]; then
+              echo "::error::upstream job result: $r"
+              exit 1
+            fi
+          done

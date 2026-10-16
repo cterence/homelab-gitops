@@ -1,9 +1,9 @@
 name: ArgoCD Diff on PR
 
 on:
+  # Runs on every PR so the "argocd_diff" check is always reported
+  # (it is a required status check on main); diff steps skip when unused.
   pull_request:
-    paths:
-      - "k8s-apps/**"
 
 # Cancel superseded runs on the same PR.
 concurrency:
