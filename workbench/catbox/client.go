@@ -164,7 +164,7 @@ func clientStatus(rwc io.ReadWriter, out io.Writer, id *peerID) error {
 	_, _ = fmt.Fprintf(out, "inbox: %d waiting (%s)\n", len(m.Items), humanBytes(waitBytes))
 
 	for _, it := range m.Items {
-		_, _ = fmt.Fprintf(out, "  %s from %s (%s), id %s\n", it.FileName, it.From, humanBytes(it.Plain), it.ID)
+		_, _ = fmt.Fprintf(out, "  %s from %s (%s), id %s, deposited %s\n", it.FileName, it.From, humanBytes(it.Plain), it.ID, time.Unix(it.At, 0).Format("2 Jan 15:04"))
 	}
 
 	_, _ = fmt.Fprintf(out, "members: %d\n", len(m.Members))

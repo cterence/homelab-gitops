@@ -803,7 +803,7 @@ func (st *stash) opPending(rwc io.ReadWriteCloser, me member) {
 			continue
 		}
 
-		items = append(items, item{ID: sm.ID, FileName: sm.FileName, SHA: sm.SHA, From: sm.From, Plain: sm.Plain, Size: sm.Size})
+		items = append(items, item{ID: sm.ID, FileName: sm.FileName, SHA: sm.SHA, From: sm.From, Plain: sm.Plain, Size: sm.Size, At: sm.At})
 	}
 
 	_ = writeMsg(rwc, msg{Op: opItems, OK: true, Items: items, Members: st.members()})

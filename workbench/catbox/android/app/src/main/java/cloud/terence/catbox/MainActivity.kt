@@ -839,7 +839,7 @@ fun MainScreen(
                                 supportingContent = {
                                     Column {
                                         Text("From ${f.from}")
-                                        Text(humanBytes(f.plain))
+                                        Text(if (f.at > 0) "${humanBytes(f.plain)} · ${humanWhen(f.at)}" else humanBytes(f.plain))
                                     }
                                 },
                                 trailingContent = {

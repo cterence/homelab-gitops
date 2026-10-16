@@ -71,7 +71,7 @@ object Catbox {
 
     /** The status --json answer, or null when the command fails. */
     data class Status(val name: String, val waiting: List<Wait>, val members: List<Member>) {
-        data class Wait(val id: String, val fn: String, val from: String, val plain: Long)
+        data class Wait(val id: String, val fn: String, val from: String, val plain: Long, val at: Long)
         data class Member(val name: String, val listening: Boolean)
     }
 
@@ -128,6 +128,7 @@ object Catbox {
                             w.optString("fn", "?"),
                             w.optString("from", "?"),
                             w.optLong("plain", 0),
+                            w.optLong("at", 0),
                         )
                     },
                     (0 until members.length()).map { i ->

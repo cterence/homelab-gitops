@@ -159,7 +159,8 @@ catbox help
   an ambiguous or foreign name is refused. `status`
   lists the ids of everything waiting for you.
 - `status` asks the stash who's in the mesh: files and bytes waiting
-  for you there (each with its id, sender, and size), and every member
+  for you there (each with its id, sender, size, and deposit time),
+  and every member
   with `[admin]` and `[you]` markers. The roster comes
   straight from the authority, never from the local cache. `--json`
   emits one machine-readable object (name, waiting items, members)
