@@ -623,9 +623,7 @@ depositing:
 	case <-time.After(30 * time.Second):
 		_ = send.Process.Kill()
 
-		<-done
-
-		t.Fatalf("SIGINT did not kill the send within 30s:\n%s", sendLogs.String())
+		t.Fatalf("SIGINT did not kill the send within 30s (exit: %v):\n%s", <-done, sendLogs.String())
 	}
 
 	if out := sendLogs.String(); strings.Contains(out, "sent big.bin") {
