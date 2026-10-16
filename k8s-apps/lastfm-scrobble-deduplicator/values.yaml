@@ -44,7 +44,7 @@ app-template:
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
-            tag: latest@sha256:c4fd6493ff97936eb62cb35bbc19a428dda3d30905c3a59a28d9620f29b85db1
+            tag: latest@sha256:c62cf104709509191ca78e2b3d9232528fabc93a6dbb37cbadd511886324b657
           ports:
             - name: http
               containerPort: 3000
