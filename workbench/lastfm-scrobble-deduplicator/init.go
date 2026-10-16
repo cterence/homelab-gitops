@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/remote"
 	"github.com/go-telegram/bot"
 	"github.com/michiwend/gomusicbrainz"
 )
@@ -46,7 +47,7 @@ func initApp(ctx context.Context, c *Config) error {
 		allocCancel context.CancelFunc
 	)
 	if c.BrowserURL != "" {
-		allocCtx, allocCancel = chromedp.NewRemoteAllocator(ctx, c.BrowserURL, chromedp.NoModifyURL)
+		allocCtx, allocCancel = remote.NewAllocator(ctx, c.BrowserURL, remote.NoModifyURL)
 	} else {
 		opts := chromedp.DefaultExecAllocatorOptions[:]
 		if c.BrowserHeadful {
