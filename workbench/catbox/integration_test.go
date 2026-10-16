@@ -42,8 +42,7 @@ import (
 func TestMain(m *testing.M) {
 	if os.Getenv("CATBOX_HELPER") == "1" {
 		if err := run(); err != nil {
-			fmt.Fprintln(os.Stderr, "catbox:", err)
-			os.Exit(1)
+			fail(err)
 		}
 
 		os.Exit(0)

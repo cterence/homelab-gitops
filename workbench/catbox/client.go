@@ -734,14 +734,14 @@ func resolveDismiss(items []item, arg string) (string, error) {
 		}
 
 		if id != "" {
-			return "", fmt.Errorf("%q is ambiguous: waiting from several senders; dismiss by id (see catbox status)", arg)
+			return "", fmt.Errorf("%w: %q is ambiguous: waiting from several senders; dismiss by id (see catbox status)", errNotFound, arg)
 		}
 
 		id = it.ID
 	}
 
 	if id == "" {
-		return "", fmt.Errorf("no waiting file with id or name %q", arg)
+		return "", fmt.Errorf("%w: no waiting file with id or name %q", errNotFound, arg)
 	}
 
 	return id, nil
@@ -816,7 +816,7 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 	}
 
 	if len(m.Items) == 0 {
-		fmt.Println("inbox empty")
+		fmt.Fprintln(os.Stderr, "inbox empty")
 
 		return nil
 	}
@@ -850,7 +850,7 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 		}
 
 		if len(missing) > 0 {
-			return fmt.Errorf("no such pending item: %s", strings.Join(missing, ", "))
+			return fmt.Errorf("%w: no such pending item: %s", errNotFound, strings.Join(missing, ", "))
 		}
 	}
 
@@ -869,7 +869,7 @@ func clientInbox(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 	for _, it := range pull {
 		if err := clientFetch(ctx, rwc, cl, id, it, dir); err != nil {
 			if errors.Is(err, errPartialBusy) {
-				fmt.Printf("skipped %s (already receiving)\n", it.FileName)
+				fmt.Fprintf(os.Stderr, "skipped %s (already receiving)\n", it.FileName)
 
 				continue // a direct receive holds it: leave it parked
 			}

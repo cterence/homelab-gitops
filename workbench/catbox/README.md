@@ -36,19 +36,20 @@ daemonless peers, everything end-to-end encrypted.
 ```
 catbox serve  [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
 catbox addr
-catbox join   <name> <invite-token>   # admitted join
+catbox join   <name> <invite-token>   # admitted join ("-" reads the token from stdin)
 catbox join   <name> <stash-addr>     # fresh mesh: the bootstrap admin
 catbox rename <new-name>
 catbox invite
-catbox remove [<member>] | --data DIR <member>
+catbox remove <member> --yes | --data DIR <member> --yes
 catbox admin  --data DIR <member>
 catbox reset --yes
 catbox send   <member> <file> [<file>...]
 catbox recv   [--dir DIR] [<id>...]
 catbox listen [--dir DIR]
 catbox dismiss <id>
-catbox status
+catbox status [--json]
 catbox version
+catbox help
 ```
 
 - `serve` runs the stash. First boot creates the identity (node key,
@@ -70,7 +71,9 @@ catbox version
   name. The token is the invite from `catbox invite` — a base64 blob
   carrying the one-time code and naming the stash; a bare stash
   address instead is the fresh-mesh form, no code needed, and the
-  first member bootstraps as admin. Run once per machine; the identity
+  first member bootstraps as admin. A token of `-` is read from
+  stdin, keeping the capability out of the shell history. Run once
+  per machine; the identity
   lives in the OS config dir (`~/.config/catbox` or
   `~/Library/Application Support/catbox`). A join that fails after
   creating the identity rolls it back — a half-joined device is
@@ -88,7 +91,9 @@ catbox version
   Stop `listen` first: renaming re-registers without the
   listener address, which would otherwise go stale.
 - `remove <member>` drops another member from the roster, parked
-  items and all — admin only, over the wire. `remove --data
+  items and all — admin only, over the wire. Both forms require
+  `--yes`: the removal destroys every file parked for the member.
+  `remove --data
   [DIR] <member>` is the stash-host form: it removes any member
   without being admin, the cleanup path for a device that reset while
   offline and left a ghost (a bare `remove <member>` also takes the
@@ -145,7 +150,7 @@ catbox version
   downloads + `/catbox` by default) — everything, or only the files
   named by id (see `catbox status`) — verifying each file's SHA-256
   and acknowledging so the stash deletes its copy; an unknown id is
-  an error. `listen` only receives direct sends: it publishes its tailcat
+  an error (exit 4). `listen` only receives direct sends: it publishes its tailcat
   address in the roster and clears it again on shutdown (Ctrl-C);
   pulling stays an explicit decision.
 - `dismiss <id | name>` refuses delivery of one of your own pending
@@ -158,10 +163,18 @@ catbox version
   with `[admin]` and `[you]` markers. The roster comes
   straight from the authority, never from the local cache. `--json`
   emits one machine-readable object (name, waiting items, members)
-  for the Android app.
+  for the Android app; a `--json` failure prints
+  `{"error":{"exit_code":N,"message":"..."}}` on stderr and exits
+  non-zero, so callers parse failures the same way.
 - `version` prints the build stamp baked in via `-ldflags
   "-X main.version=…"`: the git short rev in nix builds, the image tag
   in Docker builds, `dev` otherwise.
+- `help` (or bare `catbox`, or `-h`/`--help`) prints the usage and
+  exits 0.
+- Exit codes: 0 success (help and version included), 1 runtime
+  failure, 2 invalid usage (unknown command, missing arguments, a
+  refused `--yes`), 4 no such pending item, 130 interrupted by
+  SIGINT/SIGTERM.
 - `CATBOX_PACE=<duration>` (unset in production) sleeps per 64 KiB
   chunk of any sealed transfer: a test seam making transfer duration
   deterministic — the integration suite uses it for its mid-transfer
