@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -22,9 +24,81 @@ var version = "dev"
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "catbox:", err)
-		os.Exit(1)
+		fail(err)
 	}
+}
+
+// errUsage marks an invalid invocation, errNotFound a named target
+// that does not exist; exitCode maps both to their exit code.
+var (
+	errUsage    = errors.New("usage")
+	errNotFound = errors.New("not found")
+)
+
+// jsonError marks a failure of a --json command: fail prints a JSON
+// envelope on stderr instead of prose, so machine callers can parse
+// failures too.
+type jsonError struct{ err error }
+
+func (e *jsonError) Error() string { return e.err.Error() }
+func (e *jsonError) Unwrap() error { return e.err }
+
+// exitCode maps an error to the exit code: 2 invalid invocation, 4
+// target not found, 130 interrupted, 1 anything else.
+func exitCode(err error) int {
+	switch {
+	case errors.Is(err, errUsage):
+		return 2
+	case errors.Is(err, errNotFound):
+		return 4
+	case errors.Is(err, context.Canceled):
+		return 130
+	default:
+		return 1
+	}
+}
+
+// fail prints err and exits: a JSON envelope when the command ran
+// with --json, else one prose line.
+func fail(err error) {
+	code := exitCode(err)
+
+	var je *jsonError
+	if errors.As(err, &je) {
+		fmt.Fprintf(os.Stderr, "%s\n", jsonEnvelope(err))
+		os.Exit(code)
+	}
+
+	fmt.Fprintln(os.Stderr, "catbox:", err)
+	os.Exit(code)
+}
+
+// jsonEnvelope renders err as the machine error object printed on
+// stderr when --json was passed.
+func jsonEnvelope(err error) []byte {
+	env := struct {
+		Error struct {
+			ExitCode int    `json:"exit_code"`
+			Message  string `json:"message"`
+		} `json:"error"`
+	}{}
+	env.Error.ExitCode = exitCode(err)
+	env.Error.Message = err.Error()
+
+	b, _ := json.Marshal(env)
+
+	return b
+}
+
+// tokenFromStdin reads the invite token (or bare stash address) from
+// r, trimming surrounding whitespace.
+func tokenFromStdin(r io.Reader) (string, error) {
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return "", fmt.Errorf("reading token from stdin: %w", err)
+	}
+
+	return strings.TrimSpace(string(b)), nil
 }
 
 // newLogger logs to stderr: human text on a terminal, JSON in
@@ -45,9 +119,9 @@ func newLogger() *slog.Logger {
 func run() error {
 	log := newLogger()
 
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(1)
+	if len(os.Args) < 2 || os.Args[1] == "help" || os.Args[1] == "-h" || os.Args[1] == "--help" {
+		usage(os.Stdout)
+		return nil
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -65,7 +139,7 @@ func run() error {
 
 		maxN, err := parseSize(*max)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: --max: %v", errUsage, err)
 		}
 
 		dataDir, err := resolveDataDir(*data)
@@ -95,17 +169,33 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 2 {
-			return errors.New("join takes <name> <invite-token | stash-addr>")
+			return fmt.Errorf("%w: join takes <name> <invite-token | stash-addr>", errUsage)
 		}
 
 		// The second argument is the invite token when it decodes,
 		// else a bare stash address (the fresh-mesh bootstrap join).
+		// "-" reads it from stdin, keeping the token out of the
+		// shell history.
 		name, addr, code := fs.Arg(0), "", ""
 
-		if iv, err := parseInviteArg(fs.Arg(1)); err == nil {
+		arg := fs.Arg(1)
+		if arg == "-" {
+			tok, err := tokenFromStdin(os.Stdin)
+			if err != nil {
+				return err
+			}
+
+			if tok == "" {
+				return fmt.Errorf("%w: empty token on stdin", errUsage)
+			}
+
+			arg = tok
+		}
+
+		if iv, err := parseInviteArg(arg); err == nil {
 			addr, code = iv.Stash, iv.Code
 		} else {
-			addr = fs.Arg(1)
+			addr = arg
 		}
 
 		created, err := runJoin(ctx, name, addr, code)
@@ -125,7 +215,7 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
-			return errors.New("rename takes <new-name>")
+			return fmt.Errorf("%w: rename takes <new-name>", errUsage)
 		}
 
 		id, _, err := loadPeerID("", "")
@@ -233,37 +323,17 @@ func run() error {
 		jsonOut := fs.Bool("json", false, "machine-readable status for UIs")
 		_ = fs.Parse(os.Args[2:])
 
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
+		if err := runStatus(ctx, *jsonOut); err != nil {
+			return &jsonError{err}
 		}
 
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		if *jsonOut {
-			return clientStatusJSON(conn, os.Stdout, id)
-		}
-
-		return clientStatus(conn, os.Stdout, id)
+		return nil
 	case "send":
 		fs := flag.NewFlagSet("send", flag.ExitOnError)
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() < 2 {
-			return errors.New("send takes <member> <file> [<file>...]")
+			return fmt.Errorf("%w: send takes <member> <file> [<file>...]", errUsage)
 		}
 
 		for _, path := range fs.Args()[1:] {
@@ -308,7 +378,7 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
-			return errors.New("dismiss takes <id or file name> (see catbox status)")
+			return fmt.Errorf("%w: dismiss takes <id or file name> (see catbox status)", errUsage)
 		}
 
 		id, _, err := loadPeerID("", "")
@@ -353,10 +423,17 @@ func run() error {
 	case "remove":
 		fs := flag.NewFlagSet("remove", flag.ExitOnError)
 		data := fs.String("data", "", "stash data dir: run there to remove any member without being admin")
+		yes := fs.Bool("yes", false, "confirm: drop the member and every file parked for them")
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
-			return errors.New("remove takes <member> (see catbox status)")
+			return fmt.Errorf("%w: remove takes <member> (see catbox status)", errUsage)
+		}
+
+		// Both forms destroy parked files irrecoverably, so both
+		// carry the same friction as reset.
+		if !*yes {
+			return fmt.Errorf("%w: remove drops the member and every file parked for them; rerun with --yes", errUsage)
 		}
 
 		// The stash host is break-glass: it removes any member.
@@ -414,7 +491,7 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if fs.NArg() != 1 {
-			return errors.New("admin takes <member>")
+			return fmt.Errorf("%w: admin takes <member>", errUsage)
 		}
 
 		dataDir, err := resolveDataDir(*data)
@@ -440,7 +517,7 @@ func run() error {
 		_ = fs.Parse(os.Args[2:])
 
 		if !*yes {
-			return errors.New("reset leaves the mesh and wipes this machine's identity; rerun with --yes")
+			return fmt.Errorf("%w: reset leaves the mesh and wipes this machine's identity; rerun with --yes", errUsage)
 		}
 
 		// Leave the roster before wiping the identity, so no ghost
@@ -480,8 +557,9 @@ func run() error {
 
 		return nil
 	default:
-		usage()
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "catbox: unknown command %q\n", os.Args[1])
+		usage(os.Stderr)
+		os.Exit(2)
 	}
 
 	return nil
@@ -529,8 +607,39 @@ func runJoin(ctx context.Context, name, addr, code string) (created bool, err er
 	return created, nil
 }
 
-func usage() {
-	fmt.Fprint(os.Stderr, `catbox: async file transfer over tailcat, one stash, daemonless peers
+// runStatus asks the stash for the roster and this peer's pending
+// items — the status command's body, extracted so its every failure
+// rides the --json error envelope.
+func runStatus(ctx context.Context, jsonOut bool) error {
+	id, _, err := loadPeerID("", "")
+	if err != nil {
+		return err
+	}
+
+	release, err := lockPeer(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer release()
+
+	conn, cl, err := clientConn(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = cl.Close() }()
+	defer func() { _ = conn.Close() }()
+
+	if jsonOut {
+		return clientStatusJSON(conn, os.Stdout, id)
+	}
+
+	return clientStatus(conn, os.Stdout, id)
+}
+
+func usage(w io.Writer) {
+	_, _ = fmt.Fprint(w, `catbox: async file transfer over tailcat, one stash, daemonless peers
 
 usage:
   catbox <command> [flags]
@@ -542,13 +651,14 @@ stash commands:
 
 membership commands:
   join      register this machine under a name
-            <name> <invite-token> | <name> <stash-addr> (fresh mesh)
+            <name> <invite-token> | <name> <stash-addr> (fresh mesh);
+            "-" reads the token from stdin
   invite    print a one-time invite token (admin)
   rename    change this member's name
             <new-name>
   remove    drop a member from the roster (admins over the wire,
             anyone on the stash)
-            [<member>] | --data DIR <member>
+            <member> --yes | --data DIR <member> --yes
   admin     grant a member admin (runs on the stash)
             --data DIR <member>
   reset     leave the mesh (best effort) and wipe this machine's identity
@@ -568,6 +678,7 @@ transfer commands:
 
 other commands:
   version   print the build version
+  help      print this usage
 `)
 }
 
