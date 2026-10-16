@@ -111,6 +111,7 @@ type item struct {
 	From     string `json:"from"`
 	Plain    int64  `json:"plain"`
 	Size     int64  `json:"size"`
+	At       int64  `json:"at,omitempty"` // deposit time, unix seconds
 }
 
 // member is one admitted machine. Key is the identity (and listener)

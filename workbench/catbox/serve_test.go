@@ -522,6 +522,7 @@ func TestClientStatus(t *testing.T) {
 	for _, want := range []string{
 		"inbox: 1 waiting (5 B)",
 		"  f.txt from nas (5 B), id ",
+		", deposited ",
 		"members: 2",
 		"laptop [admin] [you]",
 	} {
@@ -677,6 +678,10 @@ func TestClientStatusJSON(t *testing.T) {
 
 	if len(s.Waiting) != 1 || s.Waiting[0].FileName != "f.txt" || s.Waiting[0].Plain != 5 {
 		t.Fatalf("waiting = %+v", s.Waiting)
+	}
+
+	if d := time.Since(time.Unix(s.Waiting[0].At, 0)); d < 0 || d > time.Minute {
+		t.Fatalf("deposit time = %d (%s off)", s.Waiting[0].At, d)
 	}
 
 	if len(s.Members) != 2 || s.Members[0].Name != "laptop" || s.Members[1].Name != "nas" {
