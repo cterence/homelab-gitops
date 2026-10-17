@@ -1,4 +1,4 @@
 image: catbox
-tag: &version "49"
+tag: &version "50"
 buildArgs:
   VERSION: *version
