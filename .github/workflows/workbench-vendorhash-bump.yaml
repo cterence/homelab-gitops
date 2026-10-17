@@ -7,7 +7,6 @@ on:
       - workbench/*/go.mod
       - workbench/*/go.sum
 
-# Serializes runs: each bumps on top of the previous run's bump commits.
 concurrency:
   group: workbench-vendorhash-bump
   cancel-in-progress: false
