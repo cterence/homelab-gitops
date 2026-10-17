@@ -34,11 +34,6 @@ app-template:
           args:
             - --from
             - yesterday
-          env:
-            - name: TELEGRAM_BOT_TOKEN
-              value: ""
-            - name: TELEGRAM_CHAT_ID
-              value: ""
           envFrom:
             - configMapRef:
                 identifier: config
@@ -112,6 +107,12 @@ app-template:
           target:
             name: lastfm-credentials
             creationPolicy: Owner
-          dataFrom:
-            - extract:
+          data:
+            - secretKey: LASTFM_USERNAME
+              remoteRef:
                 key: "lastfm-scrobble-deduplicator/lastfm-credentials"
+                property: LASTFM_USERNAME
+            - secretKey: LASTFM_PASSWORD
+              remoteRef:
+                key: "lastfm-scrobble-deduplicator/lastfm-credentials"
+                property: LASTFM_PASSWORD
