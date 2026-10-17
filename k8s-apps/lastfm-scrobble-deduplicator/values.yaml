@@ -34,6 +34,11 @@ app-template:
           args:
             - --from
             - yesterday
+          env:
+            - name: TELEGRAM_BOT_TOKEN
+              value: ""
+            - name: TELEGRAM_CHAT_ID
+              value: ""
           envFrom:
             - configMapRef:
                 identifier: config
