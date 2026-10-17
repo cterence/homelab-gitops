@@ -92,7 +92,7 @@ argo-cd:
         enabled: true
 
   notifications:
-    enabled: true
+    enabled: false
     secret:
       create: false
       name: argocd-notifications-controller-secret
