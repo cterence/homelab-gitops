@@ -1,0 +1,59 @@
+name: Workbench vendorHash bump
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - workbench/*/go.mod
+      - workbench/*/go.sum
+
+concurrency:
+  group: workbench-vendorhash-bump
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  bump:
+    name: Update vendorHash after go.mod/go.sum changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.3.0
+        with:
+          app-id: ${{ secrets.WORKBUMP_APP_ID }}
+          private-key: ${{ secrets.WORKBUMP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+        with:
+          determinate: false
+
+      - name: Setup niks3 cache
+        uses: Mic92/niks3-action@f0743610fddd7d96239c78d9e457440fc15019e2 # v1.4.0
+        with:
+          server-url: https://niks3.terence.cloud
+
+      - name: Bump
+        run: |
+          git config user.name "homelab-workbench-bump[bot]"
+          git config user.email "${{ secrets.WORKBUMP_APP_ID }}+homelab-workbench-bump[bot]@users.noreply.github.com"
+          bash scripts/workbench-vendorhash-bump.sh "${{ github.event.before }}"
+
+      - name: Push bump commits
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then
+            echo "no bumps needed"
+            exit 0
+          fi
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
