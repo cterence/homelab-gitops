@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
@@ -138,6 +139,9 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
     val pendingFiles = remember { mutableStateOf(shared.uris) } // from the share sheet or the in-app picker
     val clipboardSend = remember { mutableStateOf(shared.text) } // pendingFiles came from the clipboard
     val sendTargets = remember { mutableStateOf(setOf<String>()) }
+    val textOpen = remember { mutableStateOf(false) } // the send-text dialog
+    val textDraft = remember { mutableStateOf("") } // its field
+    val pendingText = remember { mutableStateOf<String?>(null) } // typed text waiting for targets
     val invite = remember { mutableStateOf<String?>(null) } // open invite dialog
     val aboutOpen = remember { mutableStateOf<String?>(null) } // open about dialog: the version line
     val resetPending = remember { mutableStateOf(false) } // open reset confirmation dialog
@@ -298,10 +302,48 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
         refresh()
     }
 
+    // Typed text rides the CLI's --text: no staging file, no
+    // provider — delivered as text-<stamp>.txt.
+    suspend fun sendText(text: String, targets: Set<String>) {
+        busy.value = true
+        ops.lock()
+        val problems = mutableListOf<String>()
+        var done = 0
+        var canceled = false
+
+        try {
+            for (target in targets) {
+                if (cancelRequested.value) break
+
+                done++
+                progress.value = "Sending $done/${targets.size}"
+                progressFrac.value = null
+                val code = withContext(Dispatchers.IO) { Catbox.run(context, ::append, "send", "--text", text, target) }
+                if (code != 0 && !cancelRequested.value) problems += "Send to $target failed (exit $code)"
+            }
+        } finally {
+            canceled = cancelRequested.value
+            ops.unlock()
+            busy.value = false
+            progress.value = null
+            cancelRequested.value = false
+        }
+        // Snackbars only after busy clears: the bar never outlives the message.
+        if (canceled) {
+            snackbar.showSnackbar("Canceled")
+        } else if (problems.isEmpty()) {
+            snackbar.showSnackbar("Sent text to ${targets.joinToString()}")
+        } else {
+            snackbar.showSnackbar(problems.joinToString(" · "))
+        }
+        refresh()
+    }
+
     val pickFiles = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) {
             pendingFiles.value = uris
             clipboardSend.value = false
+            pendingText.value = null
             sendTargets.value = emptySet()
         }
     }
@@ -333,6 +375,7 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
 
         pendingFiles.value = listOf(uri)
         clipboardSend.value = true
+        pendingText.value = null
         sendTargets.value = emptySet()
     }
 
@@ -531,6 +574,9 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                         ) {
                             Text("Send")
                         }
+                        IconButton(onClick = { textDraft.value = ""; textOpen.value = true }, enabled = !busy.value) {
+                            Icon(Icons.Outlined.Chat, contentDescription = "Send text")
+                        }
                         IconButton(onClick = { sendClipboard() }, enabled = !busy.value) {
                             Icon(Icons.Outlined.ContentPaste, contentDescription = "Send clipboard")
                         }
@@ -590,22 +636,57 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
             }
         }
 
-        // Step 2 of send: files picked, pick peers with checkboxes.
-        if (pendingFiles.value.isNotEmpty()) {
+        // Step 1 of text: type it, then pick peers like a file send.
+        if (textOpen.value) {
+            AlertDialog(
+                onDismissRequest = { textOpen.value = false },
+                title = { Text("Send text") },
+                text = {
+                    OutlinedTextField(
+                        value = textDraft.value,
+                        onValueChange = { textDraft.value = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        enabled = textDraft.value.isNotBlank(),
+                        onClick = {
+                            pendingFiles.value = emptyList()
+                            pendingText.value = textDraft.value
+                            sendTargets.value = emptySet()
+                            textOpen.value = false
+                        },
+                    ) {
+                        Text("Next")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { textOpen.value = false }) {
+                        Text("Cancel")
+                    }
+                },
+            )
+        }
+
+        // Step 2 of send: sources picked, pick peers with checkboxes.
+        if (pendingFiles.value.isNotEmpty() || pendingText.value != null) {
             val me = Catbox.cachedName(context)
             val peers = Catbox.cachedMembers(context).filter { it != me }.sorted()
             AlertDialog(
                 onDismissRequest = {
                     pendingFiles.value = emptyList()
+                    pendingText.value = null
                     sendTargets.value = emptySet()
                 },
                 title = {
                     val n = pendingFiles.value.size
                     Text(
-                        if (clipboardSend.value) {
-                            "Send clipboard content to"
-                        } else {
-                            "Send ${if (n == 1) "file" else "$n files"} to"
+                        when {
+                            pendingText.value != null -> "Send text to"
+                            clipboardSend.value -> "Send clipboard content to"
+                            else -> "Send ${if (n == 1) "file" else "$n files"} to"
                         },
                     )
                 },
@@ -638,10 +719,16 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                         enabled = sendTargets.value.isNotEmpty(),
                         onClick = {
                             val files = pendingFiles.value
+                            val text = pendingText.value
                             val targets = sendTargets.value
                             pendingFiles.value = emptyList()
+                            pendingText.value = null
                             sendTargets.value = emptySet()
-                            scope.launch { sendAll(files, targets) }
+                            if (text != null) {
+                                scope.launch { sendText(text, targets) }
+                            } else {
+                                scope.launch { sendAll(files, targets) }
+                            }
                         },
                     ) {
                         Text("Send")
@@ -651,6 +738,7 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                     TextButton(
                         onClick = {
                             pendingFiles.value = emptyList()
+                            pendingText.value = null
                             sendTargets.value = emptySet()
                         },
                     ) {

@@ -209,7 +209,9 @@ via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
 on screen — direct sends are always welcome, every waiting file
 carries its own receive action, and the waiting header receives
 everything at once; parked files can be refused per file with a
-confirming dialog. The overflow menu's Reset leaves the mesh and wipes
+confirming dialog. The bottom bar's Send picks files, the chat icon
+sends typed text (the binary's `--text`), and the clipboard icon
+sends whatever the clipboard holds. The overflow menu's Reset leaves the mesh and wipes
 the app's identity (the binary's `reset`, confirmation dialog first);
 the join card takes the
 invite token as a paste (or a bare stash address on a fresh mesh).
