@@ -330,17 +330,23 @@ func run() error {
 		return nil
 	case "send":
 		fs := flag.NewFlagSet("send", flag.ExitOnError)
+		text := fs.String("text", "", "send this text as text-<date>.txt")
 		_ = fs.Parse(os.Args[2:])
 
-		if fs.NArg() < 2 {
-			return fmt.Errorf("%w: send takes <member> <file> [<file>...]", errUsage)
+		target, srcs, err := sendSources(*text, fs.Args())
+		if err != nil {
+			return err
 		}
 
-		for _, path := range fs.Args()[1:] {
-			if fi, err := os.Stat(path); err != nil {
+		for _, src := range srcs {
+			if src.path == "" {
+				continue
+			}
+
+			if fi, err := os.Stat(src.path); err != nil {
 				return err
 			} else if fi.IsDir() {
-				return errors.New("send takes files, " + path + " is a directory")
+				return errors.New("send takes files, " + src.path + " is a directory")
 			}
 		}
 
@@ -356,7 +362,34 @@ func run() error {
 
 		defer release()
 
-		for _, path := range fs.Args()[1:] {
+		var spooled []string
+
+		defer func() {
+			for _, dir := range spooled {
+				_ = os.RemoveAll(dir)
+			}
+		}()
+
+		for _, src := range srcs {
+			path, label := src.path, src.path
+
+			if path == "" {
+				body := src.body
+
+				if src.stdin {
+					if body, err = io.ReadAll(os.Stdin); err != nil {
+						return fmt.Errorf("reading stdin: %w", err)
+					}
+				}
+
+				if path, err = spoolSend(body); err != nil {
+					return err
+				}
+
+				spooled = append(spooled, filepath.Dir(path))
+				label = filepath.Base(path)
+			}
+
 			// The SHA is known before sealing: it keys the
 			// deterministic file secret and the receiver's resume
 			// partial. The stash conn is clientSend's to dial, per
@@ -367,8 +400,8 @@ func run() error {
 				return fmt.Errorf("hashing %s: %w", path, err)
 			}
 
-			if err := clientSend(ctx, nil, id, fs.Arg(0), path, shaHex); err != nil {
-				return fmt.Errorf("sending %s: %w", path, err)
+			if err := clientSend(ctx, nil, id, target, path, shaHex); err != nil {
+				return fmt.Errorf("sending %s: %w", label, err)
 			}
 		}
 
@@ -668,7 +701,7 @@ membership commands:
 
 transfer commands:
   send      seal and ship files to a member
-            <member> <file> [<file>...]
+            <member> [--text <string>] <file|-|...>
   recv      pull held files into the inbox dir
             [--dir DIR] [<id>...]
   listen    receive direct sends (Ctrl-C to stop)
