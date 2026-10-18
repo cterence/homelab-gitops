@@ -84,6 +84,12 @@ func clientConn(ctx context.Context, id *peerID) (net.Conn, *tailcat.Client, err
 	if err != nil {
 		_ = c.Close()
 
+		// Not a cancel: maybe stale relay details — drop the cache so
+		// the next command re-resolves them from the raw address.
+		if ctx.Err() == nil {
+			unresolveStash()
+		}
+
 		return nil, nil, fmt.Errorf("connecting to stash: %w", err)
 	}
 

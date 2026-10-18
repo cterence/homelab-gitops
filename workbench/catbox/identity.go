@@ -90,6 +90,8 @@ func loadPeerID(name string, stash tailcat.Addr) (*peerID, bool, error) {
 			}
 		}
 
+		id.StashAddr = resolvedStash(id.StashAddr)
+
 		return id, false, nil
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return nil, false, fmt.Errorf("reading %s: %w", path, err)
@@ -108,7 +110,72 @@ func loadPeerID(name string, stash tailcat.Addr) (*peerID, bool, error) {
 		return nil, false, err
 	}
 
+	id.StashAddr = resolvedStash(stash)
+
 	return id, true, nil
+}
+
+// resolveStash embeds the DERP relay details in a stash address so
+// dials skip the DERP map fetch. Best-effort: the unresolved address
+// is returned when the map is unreachable, and the next load retries.
+func resolveStash(addr tailcat.Addr) tailcat.Addr {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	ra, err := addr.Resolve(ctx)
+	if err != nil {
+		return addr
+	}
+
+	return ra
+}
+
+// stashAddrCache pairs the raw stash address a resolution was made
+// from with its relay-embedded form, so a cache can never be served
+// to a different stash.
+type stashAddrCache struct {
+	Raw      tailcat.Addr `json:"raw"`
+	Resolved tailcat.Addr `json:"resolved"`
+}
+
+// resolvedStash returns the stash address with its DERP relay
+// embedded: the cached resolution when it matches the raw address,
+// else a fresh one, cached. The raw address stays the source of
+// truth in identity.json, so a stale cache is always recoverable.
+func resolvedStash(raw tailcat.Addr) tailcat.Addr {
+	dir, err := peerDir()
+	if err != nil {
+		return raw
+	}
+
+	path := filepath.Join(dir, "stash-resolved.json")
+	if b, err := os.ReadFile(path); err == nil {
+		var c stashAddrCache
+		if json.Unmarshal(b, &c) == nil && c.Raw == raw && c.Resolved != "" {
+			return c.Resolved
+		}
+	}
+
+	ra := resolveStash(raw)
+	if ra == raw {
+		return raw // unresolved: the dial fetches the map itself
+	}
+
+	_ = saveJSON(path, stashAddrCache{Raw: raw, Resolved: ra}) // cache only
+
+	return ra
+}
+
+// unresolveStash drops the resolved-address cache after a failed
+// dial: the relay details may be stale, and the next command
+// re-resolves them from the raw address.
+func unresolveStash() {
+	dir, err := peerDir()
+	if err != nil {
+		return
+	}
+
+	_ = os.Remove(filepath.Join(dir, "stash-resolved.json"))
 }
 
 // resetPeer deletes the local identity and roster cache: the device
@@ -120,7 +187,7 @@ func resetPeer() error {
 		return err
 	}
 
-	for _, name := range []string{"identity.json", "roster.json"} {
+	for _, name := range []string{"identity.json", "roster.json", "stash-resolved.json"} {
 		if err := os.Remove(filepath.Join(dir, name)); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("removing %s: %w", name, err)
 		}
