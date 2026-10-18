@@ -198,8 +198,9 @@ func TestVersionPrintsBuildStamp(t *testing.T) {
 		t.Fatalf("catbox version: exit = %d, want 0", code)
 	}
 
-	if !strings.Contains(out, "catbox ") || !strings.Contains(out, "built ") {
-		t.Fatalf("catbox version: no version or build stamp in output: %q", out)
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 1 || !strings.Contains(lines[0], "catbox ") || !strings.Contains(lines[0], "built ") {
+		t.Fatalf("catbox version: want one line with version and build stamp, got: %q", out)
 	}
 }
 

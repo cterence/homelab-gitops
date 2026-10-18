@@ -600,8 +600,7 @@ func run() error {
 
 		return nil
 	case "version":
-		fmt.Println("catbox " + version)
-		fmt.Println("built " + buildStamp())
+		fmt.Println("catbox " + version + ", built " + buildStamp())
 
 		return nil
 	default:
