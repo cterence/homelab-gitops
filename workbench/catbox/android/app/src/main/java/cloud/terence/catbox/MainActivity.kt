@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Chat
@@ -67,6 +68,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -494,9 +496,12 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(R.drawable.tailcat),
+                            painter = painterResource(R.drawable.catbox_logo),
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp),
+                            // Launcher art fills the center two thirds: 36dp reads as 24dp.
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp)),
                         )
                         Spacer(Modifier.size(8.dp))
                         Text("Catbox")
@@ -618,19 +623,21 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Button(
-                            onClick = { pickFiles.launch(arrayOf("*/*")) },
-                            enabled = !busy.value,
-                        ) {
-                            Text("Send")
-                        }
                         IconButton(onClick = { textDraft.value = ""; textOpen.value = true }, enabled = !busy.value) {
                             Icon(Icons.Outlined.Chat, contentDescription = "Send text")
                         }
                         IconButton(onClick = { sendClipboard() }, enabled = !busy.value) {
                             Icon(Icons.Outlined.ContentPaste, contentDescription = "Send clipboard")
+                        }
+                        Button(
+                            onClick = { pickFiles.launch(arrayOf("*/*")) },
+                            enabled = !busy.value,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text("Send files")
                         }
                     }
                 }
