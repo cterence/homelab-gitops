@@ -22,6 +22,20 @@ import (
 // Baked at build time via -ldflags "-X main.version=…"; "dev" otherwise.
 var version = "dev"
 
+// Baked at build time via -ldflags "-X main.buildTime=…"; unix seconds,
+// "0" in dev builds.
+var buildTime = "0"
+
+// buildStamp renders the baked build time; "unknown" when unset.
+func buildStamp() string {
+	sec, err := strconv.ParseInt(buildTime, 10, 64)
+	if err != nil || sec <= 0 {
+		return "unknown"
+	}
+
+	return time.Unix(sec, 0).UTC().Format("2 Jan 2006, 15:04 MST")
+}
+
 func main() {
 	if err := run(); err != nil {
 		fail(err)
@@ -587,6 +601,7 @@ func run() error {
 		return nil
 	case "version":
 		fmt.Println("catbox " + version)
+		fmt.Println("built " + buildStamp())
 
 		return nil
 	default:
@@ -710,7 +725,7 @@ transfer commands:
             <id | name>
 
 other commands:
-  version   print the build version
+  version   print the build version and time
   help      print this usage
 `)
 }

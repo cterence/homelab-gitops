@@ -170,7 +170,10 @@ catbox help
   non-zero, so callers parse failures the same way.
 - `version` prints the build stamp baked in via `-ldflags
   "-X main.version=…"`: the git short rev in nix builds, the image tag
-  in Docker builds, `dev` otherwise.
+  in Docker builds, `dev` otherwise. The second line prints the build
+  time (`-X main.buildTime=…`, unix seconds): the Kaniko build moment
+  in Docker builds, the commit timestamp in nix builds, `unknown`
+  otherwise. The Android app's About dialog shows this output.
 - `help` (or bare `catbox`, or `-h`/`--help`) prints the usage and
   exits 0.
 - Exit codes: 0 success (help and version included), 1 runtime

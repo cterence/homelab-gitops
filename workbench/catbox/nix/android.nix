@@ -15,6 +15,7 @@
   src,
   vendorHash,
   version,
+  buildTime,
 }:
 
 let
@@ -39,6 +40,7 @@ let
       "-s"
       "-w"
       "-X main.version=${version}"
+      "-X main.buildTime=${buildTime}"
     ];
     env.CGO_ENABLED = "0";
     # module.nix pins GOOS/GOARCH to the host platform (darwin here);

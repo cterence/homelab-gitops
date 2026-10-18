@@ -167,6 +167,42 @@ func TestJSONEnvelope(t *testing.T) {
 	}
 }
 
+func TestBuildStamp(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"unset", "0", "unknown"},
+		{"garbage", "dev", "unknown"},
+		{"negative", "-1", "unknown"},
+		{"baked", "1760000000", "9 Oct 2025, 08:53 UTC"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buildTime = tt.in
+
+			t.Cleanup(func() { buildTime = "0" })
+
+			if got := buildStamp(); got != tt.want {
+				t.Fatalf("buildStamp() with buildTime %q = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestVersionPrintsBuildStamp(t *testing.T) {
+	out, code := runCLI(t, "version")
+	if code != 0 {
+		t.Fatalf("catbox version: exit = %d, want 0", code)
+	}
+
+	if !strings.Contains(out, "catbox ") || !strings.Contains(out, "built ") {
+		t.Fatalf("catbox version: no version or build stamp in output: %q", out)
+	}
+}
+
 func TestTokenFromStdin(t *testing.T) {
 	tests := []struct {
 		name string
