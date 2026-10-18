@@ -827,6 +827,132 @@ func TestJoinRefusedWhenRosterSaveFails(t *testing.T) {
 	}
 }
 
+// A rename whose roster save fails must not retarget parked files:
+// the roster on disk keeps the old name, so a premature retarget
+// orphans the delivery.
+func TestRenameRefusedWhenRosterSaveFails(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	st := newTestStash(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	src := filepath.Join(t.TempDir(), "parked.txt")
+	if err := os.WriteFile(src, []byte("parked"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	if err := clientSend(context.Background(), conn, laptop, "nas", src, mustSHA(t, src)); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+
+	_ = conn.Close()
+
+	if err := os.Remove(rosterPath(st.dir)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Mkdir(rosterPath(st.dir), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	nas.Name = "nas2"
+
+	conn = dial(t, st, nas)
+	defer func() { _ = conn.Close() }()
+
+	if err := joinReq(conn, nas, "", ""); err == nil || !strings.Contains(err.Error(), "roster") {
+		t.Fatalf("rename join must be refused when the roster save fails, got %v", err)
+	}
+
+	metas, err := st.spool.items()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(metas) != 1 || metas[0].Target != "nas" {
+		t.Fatalf("parked file must keep its target when the rename fails: %+v", metas)
+	}
+}
+
+// A removal whose roster save fails must be refused: the client must
+// not believe a member is gone who reappears after a stash restart.
+func TestRemoveRefusedWhenRosterSaveFails(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+
+	st := newTestStash(t)
+	laptop := testPeerID("laptop")
+	nas := testPeerID("nas")
+
+	for _, id := range []*peerID{laptop, nas} {
+		conn := dial(t, st, id)
+		if err := joinReq(conn, id, "", testInvite(t, st)); err != nil {
+			t.Fatalf("join %s: %v", id.Name, err)
+		}
+
+		_ = conn.Close()
+	}
+
+	if err := os.Remove(rosterPath(st.dir)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Mkdir(rosterPath(st.dir), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	conn := dial(t, st, laptop)
+	defer func() { _ = conn.Close() }()
+
+	if err := clientRemove(conn, "nas"); err == nil || !strings.Contains(err.Error(), "roster") {
+		t.Fatalf("remove must be refused when the roster save fails, got %v", err)
+	}
+}
+
+// patchMeta must report load and save failures: the SHA patch and the
+// rename retarget ride it, and a silent loss disables the receiver's
+// integrity check or orphans the delivery.
+func TestPatchMetaReportsFailure(t *testing.T) {
+	st := newTestStash(t)
+
+	m := spoolMeta{ID: "deadbee0", FileName: "f", Target: "nas"}
+	if err := saveJSON(st.spool.metaPath(m.ID), m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Chmod(spoolDir(st.dir), 0o500); err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.Chmod(spoolDir(st.dir), 0o700) }()
+
+	if err := st.patchMeta(m.ID, func(sm *spoolMeta) { sm.FileName = "g" }); err == nil {
+		t.Fatal("patchMeta must report a failed save")
+	}
+
+	if err := os.Chmod(spoolDir(st.dir), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Remove(st.spool.metaPath(m.ID)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := st.patchMeta(m.ID, func(sm *spoolMeta) { sm.FileName = "g" }); err == nil {
+		t.Fatal("patchMeta must report a failed load")
+	}
+}
+
 func TestDismissDestinedFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // keep the real config dir untouched
 
