@@ -1269,6 +1269,30 @@ func TestDepositResumesAfterInterruption(t *testing.T) {
 	}
 }
 
+// waitAdmission blocks until no deposit holds admitted bytes: a conn's
+// admission releases asynchronously once its read fails on close.
+func waitAdmission(t *testing.T, st *stash) {
+	t.Helper()
+
+	deadline := time.Now().Add(2 * time.Second)
+
+	for {
+		st.mu.Lock()
+		admitted := st.admitted
+		st.mu.Unlock()
+
+		if admitted == 0 {
+			return
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("deposit still holds %d admitted bytes", admitted)
+		}
+
+		time.Sleep(time.Millisecond)
+	}
+}
+
 // TestDepositResumesNearCap pins the cap accounting: a resumed
 // deposit's partial is already inside usage, so only the missing
 // bytes count — a near-cap retry is not refused for space it holds.
@@ -1331,23 +1355,7 @@ func TestDepositResumesNearCap(t *testing.T) {
 	// The abandoned deposit releases its admission asynchronously (its
 	// read fails on the closed conn): wait it out before the retry,
 	// which must be admitted against the released budget.
-	deadline := time.Now().Add(2 * time.Second)
-
-	for {
-		st.mu.Lock()
-		admitted := st.admitted
-		st.mu.Unlock()
-
-		if admitted == 0 {
-			break
-		}
-
-		if time.Now().After(deadline) {
-			t.Fatalf("abandoned deposit still holds %d admitted bytes", admitted)
-		}
-
-		time.Sleep(time.Millisecond)
-	}
+	waitAdmission(t, st)
 
 	// Retry under the tightened cap: must be admitted with resume.
 	conn = dial(t, st, laptop)
@@ -1365,6 +1373,10 @@ func TestDepositResumesNearCap(t *testing.T) {
 	if m.Op != opReady || !m.OK || m.Have != 2*chunkSize {
 		t.Fatalf("retry opReady = %+v, want OK with Have=%d", m, 2*chunkSize)
 	}
+
+	// The retry conn's admission releases asynchronously too: wait it
+	// out before the resumed send checks the shared budget.
+	waitAdmission(t, st)
 
 	// The resumed deposit completes within the remaining budget.
 	conn = dial(t, st, laptop)
