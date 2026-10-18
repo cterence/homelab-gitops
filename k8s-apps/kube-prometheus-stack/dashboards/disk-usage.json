@@ -34,7 +34,6 @@
         "spec": {
           "id": 1,
           "title": "Volume usage",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -138,7 +137,6 @@
         "spec": {
           "id": 10,
           "title": "Absolute used space",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -159,7 +157,7 @@
                         "exemplar": false,
                         "expr": "avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim=\"storage-loki-0\"})",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "used",
                         "range": true
                       }
                     },
@@ -220,7 +218,6 @@
         "spec": {
           "id": 11,
           "title": "Relative used space",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -241,7 +238,7 @@
                         "exemplar": false,
                         "expr": "1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim=\"storage-loki-0\"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=\"storage-loki-0\"}",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "relative",
                         "range": true
                       }
                     },
@@ -310,7 +307,6 @@
         "spec": {
           "id": 2,
           "title": "Absolute used space",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -331,7 +327,7 @@
                         "exemplar": false,
                         "expr": "avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim=\"arr-stack-data\"})",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "used",
                         "range": true
                       }
                     },
@@ -392,7 +388,6 @@
         "spec": {
           "id": 3,
           "title": "Relative used space",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -413,7 +408,7 @@
                         "exemplar": false,
                         "expr": "1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim=\"arr-stack-data\"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=\"arr-stack-data\"}",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "relative",
                         "range": true
                       }
                     },
@@ -482,7 +477,6 @@
         "spec": {
           "id": 4,
           "title": "Top 10 by absolute usage",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -582,7 +576,6 @@
         "spec": {
           "id": 5,
           "title": "Absolute capacity",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -603,7 +596,7 @@
                         "exemplar": false,
                         "expr": "avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=\"arr-stack-data\"})",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "capacity",
                         "range": true
                       }
                     },
@@ -664,7 +657,6 @@
         "spec": {
           "id": 6,
           "title": "Absolute capacity",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -685,7 +677,7 @@
                         "exemplar": false,
                         "expr": "avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=\"storage-pool\"})",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "capacity",
                         "range": true
                       }
                     },
@@ -746,7 +738,6 @@
         "spec": {
           "id": 7,
           "title": "Absolute used space",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -767,7 +758,7 @@
                         "exemplar": false,
                         "expr": "avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim=\"storage-pool\"})",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "used",
                         "range": true
                       }
                     },
@@ -828,7 +819,6 @@
         "spec": {
           "id": 8,
           "title": "Relative used space",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -849,7 +839,7 @@
                         "exemplar": false,
                         "expr": "1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim=\"storage-pool\"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=\"storage-pool\"}",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "relative",
                         "range": true
                       }
                     },
@@ -918,7 +908,6 @@
         "spec": {
           "id": 9,
           "title": "Absolute capacity",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -939,7 +928,7 @@
                         "exemplar": false,
                         "expr": "avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=\"storage-loki-0\"})",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "capacity",
                         "range": true
                       }
                     },

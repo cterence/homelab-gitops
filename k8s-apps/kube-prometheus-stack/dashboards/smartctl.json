@@ -34,7 +34,6 @@
         "spec": {
           "id": 1,
           "title": "SMART status",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -55,7 +54,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_smart_status",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "SMART status",
                         "range": true
                       }
                     },
@@ -120,7 +119,6 @@
         "spec": {
           "id": 2,
           "title": "Temperature",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -141,7 +139,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_temperature",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "Temperature",
                         "range": true
                       }
                     },
@@ -210,7 +208,6 @@
         "spec": {
           "id": 3,
           "title": "Reallocated sectors",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -231,7 +228,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_attribute{attribute_name=\"Reallocated_Sector_Ct\",attribute_value_type=\"raw\"}",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "Reallocated sectors",
                         "range": true
                       }
                     },
@@ -296,7 +293,6 @@
         "spec": {
           "id": 4,
           "title": "Pending sectors",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -317,7 +313,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_attribute{attribute_name=\"Current_Pending_Sector\",attribute_value_type=\"raw\"}",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "Pending sectors",
                         "range": true
                       }
                     },
@@ -382,7 +378,6 @@
         "spec": {
           "id": 5,
           "title": "Power on hours",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -403,7 +398,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_attribute{attribute_name=\"Power_On_Hours\",attribute_value_type=\"raw\"}",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "Power on hours",
                         "range": true
                       }
                     },
@@ -464,7 +459,6 @@
         "spec": {
           "id": 6,
           "title": "Temperature",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -561,7 +555,6 @@
         "spec": {
           "id": 7,
           "title": "Sector errors",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",

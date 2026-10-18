@@ -35,7 +35,6 @@
         "spec": {
           "id": 1,
           "title": "Spool fill",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -54,9 +53,9 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "catbox_spool_bytes / catbox_spool_cap_bytes",
+                        "expr": "max(catbox_spool_bytes / catbox_spool_cap_bytes)",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "fill",
                         "range": true
                       }
                     },
@@ -92,6 +91,7 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "percentunit",
+                  "decimals": 2,
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -125,7 +125,6 @@
         "spec": {
           "id": 2,
           "title": "Parked deliveries",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -144,9 +143,9 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "catbox_spool_items",
+                        "expr": "max(catbox_spool_items)",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "parked",
                         "range": true
                       }
                     },
@@ -207,7 +206,6 @@
         "spec": {
           "id": 3,
           "title": "Mesh members",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -226,9 +224,9 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "catbox_members",
+                        "expr": "max(catbox_members)",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "members",
                         "range": true
                       }
                     },
@@ -289,7 +287,6 @@
         "spec": {
           "id": 4,
           "title": "Spool bytes",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -308,9 +305,9 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "catbox_spool_bytes",
+                        "expr": "max(catbox_spool_bytes)",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "spool bytes",
                         "range": true
                       }
                     },
@@ -382,7 +379,6 @@
         "spec": {
           "id": 5,
           "title": "Parked deliveries over time",
-          "description": "",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -401,9 +397,9 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "catbox_spool_items",
+                        "expr": "max(catbox_spool_items)",
                         "instant": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "parked",
                         "range": true
                       }
                     },

@@ -14,7 +14,7 @@ const (
 )
 
 func smartStatPanel(id int, title, expr, unit string, steps []dashboardv2.Threshold) *dashboardv2.PanelBuilder {
-	return statPanel(float64(id), title, expr, unit, common.BigValueGraphModeNone, steps)
+	return statPanel(float64(id), title, expr, title, unit, common.BigValueGraphModeNone, steps)
 }
 
 func temperatureTimeseriesPanel() *dashboardv2.PanelBuilder {

@@ -35,15 +35,16 @@ func TestCatboxPanelQueries(t *testing.T) {
 	elements := m["spec"].(map[string]any)["elements"].(map[string]any)
 
 	tests := []struct {
-		key   string
-		title string
-		expr  string
+		key    string
+		title  string
+		expr   string
+		legend string
 	}{
-		{"panel-1", "Spool fill", "catbox_spool_bytes / catbox_spool_cap_bytes"},
-		{"panel-2", "Parked deliveries", "catbox_spool_items"},
-		{"panel-3", "Mesh members", "catbox_members"},
-		{"panel-4", "Spool bytes", "catbox_spool_bytes"},
-		{"panel-5", "Parked deliveries over time", "catbox_spool_items"},
+		{"panel-1", "Spool fill", "max(catbox_spool_bytes / catbox_spool_cap_bytes)", "fill"},
+		{"panel-2", "Parked deliveries", "max(catbox_spool_items)", "parked"},
+		{"panel-3", "Mesh members", "max(catbox_members)", "members"},
+		{"panel-4", "Spool bytes", "max(catbox_spool_bytes)", "spool bytes"},
+		{"panel-5", "Parked deliveries over time", "max(catbox_spool_items)", "parked"},
 	}
 
 	for _, tt := range tests {
@@ -55,10 +56,26 @@ func TestCatboxPanelQueries(t *testing.T) {
 
 			query := panel["data"].(map[string]any)["spec"].(map[string]any)["queries"].([]any)[0]
 
-			expr := query.(map[string]any)["spec"].(map[string]any)["query"].(map[string]any)["spec"].(map[string]any)["expr"]
+			querySpec := query.(map[string]any)["spec"].(map[string]any)["query"].(map[string]any)["spec"].(map[string]any)
+
+			expr := querySpec["expr"]
 			if expr != tt.expr {
 				t.Errorf("expr: got %v, want %v", expr, tt.expr)
 			}
+
+			if querySpec["legendFormat"] != tt.legend {
+				t.Errorf("legend: got %v, want %v", querySpec["legendFormat"], tt.legend)
+			}
 		})
+	}
+}
+
+func TestCatboxSpoolFillDecimals(t *testing.T) {
+	m := buildManifest(t, catbox())
+	panel := m["spec"].(map[string]any)["elements"].(map[string]any)["panel-1"].(map[string]any)["spec"].(map[string]any)
+
+	defaults := panel["vizConfig"].(map[string]any)["spec"].(map[string]any)["fieldConfig"].(map[string]any)["defaults"].(map[string]any)
+	if defaults["decimals"] != float64(2) {
+		t.Errorf("decimals: got %v, want 2", defaults["decimals"])
 	}
 }

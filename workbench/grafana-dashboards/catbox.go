@@ -2,6 +2,8 @@ package main
 
 // Catbox dashboard: the stash's spool occupancy against its cap and
 // the mesh size, from the gauges `catbox serve` exposes at /metrics.
+// Queries take max() because hostNetwork rollout targets overlap and
+// would otherwise double every panel.
 
 import (
 	"github.com/grafana/grafana-foundation-sdk/go/cog"
@@ -14,7 +16,7 @@ import (
 // red dashed line.
 const spoolCapBytes = 107374182400
 
-func linePanel(id float64, title, unit, expr string, steps []dashboardv2.Threshold, thresholdStyle *common.GraphThresholdsStyleConfigBuilder) *dashboardv2.PanelBuilder {
+func linePanel(id float64, title, unit, expr, legend string, steps []dashboardv2.Threshold, thresholdStyle *common.GraphThresholdsStyleConfigBuilder) *dashboardv2.PanelBuilder {
 	viz := timeseries.NewVisualizationV2Builder().
 		Unit(unit).
 		ColorScheme(dashboardv2.NewFieldColorBuilder().Mode(dashboardv2.FieldColorModeIdPaletteClassic)).
@@ -41,7 +43,7 @@ func linePanel(id float64, title, unit, expr string, steps []dashboardv2.Thresho
 		Id(id).
 		Title(title).
 		Data(dashboardv2.NewQueryGroupBuilder().
-			Target(promTarget("A", expr, "__auto", false))).
+			Target(promTarget("A", expr, legend, false))).
 		Visualization(viz)
 }
 
@@ -52,19 +54,19 @@ func catbox() *dashboardv2.DashboardBuilder {
 		Editable(true).
 		Annotations([]cog.Builder[dashboardv2.AnnotationQueryKind]{builtInAnnotation()}).
 		Panel("panel-1", statPanel(1, "Spool fill",
-			"catbox_spool_bytes / catbox_spool_cap_bytes", "percentunit", common.BigValueGraphModeNone, []dashboardv2.Threshold{
+			"max(catbox_spool_bytes / catbox_spool_cap_bytes)", "fill", "percentunit", common.BigValueGraphModeNone, []dashboardv2.Threshold{
 				thresholdStep("green", 0),
 				thresholdStep("#EAB839", 0.8),
 				thresholdStep("dark-red", 0.9),
-			})).
-		Panel("panel-2", statPanel(2, "Parked deliveries", "catbox_spool_items",
-			"short", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)})).
-		Panel("panel-3", statPanel(3, "Mesh members", "catbox_members",
-			"short", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)})).
-		Panel("panel-4", linePanel(4, "Spool bytes", "bytes", "catbox_spool_bytes",
+			}, 2)).
+		Panel("panel-2", statPanel(2, "Parked deliveries", "max(catbox_spool_items)",
+			"parked", "short", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)})).
+		Panel("panel-3", statPanel(3, "Mesh members", "max(catbox_members)",
+			"members", "short", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)})).
+		Panel("panel-4", linePanel(4, "Spool bytes", "bytes", "max(catbox_spool_bytes)", "spool bytes",
 			[]dashboardv2.Threshold{thresholdStep("green", 0), thresholdStep("dark-red", spoolCapBytes)},
 			common.NewGraphThresholdsStyleConfigBuilder().Mode(common.GraphThresholdsStyleModeDashed))).
-		Panel("panel-5", linePanel(5, "Parked deliveries over time", "short", "catbox_spool_items",
+		Panel("panel-5", linePanel(5, "Parked deliveries over time", "short", "max(catbox_spool_items)", "parked",
 			[]dashboardv2.Threshold{thresholdStep("green", 0)}, nil)).
 		RowsLayout(dashboardv2.NewRowsBuilder().
 			Row(dashboardv2.NewRowBuilder().
