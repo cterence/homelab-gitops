@@ -587,30 +587,14 @@ func tunnelClient(addr tailcat.Addr, dialKey key.NodePrivate) *tailcat.Client {
 	return c.(*tailcat.Client)
 }
 
-// tryDirect sends straight to the target's listener, redialing a
-// bounded number of times: each redial resumes from the listener's
-// partial, so a target that vanished mid-transfer and came back
-// finishes with no stash bytes. It returns the resume offset and
-// network path of the transfer.
+// tryDirect sends straight to the target's listener, once. Direct is
+// best effort: a miss falls back to the stash immediately, and the
+// next send resumes from the listener's partial. It returns the
+// resume offset and network path of the transfer.
 func tryDirect(ctx context.Context, id *peerID, target member, f *os.File, info os.FileInfo, path, shaHex string) (int64, string, error) {
 	fmt.Fprintf(os.Stderr, "dialing %s directly...\n", target.Name)
 
-	resumed, dpath, err := directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
-
-	for attempt := 1; err != nil && ctx.Err() == nil && attempt <= directRetries; attempt++ {
-		fmt.Fprintf(os.Stderr, "direct send failed (%v), retrying...\n", err)
-
-		// A restarted listener has the same address but fresh peer
-		// state: it only re-adds us on a new meow handshake, which
-		// the cached client never redoes (its up flag is sticky) —
-		// so the retry dials on a fresh, uncached client, patient
-		// enough for the re-handshake.
-		rc := &tailcat.Client{Server: target.Addr, Key: id.DialKey, Logf: func(string, ...any) {}}
-		resumed, dpath, err = directSend(ctx, rc, directRetryDial, id, target, f, info, path, shaHex)
-		_ = rc.Close()
-	}
-
-	return resumed, dpath, err
+	return directSend(ctx, tunnelClient(target.Addr, id.DialKey), directDial, id, target, f, info, path, shaHex)
 }
 
 // directSend dials the target's listener and hands it the sealed
@@ -670,8 +654,8 @@ func directSend(ctx context.Context, c *tailcat.Client, dialTimeout time.Duratio
 
 	// The listener's partial decides where the stream continues; only
 	// a chunk-aligned prefix of a smaller file can be trusted. The
-	// seek is unconditional: a retry re-enters with the file at an
-	// arbitrary offset.
+	// seek is unconditional: a later attempt re-enters with the file
+	// at an arbitrary offset.
 	resumed := resumeOffset(m.Have, info.Size())
 
 	if _, err := f.Seek(resumed, io.SeekStart); err != nil {

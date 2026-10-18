@@ -123,11 +123,10 @@ catbox help
   online target works without the stash, which is only dialed for
   unknown targets, stale caches, and deposits (3s dial timeout),
   otherwise deposited at the stash until the target pulls. Direct transfers abort after 30
-  seconds of silence; a failed direct attempt is redialed at most twice
-  before the fallback — each redial resumes
-  from the listener's partial, so a phone that locks and comes back
-  finishes direct with no stash bytes. Stash-path transfers abort
-  after two minutes; Ctrl-C aborts instantly.
+  seconds of silence; a failed direct attempt is tried once — direct
+  is best effort, the send falls back to the stash immediately, and
+  the next send resumes from the listener's partial. Stash-path
+  transfers abort after two minutes; Ctrl-C aborts instantly.
   Interrupted transfers resume at either end: the receiver keeps its
   received bytes in a content-keyed partial (`.part-<sha12>-<size>` in
   the inbox), and the stash keeps an interrupted deposit's partial

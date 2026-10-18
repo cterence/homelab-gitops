@@ -50,30 +50,17 @@ var idleTimeout = 2 * time.Minute
 // cheap.
 var directStall = 30 * time.Second
 
-// directRetries bounds the direct redials before the stash fallback:
-// each redial resumes from the listener's partial, so a target that
-// vanished mid-transfer and comes back within these tries finishes
-// direct with no stash bytes. Anything still dead after them goes to
-// the stash.
-var directRetries = 2
-
-// directDial bounds the first direct dial: a live listener answers
-// its handshake in well under a second, so this is the stale-address
-// detector.
+// directDial bounds the direct dial: a live listener answers its
+// handshake in well under a second, so this is the stale-address
+// detector — a miss falls straight back to the stash.
 var directDial = 3 * time.Second
-
-// directRetryDial bounds a retry's dial: it rides a fresh client, so
-// it must also cover the meow re-handshake with a listener that
-// restarted.
-var directRetryDial = 15 * time.Second
 
 func init() {
 	// Test seam: the integration test's helper children shrink the
-	// retry patience, so a dead listener falls back to the stash in
+	// dial patience, so a dead listener falls back to the stash in
 	// about a second instead of after the real window.
 	if os.Getenv("CATBOX_FAST_TIMERS") == "1" {
 		directDial = time.Second
-		directRetryDial = time.Second
 		directStall = 2 * time.Second
 		idleTimeout = 5 * time.Second
 	}

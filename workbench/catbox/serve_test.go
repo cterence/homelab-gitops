@@ -469,12 +469,6 @@ func TestRejoinUpdatesListenerAddr(t *testing.T) {
 func TestClientStatus(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	// Direct retries would crawl through the real redials on the
-	// bogus listener address: this test only exercises the deposit.
-	defer func(n int) { directRetries = n }(directRetries)
-
-	directRetries = 0
-
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")
 	nas := testPeerID("nas")
@@ -620,12 +614,6 @@ func TestDepositDedup(t *testing.T) {
 
 func TestClientStatusJSON(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-
-	// Direct retries would crawl through the real redials on the
-	// bogus listener address: this test only exercises the deposit.
-	defer func(n int) { directRetries = n }(directRetries)
-
-	directRetries = 0
 
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")
@@ -1715,12 +1703,6 @@ func TestDepositIdempotent(t *testing.T) {
 func TestSendCachedRosterFirst(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	// The bogus listener address must fail fast, not crawl the
-	// redials.
-	defer func(n int) { directRetries = n }(directRetries)
-
-	directRetries = 0
-
 	ctx := context.Background()
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")
@@ -1780,17 +1762,16 @@ func TestSendCachedRosterFirst(t *testing.T) {
 	}
 }
 
-// TestDirectRetryCap: a dead listener is redialed at most twice
-// before the send gives up on direct and deposits at the stash —
-// no minutes-long retry window.
-func TestDirectRetryCap(t *testing.T) {
+// TestDirectSingleAttempt: a dead listener gets exactly one direct
+// dial, then the send deposits at the stash — direct is best effort,
+// the send must not crawl redials before the fallback.
+func TestDirectSingleAttempt(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	// The count, not the clock, ends the retries: shrink the dials
-	// so the loop is milliseconds either way.
-	defer func(d, r time.Duration) { directDial, directRetryDial = d, r }(directDial, directRetryDial)
+	// Shrink the dial so the one miss is milliseconds.
+	defer func(d time.Duration) { directDial = d }(directDial)
 
-	directDial, directRetryDial = 10*time.Millisecond, 10*time.Millisecond
+	directDial = 10 * time.Millisecond
 
 	st := newTestStash(t)
 	laptop := testPeerID("laptop")
@@ -1844,8 +1825,8 @@ func TestDirectRetryCap(t *testing.T) {
 		t.Fatalf("the deposit at the stash must complete the send, got %v", err)
 	}
 
-	if n := strings.Count(string(out), "retrying..."); n != directRetries {
-		t.Fatalf("a dead listener must be redialed %d times, saw %d\nstderr:\n%s", directRetries, n, out)
+	if n := strings.Count(string(out), "retrying..."); n != 0 {
+		t.Fatalf("a dead listener must not be redialed, saw %d\nstderr:\n%s", n, out)
 	}
 
 	if !strings.Contains(string(out), "depositing at the stash") {

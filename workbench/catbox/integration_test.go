@@ -514,6 +514,94 @@ partial:
 	assertSpoolLen(t, stash, 1)
 }
 
+// TestIntegrationCrossPathResume pins the handoff story: a direct
+// send dies mid-transfer, the sender's fallback parks the full copy
+// at the stash, and the receiver's later pull reuses the direct
+// attempt's partial — downloading the remainder, not the file.
+func TestIntegrationCrossPathResume(t *testing.T) {
+	if os.Getenv("CATBOX_INTEGRATION") != "1" {
+		t.Skip("set CATBOX_INTEGRATION=1 (needs outbound DERP network)")
+	}
+
+	t.Parallel()
+
+	stash := newNode(t, "stash")
+	if err := stash.start(); err != nil {
+		t.Fatalf("starting stash: %v", err)
+	}
+
+	addr := stash.addr()
+
+	milo := newNode(t, "milo")
+
+	puma := newNode(t, "puma")
+	for _, n := range []*node{milo, puma} {
+		joinMesh(t, n, milo, addr)
+	}
+
+	// CATBOX_PACE makes the direct send last a known 16 chunks ×
+	// 100ms — the kill window does not depend on network speed.
+	big := writeFile(t, "big.bin", 1<<20)
+
+	// First send: direct, killed mid-transfer once the partial exists.
+	ready := puma.listen()
+	select {
+	case <-ready:
+	case <-time.After(60 * time.Second):
+		t.Fatalf("puma listener never reported itself registered")
+	}
+
+	send := exec.Command(os.Args[0], "send", "puma", big)
+	send.Env = milo.env(nil)
+
+	var sendLogs bytes.Buffer
+
+	send.Stdout = &sendLogs
+
+	send.Stderr = &sendLogs
+	if err := send.Start(); err != nil {
+		t.Fatalf("starting send: %v", err)
+	}
+
+	deadline := time.Now().Add(60 * time.Second)
+	for time.Now().Before(deadline) {
+		des, err := os.ReadDir(puma.inbox)
+		if err == nil {
+			for _, de := range des {
+				if strings.HasPrefix(de.Name(), ".part-") {
+					if fi, err := de.Info(); err == nil && fi.Size() >= 2*chunkSize {
+						goto partial
+					}
+				}
+			}
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatalf("direct send never produced a partial:\n%s", sendLogs.String())
+
+partial:
+	// The listener shuts down mid-flight: the transfer dies, the
+	// sender falls back and parks the full copy at the stash, and
+	// the receiver keeps its partial.
+	puma.stop()
+
+	_ = send.Wait()
+
+	assertSpoolLen(t, stash, 1)
+
+	// The receiver wakes up as a plain pull — no listener — and must
+	// continue from the direct attempt's partial, not from zero.
+	out := puma.cat(nil, "recv", "--dir", puma.inbox)
+	if !strings.Contains(out, "resumed from") {
+		t.Fatalf("pull after a dead direct send did not resume: %q", out)
+	}
+
+	assertFile(t, puma, "big.bin", big)
+	assertSpoolLen(t, stash, 0)
+}
+
 // TestIntegrationInterruptedDeposit pins the locked-phone story: a
 // listener vanishes without deregistering (SIGKILL, like a locked
 // phone), the sender falls back to the stash, and SIGINT during the
@@ -584,8 +672,8 @@ func TestIntegrationInterruptedDeposit(t *testing.T) {
 
 	spoolDir := filepath.Join(stash.dir, "spool")
 
-	// The dead listener is redialed before the fallback: the deposit
-	// starts after the redials, so the poll waits them out.
+	// The dead listener costs one dial: the deposit starts right
+	// after it, and the poll only waits for the spool files.
 	deadline := time.Now().Add(90 * time.Second)
 	for time.Now().Before(deadline) {
 		if des, err := os.ReadDir(spoolDir); err == nil {
