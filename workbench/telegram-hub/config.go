@@ -19,24 +19,29 @@ const (
 	defaultCacheMaxAgeDays = 30
 )
 
-// config is the bot configuration, read from the environment at startup.
+// config is the app configuration, read from the environment at startup.
 type config struct {
-	telegramToken     string
+	botToken          string
+	chatID            string
 	mistralAPIKey     string
 	allowedUsers      []string
 	systemPromptClean string
+	// apiBase is the public Telegram API; tests inject a fake directly.
+	apiBase string
 }
 
 func loadConfig() (config, error) {
 	cfg := config{
-		telegramToken:     os.Getenv("TELEGRAM_BOT_TOKEN"),
+		botToken:          os.Getenv("TELEGRAM_BOT_TOKEN"),
+		chatID:            os.Getenv("TELEGRAM_CHAT_ID"),
 		mistralAPIKey:     os.Getenv("MISTRAL_API_KEY"),
 		allowedUsers:      parseAllowedUsers(os.Getenv("ALLOWED_USERS")),
 		systemPromptClean: envOrDefault("SYSTEM_PROMPT_CLEAN", defaultCleanPrompt),
+		apiBase:           telegramAPIBase,
 	}
 
-	if cfg.telegramToken == "" || cfg.mistralAPIKey == "" {
-		return cfg, errors.New("TELEGRAM_BOT_TOKEN and MISTRAL_API_KEY environment variables must be set")
+	if cfg.botToken == "" || cfg.chatID == "" || cfg.mistralAPIKey == "" {
+		return cfg, errors.New("TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID and MISTRAL_API_KEY environment variables must be set")
 	}
 
 	if len(cfg.allowedUsers) == 0 {

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: telegram-hub
+description: Telegram MCP server (send_message, tts_article) and article-to-audio bot
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.3.0
