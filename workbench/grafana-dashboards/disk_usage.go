@@ -128,23 +128,29 @@ func topUsagePanel() *dashboardv2.PanelBuilder {
 			ReduceOptions(lastNotNull()))
 }
 
-func statPanel(id float64, title, expr, unit string, graphMode common.BigValueGraphMode, steps []dashboardv2.Threshold) *dashboardv2.PanelBuilder {
+func statPanel(id float64, title, expr, legend, unit string, graphMode common.BigValueGraphMode, steps []dashboardv2.Threshold, decimals ...float64) *dashboardv2.PanelBuilder {
+	viz := stat.NewVisualizationV2Builder().
+		Unit(unit).
+		ColorScheme(dashboardv2.NewFieldColorBuilder().
+			Mode(dashboardv2.FieldColorModeIdThresholds).
+			FixedColor("#ad46ff")).
+		Thresholds(thresholds(steps...)).
+		ColorMode(common.BigValueColorModeValue).
+		GraphMode(graphMode).
+		Orientation(common.VizOrientationAuto).
+		ReduceOptions(lastNotNull()).
+		WideLayout(true)
+
+	if len(decimals) > 0 {
+		viz = viz.Decimals(decimals[0])
+	}
+
 	return dashboardv2.NewPanelBuilder().
 		Id(id).
 		Title(title).
 		Data(dashboardv2.NewQueryGroupBuilder().
-			Target(promTarget("A", expr, "__auto", false))).
-		Visualization(stat.NewVisualizationV2Builder().
-			Unit(unit).
-			ColorScheme(dashboardv2.NewFieldColorBuilder().
-				Mode(dashboardv2.FieldColorModeIdThresholds).
-				FixedColor("#ad46ff")).
-			Thresholds(thresholds(steps...)).
-			ColorMode(common.BigValueColorModeValue).
-			GraphMode(graphMode).
-			Orientation(common.VizOrientationAuto).
-			ReduceOptions(lastNotNull()).
-			WideLayout(true))
+			Target(promTarget("A", expr, legend, false))).
+		Visualization(viz)
 }
 
 // diskStatsPanels returns the capacity/used/relative stat triplet for one PVC.
@@ -152,13 +158,13 @@ func diskStatsPanels(pvc string, capacityID, usedID, relativeID int) []*dashboar
 	return []*dashboardv2.PanelBuilder{
 		statPanel(float64(capacityID), "Absolute capacity",
 			fmt.Sprintf("avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=%q})", pvc),
-			"bytes", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)}),
+			"capacity", "bytes", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)}),
 		statPanel(float64(usedID), "Absolute used space",
 			fmt.Sprintf("avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim=%q})", pvc),
-			"bytes", common.BigValueGraphModeArea, []dashboardv2.Threshold{thresholdStep("green", 0)}),
+			"used", "bytes", common.BigValueGraphModeArea, []dashboardv2.Threshold{thresholdStep("green", 0)}),
 		statPanel(float64(relativeID), "Relative used space",
 			fmt.Sprintf("1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim=%q}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=%q}", pvc, pvc),
-			"percentunit", common.BigValueGraphModeNone, []dashboardv2.Threshold{
+			"relative", "percentunit", common.BigValueGraphModeNone, []dashboardv2.Threshold{
 				thresholdStep("green", 0),
 				thresholdStep("#EAB839", 0.8),
 				thresholdStep("dark-red", 0.9),
