@@ -423,6 +423,8 @@ func (st *stash) opJoin(rwc io.ReadWriteCloser, peer key.NodePublic, cur member,
 				st.log.Error("saving roster", "err", err)
 
 				_ = writeMsg(rwc, msg{Op: opJoined, Err: "saving the roster failed; join again"})
+
+				return // no retarget: the disk roster keeps the old name
 			}
 		}
 
@@ -702,7 +704,16 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	st.log.Info("deposited", "id", meta.ID, "target", target.Name, "bytes", meta.Size)
 
 	if validSHA(done.SHA) {
-		st.patchMeta(meta.ID, func(sm *spoolMeta) { sm.SHA = done.SHA })
+		if err := st.patchMeta(meta.ID, func(sm *spoolMeta) { sm.SHA = done.SHA }); err != nil {
+			// An unrecorded SHA disables the receiver's integrity
+			// check: fail the deposit; a retry is idempotent.
+			st.log.Warn("recording delivery sha failed", "id", meta.ID, "err", err)
+
+			_ = writeMsg(rwc, msg{Op: opDone, Err: "recording the delivery failed; send again"})
+
+			return
+		}
+
 		st.dedup(target.Name, me.Name, done.SHA, meta.ID)
 	}
 
@@ -742,7 +753,9 @@ func (st *stash) retargetSpool(oldName, newName string) {
 
 	for _, sm := range metas {
 		if sm.Target == oldName {
-			st.patchMeta(sm.ID, func(m *spoolMeta) { m.Target = newName })
+			if err := st.patchMeta(sm.ID, func(m *spoolMeta) { m.Target = newName }); err != nil {
+				st.log.Error("retargeting spool entry", "id", sm.ID, "err", err)
+			}
 		}
 	}
 }
@@ -767,7 +780,9 @@ func (st *stash) dedup(target, from, sha, keep string) {
 
 	for _, sm := range metas {
 		if sm.ID != keep && sm.Target == target && sm.From == from && sm.SHA == sha {
-			if err := st.spool.delete(sm.ID); err == nil {
+			if err := st.spool.delete(sm.ID); err != nil {
+				st.log.Warn("dedup delete failed", "id", sm.ID, "err", err)
+			} else {
 				st.log.Info("deduped identical deposit", "id", sm.ID, "target", target)
 			}
 		}
@@ -775,17 +790,17 @@ func (st *stash) dedup(target, from, sha, keep string) {
 }
 
 // patchMeta rewrites one sidecar field.
-func (st *stash) patchMeta(id string, f func(*spoolMeta)) {
+func (st *stash) patchMeta(id string, f func(*spoolMeta)) error {
 	path := st.spool.metaPath(id)
 
 	sm := spoolMeta{}
 	if err := loadJSON(path, &sm); err != nil {
-		return
+		return fmt.Errorf("loading meta %s: %w", id, err)
 	}
 
 	f(&sm)
 
-	_ = saveJSON(path, sm)
+	return saveJSON(path, sm)
 }
 
 func (st *stash) opPending(rwc io.ReadWriteCloser, me member) {
@@ -954,6 +969,10 @@ func (st *stash) opRemove(rwc io.ReadWriteCloser, me member, m msg) {
 
 	if err := saveRoster(rosterPath(st.dir), kept); err != nil {
 		st.log.Error("saving roster", "err", err)
+
+		_ = writeMsg(rwc, msg{Op: opAcked, Err: "saving the roster failed; remove again"})
+
+		return // the removal is not durable: don't sweep the member's files
 	}
 
 	if metas, err := st.spool.items(); err == nil {

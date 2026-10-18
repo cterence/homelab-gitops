@@ -326,7 +326,10 @@ func (lc *listener) receive(rwc io.ReadWriteCloser, m msg) {
 	sender, plainSize, sha, err := openStream(lc.id.Key, src, &budgetWriter{w: f, max: m.Size - have}, have, h)
 	src.close() // sealed streams self-terminate: no EOF ever reaches the reader
 
-	_ = f.Close()
+	// A failed close means plaintext may be missing: never deliver it.
+	if cerr := f.Close(); err == nil && cerr != nil {
+		err = fmt.Errorf("closing the received file: %w", cerr)
+	}
 
 	if err != nil {
 		lc.log.Warn("direct receive failed", "err", err)

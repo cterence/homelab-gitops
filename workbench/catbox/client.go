@@ -944,7 +944,10 @@ func clientFetch(ctx context.Context, rwc io.ReadWriteCloser, cl *tailcat.Client
 	_, plainSize, sha, err := openStream(id.Key, src, f, have, h)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader
 
-	_ = f.Close()
+	// A failed close means plaintext may be missing: never deliver it.
+	if cerr := f.Close(); err == nil && cerr != nil {
+		err = fmt.Errorf("closing the received file: %w", cerr)
+	}
 
 	if err != nil {
 		// An imperative cancel (Ctrl-C, the app's kill) leaves no
