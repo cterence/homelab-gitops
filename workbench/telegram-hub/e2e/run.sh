@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# End-to-end test for mcp-telegram: builds and starts the server locally,
+# End-to-end test for telegram-hub: builds and starts the server locally,
 # loads the real credentials from the in-cluster secret (without ever
-# printing them), then drives the send_message tool over the streamable-HTTP
-# transport and checks the host guard.
+# printing them), then drives the send_message and tts_article tools over
+# the streamable-HTTP transport and checks the host guard.
 #
 # Usage: ./e2e/run.sh
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-NAMESPACE="${NAMESPACE:-mcp-telegram}"
-SERVER_BIN="$(mktemp -t mcp-telegram-e2e.XXXXXX)"
-CLIENT_BIN="$(mktemp -t mcp-telegram-e2e-client.XXXXXX)"
+NAMESPACE="${NAMESPACE:-telegram-hub}"
+SERVER_BIN="$(mktemp -t telegram-hub-e2e.XXXXXX)"
+CLIENT_BIN="$(mktemp -t telegram-hub-e2e-client.XXXXXX)"
 
 cleanup() {
   if [ -n "${SERVER_PID:-}" ]; then
@@ -28,10 +28,14 @@ trap cleanup EXIT
 # Load credentials straight into the server environment; never echoed.
 export TELEGRAM_BOT_TOKEN="$(kubectl get secret credentials -n "$NAMESPACE" -o jsonpath='{.data.TELEGRAM_BOT_TOKEN}' | base64 -d)"
 export TELEGRAM_CHAT_ID="$(kubectl get secret credentials -n "$NAMESPACE" -o jsonpath='{.data.TELEGRAM_CHAT_ID}' | base64 -d)"
-if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-  echo "failed to load credentials from namespace $NAMESPACE" >&2
-  exit 1
-fi
+export MISTRAL_API_KEY="$(kubectl get secret credentials -n "$NAMESPACE" -o jsonpath='{.data.MISTRAL_API_KEY}' | base64 -d)"
+export ALLOWED_USERS="$(kubectl get secret credentials -n "$NAMESPACE" -o jsonpath='{.data.ALLOWED_USERS}' | base64 -d)"
+for var in TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID MISTRAL_API_KEY ALLOWED_USERS; do
+  if [ -z "${!var}" ]; then
+    echo "failed to load $var from namespace $NAMESPACE" >&2
+    exit 1
+  fi
+done
 echo "credentials loaded from namespace $NAMESPACE (values not printed)"
 
 "$SERVER_BIN" &

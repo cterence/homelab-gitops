@@ -16,13 +16,13 @@ func TestHostAllowed(t *testing.T) {
 		{"127.0.0.1", true},
 		{"127.0.0.1:8443", true},
 		{"[::1]:9000", true},
-		{"tmcp.terence.cloud", true},
-		{"tmcp.terence.cloud:443", true},
-		{"telegram-mcp.snow-delta.ts.net", true},
-		{"telegram-mcp.snow-delta.ts.net:8443", true},
+		{"thub.terence.cloud", true},
+		{"thub.terence.cloud:443", true},
+		{"telegram-hub.snow-delta.ts.net", true},
+		{"telegram-hub.snow-delta.ts.net:8443", true},
 		{"", false},
 		{"example.com", false},
-		{"tmcp.terence.cloud.evil.com", false},
+		{"thub.terence.cloud.evil.com", false},
 		{"evil.com:8000", false},
 		{"[::1]", false},
 	}
@@ -46,7 +46,7 @@ func TestHostGuardMiddleware(t *testing.T) {
 		host     string
 		expected int
 	}{
-		{"allowed host", "tmcp.terence.cloud", http.StatusOK},
+		{"allowed host", "thub.terence.cloud", http.StatusOK},
 		{"allowed host with port", "localhost:8080", http.StatusOK},
 		{"disallowed host", "evil.com", http.StatusMisdirectedRequest},
 	}

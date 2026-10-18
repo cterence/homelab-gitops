@@ -1,6 +1,6 @@
-module github.com/cterence/homelab-gitops/workbench/mcp-telegram/e2e
+module github.com/cterence/homelab-gitops/workbench/telegram-hub/e2e
 
-go 1.26.7
+go 1.27.1
 
 require github.com/modelcontextprotocol/go-sdk v1.8.0
 

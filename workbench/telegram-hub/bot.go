@@ -214,15 +214,25 @@ func (b *bot) delete(msg *tgbotapi.Message) {
 }
 
 func (b *bot) replyAudio(msg *tgbotapi.Message, audio []byte, title string, duration int) {
+	if err := b.sendAudio(msg.Chat.ID, audio, title, duration); err != nil {
+		b.logger.Error("sending audio", "err", err)
+	}
+}
+
+// sendAudio posts a voice message to a chat; the tts_article MCP tool and
+// the bot loop share it.
+func (b *bot) sendAudio(chatID int64, audio []byte, title string, duration int) error {
 	audioCfg := tgbotapi.AudioConfig{
 		BaseFile: tgbotapi.BaseFile{
-			BaseChat: tgbotapi.BaseChat{ChatID: msg.Chat.ID},
+			BaseChat: tgbotapi.BaseChat{ChatID: chatID},
 			File:     tgbotapi.FileBytes{Bytes: audio, Name: "article.mp3"},
 		},
 		Title:    title,
 		Duration: duration,
 	}
 	if _, err := b.api.Send(audioCfg); err != nil {
-		b.logger.Error("sending audio", "err", err)
+		return fmt.Errorf("sending audio: %w", err)
 	}
+
+	return nil
 }

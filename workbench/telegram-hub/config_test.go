@@ -5,17 +5,37 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	t.Run("required variables", func(t *testing.T) {
-		t.Setenv("TELEGRAM_BOT_TOKEN", "")
-		t.Setenv("MISTRAL_API_KEY", "")
+	t.Run("defaults api base to telegram", func(t *testing.T) {
+		t.Setenv("TELEGRAM_BOT_TOKEN", "tok")
+		t.Setenv("TELEGRAM_CHAT_ID", "chat")
+		t.Setenv("MISTRAL_API_KEY", "key")
+		t.Setenv("ALLOWED_USERS", "111")
 
-		if _, err := loadConfig(); err == nil {
+		cfg, err := loadConfig()
+		if err != nil {
+			t.Fatalf("loadConfig() error = %v", err)
+		}
+
+		if cfg.apiBase != telegramAPIBase {
+			t.Errorf("apiBase = %q, want %q", cfg.apiBase, telegramAPIBase)
+		}
+	})
+
+	t.Run("fails fast without credentials", func(t *testing.T) {
+		t.Setenv("TELEGRAM_BOT_TOKEN", "")
+		t.Setenv("TELEGRAM_CHAT_ID", "")
+		t.Setenv("MISTRAL_API_KEY", "")
+		t.Setenv("ALLOWED_USERS", "")
+
+		_, err := loadConfig()
+		if err == nil {
 			t.Fatal("loadConfig() error = nil, want missing-credentials error")
 		}
 	})
 
 	t.Run("empty allowed users fails closed", func(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", "bot-token")
+		t.Setenv("TELEGRAM_CHAT_ID", "chat")
 		t.Setenv("MISTRAL_API_KEY", "mistral-key")
 		t.Setenv("ALLOWED_USERS", "")
 
@@ -26,6 +46,7 @@ func TestLoadConfig(t *testing.T) {
 
 	t.Run("parses allowed users", func(t *testing.T) {
 		t.Setenv("TELEGRAM_BOT_TOKEN", "bot-token")
+		t.Setenv("TELEGRAM_CHAT_ID", "chat")
 		t.Setenv("MISTRAL_API_KEY", "mistral-key")
 		t.Setenv("ALLOWED_USERS", "111,222")
 

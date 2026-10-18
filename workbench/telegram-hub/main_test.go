@@ -84,3 +84,16 @@ func TestSendMessageToolSurfacesDeliveryFailure(t *testing.T) {
 		t.Logf("result marked as tool error")
 	}
 }
+
+func TestTTSArticleToolRejectsNonURL(t *testing.T) {
+	handler := newTTSArticleHandler(discardLogger(), &bot{}, -1001234)
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, ttsArticleInput{URL: "not a url"})
+	if err == nil {
+		t.Fatal("handler error = nil, want URL validation error")
+	}
+
+	if !strings.Contains(err.Error(), "http://") {
+		t.Errorf("handler error = %v, want it to mention the http:// requirement", err)
+	}
+}

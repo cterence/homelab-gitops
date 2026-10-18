@@ -14,10 +14,10 @@ var allowedHostPatterns = []string{
 	"127.0.0.1",
 	"127.0.0.1:*",
 	"[::1]:*",
-	"tmcp.terence.cloud",
-	"tmcp.terence.cloud:*",
-	"telegram-mcp.snow-delta.ts.net",
-	"telegram-mcp.snow-delta.ts.net:*",
+	"thub.terence.cloud",
+	"thub.terence.cloud:*",
+	"telegram-hub.snow-delta.ts.net",
+	"telegram-hub.snow-delta.ts.net:*",
 }
 
 func hostAllowed(host string) bool {
