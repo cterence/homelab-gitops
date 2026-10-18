@@ -208,7 +208,9 @@ via `--dir`. The app runs one-shot `status --json` / `send` / `recv` /
 on screen — direct sends are always welcome, every waiting file
 carries its own receive action, and the waiting header receives
 everything at once; parked files can be refused per file with a
-confirming dialog. The bottom bar's Send picks files, the chat icon
+confirming dialog. The send confirmation distinguishes how each
+file landed: delivered directly, or deposited at the stash
+(mixed counts when a batch splits). The bottom bar's Send picks files, the chat icon
 sends typed text (the binary's `--text`), and the clipboard icon
 sends whatever the clipboard holds. The overflow menu's Reset leaves the mesh and wipes
 the app's identity (the binary's `reset`, confirmation dialog first);

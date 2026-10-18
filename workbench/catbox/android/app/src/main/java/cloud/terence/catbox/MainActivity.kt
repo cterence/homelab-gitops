@@ -123,6 +123,29 @@ data class Shared(val uris: List<Uri>, val text: Boolean = false)
  * transfer can upgrade DERP to direct. */
 data class LiveRecv(val from: String, val file: String, val detail: String, val direct: Boolean, val path: String? = null)
 
+/** How one send landed, from its completion line: true = direct,
+ *  false = deposited at the stash, null = none parsed. */
+fun sendOutcome(line: String): Boolean? {
+    val t = line.trim()
+    return when {
+        !t.startsWith("sent ") -> null
+        t.contains(" directly (") -> true
+        t.contains(" via stash (") -> false
+        else -> null
+    }
+}
+
+/** The send confirmation: names the route — direct, deposited, or mixed. */
+fun sentSummary(what: String, targets: Set<String>, direct: Int, deposited: Int): String {
+    val to = targets.joinToString()
+    return when {
+        direct > 0 && deposited == 0 -> "Sent $what directly to $to"
+        deposited > 0 && direct == 0 -> "Sent $what to $to (deposited at the stash)"
+        direct > 0 && deposited > 0 -> "Sent $what to $to ($direct direct, $deposited deposited)"
+        else -> "Sent $what to $to"
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatboxApp(shared: Shared = Shared(emptyList())) {
@@ -253,6 +276,8 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
         val total = uris.size * targets.size
         var done = 0
         var canceled = false
+        var direct = 0
+        var deposited = 0
 
         try {
             for (target in targets) {
@@ -262,6 +287,10 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                     if (cancelRequested.value) break
 
                     done++
+                    // Label before staging: the cache copy of a big file
+                    // would otherwise sit under the bare "Working…".
+                    progress.value = "Sending $done/$total: ${displayName(context, uri)}"
+                    progressFrac.value = null // staging: no percent yet
                     val tmp = withContext(Dispatchers.IO) {
                         val input = context.contentResolver.openInputStream(uri)
                         if (input == null) {
@@ -276,9 +305,18 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                         problems += "Send to $target failed: ${displayName(context, uri)} is unreadable"
                         continue
                     }
-                    progress.value = "Sending $done/$total: ${tmp.name}"
-                    progressFrac.value = null // staging: no percent yet
-                    val code = withContext(Dispatchers.IO) { Catbox.run(context, ::append, "send", target, tmp.absolutePath) }
+                    var landed: Boolean? = null
+                    val code = withContext(Dispatchers.IO) {
+                        Catbox.run(context, { line ->
+                            append(line)
+                            landed = landed ?: sendOutcome(line)
+                        }, "send", target, tmp.absolutePath)
+                    }
+                    when (landed) {
+                        true -> direct++
+                        false -> deposited++
+                        null -> {}
+                    }
                     tmp.delete()
                     if (code != 0 && !cancelRequested.value) problems += "Send to $target failed (exit $code)"
                 }
@@ -295,7 +333,8 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
             snackbar.showSnackbar("Canceled")
         } else if (problems.isEmpty()) {
             val n = uris.size
-            snackbar.showSnackbar("Sent ${if (n == 1) "1 file" else "$n files"} to ${targets.joinToString()}")
+            val what = if (n == 1) "1 file" else "$n files"
+            snackbar.showSnackbar(sentSummary(what, targets, direct, deposited))
         } else {
             snackbar.showSnackbar(problems.joinToString(" · "))
         }
@@ -310,6 +349,8 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
         val problems = mutableListOf<String>()
         var done = 0
         var canceled = false
+        var direct = 0
+        var deposited = 0
 
         try {
             for (target in targets) {
@@ -318,7 +359,18 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                 done++
                 progress.value = "Sending $done/${targets.size}"
                 progressFrac.value = null
-                val code = withContext(Dispatchers.IO) { Catbox.run(context, ::append, "send", "--text", text, target) }
+                var landed: Boolean? = null
+                val code = withContext(Dispatchers.IO) {
+                    Catbox.run(context, { line ->
+                        append(line)
+                        landed = landed ?: sendOutcome(line)
+                    }, "send", "--text", text, target)
+                }
+                when (landed) {
+                    true -> direct++
+                    false -> deposited++
+                    null -> {}
+                }
                 if (code != 0 && !cancelRequested.value) problems += "Send to $target failed (exit $code)"
             }
         } finally {
@@ -332,7 +384,7 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
         if (canceled) {
             snackbar.showSnackbar("Canceled")
         } else if (problems.isEmpty()) {
-            snackbar.showSnackbar("Sent text to ${targets.joinToString()}")
+            snackbar.showSnackbar(sentSummary("text", targets, direct, deposited))
         } else {
             snackbar.showSnackbar(problems.joinToString(" · "))
         }
