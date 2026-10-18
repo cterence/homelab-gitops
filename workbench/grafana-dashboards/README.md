@@ -25,3 +25,13 @@ go run . [-out <dir>]
 Output files are CRD-wrapped (`apiVersion: dashboard.grafana.app/v2`,
 `kind: Dashboard`, `metadata.name` = UID), the format Grafana file
 provisioning expects for v2 dashboards.
+
+## Conventions
+
+- Every query gets an explicit legend: `__auto` renders the raw PromQL
+  string whenever the expression is wrapped (max, avg, ...), which is what
+  the panel then displays.
+- Apps running with `hostNetwork` and a per-pod PodMonitor overlap in
+  Prometheus during rollouts (the old pod's target keeps answering on the
+  same node address). Wrap their per-pod gauges in `max(...)` so panels
+  don't render one series per overlapping target.
