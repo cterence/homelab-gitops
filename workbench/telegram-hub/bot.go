@@ -100,7 +100,7 @@ func (b *bot) processArticle(ctx context.Context, msg *tgbotapi.Message, pageURL
 	b.logger.Info("article title extracted", "url", pageURL, "title", articleTitle)
 	b.edit(progress, fmt.Sprintf("Cleaning text for %s...", articleTitle))
 
-	cacheFile, err := b.processURL(ctx, pageURL, rawText)
+	cacheFile, err := processURL(ctx, b.logger, b.mistral, pageURL, rawText)
 	if err != nil {
 		return err
 	}
@@ -125,49 +125,61 @@ func (b *bot) processArticle(ctx context.Context, msg *tgbotapi.Message, pageURL
 	return nil
 }
 
-// processURL returns the path of the cached audio for a URL, generating and
-// remuxing it on a miss. Cached files are already remuxed.
-func (b *bot) processURL(ctx context.Context, pageURL, rawText string) (string, error) {
+// remuxEnabled reports whether generated audio is remuxed with ffmpeg before
+// delivery. Set TTS_REMUX=0 to deliver the raw Mistral output (A/B test:
+// the API now reports an accurate duration without the remux).
+func remuxEnabled(env string) bool {
+	return env != "0"
+}
+
+// processURL returns the path of the cached audio for a URL, generating it
+// on a miss (remuxed unless TTS_REMUX=0).
+func processURL(ctx context.Context, logger *slog.Logger, m *mistralClient, pageURL, rawText string) (string, error) {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return "", fmt.Errorf("creating cache dir: %w", err)
 	}
 
 	cacheFile := getCacheFilename(pageURL)
 	if _, err := os.ReadFile(cacheFile); err == nil {
-		b.logger.Info("cache hit", "url", pageURL, "file", cacheFile)
+		logger.Info("cache hit", "url", pageURL, "file", cacheFile)
 		return cacheFile, nil
 	}
 
-	b.logger.Info("cache miss, generating audio", "url", pageURL)
+	logger.Info("cache miss, generating audio", "url", pageURL)
 
-	cleanText, err := b.mistral.cleanText(ctx, rawText)
+	cleanText, err := m.cleanText(ctx, rawText)
 	if err != nil {
 		return "", fmt.Errorf("cleaning text: %w", err)
 	}
 
-	b.logger.Info("text cleaned", "url", pageURL, "chars", len([]rune(cleanText)))
+	logger.Info("text cleaned", "url", pageURL, "chars", len([]rune(cleanText)))
 
-	audio, err := b.mistral.generateTTS(ctx, cleanText)
+	audio, err := m.generateTTS(ctx, cleanText)
 	if err != nil {
 		return "", fmt.Errorf("generating TTS: %w", err)
 	}
 
-	b.logger.Info("tts generated", "url", pageURL, "bytes", len(audio))
+	logger.Info("tts generated", "url", pageURL, "bytes", len(audio))
 
 	tempFile := cacheFile + ".temp"
 	if err := os.WriteFile(tempFile, audio, 0o600); err != nil {
 		return "", fmt.Errorf("writing temp audio: %w", err)
 	}
 
-	if err := fixAudioHeader(ctx, tempFile, cacheFile); err != nil {
+	if remuxEnabled(os.Getenv("TTS_REMUX")) {
+		if err := fixAudioHeader(ctx, tempFile, cacheFile); err != nil {
+			_ = os.Remove(tempFile)
+			return "", err
+		}
+
+		logger.Info("audio remuxed", "url", pageURL, "file", cacheFile, "bytes", len(audio))
+
+		if err := os.Remove(tempFile); err != nil {
+			logger.Warn("removing temp audio", "err", err)
+		}
+	} else if err := os.Rename(tempFile, cacheFile); err != nil {
 		_ = os.Remove(tempFile)
-		return "", err
-	}
-
-	b.logger.Info("audio remuxed", "url", pageURL, "file", cacheFile, "bytes", len(audio))
-
-	if err := os.Remove(tempFile); err != nil {
-		b.logger.Warn("removing temp audio", "err", err)
+		return "", fmt.Errorf("moving raw audio into place: %w", err)
 	}
 
 	return cacheFile, nil

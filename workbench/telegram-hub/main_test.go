@@ -86,7 +86,7 @@ func TestSendMessageToolSurfacesDeliveryFailure(t *testing.T) {
 }
 
 func TestTTSArticleToolRejectsNonURL(t *testing.T) {
-	handler := newTTSArticleHandler(discardLogger(), &bot{}, -1001234)
+	handler := newTTSArticleHandler(discardLogger(), &bot{})
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, ttsArticleInput{URL: "not a url"})
 	if err == nil {
@@ -95,5 +95,18 @@ func TestTTSArticleToolRejectsNonURL(t *testing.T) {
 
 	if !strings.Contains(err.Error(), "http://") {
 		t.Errorf("handler error = %v, want it to mention the http:// requirement", err)
+	}
+}
+
+func TestTTSArticleToolFailsWhenChatIDUnconfigured(t *testing.T) {
+	handler := newTTSArticleHandler(discardLogger(), &bot{})
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, ttsArticleInput{URL: "https://example.com/a"})
+	if err == nil {
+		t.Fatal("handler error = nil, want TELEGRAM_CHAT_ID error")
+	}
+
+	if !strings.Contains(err.Error(), "TELEGRAM_CHAT_ID") {
+		t.Errorf("handler error = %v, want it to mention TELEGRAM_CHAT_ID", err)
 	}
 }

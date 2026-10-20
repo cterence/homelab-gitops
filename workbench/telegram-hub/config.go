@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"os"
 	"strings"
 )
@@ -28,27 +27,39 @@ type config struct {
 	systemPromptClean string
 	// apiBase is the public Telegram API; tests inject a fake directly.
 	apiBase string
+
+	mistralAPIBase string
+	chatCleanModel string
+	chatTitleModel string
+	ttsModel       string
+	voiceEnglish   string
+	voiceFrench    string
 }
 
-func loadConfig() (config, error) {
-	cfg := config{
+// loadConfig reads the app configuration from the environment. Serve starts
+// with whatever is set and degrades at use: the bot loop needs botEnabled,
+// the MCP tools fail at call time when their credentials are missing.
+func loadConfig() config {
+	return config{
 		botToken:          os.Getenv("TELEGRAM_BOT_TOKEN"),
 		chatID:            os.Getenv("TELEGRAM_CHAT_ID"),
 		mistralAPIKey:     os.Getenv("MISTRAL_API_KEY"),
 		allowedUsers:      parseAllowedUsers(os.Getenv("ALLOWED_USERS")),
 		systemPromptClean: envOrDefault("SYSTEM_PROMPT_CLEAN", defaultCleanPrompt),
 		apiBase:           telegramAPIBase,
+		mistralAPIBase:    envOrDefault("MISTRAL_API_BASE", mistralAPIBase),
+		chatCleanModel:    envOrDefault("MISTRAL_CHAT_CLEAN_MODEL", chatCleanModel),
+		chatTitleModel:    envOrDefault("MISTRAL_CHAT_TITLE_MODEL", chatTitleModel),
+		ttsModel:          envOrDefault("MISTRAL_TTS_MODEL", ttsModel),
+		voiceEnglish:      envOrDefault("MISTRAL_VOICE_EN", voiceEnglish),
+		voiceFrench:       envOrDefault("MISTRAL_VOICE_FR", voiceFrench),
 	}
+}
 
-	if cfg.botToken == "" || cfg.chatID == "" || cfg.mistralAPIKey == "" {
-		return cfg, errors.New("TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID and MISTRAL_API_KEY environment variables must be set")
-	}
-
-	if len(cfg.allowedUsers) == 0 {
-		return cfg, errors.New("ALLOWED_USERS environment variable must be set (comma-separated Telegram user IDs)")
-	}
-
-	return cfg, nil
+// botEnabled reports whether the long-polling bot can run: it needs a token
+// and at least one allowed user (isAllowedUser fails closed otherwise).
+func botEnabled(cfg config) bool {
+	return cfg.botToken != "" && len(cfg.allowedUsers) > 0
 }
 
 func parseAllowedUsers(raw string) []string {

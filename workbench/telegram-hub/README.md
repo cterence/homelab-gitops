@@ -47,14 +47,21 @@ silently lost. Unknown `parse_mode` values are rejected with an error.
 ## Configuration
 
 Environment variables (all from the `credentials` ExternalSecret in the
-in-cluster deployment):
+in-cluster deployment). None are required to start: serve boots with
+warnings and each feature fails at call time until its credentials exist.
 
-- `TELEGRAM_BOT_TOKEN` — required, the bot token (one bot does everything)
-- `TELEGRAM_CHAT_ID` — required, hard-locked recipient chat for the tools
-- `MISTRAL_API_KEY` — required, Mistral API access
-- `ALLOWED_USERS` — required, comma-separated Telegram user IDs allowed to
-  use the bot loop; the app refuses to start when unset (fail closed)
+- `TELEGRAM_BOT_TOKEN` — Telegram bot token (bot loop and delivery tools)
+- `TELEGRAM_CHAT_ID` — hard-locked recipient chat for the tools
+- `MISTRAL_API_KEY` — Mistral API access (text cleaning and TTS)
+- `ALLOWED_USERS` — comma-separated Telegram user IDs allowed to use the
+  bot loop; the bot loop is disabled when unset (per-user checks still fail
+  closed)
 - `SYSTEM_PROMPT_CLEAN` — optional, overrides the text-cleaning prompt
+- `TTS_REMUX` — optional; `0` delivers the raw Mistral audio without the
+  ffmpeg remux (A/B test: the API's duration header looks fixed)
+- `MISTRAL_API_BASE`, `MISTRAL_CHAT_CLEAN_MODEL`, `MISTRAL_CHAT_TITLE_MODEL`,
+  `MISTRAL_TTS_MODEL`, `MISTRAL_VOICE_EN`, `MISTRAL_VOICE_FR` — optional,
+  override the built-in Mistral defaults
 
 ## Deployment notes
 
@@ -70,15 +77,39 @@ in-cluster deployment):
 
 ## Running
 
+The binary is a small CLI:
+
 ```
-go run .
+telegram-hub [serve]                          run the MCP server and bot (default)
+telegram-hub tts <url> [-o <file>]           convert an article to MP3 locally
+telegram-hub send <text> [--parse-mode <m>]  message the owner chat
 ```
+
+- `serve` runs the MCP server plus long-polling bot; the deployment passes it
+  as the container command. Missing credentials only disable the affected
+  features (warnings on stderr).
+- `tts` runs the extract → clean → speak pipeline once; by default it prints
+  the cache path (`generated/<md5>.mp3`) on stderr. `-o <file>` copies the
+  MP3 somewhere, `-o -` streams it to stdout. Needs only `MISTRAL_API_KEY` —
+  no Telegram credentials, no bot loop. Precedence is flags over the
+  `MISTRAL_*` environment variables over the built-in defaults:
+  `--model`, `--clean-model`, `--title-model`, `--api-base`, `--voice-en`
+  and `--voice-fr` override the matching variable.
+- `send` delivers one message to the `TELEGRAM_CHAT_ID` chat (same locked
+  recipient and plain-text retry as the MCP tool). Needs `TELEGRAM_BOT_TOKEN`
+  and `TELEGRAM_CHAT_ID`.
+
+Exit codes: 0 success, 1 runtime failure, 2 invalid usage.
 
 ## Tests
 
 ```
 go test ./...
 ```
+
+`integration_test.go` (real Mistral TTS + ffprobe; compares raw vs remuxed
+duration) runs when `TELEGRAM_HUB_INTEGRATION=1` and `MISTRAL_API_KEY` are
+set.
 
 ## End-to-end test
 

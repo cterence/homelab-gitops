@@ -55,6 +55,10 @@ func validParseMode(mode string) bool {
 // response. If Telegram rejects the formatting (HTTP 400), it retries once
 // as plain text so the message still arrives.
 func (c *telegramClient) deliver(ctx context.Context, text, parseMode string) (string, error) {
+	if c.botToken == "" || c.chatID == "" {
+		return "", errors.New("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are not configured")
+	}
+
 	text = trimToRunes(text, maxTextLength)
 
 	response, err := c.post(ctx, text, parseMode)

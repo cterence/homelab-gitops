@@ -10,3 +10,4 @@ docs/superpowers/
 .direnv/
 .pre-commit-config.yaml
 result.apk
+*.mp3
