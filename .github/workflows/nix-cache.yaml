@@ -1,11 +1,28 @@
 # Builds the flake's packages per system and pushes them to the niks3
 # binary cache (https://niks3.terence.cloud). Auth is GitHub Actions
 # OIDC: the audience/subject must be bound in k8s-apps/niks3/values.yaml.
+# PRs touching the Android app build only catbox-android: the hermetic
+# APK build is not covered by workbench-ci, and gradle updates (AGP,
+# compose-bom, verification metadata, FOD hash) can only be validated
+# by building it. The build pushes to the cache so the post-merge
+# build on main is a cache hit.
 name: Nix cache
 
 on:
   push:
     branches: [main]
+    paths:
+      - flake.nix
+      - flake.lock
+      - workbench/catbox/**
+      - .github/workflows/nix-cache.yaml
+  pull_request:
+    paths:
+      - workbench/catbox/android/**
+      - workbench/catbox/nix/**
+      - flake.nix
+      - flake.lock
+      - .github/workflows/nix-cache.yaml
   workflow_dispatch:
 
 permissions:
@@ -14,6 +31,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
@@ -47,3 +65,29 @@ jobs:
             echo "## $attr (${{ matrix.system }})"
             nix build --print-out-paths ".#$attr" | tee -a "$GITHUB_STEP_SUMMARY"
           done
+
+  # PR validation for the one package workbench-ci cannot build: the
+  # APK's gradle dependency set (verification metadata, FOD hash) is
+  # only proven by the hermetic nix build. Pushes to the cache so the
+  # same build on main is served from it.
+  android-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: ${{ github.workflow }}-android-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+        with:
+          determinate: false
+      - name: Setup niks3 cache
+        uses: Mic92/niks3-action@6d24bc1d87acdfac8e5dc3266f7b28ae99051adf # v1.5.0
+        with:
+          server-url: https://niks3.terence.cloud
+      - name: Build catbox-android
+        run: |
+          nix build --print-out-paths .#catbox-android | tee -a "$GITHUB_STEP_SUMMARY"

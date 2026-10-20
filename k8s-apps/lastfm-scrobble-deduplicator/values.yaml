@@ -29,7 +29,7 @@ app-template:
         app:
           image:
             repository: registry.terence.cloud/lastfm-scrobble-deduplicator
-            tag: "10"
+            tag: "11"
             pullPolicy: IfNotPresent
           args:
             - --from
@@ -44,7 +44,7 @@ app-template:
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
-            tag: latest@sha256:c62cf104709509191ca78e2b3d9232528fabc93a6dbb37cbadd511886324b657
+            tag: latest@sha256:2a676f54f7c0587a1342e371f14e8ec10e2620b010275a4d4aa9abbaac07f91d
           ports:
             - name: http
               containerPort: 3000

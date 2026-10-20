@@ -17,7 +17,16 @@ func newMistralTestClient(t *testing.T, handler http.HandlerFunc) *mistralClient
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 
-	return newMistralClient(server.Client(), "test-key", server.URL, defaultCleanPrompt, defaultTitlePrompt)
+	return newMistralClient(server.Client(), config{
+		mistralAPIKey:     "test-key",
+		mistralAPIBase:    server.URL,
+		systemPromptClean: defaultCleanPrompt,
+		chatCleanModel:    chatCleanModel,
+		chatTitleModel:    chatTitleModel,
+		ttsModel:          ttsModel,
+		voiceEnglish:      voiceEnglish,
+		voiceFrench:       voiceFrench,
+	})
 }
 
 func decodeJSON(t *testing.T, r io.Reader) map[string]any {
@@ -44,8 +53,8 @@ func TestCleanTextSendsPromptToChatModel(t *testing.T) {
 		}
 
 		body := decodeJSON(t, r.Body)
-		if body["model"] != "mistral-medium-latest" {
-			t.Errorf("model = %v, want mistral-medium-latest", body["model"])
+		if body["model"] != chatCleanModel {
+			t.Errorf("model = %v, want %v", body["model"], chatCleanModel)
 		}
 		// temperature 0.1 unmarshals as float64.
 		if body["temperature"] != 0.1 {
@@ -94,8 +103,8 @@ func TestArticleTitle(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 
 		body := decodeJSON(t, r.Body)
-		if body["model"] != "mistral-small-latest" {
-			t.Errorf("model = %v, want mistral-small-latest", body["model"])
+		if body["model"] != chatTitleModel {
+			t.Errorf("model = %v, want %v", body["model"], chatTitleModel)
 		}
 
 		messages := body["messages"].([]any)
@@ -169,8 +178,8 @@ func TestGenerateTTS(t *testing.T) {
 		}
 
 		body := decodeJSON(t, r.Body)
-		if body["model"] != "voxtral-mini-tts-2603" {
-			t.Errorf("model = %v, want voxtral-mini-tts-2603", body["model"])
+		if body["model"] != ttsModel {
+			t.Errorf("model = %v, want %v", body["model"], ttsModel)
 		}
 
 		if body["response_format"] != "mp3" {

@@ -19,7 +19,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/agent-relay
-            tag: "3"
+            tag: "4"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris

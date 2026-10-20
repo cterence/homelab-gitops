@@ -214,3 +214,26 @@ func TestDeliverWrapsNetworkError(t *testing.T) {
 		t.Errorf("deliver() error = %v, want it to contain 'telegram API unreachable'", err)
 	}
 }
+
+func TestDeliverFailsWhenUnconfigured(t *testing.T) {
+	ft := newFakeTelegram(t)
+	client := &telegramClient{
+		httpClient: ft.server.Client(),
+		apiBase:    ft.server.URL,
+		botToken:   "",
+		chatID:     "",
+	}
+
+	_, err := client.deliver(context.Background(), "hello", "")
+	if err == nil {
+		t.Fatal("deliver() error = nil, want unconfigured error")
+	}
+
+	if !strings.Contains(err.Error(), "TELEGRAM_BOT_TOKEN") {
+		t.Errorf("deliver() error = %v, want it to name the missing environment variables", err)
+	}
+
+	if ft.calls != 0 {
+		t.Errorf("calls = %d, want 0 (guard must fire before any request)", ft.calls)
+	}
+}

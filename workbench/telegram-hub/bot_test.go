@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
@@ -43,6 +44,29 @@ func TestIsValidURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isValidURL(tt.text); got != tt.expected {
 				t.Errorf("isValidURL(%q) = %v, want %v", tt.text, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRemuxEnabled(t *testing.T) {
+	tests := []struct {
+		name string
+		env  string
+		want bool
+	}{
+		{"unset", "", true},
+		{"explicitly on", "1", true},
+		{"anything but 0", "yes", true},
+		{"disabled", "0", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("TTS_REMUX", tt.env)
+
+			if got := remuxEnabled(os.Getenv("TTS_REMUX")); got != tt.want {
+				t.Errorf("remuxEnabled(%q) = %v, want %v", tt.env, got, tt.want)
 			}
 		})
 	}

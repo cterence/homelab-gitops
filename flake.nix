@@ -152,8 +152,8 @@
         }
         // (
           # The Android app shell: nix develop .#android. The SDK
-          # matches android/app/build.gradle.kts (compileSdk 36,
-          # build-tools 35.0.0, AGP 8.13.2, JDK 17) — bump them
+          # matches android/app/build.gradle.kts (compileSdk 37,
+          # build-tools 36.0.0, AGP 9.4.1, JDK 17) — bump them
           # together. Hosts without an android-nixpkgs SDK composition
           # (aarch64-linux) don't get the shell.
           let
@@ -170,8 +170,8 @@
                   sdkPkgs: with sdkPkgs; [
                     cmdline-tools-latest
                     platform-tools
-                    build-tools-35-0-0
-                    platforms-android-36
+                    build-tools-36-0-0
+                    platforms-android-37-0
                     emulator
                     system-images-android-36-default-arm64-v8a
                   ]
@@ -181,14 +181,14 @@
                 packages = [
                   sdk
                   pkgs.jdk17
-                  pkgs.gradle
+                  pkgs.gradle_9
                   pkgs.go
                 ];
                 ANDROID_HOME = "${sdk}/share/android-sdk";
                 ANDROID_SDK_ROOT = "${sdk}/share/android-sdk";
                 # AGP downloads a prebuilt aapt2 from Maven that does not
                 # run on Nix (unpatched ELF); point it at the SDK's own.
-                GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${ANDROID_HOME}/build-tools/35.0.0/aapt2";
+                GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${ANDROID_HOME}/build-tools/36.0.0/aapt2";
                 JAVA_HOME = pkgs.jdk17.home;
               };
           }

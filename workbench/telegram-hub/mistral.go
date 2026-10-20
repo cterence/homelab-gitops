@@ -19,7 +19,7 @@ const (
 
 	chatCleanModel = "mistral-medium-latest"
 	chatTitleModel = "mistral-small-latest"
-	ttsModel       = "voxtral-mini-tts-2603"
+	ttsModel       = "voxtral-mini-tts-latest"
 
 	voiceEnglish = "gb_jane_neutral"
 	voiceFrench  = "fr_marie_neutral"
@@ -42,23 +42,33 @@ type mistralClient struct {
 	client            *mistral.APIClient
 	systemPromptClean string
 	systemPromptTitle string
+	chatCleanModel    string
+	chatTitleModel    string
+	ttsModel          string
+	voiceEnglish      string
+	voiceFrench       string
 }
 
-func newMistralClient(httpClient *http.Client, apiKey, apiBase, cleanPrompt, titlePrompt string) *mistralClient {
-	cfg := mistral.NewConfiguration()
-	cfg.HTTPClient = httpClient
+func newMistralClient(httpClient *http.Client, cfg config) *mistralClient {
+	sdkCfg := mistral.NewConfiguration()
+	sdkCfg.HTTPClient = httpClient
 
-	if u, err := url.Parse(apiBase); err == nil && u.Host != "" {
-		cfg.Scheme = u.Scheme
-		cfg.Host = u.Host
+	if u, err := url.Parse(cfg.mistralAPIBase); err == nil && u.Host != "" {
+		sdkCfg.Scheme = u.Scheme
+		sdkCfg.Host = u.Host
 	}
 
-	cfg.AddDefaultHeader("Authorization", "Bearer "+apiKey)
+	sdkCfg.AddDefaultHeader("Authorization", "Bearer "+cfg.mistralAPIKey)
 
 	return &mistralClient{
-		client:            mistral.NewAPIClient(cfg),
-		systemPromptClean: cleanPrompt,
-		systemPromptTitle: titlePrompt,
+		client:            mistral.NewAPIClient(sdkCfg),
+		systemPromptClean: cfg.systemPromptClean,
+		systemPromptTitle: defaultTitlePrompt,
+		chatCleanModel:    cfg.chatCleanModel,
+		chatTitleModel:    cfg.chatTitleModel,
+		ttsModel:          cfg.ttsModel,
+		voiceEnglish:      cfg.voiceEnglish,
+		voiceFrench:       cfg.voiceFrench,
 	}
 }
 
@@ -92,13 +102,13 @@ func (m *mistralClient) chatComplete(ctx context.Context, model, prompt string) 
 // when spoken.
 func (m *mistralClient) cleanText(ctx context.Context, rawText string) (string, error) {
 	prompt := m.systemPromptClean + "\n\n" + rawText
-	return m.chatComplete(ctx, chatCleanModel, prompt)
+	return m.chatComplete(ctx, m.chatCleanModel, prompt)
 }
 
 // articleTitle extracts the article's main title; on any failure it falls
 // back to a generic title so delivery is never blocked.
 func (m *mistralClient) articleTitle(ctx context.Context, rawText string) string {
-	title, err := m.chatComplete(ctx, chatTitleModel, m.systemPromptTitle+"\n\n"+truncateRunes(rawText, titleMaxRunes))
+	title, err := m.chatComplete(ctx, m.chatTitleModel, m.systemPromptTitle+"\n\n"+truncateRunes(rawText, titleMaxRunes))
 	if err != nil || strings.TrimSpace(title) == "" {
 		return "article"
 	}
@@ -113,8 +123,8 @@ func (m *mistralClient) generateTTS(ctx context.Context, text string) ([]byte, e
 
 	resp, _, err := m.client.AudioSpeechAPI.SpeechV1AudioSpeechPost(ctx).
 		SpeechRequest(mistral.SpeechRequest{
-			Model:          *mistral.NewNullableString(mistral.PtrString(ttsModel)),
-			VoiceId:        *mistral.NewNullableString(mistral.PtrString(selectVoice(detectLanguage(text)))),
+			Model:          *mistral.NewNullableString(mistral.PtrString(m.ttsModel)),
+			VoiceId:        *mistral.NewNullableString(mistral.PtrString(m.selectVoice(detectLanguage(text)))),
 			Input:          text,
 			ResponseFormat: &format,
 		}).Execute()
@@ -144,14 +154,13 @@ func detectLanguage(text string) languageCode {
 	}
 }
 
-// selectVoice maps the detected language to a TTS voice: English gets Jane,
-// everything else gets Marie.
-func selectVoice(lang languageCode) string {
+// selectVoice maps the detected language to a configured TTS voice.
+func (m *mistralClient) selectVoice(lang languageCode) string {
 	if lang == langEnglish {
-		return voiceEnglish
+		return m.voiceEnglish
 	}
 
-	return voiceFrench
+	return m.voiceFrench
 }
 
 // truncateRunes caps a string at n runes without splitting a multi-byte

@@ -17,12 +17,21 @@ app-template:
 
       containers:
         main:
+          command:
+            - /usr/local/bin/telegram-hub
+            - serve
           image:
             repository: registry.terence.cloud/telegram-hub
-            tag: "1"
+            tag: "4"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
+            TTS_REMUX: "1"
+            MISTRAL_TTS_MODEL: voxtral-mini-tts-latest
+            MISTRAL_CHAT_CLEAN_MODEL: mistral-medium-latest
+            MISTRAL_CHAT_TITLE_MODEL: mistral-small-latest
+            MISTRAL_VOICE_EN: gb_jane_neutral
+            MISTRAL_VOICE_FR: fr_marie_neutral
             SYSTEM_PROMPT_CLEAN: |
               You are an expert text-cleaning assistant optimized for Text-to-Speech (TTS) preparation. Your task is to extract the main article text from raw HTML and format it so it sounds perfectly natural when read aloud.
 
