@@ -11,6 +11,11 @@ name: Nix cache
 on:
   push:
     branches: [main]
+    paths:
+      - flake.nix
+      - flake.lock
+      - workbench/catbox/**
+      - .github/workflows/nix-cache.yaml
   pull_request:
     paths:
       - workbench/catbox/android/**
