@@ -209,13 +209,13 @@ func runServe(ctx context.Context) error {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	mux.Handle("/mcp", hostGuard(logger, mcpHandler))
+	mux.Handle("/mcp", requestLog(logger, hostGuard(logger, mcpHandler)))
 
 	// WriteTimeout is left unset: streamable-HTTP responses can be SSE
 	// streams that stay open longer than any fixed write deadline.
 	srv := &http.Server{
 		Addr:              listenAddr,
-		Handler:           requestLog(logger, mux),
+		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       120 * time.Second,
