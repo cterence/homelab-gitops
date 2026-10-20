@@ -48,7 +48,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | App | Description |
 | --- | --- |
 | [agent-relay](./scripts/../k8s-apps/agent-relay) | Generic webhook to Mistral agent relay |
-| [anubis](./scripts/../k8s-apps/anubis) | Weighs the soul of incoming HTTP requests to stop AI crawlers |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes |
 | [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack |
 | [audiobookshelf](./scripts/../k8s-apps/audiobookshelf) | Self-hosted audiobook and podcast server |
@@ -72,7 +71,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [lastfm-scrobble-deduplicator](./scripts/../k8s-apps/lastfm-scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles |
 | [local-path-provisioner](./scripts/../k8s-apps/local-path-provisioner) | Utilize the local storage in each node |
 | [loki](./scripts/../k8s-apps/loki) | Like Prometheus, but for logs |
-| [mcp-telegram](./scripts/../k8s-apps/mcp-telegram) | Minimal Telegram notification MCP server |
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols |
 | [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker |
@@ -88,8 +86,8 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity |
 | [steam-headless](./scripts/../k8s-apps/steam-headless) | Headless Steam with Sunshine for Moonlight game streaming |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale |
+| [telegram-hub](./scripts/../k8s-apps/telegram-hub) | Telegram MCP server (send_message, tts_article) and article-to-audio bot |
 | [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller |
-| [tts9000](./scripts/../k8s-apps/tts9000) | Text-to-Speech service using Mistral's Voxtral TTS |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust |
 | [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes |
 | [versity-gw](./scripts/../k8s-apps/versity-gw) | High-performance S3 translation service |
