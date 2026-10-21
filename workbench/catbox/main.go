@@ -345,9 +345,9 @@ func run() error {
 	case "send":
 		fs := flag.NewFlagSet("send", flag.ExitOnError)
 		text := fs.String("text", "", "send this text as text-<date>.txt")
-		_ = fs.Parse(os.Args[2:])
+		positional := parseSendFlags(fs, os.Args[2:])
 
-		target, srcs, err := sendSources(*text, fs.Args())
+		target, srcs, err := sendSources(*text, positional)
 		if err != nil {
 			return err
 		}

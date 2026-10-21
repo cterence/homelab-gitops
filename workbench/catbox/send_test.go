@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,6 +71,37 @@ func TestSendSources(t *testing.T) {
 				if got.path != want.path || got.stdin != want.stdin || !bytes.Equal(got.body, want.body) {
 					t.Fatalf("srcs[%d] = %+v, want %+v", i, got, want)
 				}
+			}
+		})
+	}
+}
+
+func TestParseSendFlags(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		wantText string
+		wantRest []string
+	}{
+		{"flag before positionals", []string{"--text", "hi", "bob", "a.txt"}, "hi", []string{"bob", "a.txt"}},
+		{"flag after member", []string{"bob", "--text", "hi", "a.txt"}, "hi", []string{"bob", "a.txt"}},
+		{"flag at end", []string{"bob", "a.txt", "--text", "hi"}, "hi", []string{"bob", "a.txt"}},
+		{"no flags", []string{"bob", "a.txt"}, "", []string{"bob", "a.txt"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fs := flag.NewFlagSet("send", flag.ExitOnError)
+			text := fs.String("text", "", "")
+
+			rest := parseSendFlags(fs, tt.args)
+
+			if *text != tt.wantText {
+				t.Fatalf("text = %q, want %q", *text, tt.wantText)
+			}
+
+			if strings.Join(rest, " ") != strings.Join(tt.wantRest, " ") {
+				t.Fatalf("rest = %q, want %q", rest, tt.wantRest)
 			}
 		})
 	}
