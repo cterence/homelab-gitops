@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,60 +16,23 @@ import (
 // errUsage marks invalid command-line usage; main exits 2 for it.
 var errUsage = errors.New("usage")
 
-const usageText = `telegram-hub — the homelab's Telegram app
-
-Usage:
-  telegram-hub serve                            run the MCP server and bot
-  telegram-hub tts <url> [flags]                convert an article to MP3; prints
-                                                 the cache path unless -o is given
-  telegram-hub send <text> [--parse-mode <m>]    message the owner chat
-
-tts flags (override the matching MISTRAL_* environment variables):
-  -o, --output <file|->      where to write the MP3
-  --model <name>              TTS model
-  --clean-model <name>        chat model used to clean the article text
-  --title-model <name>        chat model used to extract the title
-  --api-base <url>            Mistral API base URL
-  --voice-en, --voice-fr <id> voices for English and non-English text
-
-Examples:
-  telegram-hub tts https://example.com/article -o article.mp3
-  telegram-hub tts https://example.com/article --model voxtral-mini-tts-3-0
-  telegram-hub send "hello from the CLI" --parse-mode HTML
-
-Environment: serve needs TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, MISTRAL_API_KEY
-and ALLOWED_USERS. tts needs only MISTRAL_API_KEY. send needs
-TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.
-`
-
-func usage(w io.Writer) {
-	_, _ = fmt.Fprint(w, usageText)
-}
-
-// onUsage prints the usage then maps the parse failure onto errUsage.
-func onUsage(context.Context, *cli.Command, error, bool) error {
-	usage(os.Stderr)
-
-	return errUsage
+// onUsage maps flag parse failures onto errUsage: exit code 2.
+func onUsage(_ context.Context, _ *cli.Command, err error, _ bool) error {
+	return fmt.Errorf("%w: %v", errUsage, err)
 }
 
 // run dispatches subcommands; bare invocation only prints help.
 func run(ctx context.Context, args []string) error {
 	cmd := &cli.Command{
-		Name:                          "telegram-hub",
-		UsageText:                     usageText,
-		CustomRootCommandHelpTemplate: "{{.UsageText}}",
-		OnUsageError:                  onUsage,
+		Name:         "telegram-hub",
+		Usage:        "the homelab's Telegram app: MCP server, bot, and CLI",
+		OnUsageError: onUsage,
 		Action: func(_ context.Context, c *cli.Command) error {
 			if c.Args().Present() {
-				usage(os.Stderr)
-
-				return errUsage
+				return fmt.Errorf("%w: unknown command %q", errUsage, c.Args().First())
 			}
 
-			usage(os.Stdout)
-
-			return nil
+			return cli.ShowRootCommandHelp(c)
 		},
 		Commands: []*cli.Command{
 			{
@@ -93,7 +55,7 @@ func run(ctx context.Context, args []string) error {
 				Action: func(ctx context.Context, c *cli.Command) error {
 					args := c.Args().Slice()
 					if len(args) != 1 {
-						fmt.Fprintln(os.Stderr, "usage: telegram-hub tts <url> [-o <file>] [--model <m>] [--clean-model <m>] [--title-model <m>] [--api-base <url>] [--voice-en <v>] [--voice-fr <v>]")
+						_ = cli.ShowSubcommandHelp(c)
 
 						return errUsage
 					}
@@ -119,7 +81,7 @@ func run(ctx context.Context, args []string) error {
 				Action: func(ctx context.Context, c *cli.Command) error {
 					args := c.Args().Slice()
 					if len(args) == 0 {
-						fmt.Fprintln(os.Stderr, `usage: telegram-hub send <text> [--parse-mode ""|HTML|MarkdownV2]`)
+						_ = cli.ShowSubcommandHelp(c)
 
 						return errUsage
 					}
