@@ -8,7 +8,8 @@ Migrated from https://github.com/cterence/go-healthcheck.
 ## How it works
 
 1. **Config** — reads `config.yaml` from the working directory (`/app` in
-   the container). Declares a name/version, a check timeout, and lists of
+   the container), or the path given by the `--config` flag. Declares a
+   name/version, a check timeout, and lists of
    targets per type.
 2. **Targets** — each target is validated and registered with the
    hellofresh/health-go library. HTTP targets optionally use a client
