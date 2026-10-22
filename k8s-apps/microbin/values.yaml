@@ -305,6 +305,30 @@ app-template:
         - secretName: microbin-tls
           hosts:
             - *host
+    upload:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.priority: "1000"
+      className: "traefik"
+      hosts:
+        - host: *host
+          paths:
+            - path: /upload
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+            - path: /static
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: microbin-tls
+          hosts:
+            - *host
 
   persistence:
     config:
