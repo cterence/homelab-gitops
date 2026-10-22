@@ -98,6 +98,10 @@ traefik:
         default: true
       exposedPort: 443
       allowACMEByPass: false
+      transport:
+        respondingTimeouts:
+          # v3 default 60s covers the full request body: slow uploads >60s get killed with 502
+          readTimeout: 0s
       http3:
         enabled: false
         advertisedPort: # @schema type:[integer, null]; minimum:0
