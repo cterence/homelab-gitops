@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -53,24 +52,6 @@ func sendSources(text bool, args []string) (string, []sendSrc, error) {
 	}
 
 	return member, srcs, nil
-}
-
-// parseSendFlags extracts flags from anywhere in args — flag.Parse
-// stops at the first non-flag argument — returning the positionals.
-func parseSendFlags(fs *flag.FlagSet, args []string) []string {
-	var positional []string
-
-	for {
-		_ = fs.Parse(args)
-
-		rest := fs.Args()
-		if len(rest) == 0 {
-			return positional
-		}
-
-		positional = append(positional, rest[0])
-		args = rest[1:]
-	}
 }
 
 // textFileName is the delivered name for --text and stdin sends.
