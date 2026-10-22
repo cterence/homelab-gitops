@@ -170,7 +170,7 @@ func run() error {
 				Usage:    "run the always-on stash; first boot creates its identity",
 				Category: "stash",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "data", Usage: "data dir for identity, roster, and spool (defaults to CATBOX_DATA, else the host default)"},
+					&cli.StringFlag{Name: "data", Sources: cli.NewValueSourceChain(cli.EnvVar("CATBOX_DATA")), Usage: "data dir for identity, roster, and spool (defaults to CATBOX_DATA, else the host default)"},
 					&cli.Int64Flag{Name: "region", Usage: "DERP region ID; 0 probes once on first boot"},
 					&cli.StringFlag{Name: "max", Value: "100G", Usage: "spool capacity cap"},
 					&cli.DurationFlag{Name: "ttl", Value: 30 * 24 * time.Hour, Usage: "spool retention"},
@@ -554,7 +554,7 @@ func run() error {
 					&cli.StringArg{Name: "member", Required: true},
 				},
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "data", Usage: "stash data dir: run there to remove any member without being admin"},
+					&cli.StringFlag{Name: "data", Sources: cli.NewValueSourceChain(cli.EnvVar("CATBOX_DATA")), Usage: "stash data dir: run there to remove any member without being admin"},
 					&cli.BoolFlag{Name: "yes", Usage: "confirm: drop the member and every file parked for them"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
@@ -624,7 +624,7 @@ func run() error {
 					&cli.StringArg{Name: "member", Required: true},
 				},
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "data", Usage: "stash data dir (defaults to CATBOX_DATA, else the host default)"},
+					&cli.StringFlag{Name: "data", Sources: cli.NewValueSourceChain(cli.EnvVar("CATBOX_DATA")), Usage: "stash data dir (defaults to CATBOX_DATA, else the host default)"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
 					dataDir, err := resolveDataDir(c.String("data"))

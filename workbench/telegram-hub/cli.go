@@ -58,12 +58,12 @@ func run(ctx context.Context, args []string) error {
 				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Aliases: []string{"o"}, Usage: "where to write the MP3"},
-					&cli.StringFlag{Name: "model", Usage: "TTS model"},
-					&cli.StringFlag{Name: "clean-model", Usage: "chat model used to clean the article text"},
-					&cli.StringFlag{Name: "title-model", Usage: "chat model used to extract the title"},
-					&cli.StringFlag{Name: "api-base", Usage: "Mistral API base URL"},
-					&cli.StringFlag{Name: "voice-en", Usage: "voice for English text"},
-					&cli.StringFlag{Name: "voice-fr", Usage: "voice for non-English text"},
+					&cli.StringFlag{Name: "model", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_TTS_MODEL")), Usage: "TTS model"},
+					&cli.StringFlag{Name: "clean-model", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_CHAT_CLEAN_MODEL")), Usage: "chat model used to clean the article text"},
+					&cli.StringFlag{Name: "title-model", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_CHAT_TITLE_MODEL")), Usage: "chat model used to extract the title"},
+					&cli.StringFlag{Name: "api-base", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_API_BASE")), Usage: "Mistral API base URL"},
+					&cli.StringFlag{Name: "voice-en", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_VOICE_EN")), Usage: "voice for English text"},
+					&cli.StringFlag{Name: "voice-fr", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_VOICE_FR")), Usage: "voice for non-English text"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if c.Args().Present() {

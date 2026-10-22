@@ -7,7 +7,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -64,9 +63,9 @@ func run(ctx context.Context, args []string) error {
 		Name:  "pv-migrate",
 		Usage: "migrate data from a Released PersistentVolume to a destination PVC",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "source-pv", Destination: &cfg.sourcePV, Usage: "name of the source PersistentVolume (Released or Available)"},
-			&cli.StringFlag{Name: "dest-pvc", Destination: &cfg.destPVC, Usage: "name of the destination PVC (must already exist)"},
-			&cli.StringFlag{Name: "dest-namespace", Destination: &cfg.destNamespace, Usage: "namespace of the destination PVC"},
+			&cli.StringFlag{Name: "source-pv", Required: true, Destination: &cfg.sourcePV, Usage: "name of the source PersistentVolume (Released or Available)"},
+			&cli.StringFlag{Name: "dest-pvc", Required: true, Destination: &cfg.destPVC, Usage: "name of the destination PVC (must already exist)"},
+			&cli.StringFlag{Name: "dest-namespace", Required: true, Destination: &cfg.destNamespace, Usage: "namespace of the destination PVC"},
 			&cli.StringFlag{Name: "temp-namespace", Destination: &cfg.tempNamespace, Usage: "namespace for the temporary source PVC (default: source PV's old claimRef namespace)"},
 			&cli.StringFlag{Name: "kubeconfig", Destination: &cfg.kubeconfig, Usage: "path to kubeconfig (defaults to in-cluster or ~/.kube/config)"},
 			&cli.BoolFlag{Name: "allow-delete-reclaim", Destination: &cfg.allowDeleteReclaim, Usage: "allow migrating from a PV with a Delete reclaim policy (dangerous: deleting the temp PVC deletes the PV)"},
@@ -95,10 +94,6 @@ func run(ctx context.Context, args []string) error {
 
 // migrate is the command body: everything after flag parsing.
 func migrate(ctx context.Context, cfg config) error {
-	if cfg.sourcePV == "" || cfg.destPVC == "" || cfg.destNamespace == "" {
-		return errors.New("--source-pv, --dest-pvc and --dest-namespace are required")
-	}
-
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
