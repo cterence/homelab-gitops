@@ -5,7 +5,6 @@
 package main
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -15,6 +14,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	cli "github.com/urfave/cli/v3"
 )
 
 const (
@@ -23,7 +24,31 @@ const (
 	configPathEnv = "AGENT_RELAY_CONFIG"
 )
 
-func run(ctx context.Context) error {
+func run(ctx context.Context, args []string) error {
+	var configPath string
+
+	cmd := &cli.Command{
+		Name:  "agent-relay",
+		Usage: "generic webhook to Mistral-agent relay",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "config",
+				Value:       defaultConfig,
+				Sources:     cli.NewValueSourceChain(cli.EnvVar(configPathEnv)),
+				Destination: &configPath,
+				Usage:       "path to the routes config file",
+			},
+		},
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return serve(ctx, configPath)
+		},
+	}
+
+	return cmd.Run(ctx, args)
+}
+
+// serve is the command body: everything after flag parsing.
+func serve(ctx context.Context, configPath string) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
@@ -32,11 +57,9 @@ func run(ctx context.Context) error {
 		return errors.New("MISTRAL_API_KEY environment variable must be set")
 	}
 
-	path := cmp.Or(os.Getenv(configPathEnv), defaultConfig)
-
-	cfg, err := loadConfig(path)
+	cfg, err := loadConfig(configPath)
 	if err != nil {
-		return fmt.Errorf("loading config %s: %w", path, err)
+		return fmt.Errorf("loading config %s: %w", configPath, err)
 	}
 
 	rl := &relay{
@@ -95,7 +118,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if err := run(ctx); err != nil {
+	if err := run(ctx, os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
