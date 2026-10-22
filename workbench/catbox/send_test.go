@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,31 +14,32 @@ import (
 func TestSendSources(t *testing.T) {
 	tests := []struct {
 		name       string
-		text       string
+		text       bool
 		args       []string
 		wantMember string
 		want       []sendSrc
 		wantErr    bool
 	}{
-		{"no args", "", nil, "", nil, true},
-		{"member without sources", "", []string{"bob"}, "", nil, true},
-		{"one file", "", []string{"bob", "a.txt"}, "bob", []sendSrc{{path: "a.txt"}}, false},
+		{"no args", false, nil, "", nil, true},
+		{"member without sources", false, []string{"bob"}, "", nil, true},
+		{"one file", false, []string{"bob", "a.txt"}, "bob", []sendSrc{{path: "a.txt"}}, false},
 		{
 			"files mixed with stdin",
-			"",
+			false,
 			[]string{"bob", "a.txt", "-", "b.txt"},
 			"bob",
 			[]sendSrc{{path: "a.txt"}, {stdin: true}, {path: "b.txt"}},
 			false,
 		},
-		{"stdin only", "", []string{"bob", "-"}, "bob", []sendSrc{{stdin: true}}, false},
-		{"text only", "hi", []string{"bob"}, "bob", []sendSrc{{body: []byte("hi")}}, false},
+		{"stdin only", false, []string{"bob", "-"}, "bob", []sendSrc{{stdin: true}}, false},
+		{"text flag without body", true, []string{"bob"}, "", nil, true},
+		{"text only", true, []string{"bob", "hi"}, "bob", []sendSrc{{body: []byte("hi")}}, false},
 		{
-			"text with files",
-			"hi",
-			[]string{"bob", "a.txt"},
+			"multi-word text joined",
+			true,
+			[]string{"bob", "hi", "there"},
 			"bob",
-			[]sendSrc{{path: "a.txt"}, {body: []byte("hi")}},
+			[]sendSrc{{body: []byte("hi there")}},
 			false,
 		},
 	}
@@ -70,6 +72,37 @@ func TestSendSources(t *testing.T) {
 				if got.path != want.path || got.stdin != want.stdin || !bytes.Equal(got.body, want.body) {
 					t.Fatalf("srcs[%d] = %+v, want %+v", i, got, want)
 				}
+			}
+		})
+	}
+}
+
+func TestParseSendFlags(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		wantText bool
+		wantRest []string
+	}{
+		{"flag before positionals", []string{"--text", "bob", "hi there"}, true, []string{"bob", "hi there"}},
+		{"flag between positionals", []string{"bob", "--text", "hi there"}, true, []string{"bob", "hi there"}},
+		{"flag after positionals", []string{"bob", "hi there", "--text"}, true, []string{"bob", "hi there"}},
+		{"no flags", []string{"bob", "a.txt"}, false, []string{"bob", "a.txt"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fs := flag.NewFlagSet("send", flag.ExitOnError)
+			text := fs.Bool("text", false, "")
+
+			rest := parseSendFlags(fs, tt.args)
+
+			if *text != tt.wantText {
+				t.Fatalf("text = %v, want %v", *text, tt.wantText)
+			}
+
+			if strings.Join(rest, " ") != strings.Join(tt.wantRest, " ") {
+				t.Fatalf("rest = %q, want %q", rest, tt.wantRest)
 			}
 		})
 	}

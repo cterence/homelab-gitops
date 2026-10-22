@@ -344,10 +344,10 @@ func run() error {
 		return nil
 	case "send":
 		fs := flag.NewFlagSet("send", flag.ExitOnError)
-		text := fs.String("text", "", "send this text as text-<date>.txt")
-		_ = fs.Parse(os.Args[2:])
+		text := fs.Bool("text", false, "send the trailing args as text-<date>.txt instead of files")
+		positional := parseSendFlags(fs, os.Args[2:])
 
-		target, srcs, err := sendSources(*text, fs.Args())
+		target, srcs, err := sendSources(*text, positional)
 		if err != nil {
 			return err
 		}
@@ -715,7 +715,7 @@ membership commands:
 
 transfer commands:
   send      seal and ship files to a member
-            <member> [--text <string>] <file|-|...>
+            <member> <file|-|...> | <member> --text <string>
   recv      pull held files into the inbox dir
             [--dir DIR] [<id>...]
   listen    receive direct sends (Ctrl-C to stop)
