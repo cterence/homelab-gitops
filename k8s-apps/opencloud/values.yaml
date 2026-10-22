@@ -15,7 +15,8 @@ app-template:
         OC_INSECURE: "false" # SSL termination at ingress controller
         PROXY_TLS: "false"
         PROXY_HTTP_ADDR: 0.0.0.0:9200
-        OC_URL: https://oc.terence.cloud
+        # Canonical public host: share links embed OC_URL, so it must be publicly reachable
+        OC_URL: https://share.terence.cloud
         STORAGE_USERS_DRIVER: posix
         STORAGE_SYSTEM_DRIVER: decomposed
         STORAGE_USERS_ID_CACHE_STORE: "nats-js-kv"
@@ -32,7 +33,7 @@ app-template:
         init:
           image:
             repository: opencloudeu/opencloud-rolling
-            tag: 8.0.1@sha256:1e78144071ab3fc20d2533dd4c5709d24b7e1669c96439fdf7c73cb2808a5d5e
+            tag: 8.1.0@sha256:8fc64ca861739cc62095cd558814f2eba6a90acf5998d884e439b33a47875da8
           command: "/bin/bash"
           args:
             - -c
@@ -44,7 +45,7 @@ app-template:
         main:
           image:
             repository: opencloudeu/opencloud-rolling
-            tag: 8.0.1@sha256:1e78144071ab3fc20d2533dd4c5709d24b7e1669c96439fdf7c73cb2808a5d5e
+            tag: 8.1.0@sha256:8fc64ca861739cc62095cd558814f2eba6a90acf5998d884e439b33a47875da8
           envFrom:
             - configMapRef:
                 identifier: config
@@ -76,6 +77,7 @@ app-template:
           port: 9200
 
   ingress:
+    # Private admin alias; OC_URL/share links point at the public host below
     main:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
@@ -95,6 +97,27 @@ app-template:
         - secretName: opencloud-tls
           hosts:
             - *host
+
+    # Public host for share links and sync clients away from home
+    share:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+      className: "traefik"
+      hosts:
+        - host: &sharehost share.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: opencloud-share-tls
+          hosts:
+            - *sharehost
 
   persistence:
     config:
