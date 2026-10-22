@@ -5,65 +5,104 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"strings"
+
+	cli "github.com/urfave/cli/v3"
 )
 
 // errUsage marks invalid command-line usage; main exits 2 for it.
 var errUsage = errors.New("usage")
 
-func usage(w io.Writer) {
-	_, _ = fmt.Fprintf(w, `telegram-hub — the homelab's Telegram app
+// onUsage shows the command help — the same renderer --help uses, so
+// declared arguments appear in the usage line — then maps the
+// failure onto errUsage: exit code 2.
+func onUsage(ctx context.Context, c *cli.Command, err error, _ bool) error {
+	if c.Root() == c {
+		_ = cli.ShowRootCommandHelp(c)
+	} else {
+		_ = cli.ShowCommandHelp(ctx, c.Root(), c.Name)
+	}
 
-Usage:
-  telegram-hub serve                            run the MCP server and bot
-  telegram-hub tts <url> [flags]                convert an article to MP3; prints
-                                                 the cache path unless -o is given
-  telegram-hub send <text> [--parse-mode <m>]    message the owner chat
-
-tts flags (override the matching MISTRAL_* environment variables):
-  -o, --output <file|->      where to write the MP3
-  --model <name>              TTS model
-  --clean-model <name>        chat model used to clean the article text
-  --title-model <name>        chat model used to extract the title
-  --api-base <url>            Mistral API base URL
-  --voice-en, --voice-fr <id> voices for English and non-English text
-
-Examples:
-  telegram-hub tts https://example.com/article -o article.mp3
-  telegram-hub tts https://example.com/article --model voxtral-mini-tts-3-0
-  telegram-hub send "hello from the CLI" --parse-mode HTML
-
-Environment: serve needs TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, MISTRAL_API_KEY
-and ALLOWED_USERS. tts needs only MISTRAL_API_KEY. send needs
-TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.
-`)
+	return fmt.Errorf("%w: %v", errUsage, err)
 }
 
 // run dispatches subcommands; bare invocation only prints help.
 func run(ctx context.Context, args []string) error {
-	if len(args) == 0 {
-		usage(os.Stdout)
-		return nil
+	cmd := &cli.Command{
+		Name:         "telegram-hub",
+		Usage:        "the homelab's Telegram app: MCP server, bot, and CLI",
+		OnUsageError: onUsage,
+		Action: func(_ context.Context, c *cli.Command) error {
+			if c.Args().Present() {
+				_ = cli.ShowRootCommandHelp(c)
+
+				return fmt.Errorf("%w: unknown command %q", errUsage, c.Args().First())
+			}
+
+			return cli.ShowRootCommandHelp(c)
+		},
+		Commands: []*cli.Command{
+			{
+				Name:   "serve",
+				Usage:  "run the MCP server and bot",
+				Action: func(ctx context.Context, _ *cli.Command) error { return runServe(ctx) },
+			},
+			{
+				Name:  "tts",
+				Usage: "convert an article to MP3; prints the cache path unless -o is given",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "url", Required: true},
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "output", Aliases: []string{"o"}, Usage: "where to write the MP3"},
+					&cli.StringFlag{Name: "model", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_TTS_MODEL")), Usage: "TTS model"},
+					&cli.StringFlag{Name: "clean-model", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_CHAT_CLEAN_MODEL")), Usage: "chat model used to clean the article text"},
+					&cli.StringFlag{Name: "title-model", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_CHAT_TITLE_MODEL")), Usage: "chat model used to extract the title"},
+					&cli.StringFlag{Name: "api-base", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_API_BASE")), Usage: "Mistral API base URL"},
+					&cli.StringFlag{Name: "voice-en", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_VOICE_EN")), Usage: "voice for English text"},
+					&cli.StringFlag{Name: "voice-fr", Sources: cli.NewValueSourceChain(cli.EnvVar("MISTRAL_VOICE_FR")), Usage: "voice for non-English text"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					if c.Args().Present() {
+						return onUsage(ctx, c, fmt.Errorf("unexpected arguments %v: tts takes one url", c.Args().Slice()), true)
+					}
+
+					return runTTS(ctx, ttsFlags{
+						url:        c.StringArg("url"),
+						output:     c.String("output"),
+						apiBase:    c.String("api-base"),
+						cleanModel: c.String("clean-model"),
+						titleModel: c.String("title-model"),
+						model:      c.String("model"),
+						voiceEn:    c.String("voice-en"),
+						voiceFr:    c.String("voice-fr"),
+					})
+				},
+			},
+			{
+				Name:  "send",
+				Usage: "message the owner chat",
+				Arguments: []cli.Argument{
+					&cli.StringArgs{Name: "text", Min: 1, Max: -1},
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "parse-mode", Usage: `"" (plain text), HTML, or MarkdownV2`},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return runSend(ctx, strings.Join(c.StringArgs("text"), " "), c.String("parse-mode"))
+				},
+			},
+		},
 	}
 
-	switch args[0] {
-	case "serve":
-		return runServe(ctx)
-	case "tts":
-		return runTTS(ctx, args[1:])
-	case "send":
-		return runSend(ctx, args[1:])
-	case "help", "-h", "--help":
-		usage(os.Stdout)
-		return nil
-	default:
-		usage(os.Stderr)
-		return errUsage
+	for _, sub := range cmd.Commands {
+		sub.OnUsageError = onUsage
 	}
+
+	return cmd.Run(ctx, append([]string{"telegram-hub"}, args...))
 }
 
 // cliLogger keeps stdout clean for command data; diagnostics go to stderr.
@@ -87,83 +126,10 @@ type ttsFlags struct {
 	voiceFr    string
 }
 
-// flagTarget maps a flag name to its destination; nil means unknown flag.
-func (f *ttsFlags) flagTarget(name string) *string {
-	switch name {
-	case "-o", "--output":
-		return &f.output
-	case "--api-base":
-		return &f.apiBase
-	case "--clean-model":
-		return &f.cleanModel
-	case "--title-model":
-		return &f.titleModel
-	case "--model":
-		return &f.model
-	case "--voice-en":
-		return &f.voiceEn
-	case "--voice-fr":
-		return &f.voiceFr
-	default:
-		return nil
-	}
-}
-
-func parseTTSArgs(args []string) (ttsFlags, error) {
-	var flags ttsFlags
-
-	for i := 0; i < len(args); i++ {
-		name, value := args[i], ""
-
-		if long, ok := strings.CutPrefix(name, "--"); ok {
-			if key, val, found := strings.Cut(long, "="); found {
-				name, value = "--"+key, val
-			}
-		} else if rest, ok := strings.CutPrefix(name, "-o="); ok {
-			name, value = "-o", rest
-		}
-
-		target := flags.flagTarget(name)
-		if target == nil {
-			if strings.HasPrefix(name, "-") || flags.url != "" {
-				return flags, errUsage
-			}
-
-			flags.url = name
-
-			continue
-		}
-
-		if value == "" {
-			// shortcut: --flag= (empty value) consumes the next argument; drop if it bites
-			if i+1 >= len(args) {
-				return flags, errUsage
-			}
-
-			i++
-			value = args[i]
-		}
-
-		*target = value
-	}
-
-	if flags.url == "" {
-		return flags, errUsage
-	}
-
-	return flags, nil
-}
-
 // runTTS converts one article URL to an MP3 without Telegram: a local test
 // of the extract -> clean -> speak pipeline.
-func runTTS(ctx context.Context, args []string) error {
+func runTTS(ctx context.Context, flags ttsFlags) error {
 	logger := cliLogger()
-
-	flags, err := parseTTSArgs(args)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "usage: telegram-hub tts <url> [-o <file>] [--model <m>] [--clean-model <m>] [--title-model <m>] [--api-base <url>] [--voice-en <v>] [--voice-fr <v>]")
-		return errUsage
-	}
 
 	if !isValidURL(flags.url) {
 		return fmt.Errorf("url must start with http:// or https://, got %q", flags.url)
@@ -224,44 +190,9 @@ func runTTS(ctx context.Context, args []string) error {
 	return nil
 }
 
-func parseSendArgs(args []string) (text, parseMode string, err error) {
-	var words []string
-
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		switch {
-		case arg == "--parse-mode":
-			if i+1 >= len(args) {
-				return "", "", errUsage
-			}
-
-			i++
-			parseMode = args[i]
-		case strings.HasPrefix(arg, "--parse-mode="):
-			parseMode = strings.TrimPrefix(arg, "--parse-mode=")
-		case strings.HasPrefix(arg, "-"):
-			return "", "", errUsage
-		default:
-			words = append(words, arg)
-		}
-	}
-
-	if len(words) == 0 {
-		return "", "", errUsage
-	}
-
-	return strings.Join(words, " "), parseMode, nil
-}
-
 // runSend delivers one message to the locked owner chat from the CLI.
-func runSend(ctx context.Context, args []string) error {
+func runSend(ctx context.Context, text, parseMode string) error {
 	cliLogger()
-
-	text, parseMode, err := parseSendArgs(args)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, `usage: telegram-hub send <text> [--parse-mode ""|HTML|MarkdownV2]`)
-		return errUsage
-	}
 
 	if !validParseMode(parseMode) {
 		return fmt.Errorf("parse_mode must be one of %q, got %q", parseModes, parseMode)

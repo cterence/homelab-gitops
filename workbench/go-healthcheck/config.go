@@ -23,8 +23,8 @@ type Config struct {
 	HTTPStatusCodeErrorThreshold int     `yaml:"httpStatusCodeErrorThreshold,omitempty"`
 }
 
-func (c *Config) Load() error {
-	configYaml, err := os.ReadFile("config.yaml")
+func (c *Config) Load(path string) error {
+	configYaml, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to open config file: %v", err)
 	}

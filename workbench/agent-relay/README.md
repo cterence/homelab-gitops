@@ -50,6 +50,8 @@ Deduplicated requests also return `202` so Alertmanager does not retry them.
 | `MISTRAL_API_KEY` | Mistral API key (from the `agent-relay/credentials` openbao secret) |
 | `AGENT_RELAY_CONFIG` | Config file path (default `/config/config.yaml`) |
 
+A `--config` flag overrides the env var; `--help` lists it.
+
 ## Behavior notes
 
 - The Mistral call runs in a background goroutine with a 10-minute timeout,

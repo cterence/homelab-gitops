@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/urfave/cli/v3 v3.14.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 )

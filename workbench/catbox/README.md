@@ -175,8 +175,8 @@ catbox help
   (`-X main.buildTime=…`, unix seconds): the Kaniko build moment
   in Docker builds, the commit timestamp in nix builds, `unknown`
   otherwise. The Android app's About dialog shows this output.
-- `help` (or bare `catbox`, or `-h`/`--help`) prints the usage and
-  exits 0.
+- `help` (or bare `catbox`, or `-h`/`--help`) prints the standard
+  urfave/cli help and exits 0; subcommands take their own `--help`.
 - Exit codes: 0 success (help and version included), 1 runtime
   failure, 2 invalid usage (unknown command, missing arguments, a
   refused `--yes`), 4 no such pending item, 130 interrupted by

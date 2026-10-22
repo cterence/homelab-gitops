@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,60 +16,25 @@ type sendSrc struct {
 	stdin bool
 }
 
-// sendSources splits a send command line: the first arg is the
-// target member. With text set, the remaining args are the message;
-// otherwise "-" is stdin and any other arg a file.
-func sendSources(text bool, args []string) (string, []sendSrc, error) {
-	const usage = "%w: send takes <member> <file|-|...> or <member> --text <string>"
-
-	if len(args) < 1 {
-		return "", nil, fmt.Errorf(usage, errUsage)
-	}
-
-	member := args[0]
-	rest := args[1:]
-
-	var srcs []sendSrc
-
+// sendSources splits the send command line: the target member, then one
+// sendSrc per file — "-" is stdin. With text set, the trailing args are the
+// message body instead.
+func sendSources(text bool, files []string) []sendSrc {
 	if text {
-		if len(rest) == 0 {
-			return "", nil, fmt.Errorf(usage, errUsage)
-		}
+		return []sendSrc{{body: []byte(strings.Join(files, " "))}}
+	}
 
-		srcs = append(srcs, sendSrc{body: []byte(strings.Join(rest, " "))})
-	} else {
-		for _, a := range rest {
-			if a == "-" {
-				srcs = append(srcs, sendSrc{stdin: true})
-			} else {
-				srcs = append(srcs, sendSrc{path: a})
-			}
+	srcs := make([]sendSrc, len(files))
+
+	for i, f := range files {
+		if f == "-" {
+			srcs[i] = sendSrc{stdin: true}
+		} else {
+			srcs[i] = sendSrc{path: f}
 		}
 	}
 
-	if len(srcs) == 0 {
-		return "", nil, fmt.Errorf(usage, errUsage)
-	}
-
-	return member, srcs, nil
-}
-
-// parseSendFlags extracts flags from anywhere in args — flag.Parse
-// stops at the first non-flag argument — returning the positionals.
-func parseSendFlags(fs *flag.FlagSet, args []string) []string {
-	var positional []string
-
-	for {
-		_ = fs.Parse(args)
-
-		rest := fs.Args()
-		if len(rest) == 0 {
-			return positional
-		}
-
-		positional = append(positional, rest[0])
-		args = rest[1:]
-	}
+	return srcs
 }
 
 // textFileName is the delivered name for --text and stdin sends.

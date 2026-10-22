@@ -7,8 +7,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -17,6 +15,8 @@ import (
 	"syscall"
 	"time"
 
+	cli "github.com/urfave/cli/v3"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,7 +24,10 @@ import (
 const defaultBindTimeout = 5 * time.Minute
 
 func main() {
-	if err := run(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := run(ctx, os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "pv-migrate: %v\n", err)
 		os.Exit(1)
 	}
@@ -53,40 +56,46 @@ type config struct {
 	destNode             string
 }
 
-func run() error {
+func run(ctx context.Context, args []string) error {
 	var cfg config
 
-	flag.StringVar(&cfg.sourcePV, "source-pv", "", "name of the source PersistentVolume (Released or Available)")
-	flag.StringVar(&cfg.destPVC, "dest-pvc", "", "name of the destination PVC (must already exist)")
-	flag.StringVar(&cfg.destNamespace, "dest-namespace", "", "namespace of the destination PVC")
-	flag.StringVar(&cfg.tempNamespace, "temp-namespace", "", "namespace for the temporary source PVC (default: source PV's old claimRef namespace)")
-	flag.StringVar(&cfg.kubeconfig, "kubeconfig", "", "path to kubeconfig (defaults to in-cluster or ~/.kube/config)")
-	flag.BoolVar(&cfg.allowDeleteReclaim, "allow-delete-reclaim", false, "allow migrating from a PV with a Delete reclaim policy (dangerous: deleting the temp PVC deletes the PV)")
-	flag.BoolVar(&cfg.allowDestMismatch, "allow-dest-mismatch", false, "skip the check that the dest PVC name matches the source PV's previous consumer")
-	flag.BoolVar(&cfg.dryRun, "dry-run", false, "print the plan and exit without creating or modifying anything")
-	flag.DurationVar(&cfg.bindTimeout, "bind-timeout", defaultBindTimeout, "how long to wait for the temp PVC to bind")
-	flag.StringVar(&cfg.strategies, "strategies", "", "comma-separated pv-migrate strategies (default: pv-migrate's built-in default)")
-	flag.StringVar(&cfg.helmTimeout, "helm-timeout", "", "helm install/uninstall timeout, e.g. 2m (default: pv-migrate's built-in default)")
-	flag.StringVar(&cfg.logLevel, "log-level", "", "pv-migrate log level: DEBUG, INFO, WARN, ERROR (default: pv-migrate's built-in default)")
-	flag.BoolVar(&cfg.deleteExtraneous, "delete-extraneous-files", false, "pass --dest-delete-extraneous-files to pv-migrate (rsync --delete)")
-	flag.BoolVar(&cfg.ignoreMounted, "ignore-mounted", false, "do not fail if the source or destination PVC is mounted")
-	flag.BoolVar(&cfg.nonRoot, "non-root", false, "run migration containers as non-root (restricted PodSecurity)")
-	flag.BoolVar(&cfg.noChown, "no-chown", false, "omit chown during rsync")
-	flag.BoolVar(&cfg.sourceMountReadWrite, "source-mount-read-write", false, "mount the source PVC read-write during migration")
-	flag.BoolVar(&cfg.noCompress, "no-compress", false, "disable rsync compression")
-	flag.StringVar(&cfg.sourceNode, "source-node", "", "pin the source-side pod (sshd in pull mode) to this node")
-	flag.StringVar(&cfg.destNode, "dest-node", "", "pin the dest-side pod (rsync in pull mode) to this node — triggers WaitForFirstConsumer PVC provisioning on that node")
-	flag.Parse()
-
-	if cfg.sourcePV == "" || cfg.destPVC == "" || cfg.destNamespace == "" {
-		return errors.New("--source-pv, --dest-pvc and --dest-namespace are required")
+	cmd := &cli.Command{
+		Name:  "pv-migrate",
+		Usage: "migrate data from a Released PersistentVolume to a destination PVC",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "source-pv", Required: true, Destination: &cfg.sourcePV, Usage: "name of the source PersistentVolume (Released or Available)"},
+			&cli.StringFlag{Name: "dest-pvc", Required: true, Destination: &cfg.destPVC, Usage: "name of the destination PVC (must already exist)"},
+			&cli.StringFlag{Name: "dest-namespace", Required: true, Destination: &cfg.destNamespace, Usage: "namespace of the destination PVC"},
+			&cli.StringFlag{Name: "temp-namespace", Destination: &cfg.tempNamespace, Usage: "namespace for the temporary source PVC (default: source PV's old claimRef namespace)"},
+			&cli.StringFlag{Name: "kubeconfig", Destination: &cfg.kubeconfig, Usage: "path to kubeconfig (defaults to in-cluster or ~/.kube/config)"},
+			&cli.BoolFlag{Name: "allow-delete-reclaim", Destination: &cfg.allowDeleteReclaim, Usage: "allow migrating from a PV with a Delete reclaim policy (dangerous: deleting the temp PVC deletes the PV)"},
+			&cli.BoolFlag{Name: "allow-dest-mismatch", Destination: &cfg.allowDestMismatch, Usage: "skip the check that the dest PVC name matches the source PV's previous consumer"},
+			&cli.BoolFlag{Name: "dry-run", Destination: &cfg.dryRun, Usage: "print the plan and exit without creating or modifying anything"},
+			&cli.DurationFlag{Name: "bind-timeout", Value: defaultBindTimeout, Destination: &cfg.bindTimeout, Usage: "how long to wait for the temp PVC to bind"},
+			&cli.StringFlag{Name: "strategies", Destination: &cfg.strategies, Usage: "comma-separated pv-migrate strategies (default: pv-migrate's built-in default)"},
+			&cli.StringFlag{Name: "helm-timeout", Destination: &cfg.helmTimeout, Usage: "helm install/uninstall timeout, e.g. 2m (default: pv-migrate's built-in default)"},
+			&cli.StringFlag{Name: "log-level", Destination: &cfg.logLevel, Usage: "pv-migrate log level: DEBUG, INFO, WARN, ERROR (default: pv-migrate's built-in default)"},
+			&cli.BoolFlag{Name: "delete-extraneous-files", Destination: &cfg.deleteExtraneous, Usage: "pass --dest-delete-extraneous-files to pv-migrate (rsync --delete)"},
+			&cli.BoolFlag{Name: "ignore-mounted", Destination: &cfg.ignoreMounted, Usage: "do not fail if the source or destination PVC is mounted"},
+			&cli.BoolFlag{Name: "non-root", Destination: &cfg.nonRoot, Usage: "run migration containers as non-root (restricted PodSecurity)"},
+			&cli.BoolFlag{Name: "no-chown", Destination: &cfg.noChown, Usage: "omit chown during rsync"},
+			&cli.BoolFlag{Name: "source-mount-read-write", Destination: &cfg.sourceMountReadWrite, Usage: "mount the source PVC read-write during migration"},
+			&cli.BoolFlag{Name: "no-compress", Destination: &cfg.noCompress, Usage: "disable rsync compression"},
+			&cli.StringFlag{Name: "source-node", Destination: &cfg.sourceNode, Usage: "pin the source-side pod (sshd in pull mode) to this node"},
+			&cli.StringFlag{Name: "dest-node", Destination: &cfg.destNode, Usage: "pin the dest-side pod (rsync in pull mode) to this node — triggers WaitForFirstConsumer PVC provisioning on that node"},
+		},
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return migrate(ctx, cfg)
+		},
 	}
 
+	return cmd.Run(ctx, args)
+}
+
+// migrate is the command body: everything after flag parsing.
+func migrate(ctx context.Context, cfg config) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	client, err := newK8sClient(cfg.kubeconfig)
 	if err != nil {

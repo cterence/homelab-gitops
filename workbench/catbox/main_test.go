@@ -78,8 +78,8 @@ func TestHelpExitsZero(t *testing.T) {
 				t.Fatalf("catbox %v: exit = %d, want 0", tt.args, code)
 			}
 
-			if !strings.Contains(out, "usage:") {
-				t.Fatalf("catbox %v: no usage in output: %q", tt.args, out)
+			if !strings.Contains(out, "USAGE:") || !strings.Contains(out, "serve") {
+				t.Fatalf("catbox %v: no generated help in output: %q", tt.args, out)
 			}
 		})
 	}
@@ -102,14 +102,15 @@ func TestUsageErrors(t *testing.T) {
 		args []string
 		want string
 	}{
-		{"join missing token", []string{"join", "alice"}, "join takes"},
-		{"rename missing name", []string{"rename"}, "rename takes"},
-		{"send missing file", []string{"send", "bob"}, "send takes"},
-		{"dismiss missing arg", []string{"dismiss"}, "dismiss takes"},
-		{"remove missing arg", []string{"remove"}, "remove takes"},
+		{"join missing token", []string{"join", "alice"}, "Required argument"},
+		{"rename missing name", []string{"rename"}, "Required argument"},
+		{"send missing member", []string{"send"}, "Required argument"},
+		{"send missing file", []string{"send", "bob"}, "sufficient count of arg files"},
+		{"dismiss missing arg", []string{"dismiss"}, "Required argument"},
+		{"remove missing arg", []string{"remove"}, "Required argument"},
 		{"remove needs yes", []string{"remove", "bob"}, "--yes"},
 		{"remove --data needs yes", []string{"remove", "--data", "/data", "bob"}, "--yes"},
-		{"admin missing arg", []string{"admin"}, "admin takes"},
+		{"admin missing arg", []string{"admin"}, "Required argument"},
 		{"reset needs yes", []string{"reset"}, "--yes"},
 		{"bad max", []string{"serve", "--max", "wat"}, "--max"},
 	}

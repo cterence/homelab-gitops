@@ -12,12 +12,36 @@ import (
 	"time"
 
 	"github.com/hellofresh/health-go/v5"
+	cli "github.com/urfave/cli/v3"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	cmd := &cli.Command{
+		Name:  "go-healthcheck",
+		Usage: "serve health checks for external targets",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "config", Value: "config.yaml", Usage: "path to the config file"},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			serve(ctx, c.String("config"))
+
+			return nil
+		},
+	}
+
+	if err := cmd.Run(ctx, os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "go-healthcheck: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func serve(ctx context.Context, configPath string) {
 	config := &Config{}
 
-	err := config.Load()
+	err := config.Load(configPath)
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
@@ -53,9 +77,6 @@ func main() {
 	r := newRouter(h)
 
 	srv := &http.Server{Addr: ":" + config.Port, Handler: r}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	go func() {
 		fmt.Printf("Listening on port %s\n", config.Port)

@@ -6,7 +6,6 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -16,18 +15,22 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/urfave/cli/v3"
 	"golang.org/x/sync/errgroup"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func main() {
-	if err := run(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := run(ctx, os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "cnpg-restore-test: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
+func run(ctx context.Context, args []string) error {
 	cfg := Config{
 		Namespace:               "cnpg-restore-test",
 		Concurrency:             0, // 0 = auto-detect
@@ -39,17 +42,30 @@ func run() error {
 
 	var concurrencyStr string
 
-	flag.BoolVar(&cfg.DryRun, "dry-run", true, "discover and capacity check only, no resource creation (use --dry-run=false to run full restore)")
-	flag.StringVar(&cfg.Namespace, "namespace", cfg.Namespace, "target namespace for restore clusters")
-	flag.StringVar(&concurrencyStr, "concurrency", "auto", "max concurrent cluster restores (\"auto\" to auto-detect from capacity)")
-	flag.Float64Var(&cfg.CapacityMargin, "capacity-margin", cfg.CapacityMargin, "safety multiplier for disk capacity check")
-	flag.StringVar(&cfg.CapacityMountpointRegex, "capacity-mountpoint-regex", cfg.CapacityMountpointRegex, "Prometheus mountpoint regex for capacity check (min across matching nodes)")
-	flag.StringVar(&cfg.PrometheusURL, "prometheus-endpoint", cfg.PrometheusURL, "Prometheus API URL for capacity queries")
-	flag.StringVar(&cfg.OTeleEndpoint, "otel-endpoint", cfg.OTeleEndpoint, "OTLP gRPC endpoint for pushing metrics")
-	flag.StringVar(&cfg.KubeconfigPath, "kubeconfig", "", "path to kubeconfig (defaults to ~/.kube/config or in-cluster)")
-	flag.StringVar(&cfg.ClusterFilter, "filter", "", "comma-separated glob patterns to filter clusters by namespace/name (e.g. 'pocket-id/*,vaultwarden/*')")
-	flag.Parse()
+	cmd := &cli.Command{
+		Name:  "cnpg-restore-test",
+		Usage: "verify that CNPG cluster backups can be restored",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{Name: "dry-run", Value: true, Destination: &cfg.DryRun, Usage: "discover and capacity check only, no resource creation (use --dry-run=false to run full restore)"},
+			&cli.StringFlag{Name: "namespace", Value: cfg.Namespace, Destination: &cfg.Namespace, Usage: "target namespace for restore clusters"},
+			&cli.StringFlag{Name: "concurrency", Value: "auto", Destination: &concurrencyStr, Usage: `max concurrent cluster restores ("auto" to auto-detect from capacity)`},
+			&cli.FloatFlag{Name: "capacity-margin", Value: cfg.CapacityMargin, Destination: &cfg.CapacityMargin, Usage: "safety multiplier for disk capacity check"},
+			&cli.StringFlag{Name: "capacity-mountpoint-regex", Value: cfg.CapacityMountpointRegex, Destination: &cfg.CapacityMountpointRegex, Usage: "Prometheus mountpoint regex for capacity check (min across matching nodes)"},
+			&cli.StringFlag{Name: "prometheus-endpoint", Value: cfg.PrometheusURL, Destination: &cfg.PrometheusURL, Usage: "Prometheus API URL for capacity queries"},
+			&cli.StringFlag{Name: "otel-endpoint", Value: cfg.OTeleEndpoint, Destination: &cfg.OTeleEndpoint, Usage: "OTLP gRPC endpoint for pushing metrics"},
+			&cli.StringFlag{Name: "kubeconfig", Destination: &cfg.KubeconfigPath, Usage: "path to kubeconfig (defaults to ~/.kube/config or in-cluster)"},
+			&cli.StringFlag{Name: "filter", Destination: &cfg.ClusterFilter, Usage: "comma-separated glob patterns to filter clusters by namespace/name (e.g. 'pocket-id/*,vaultwarden/*')"},
+		},
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return runRestore(ctx, cfg, concurrencyStr)
+		},
+	}
 
+	return cmd.Run(ctx, args)
+}
+
+// runRestore is the command body: everything after flag parsing.
+func runRestore(ctx context.Context, cfg Config, concurrencyStr string) error {
 	// Parse concurrency: "auto" = 0 (auto-detect), or a positive integer
 	if concurrencyStr != "auto" {
 		n, err := strconv.Atoi(concurrencyStr)
@@ -70,10 +86,6 @@ func run() error {
 
 	slog.Info("client initialized", "dry-run", cfg.DryRun, "namespace", cfg.Namespace, "concurrency", concurrencyStr)
 
-	signalCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
-
-	ctx := signalCtx
 	runStart := time.Now()
 
 	// Verify the restore storage class exists and uses Delete reclaim policy
@@ -152,6 +164,7 @@ func run() error {
 	}
 
 	// Process each cluster: restore → verify → cleanup, with bounded concurrency
+	signalCtx := ctx
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(cfg.Concurrency)
 

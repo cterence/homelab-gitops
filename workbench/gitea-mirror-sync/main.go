@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	cli "github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -413,44 +414,57 @@ func loadConfig(path string) (*Config, error) {
 	return &cfg, nil
 }
 
-func env(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-
-	return def
+type options struct {
+	mirrors  string
+	dryRun   bool
+	prune    bool
+	giteaURL string
+	user     string
+	pass     string
 }
 
 func main() {
-	if err := run(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	if err := run(ctx, os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "gitea-mirror-sync: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
+func run(ctx context.Context, args []string) error {
+	var opts options
 
-	const mirrorsFile = "/etc/mirrors/mirrors.yaml"
-
-	dryRun := os.Getenv("DRY_RUN") == "true"
-
-	prune := os.Getenv("PRUNE")
-	if prune == "" {
-		prune = "true"
+	cmd := &cli.Command{
+		Name:  "gitea-mirror-sync",
+		Usage: "reconcile Gitea mirror repos from a mirrors file",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "mirrors", Value: "/etc/mirrors/mirrors.yaml", Destination: &opts.mirrors, Usage: "path to the mirrors config file"},
+			&cli.BoolFlag{Name: "dry-run", Sources: cli.NewValueSourceChain(cli.EnvVar("DRY_RUN")), Destination: &opts.dryRun, Usage: "log planned changes only, create or delete nothing"},
+			&cli.BoolFlag{Name: "prune", Value: true, Sources: cli.NewValueSourceChain(cli.EnvVar("PRUNE")), Destination: &opts.prune, Usage: "delete Gitea repos that are no longer mirrored"},
+			&cli.StringFlag{Name: "gitea-url", Sources: cli.NewValueSourceChain(cli.EnvVar("GITEA_URL")), Destination: &opts.giteaURL, Usage: "Gitea API base URL"},
+			&cli.StringFlag{Name: "user", Sources: cli.NewValueSourceChain(cli.EnvVar("GITEA_USER")), Destination: &opts.user, Usage: "Gitea API user"},
+			&cli.StringFlag{Name: "pass", Sources: cli.NewValueSourceChain(cli.EnvVar("GITEA_PASS")), Destination: &opts.pass, Usage: "Gitea API password"},
+		},
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return reconcile(ctx, opts)
+		},
 	}
 
-	shouldPrune := prune == "true"
+	return cmd.Run(ctx, args)
+}
 
-	cfg, err := loadConfig(mirrorsFile)
+// reconcile is the command body: everything after flag parsing.
+func reconcile(ctx context.Context, opts options) error {
+	cfg, err := loadConfig(opts.mirrors)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("loaded %d mirror(s) from %s\n", len(cfg.Mirrors), mirrorsFile)
+	fmt.Printf("loaded %d mirror(s) from %s\n", len(cfg.Mirrors), opts.mirrors)
 
-	c := newClient(env("GITEA_URL", ""), os.Getenv("GITEA_USER"), os.Getenv("GITEA_PASS"))
+	c := newClient(opts.giteaURL, opts.user, opts.pass)
 
 	// Reconcile desired state.
 	desired := map[string]bool{}
@@ -468,7 +482,7 @@ func run() error {
 		case r == nil:
 			fmt.Printf("create mirror %s <- %s\n", key, m.CloneAddr)
 
-			if !dryRun {
+			if !opts.dryRun {
 				if err := c.ensureOwner(ctx, m.Owner); err != nil {
 					return err
 				}
@@ -484,7 +498,7 @@ func run() error {
 			if m.MirrorInterval != "" || (m.Private != nil && *m.Private != r.Private) {
 				fmt.Printf("update mirror %s (mirror_interval=%s private=%v)\n", key, m.MirrorInterval, m.Private)
 
-				if !dryRun {
+				if !opts.dryRun {
 					if err := c.updateRepo(ctx, m); err != nil {
 						return err
 					}
@@ -494,7 +508,7 @@ func run() error {
 	}
 
 	// Prune mirrors in any managed owner that are no longer desired.
-	if !shouldPrune {
+	if !opts.prune {
 		fmt.Println("prune disabled; skipping cleanup")
 		return nil
 	}
@@ -522,7 +536,7 @@ func run() error {
 
 			fmt.Printf("prune mirror %s\n", key)
 
-			if !dryRun {
+			if !opts.dryRun {
 				if err := c.deleteRepo(ctx, r.Owner.Name, r.Name); err != nil {
 					return err
 				}

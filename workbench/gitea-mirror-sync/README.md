@@ -50,6 +50,9 @@ PRUNE=false DRY_RUN=false go run .
 | `DRY_RUN` | `true` | Log planned changes without applying them. Set `false` to apply. |
 | `PRUNE` | `true` | Delete mirrors not present in the config. |
 
+Every variable has a matching flag (`--gitea-url`, `--user`, `--pass`,
+`--dry-run`, `--prune`, `--mirrors`); flags override env vars.
+
 ## Configuration
 
 The mirrors file is a YAML document with a default owner, a default mirror

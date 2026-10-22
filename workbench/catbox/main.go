@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"log/slog"
@@ -17,6 +16,7 @@ import (
 	"time"
 
 	"github.com/tailscale/tailcat"
+	cli "github.com/urfave/cli/v3"
 )
 
 // Baked at build time via -ldflags "-X main.version=…"; "dev" otherwise.
@@ -130,486 +130,587 @@ func newLogger() *slog.Logger {
 	return slog.New(slog.NewJSONHandler(os.Stderr, nil))
 }
 
+// onUsage shows the command help — the same renderer --help uses, so
+// declared arguments appear in the usage line — then maps the
+// failure onto errUsage: exit code 2.
+func onUsage(ctx context.Context, c *cli.Command, err error, _ bool) error {
+	if c.Root() == c {
+		_ = cli.ShowRootCommandHelp(c)
+	} else {
+		_ = cli.ShowCommandHelp(ctx, c.Root(), c.Name)
+	}
+
+	return fmt.Errorf("%w: %v", errUsage, err)
+}
+
 func run() error {
 	log := newLogger()
-
-	if len(os.Args) < 2 || os.Args[1] == "help" || os.Args[1] == "-h" || os.Args[1] == "--help" {
-		usage(os.Stdout)
-		return nil
-	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	switch os.Args[1] {
-	case "serve":
-		fs := flag.NewFlagSet("serve", flag.ExitOnError)
-		data := fs.String("data", "", "data dir for identity, roster, and spool (defaults to CATBOX_DATA, else the host default)")
-		region := fs.Int64("region", 0, "DERP region ID; 0 probes once on first boot")
-		max := fs.String("max", "100G", "spool capacity cap")
-		ttl := fs.Duration("ttl", 30*24*time.Hour, "spool retention")
-		health := fs.String("health", ":8081", "health listen address")
-		_ = fs.Parse(os.Args[2:])
+	cmd := &cli.Command{
+		Name:         "catbox",
+		Usage:        "async file transfer over tailcat, one stash, daemonless peers",
+		OnUsageError: onUsage,
+		// Bare invocation shows the help; a non-command argument is
+		// the unknown-command error.
+		Action: func(_ context.Context, c *cli.Command) error {
+			if c.Args().Present() {
+				_ = cli.ShowRootCommandHelp(c)
 
-		maxN, err := parseSize(*max)
-		if err != nil {
-			return fmt.Errorf("%w: --max: %v", errUsage, err)
-		}
-
-		dataDir, err := resolveDataDir(*data)
-		if err != nil {
-			return err
-		}
-
-		return runServe(ctx, log, dataDir, *region, maxN, *ttl, *health)
-	case "addr":
-		// Reads the same dir serve uses: --data is not offered, the
-		// resolution matches (CATBOX_DATA, else the host default).
-		dataDir, err := resolveDataDir("")
-		if err != nil {
-			return err
-		}
-
-		id, _, err := loadStashIdentity(ctx, dataDir, -1)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(id.Public.Addr())
-
-		return nil
-	case "join":
-		fs := flag.NewFlagSet("join", flag.ExitOnError)
-		_ = fs.Parse(os.Args[2:])
-
-		if fs.NArg() != 2 {
-			return fmt.Errorf("%w: join takes <name> <invite-token | stash-addr>", errUsage)
-		}
-
-		// The second argument is the invite token when it decodes,
-		// else a bare stash address (the fresh-mesh bootstrap join).
-		// "-" reads it from stdin, keeping the token out of the
-		// shell history.
-		name, addr, code := fs.Arg(0), "", ""
-
-		arg := fs.Arg(1)
-		if arg == "-" {
-			tok, err := tokenFromStdin(os.Stdin)
-			if err != nil {
-				return err
+				return fmt.Errorf("%w: unknown command %q", errUsage, c.Args().First())
 			}
 
-			if tok == "" {
-				return fmt.Errorf("%w: empty token on stdin", errUsage)
-			}
-
-			arg = tok
-		}
-
-		if iv, err := parseInviteArg(arg); err == nil {
-			addr, code = iv.Stash, iv.Code
-		} else {
-			addr = arg
-		}
-
-		created, err := runJoin(ctx, name, addr, code)
-		if err != nil {
-			return err
-		}
-
-		if created {
-			fmt.Printf("joined as %s\n", name)
-		} else {
-			fmt.Printf("already joined as %s (roster refreshed)\n", name)
-		}
-
-		return nil
-	case "rename":
-		fs := flag.NewFlagSet("rename", flag.ExitOnError)
-		_ = fs.Parse(os.Args[2:])
-
-		if fs.NArg() != 1 {
-			return fmt.Errorf("%w: rename takes <new-name>", errUsage)
-		}
-
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
-		}
-
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		// The rename rides the join op: the stash validates the name
-		// and retargets parked files. Stop listen first, or its
-		// registered listener address goes stale.
-		id.Name = fs.Arg(0)
-
-		if err := joinReq(conn, id, "", ""); err != nil {
-			return err
-		}
-
-		if err := saveJSON(filepath.Join(peerConfigDir(), "identity.json"), id); err != nil {
-			return err
-		}
-
-		fmt.Printf("renamed to %s\n", id.Name)
-
-		return nil
-	case "recv":
-		fs := flag.NewFlagSet("recv", flag.ExitOnError)
-		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
-		_ = fs.Parse(os.Args[2:])
-
-		if *dir == "" {
-			var err error
-
-			*dir, err = downloadDir()
-			if err != nil {
-				return err
-			}
-		}
-
-		return runRecv(ctx, log, *dir, fs.Args())
-	case "listen":
-		fs := flag.NewFlagSet("listen", flag.ExitOnError)
-		dir := fs.String("dir", "", "inbox dir (default: OS downloads + /catbox)")
-		_ = fs.Parse(os.Args[2:])
-
-		if *dir == "" {
-			var err error
-
-			*dir, err = downloadDir()
-			if err != nil {
-				return err
-			}
-		}
-
-		return runListen(ctx, log, *dir)
-	case "invite":
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
-		}
-
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
-
-		code, err := clientInvite(conn)
-		if err != nil {
-			return err
-		}
-
-		token, err := encodeInvite(inviteJSON{Code: code, Stash: string(id.StashAddr)})
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(token)
-
-		return nil
-	case "status":
-		fs := flag.NewFlagSet("status", flag.ExitOnError)
-		jsonOut := fs.Bool("json", false, "machine-readable status for UIs")
-		_ = fs.Parse(os.Args[2:])
-
-		if err := runStatus(ctx, *jsonOut); err != nil {
-			return &jsonError{err}
-		}
-
-		return nil
-	case "send":
-		fs := flag.NewFlagSet("send", flag.ExitOnError)
-		text := fs.Bool("text", false, "send the trailing args as text-<date>.txt instead of files")
-		positional := parseSendFlags(fs, os.Args[2:])
-
-		target, srcs, err := sendSources(*text, positional)
-		if err != nil {
-			return err
-		}
-
-		for _, src := range srcs {
-			if src.path == "" {
-				continue
-			}
-
-			if fi, err := os.Stat(src.path); err != nil {
-				return err
-			} else if fi.IsDir() {
-				return errors.New("send takes files, " + src.path + " is a directory")
-			}
-		}
-
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
-		}
-
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
-
-		defer release()
-
-		var spooled []string
-
-		defer func() {
-			for _, dir := range spooled {
-				_ = os.RemoveAll(dir)
-			}
-		}()
-
-		for _, src := range srcs {
-			path, label := src.path, src.path
-
-			if path == "" {
-				body := src.body
-
-				if src.stdin {
-					if body, err = io.ReadAll(os.Stdin); err != nil {
-						return fmt.Errorf("reading stdin: %w", err)
+			return cli.ShowRootCommandHelp(c)
+		},
+		Commands: []*cli.Command{
+			{
+				Name:     "serve",
+				Usage:    "run the always-on stash; first boot creates its identity",
+				Category: "stash",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "data", Sources: cli.NewValueSourceChain(cli.EnvVar("CATBOX_DATA")), Usage: "data dir for identity, roster, and spool (defaults to CATBOX_DATA, else the host default)"},
+					&cli.Int64Flag{Name: "region", Usage: "DERP region ID; 0 probes once on first boot"},
+					&cli.StringFlag{Name: "max", Value: "100G", Usage: "spool capacity cap"},
+					&cli.DurationFlag{Name: "ttl", Value: 30 * 24 * time.Hour, Usage: "spool retention"},
+					&cli.StringFlag{Name: "health", Value: ":8081", Usage: "health listen address"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					maxN, err := parseSize(c.String("max"))
+					if err != nil {
+						return fmt.Errorf("%w: --max: %v", errUsage, err)
 					}
-				}
 
-				if path, err = spoolSend(body); err != nil {
-					return err
-				}
+					dataDir, err := resolveDataDir(c.String("data"))
+					if err != nil {
+						return err
+					}
 
-				spooled = append(spooled, filepath.Dir(path))
-				label = filepath.Base(path)
-			}
+					return runServe(ctx, log, dataDir, c.Int64("region"), maxN, c.Duration("ttl"), c.String("health"))
+				},
+			},
+			{
+				Name:     "addr",
+				Usage:    "print the stash's tailcat address from its data dir",
+				Category: "stash",
+				// Reads the same dir serve uses: --data is not offered,
+				// the resolution matches (CATBOX_DATA, else the host
+				// default).
+				Action: func(ctx context.Context, _ *cli.Command) error {
+					dataDir, err := resolveDataDir("")
+					if err != nil {
+						return err
+					}
 
-			// The SHA is known before sealing: it keys the
-			// deterministic file secret and the receiver's resume
-			// partial. The stash conn is clientSend's to dial, per
-			// file: a long transfer starves its idle deadline, and
-			// the next file must not inherit a dead conn.
-			shaHex, err := fileSHA256(path)
-			if err != nil {
-				return fmt.Errorf("hashing %s: %w", path, err)
-			}
+					id, _, err := loadStashIdentity(ctx, dataDir, -1)
+					if err != nil {
+						return err
+					}
 
-			if err := clientSend(ctx, nil, id, target, path, shaHex); err != nil {
-				return fmt.Errorf("sending %s: %w", label, err)
-			}
-		}
+					fmt.Println(id.Public.Addr())
 
-		return nil
-	case "dismiss":
-		fs := flag.NewFlagSet("dismiss", flag.ExitOnError)
-		_ = fs.Parse(os.Args[2:])
+					return nil
+				},
+			},
+			{
+				Name:     "join",
+				Usage:    "register this machine under a name",
+				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "name", Required: true},
+					&cli.StringArg{Name: "token", UsageText: "<invite-token | stash-addr>", Required: true},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					name, arg := c.StringArg("name"), c.StringArg("token")
 
-		if fs.NArg() != 1 {
-			return fmt.Errorf("%w: dismiss takes <id or file name> (see catbox status)", errUsage)
-		}
+					// The token is the invite when it decodes, else a
+					// bare stash address (the fresh-mesh bootstrap
+					// join). "-" reads it from stdin, keeping the
+					// token out of the shell history.
+					if arg == "-" {
+						tok, err := tokenFromStdin(os.Stdin)
+						if err != nil {
+							return err
+						}
 
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
-		}
+						if tok == "" {
+							return fmt.Errorf("%w: empty token on stdin", errUsage)
+						}
 
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
+						arg = tok
+					}
 
-		defer release()
+					addr, code := "", ""
 
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
+					if iv, err := parseInviteArg(arg); err == nil {
+						addr, code = iv.Stash, iv.Code
+					} else {
+						addr = arg
+					}
 
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
+					created, err := runJoin(ctx, name, addr, code)
+					if err != nil {
+						return err
+					}
 
-		// Resolve against this peer's own waiting items first: a
-		// name must be unambiguous, and only ever one's own files.
-		pend, err := clientPending(conn)
-		if err != nil {
-			return err
-		}
+					if created {
+						fmt.Printf("joined as %s\n", name)
+					} else {
+						fmt.Printf("already joined as %s (roster refreshed)\n", name)
+					}
 
-		did, err := resolveDismiss(pend.Items, fs.Arg(0))
-		if err != nil {
-			return err
-		}
+					return nil
+				},
+			},
+			{
+				Name:     "rename",
+				Usage:    "change this member's name",
+				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "new-name", Required: true},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					id, _, err := loadPeerID("", "")
+					if err != nil {
+						return err
+					}
 
-		if err := clientDismiss(conn, did); err != nil {
-			return err
-		}
+					release, err := lockPeer(ctx)
+					if err != nil {
+						return err
+					}
 
-		fmt.Printf("dismissed %s\n", did)
+					defer release()
 
-		return nil
-	case "remove":
-		fs := flag.NewFlagSet("remove", flag.ExitOnError)
-		data := fs.String("data", "", "stash data dir: run there to remove any member without being admin")
-		yes := fs.Bool("yes", false, "confirm: drop the member and every file parked for them")
-		_ = fs.Parse(os.Args[2:])
+					conn, cl, err := clientConn(ctx, id)
+					if err != nil {
+						return err
+					}
 
-		if fs.NArg() != 1 {
-			return fmt.Errorf("%w: remove takes <member> (see catbox status)", errUsage)
-		}
+					defer func() { _ = cl.Close() }()
+					defer func() { _ = conn.Close() }()
 
-		// Both forms destroy parked files irrecoverably, so both
-		// carry the same friction as reset.
-		if !*yes {
-			return fmt.Errorf("%w: remove drops the member and every file parked for them; rerun with --yes", errUsage)
-		}
+					// The rename rides the join op: the stash validates
+					// the name and retargets parked files. Stop listen
+					// first, or its registered listener address goes
+					// stale.
+					id.Name = c.StringArg("new-name")
 
-		// The stash host is break-glass: it removes any member.
-		if *data != "" || os.Getenv("CATBOX_DATA") != "" {
-			dataDir, err := resolveDataDir(*data)
-			if err != nil {
-				return err
-			}
+					if err := joinReq(conn, id, "", ""); err != nil {
+						return err
+					}
 
-			if err := removeMemberLocal(ctx, dataDir, fs.Arg(0), log); err != nil {
-				return err
-			}
+					if err := saveJSON(filepath.Join(peerConfigDir(), "identity.json"), id); err != nil {
+						return err
+					}
 
-			fmt.Printf("removed %s\n", fs.Arg(0))
+					fmt.Printf("renamed to %s\n", id.Name)
 
-			return nil
-		}
+					return nil
+				},
+			},
+			{
+				Name:     "recv",
+				Usage:    "pull held files into the inbox dir",
+				Category: "transfer",
+				Arguments: []cli.Argument{
+					&cli.StringArgs{Name: "ids", Max: -1},
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "dir", Usage: "inbox dir (default: OS downloads + /catbox)"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					dir := c.String("dir")
+					if dir == "" {
+						var err error
 
-		// Over the wire: an admin removes any member, anyone
-		// removes themselves.
-		id, _, err := loadPeerID("", "")
-		if err != nil {
-			return err
-		}
+						dir, err = downloadDir()
+						if err != nil {
+							return err
+						}
+					}
 
-		release, err := lockPeer(ctx)
-		if err != nil {
-			return err
-		}
+					return runRecv(ctx, log, dir, c.StringArgs("ids"))
+				},
+			},
+			{
+				Name:     "listen",
+				Usage:    "receive direct sends (Ctrl-C to stop)",
+				Category: "transfer",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "dir", Usage: "inbox dir (default: OS downloads + /catbox)"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					dir := c.String("dir")
+					if dir == "" {
+						var err error
 
-		defer release()
+						dir, err = downloadDir()
+						if err != nil {
+							return err
+						}
+					}
 
-		conn, cl, err := clientConn(ctx, id)
-		if err != nil {
-			return err
-		}
+					return runListen(ctx, log, dir)
+				},
+			},
+			{
+				Name:     "invite",
+				Usage:    "print a one-time invite token (admin)",
+				Category: "membership",
+				Action: func(ctx context.Context, _ *cli.Command) error {
+					id, _, err := loadPeerID("", "")
+					if err != nil {
+						return err
+					}
 
-		defer func() { _ = cl.Close() }()
-		defer func() { _ = conn.Close() }()
+					release, err := lockPeer(ctx)
+					if err != nil {
+						return err
+					}
 
-		if err := clientRemove(conn, fs.Arg(0)); err != nil {
-			return err
-		}
+					defer release()
 
-		fmt.Printf("removed %s\n", fs.Arg(0))
+					conn, cl, err := clientConn(ctx, id)
+					if err != nil {
+						return err
+					}
 
-		return nil
-	case "admin":
-		// Runs on the stash host, like remove --data: the
-		// operator grants the first admin (or rescues an
-		// admin-less mesh). Admins mint invites and remove
-		// members over the wire.
-		fs := flag.NewFlagSet("admin", flag.ExitOnError)
-		data := fs.String("data", "", "stash data dir (defaults to CATBOX_DATA, else the host default)")
-		_ = fs.Parse(os.Args[2:])
+					defer func() { _ = cl.Close() }()
+					defer func() { _ = conn.Close() }()
 
-		if fs.NArg() != 1 {
-			return fmt.Errorf("%w: admin takes <member>", errUsage)
-		}
+					code, err := clientInvite(conn)
+					if err != nil {
+						return err
+					}
 
-		dataDir, err := resolveDataDir(*data)
-		if err != nil {
-			return err
-		}
+					token, err := encodeInvite(inviteJSON{Code: code, Stash: string(id.StashAddr)})
+					if err != nil {
+						return err
+					}
 
-		changed, err := grantAdmin(ctx, dataDir, fs.Arg(0))
-		if err != nil {
-			return err
-		}
+					fmt.Println(token)
 
-		if changed {
-			fmt.Printf("%s is now an admin\n", fs.Arg(0))
-		} else {
-			fmt.Printf("%s is already an admin\n", fs.Arg(0))
-		}
+					return nil
+				},
+			},
+			{
+				Name:     "status",
+				Usage:    "who's in the mesh and what's waiting for you",
+				Category: "membership",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "json", Usage: "machine-readable status for UIs"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					if err := runStatus(ctx, c.Bool("json")); err != nil {
+						return &jsonError{err}
+					}
 
-		return nil
-	case "reset":
-		fs := flag.NewFlagSet("reset", flag.ExitOnError)
-		yes := fs.Bool("yes", false, "confirm: leave the mesh and wipe the identity")
-		_ = fs.Parse(os.Args[2:])
+					return nil
+				},
+			},
+			{
+				Name:     "send",
+				Usage:    "seal and ship files to a member",
+				Category: "transfer",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "member", Required: true},
+					&cli.StringArgs{Name: "files", UsageText: "<file|-|...>", Min: 1, Max: -1},
+				},
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "text", Usage: "send the trailing args as text-<date>.txt instead of files"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					target := c.StringArg("member")
+					srcs := sendSources(c.Bool("text"), c.StringArgs("files"))
 
-		if !*yes {
-			return fmt.Errorf("%w: reset leaves the mesh and wipes this machine's identity; rerun with --yes", errUsage)
-		}
+					for _, src := range srcs {
+						if src.path == "" {
+							continue
+						}
 
-		// Leave the roster before wiping the identity, so no ghost
-		// member survives. Best effort: offline, the reset still
-		// completes and the member can be removed later.
-		if id, _, err := loadPeerID("", ""); err == nil {
-			release, err := lockPeer(ctx)
-			if err != nil {
-				return err
-			}
+						if fi, err := os.Stat(src.path); err != nil {
+							return err
+						} else if fi.IsDir() {
+							return errors.New("send takes files, " + src.path + " is a directory")
+						}
+					}
 
-			if conn, cl, cerr := clientConn(ctx, id); cerr == nil {
-				// The dial key binds the removal to this device:
-				// reset can never remove another member.
-				if rerr := clientRemove(conn, ""); rerr != nil {
-					fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove --data /data %s\" on the stash later\n", rerr, id.Name)
-				}
+					id, _, err := loadPeerID("", "")
+					if err != nil {
+						return err
+					}
 
-				_ = cl.Close()
-				_ = conn.Close()
-			} else {
-				fmt.Fprintf(os.Stderr, "catbox: could not reach the stash: %v; run \"catbox remove --data /data %s\" on the stash later\n", cerr, id.Name)
-			}
+					release, err := lockPeer(ctx)
+					if err != nil {
+						return err
+					}
 
-			release()
-		}
+					defer release()
 
-		if err := resetPeer(); err != nil {
-			return err
-		}
+					var spooled []string
 
-		fmt.Println("reset")
+					defer func() {
+						for _, dir := range spooled {
+							_ = os.RemoveAll(dir)
+						}
+					}()
 
-		return nil
-	case "version":
-		fmt.Println("catbox " + version + ", built " + buildStamp())
+					for _, src := range srcs {
+						path, label := src.path, src.path
 
-		return nil
-	default:
-		fmt.Fprintf(os.Stderr, "catbox: unknown command %q\n", os.Args[1])
-		usage(os.Stderr)
-		os.Exit(2)
+						if path == "" {
+							body := src.body
+
+							if src.stdin {
+								if body, err = io.ReadAll(os.Stdin); err != nil {
+									return fmt.Errorf("reading stdin: %w", err)
+								}
+							}
+
+							if path, err = spoolSend(body); err != nil {
+								return err
+							}
+
+							spooled = append(spooled, filepath.Dir(path))
+							label = filepath.Base(path)
+						}
+
+						// The SHA is known before sealing: it keys the
+						// deterministic file secret and the receiver's
+						// resume partial. The stash conn is
+						// clientSend's to dial, per file: a long
+						// transfer starves its idle deadline, and the
+						// next file must not inherit a dead conn.
+						shaHex, err := fileSHA256(path)
+						if err != nil {
+							return fmt.Errorf("hashing %s: %w", path, err)
+						}
+
+						if err := clientSend(ctx, nil, id, target, path, shaHex); err != nil {
+							return fmt.Errorf("sending %s: %w", label, err)
+						}
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:     "dismiss",
+				Usage:    "refuse delivery of one held item",
+				Category: "transfer",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "id-or-name", Required: true},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					id, _, err := loadPeerID("", "")
+					if err != nil {
+						return err
+					}
+
+					release, err := lockPeer(ctx)
+					if err != nil {
+						return err
+					}
+
+					defer release()
+
+					conn, cl, err := clientConn(ctx, id)
+					if err != nil {
+						return err
+					}
+
+					defer func() { _ = cl.Close() }()
+					defer func() { _ = conn.Close() }()
+
+					// Resolve against this peer's own waiting items
+					// first: a name must be unambiguous, and only ever
+					// one's own files.
+					pend, err := clientPending(conn)
+					if err != nil {
+						return err
+					}
+
+					did, err := resolveDismiss(pend.Items, c.StringArg("id-or-name"))
+					if err != nil {
+						return err
+					}
+
+					if err := clientDismiss(conn, did); err != nil {
+						return err
+					}
+
+					fmt.Printf("dismissed %s\n", did)
+
+					return nil
+				},
+			},
+			{
+				Name:     "remove",
+				Usage:    "drop a member from the roster (admins over the wire, anyone on the stash)",
+				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "member", Required: true},
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "data", Sources: cli.NewValueSourceChain(cli.EnvVar("CATBOX_DATA")), Usage: "stash data dir: run there to remove any member without being admin"},
+					&cli.BoolFlag{Name: "yes", Usage: "confirm: drop the member and every file parked for them"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					// Both forms destroy parked files irrecoverably,
+					// so both carry the same friction as reset.
+					if !c.Bool("yes") {
+						return fmt.Errorf("%w: remove drops the member and every file parked for them; rerun with --yes", errUsage)
+					}
+
+					// The stash host is break-glass: it removes any
+					// member.
+					if c.String("data") != "" || os.Getenv("CATBOX_DATA") != "" {
+						dataDir, err := resolveDataDir(c.String("data"))
+						if err != nil {
+							return err
+						}
+
+						if err := removeMemberLocal(ctx, dataDir, c.StringArg("member"), log); err != nil {
+							return err
+						}
+
+						fmt.Printf("removed %s\n", c.StringArg("member"))
+
+						return nil
+					}
+
+					// Over the wire: an admin removes any member,
+					// anyone removes themselves.
+					id, _, err := loadPeerID("", "")
+					if err != nil {
+						return err
+					}
+
+					release, err := lockPeer(ctx)
+					if err != nil {
+						return err
+					}
+
+					defer release()
+
+					conn, cl, err := clientConn(ctx, id)
+					if err != nil {
+						return err
+					}
+
+					defer func() { _ = cl.Close() }()
+					defer func() { _ = conn.Close() }()
+
+					if err := clientRemove(conn, c.StringArg("member")); err != nil {
+						return err
+					}
+
+					fmt.Printf("removed %s\n", c.StringArg("member"))
+
+					return nil
+				},
+			},
+			{
+				// Runs on the stash host, like remove --data: the
+				// operator grants the first admin (or rescues an
+				// admin-less mesh). Admins mint invites and remove
+				// members over the wire.
+				Name:     "admin",
+				Usage:    "grant a member admin (runs on the stash)",
+				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "member", Required: true},
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "data", Sources: cli.NewValueSourceChain(cli.EnvVar("CATBOX_DATA")), Usage: "stash data dir (defaults to CATBOX_DATA, else the host default)"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					dataDir, err := resolveDataDir(c.String("data"))
+					if err != nil {
+						return err
+					}
+
+					changed, err := grantAdmin(ctx, dataDir, c.StringArg("member"))
+					if err != nil {
+						return err
+					}
+
+					if changed {
+						fmt.Printf("%s is now an admin\n", c.StringArg("member"))
+					} else {
+						fmt.Printf("%s is already an admin\n", c.StringArg("member"))
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:     "reset",
+				Usage:    "leave the mesh (best effort) and wipe this machine's identity",
+				Category: "membership",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "yes", Usage: "confirm: leave the mesh and wipe the identity"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					if !c.Bool("yes") {
+						return fmt.Errorf("%w: reset leaves the mesh and wipes this machine's identity; rerun with --yes", errUsage)
+					}
+
+					// Leave the roster before wiping the identity, so
+					// no ghost member survives. Best effort: offline,
+					// the reset still completes and the member can be
+					// removed later.
+					if id, _, err := loadPeerID("", ""); err == nil {
+						release, err := lockPeer(ctx)
+						if err != nil {
+							return err
+						}
+
+						if conn, cl, cerr := clientConn(ctx, id); cerr == nil {
+							// The dial key binds the removal to this
+							// device: reset can never remove another
+							// member.
+							if rerr := clientRemove(conn, ""); rerr != nil {
+								fmt.Fprintf(os.Stderr, "catbox: could not leave the roster: %v; run \"catbox remove --data /data %s\" on the stash later\n", rerr, id.Name)
+							}
+
+							_ = cl.Close()
+							_ = conn.Close()
+						} else {
+							fmt.Fprintf(os.Stderr, "catbox: could not reach the stash: %v; run \"catbox remove --data /data %s\" on the stash later\n", cerr, id.Name)
+						}
+
+						release()
+					}
+
+					if err := resetPeer(); err != nil {
+						return err
+					}
+
+					fmt.Println("reset")
+
+					return nil
+				},
+			},
+			{
+				Name:  "version",
+				Usage: "print the build version and time",
+				Action: func(context.Context, *cli.Command) error {
+					fmt.Println("catbox " + version + ", built " + buildStamp())
+
+					return nil
+				},
+			},
+		},
 	}
 
-	return nil
+	for _, sub := range cmd.Commands {
+		sub.OnUsageError = onUsage
+	}
+
+	return cmd.Run(ctx, os.Args)
 }
 
 // runJoin registers this machine with the stash, creating the peer
@@ -683,50 +784,6 @@ func runStatus(ctx context.Context, jsonOut bool) error {
 	}
 
 	return clientStatus(conn, os.Stdout, id)
-}
-
-func usage(w io.Writer) {
-	_, _ = fmt.Fprint(w, `catbox: async file transfer over tailcat, one stash, daemonless peers
-
-usage:
-  catbox <command> [flags]
-
-stash commands:
-  serve     run the always-on stash; first boot creates its identity
-            [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
-  addr      print the stash's tailcat address from its data dir
-
-membership commands:
-  join      register this machine under a name
-            <name> <invite-token> | <name> <stash-addr> (fresh mesh);
-            "-" reads the token from stdin
-  invite    print a one-time invite token (admin)
-  rename    change this member's name
-            <new-name>
-  remove    drop a member from the roster (admins over the wire,
-            anyone on the stash)
-            <member> --yes | --data DIR <member> --yes
-  admin     grant a member admin (runs on the stash)
-            --data DIR <member>
-  reset     leave the mesh (best effort) and wipe this machine's identity
-            --yes
-  status    who's in the mesh and what's waiting for you
-            [--json]
-
-transfer commands:
-  send      seal and ship files to a member
-            <member> <file|-|...> | <member> --text <string>
-  recv      pull held files into the inbox dir
-            [--dir DIR] [<id>...]
-  listen    receive direct sends (Ctrl-C to stop)
-            [--dir DIR]
-  dismiss   refuse delivery of one held item
-            <id | name>
-
-other commands:
-  version   print the build version and time
-  help      print this usage
-`)
 }
 
 // parseSize parses "100", "10K", "100G", "1.5T" into bytes.
