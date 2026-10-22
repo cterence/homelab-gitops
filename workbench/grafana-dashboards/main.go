@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 
-	dashboardv2 "github.com/grafana/grafana-foundation-sdk/go/dashboardv2"
+	"github.com/grafana/grafana-foundation-sdk/go/dashboardv2"
 	"github.com/grafana/grafana-foundation-sdk/go/resource"
+	cli "github.com/urfave/cli/v3"
 )
 
 // dashboard describes one generated dashboard: its Grafana UID (kept stable
@@ -74,11 +74,18 @@ func writeDashboard(d dashboard, outDir string) error {
 }
 
 func main() {
-	outDir := flag.String("out", "../../k8s-apps/kube-prometheus-stack/dashboards", "output directory for dashboard JSON files")
+	cmd := &cli.Command{
+		Name:  "grafana-dashboards",
+		Usage: "generate the homelab's Grafana dashboard JSON files",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "out", Value: "../../k8s-apps/kube-prometheus-stack/dashboards", Usage: "output directory for dashboard JSON files"},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			return run(ctx, c.String("out"))
+		},
+	}
 
-	flag.Parse()
-
-	if err := run(context.Background(), *outDir); err != nil {
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
