@@ -130,10 +130,15 @@ func newLogger() *slog.Logger {
 	return slog.New(slog.NewJSONHandler(os.Stderr, nil))
 }
 
-// onUsage shows the command help, then maps the failure onto errUsage:
-// exit code 2.
-func onUsage(_ context.Context, c *cli.Command, err error, _ bool) error {
-	_ = cli.ShowSubcommandHelp(c)
+// onUsage shows the command help — the same renderer --help uses, so
+// declared arguments appear in the usage line — then maps the
+// failure onto errUsage: exit code 2.
+func onUsage(ctx context.Context, c *cli.Command, err error, _ bool) error {
+	if c.Root() == c {
+		_ = cli.ShowRootCommandHelp(c)
+	} else {
+		_ = cli.ShowCommandHelp(ctx, c.Root(), c.Name)
+	}
 
 	return fmt.Errorf("%w: %v", errUsage, err)
 }
