@@ -366,7 +366,7 @@ fun CatboxApp(shared: Shared = Shared(emptyList())) {
                     Catbox.run(context, { line ->
                         append(line)
                         landed = landed ?: sendOutcome(line)
-                    }, "send", "--text", text, target)
+                    }, "send", "--text", target, text)
                 }
                 when (landed) {
                     true -> direct++

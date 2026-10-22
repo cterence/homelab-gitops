@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -16,29 +18,34 @@ type sendSrc struct {
 }
 
 // sendSources splits a send command line: the first arg is the
-// target member, "-" is stdin, any other arg a file, and a non-empty
-// --text appends one text transfer after them.
-func sendSources(text string, args []string) (string, []sendSrc, error) {
-	const usage = "%w: send takes <member> [--text <string>] <file|-|...>"
+// target member. With text set, the remaining args are the message;
+// otherwise "-" is stdin and any other arg a file.
+func sendSources(text bool, args []string) (string, []sendSrc, error) {
+	const usage = "%w: send takes <member> <file|-|...> or <member> --text <string>"
 
 	if len(args) < 1 {
 		return "", nil, fmt.Errorf(usage, errUsage)
 	}
 
 	member := args[0]
+	rest := args[1:]
 
 	var srcs []sendSrc
 
-	for _, a := range args[1:] {
-		if a == "-" {
-			srcs = append(srcs, sendSrc{stdin: true})
-		} else {
-			srcs = append(srcs, sendSrc{path: a})
+	if text {
+		if len(rest) == 0 {
+			return "", nil, fmt.Errorf(usage, errUsage)
 		}
-	}
 
-	if text != "" {
-		srcs = append(srcs, sendSrc{body: []byte(text)})
+		srcs = append(srcs, sendSrc{body: []byte(strings.Join(rest, " "))})
+	} else {
+		for _, a := range rest {
+			if a == "-" {
+				srcs = append(srcs, sendSrc{stdin: true})
+			} else {
+				srcs = append(srcs, sendSrc{path: a})
+			}
+		}
 	}
 
 	if len(srcs) == 0 {
@@ -46,6 +53,24 @@ func sendSources(text string, args []string) (string, []sendSrc, error) {
 	}
 
 	return member, srcs, nil
+}
+
+// parseSendFlags extracts flags from anywhere in args — flag.Parse
+// stops at the first non-flag argument — returning the positionals.
+func parseSendFlags(fs *flag.FlagSet, args []string) []string {
+	var positional []string
+
+	for {
+		_ = fs.Parse(args)
+
+		rest := fs.Args()
+		if len(rest) == 0 {
+			return positional
+		}
+
+		positional = append(positional, rest[0])
+		args = rest[1:]
+	}
 }
 
 // textFileName is the delivered name for --text and stdin sends.

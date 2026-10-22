@@ -43,7 +43,7 @@ catbox invite
 catbox remove <member> --yes | --data DIR <member> --yes
 catbox admin  --data DIR <member>
 catbox reset --yes
-catbox send   <member> [--text <string>] <file|-|...>
+catbox send   <member> <file|-|...> | <member> --text <string>
 catbox recv   [--dir DIR] [<id>...]
 catbox listen [--dir DIR]
 catbox dismiss <id>
@@ -116,8 +116,9 @@ catbox help
   unreachable the reset still completes; clean up the leftover entry
   later with `remove` on the stash.
 - `send` seals and ships each named file (one member, one or more
-  sources per command, mixed freely): `--text "msg"` ships raw text,
-  `-` ships stdin — both arrive as `text-<YYYYMMDD-HHMMSS>.txt`,
+  sources per command): `--text "msg"` ships the trailing args as
+  raw text, `-` ships stdin — both arrive as
+  `text-<YYYYMMDD-HHMMSS>.txt`,
   named by the sender's clock. Direct to the target's listener when it is
   online — the local roster cache is tried first, so a send to an
   online target works without the stash, which is only dialed for
