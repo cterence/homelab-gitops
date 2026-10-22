@@ -68,7 +68,7 @@ app-template:
         # Disables the /pastalist endpoint, essentially making all
         # pastas private.
         # Default value: "false"
-        MICROBIN_NO_LISTING: "false"
+        MICROBIN_NO_LISTING: "true"
 
         # Enables syntax highlighting support. When creating a new
         # pasta, a new dropdown selector will be added where you can
@@ -326,6 +326,11 @@ app-template:
                 identifier: main
                 port: http
             - path: /static
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+            - path: /p
               pathType: Prefix
               service:
                 identifier: main
