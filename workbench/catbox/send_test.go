@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,55 +11,31 @@ import (
 
 func TestSendSources(t *testing.T) {
 	tests := []struct {
-		name       string
-		text       bool
-		args       []string
-		wantMember string
-		want       []sendSrc
-		wantErr    bool
+		name string
+		text bool
+		args []string
+		want []sendSrc
 	}{
-		{"no args", false, nil, "", nil, true},
-		{"member without sources", false, []string{"bob"}, "", nil, true},
-		{"one file", false, []string{"bob", "a.txt"}, "bob", []sendSrc{{path: "a.txt"}}, false},
+		{"one file", false, []string{"a.txt"}, []sendSrc{{path: "a.txt"}}},
 		{
 			"files mixed with stdin",
 			false,
-			[]string{"bob", "a.txt", "-", "b.txt"},
-			"bob",
+			[]string{"a.txt", "-", "b.txt"},
 			[]sendSrc{{path: "a.txt"}, {stdin: true}, {path: "b.txt"}},
-			false,
 		},
-		{"stdin only", false, []string{"bob", "-"}, "bob", []sendSrc{{stdin: true}}, false},
-		{"text flag without body", true, []string{"bob"}, "", nil, true},
-		{"text only", true, []string{"bob", "hi"}, "bob", []sendSrc{{body: []byte("hi")}}, false},
+		{"stdin only", false, []string{"-"}, []sendSrc{{stdin: true}}},
+		{"text only", true, []string{"hi"}, []sendSrc{{body: []byte("hi")}}},
 		{
 			"multi-word text joined",
 			true,
-			[]string{"bob", "hi", "there"},
-			"bob",
+			[]string{"hi", "there"},
 			[]sendSrc{{body: []byte("hi there")}},
-			false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			member, srcs, err := sendSources(tt.text, tt.args)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("sendSources() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if tt.wantErr {
-				if !errors.Is(err, errUsage) {
-					t.Fatalf("sendSources() error = %v, want errUsage", err)
-				}
-
-				return
-			}
-
-			if member != tt.wantMember {
-				t.Fatalf("member = %q, want %q", member, tt.wantMember)
-			}
+			srcs := sendSources(tt.text, tt.args)
 
 			if len(srcs) != len(tt.want) {
 				t.Fatalf("srcs = %+v, want %+v", srcs, tt.want)

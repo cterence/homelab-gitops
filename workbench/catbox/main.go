@@ -130,8 +130,11 @@ func newLogger() *slog.Logger {
 	return slog.New(slog.NewJSONHandler(os.Stderr, nil))
 }
 
-// onUsage maps flag parse failures onto errUsage: exit code 2.
-func onUsage(_ context.Context, _ *cli.Command, err error, _ bool) error {
+// onUsage shows the command help, then maps the failure onto errUsage:
+// exit code 2.
+func onUsage(_ context.Context, c *cli.Command, err error, _ bool) error {
+	_ = cli.ShowSubcommandHelp(c)
+
 	return fmt.Errorf("%w: %v", errUsage, err)
 }
 
@@ -149,6 +152,8 @@ func run() error {
 		// the unknown-command error.
 		Action: func(_ context.Context, c *cli.Command) error {
 			if c.Args().Present() {
+				_ = cli.ShowRootCommandHelp(c)
+
 				return fmt.Errorf("%w: unknown command %q", errUsage, c.Args().First())
 			}
 
@@ -207,20 +212,17 @@ func run() error {
 				Name:     "join",
 				Usage:    "register this machine under a name",
 				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "name", Required: true},
+					&cli.StringArg{Name: "token", UsageText: "<invite-token | stash-addr>", Required: true},
+				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) != 2 {
-						return fmt.Errorf("%w: join takes <name> <invite-token | stash-addr>", errUsage)
-					}
+					name, arg := c.StringArg("name"), c.StringArg("token")
 
-					// The second argument is the invite token when it
-					// decodes, else a bare stash address (the
-					// fresh-mesh bootstrap join). "-" reads it from
-					// stdin, keeping the token out of the shell
-					// history.
-					name, addr, code := args[0], "", ""
-
-					arg := args[1]
+					// The token is the invite when it decodes, else a
+					// bare stash address (the fresh-mesh bootstrap
+					// join). "-" reads it from stdin, keeping the
+					// token out of the shell history.
 					if arg == "-" {
 						tok, err := tokenFromStdin(os.Stdin)
 						if err != nil {
@@ -233,6 +235,8 @@ func run() error {
 
 						arg = tok
 					}
+
+					addr, code := "", ""
 
 					if iv, err := parseInviteArg(arg); err == nil {
 						addr, code = iv.Stash, iv.Code
@@ -258,12 +262,10 @@ func run() error {
 				Name:     "rename",
 				Usage:    "change this member's name",
 				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "new-name", Required: true},
+				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) != 1 {
-						return fmt.Errorf("%w: rename takes <new-name>", errUsage)
-					}
-
 					id, _, err := loadPeerID("", "")
 					if err != nil {
 						return err
@@ -288,7 +290,7 @@ func run() error {
 					// the name and retargets parked files. Stop listen
 					// first, or its registered listener address goes
 					// stale.
-					id.Name = args[0]
+					id.Name = c.StringArg("new-name")
 
 					if err := joinReq(conn, id, "", ""); err != nil {
 						return err
@@ -307,6 +309,9 @@ func run() error {
 				Name:     "recv",
 				Usage:    "pull held files into the inbox dir",
 				Category: "transfer",
+				Arguments: []cli.Argument{
+					&cli.StringArgs{Name: "ids", Max: -1},
+				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "dir", Usage: "inbox dir (default: OS downloads + /catbox)"},
 				},
@@ -321,7 +326,7 @@ func run() error {
 						}
 					}
 
-					return runRecv(ctx, log, dir, c.Args().Slice())
+					return runRecv(ctx, log, dir, c.StringArgs("ids"))
 				},
 			},
 			{
@@ -404,14 +409,16 @@ func run() error {
 				Name:     "send",
 				Usage:    "seal and ship files to a member",
 				Category: "transfer",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "member", Required: true},
+					&cli.StringArgs{Name: "files", UsageText: "<file|-|...>", Min: 1, Max: -1},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "text", Usage: "send the trailing args as text-<date>.txt instead of files"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					target, srcs, err := sendSources(c.Bool("text"), c.Args().Slice())
-					if err != nil {
-						return err
-					}
+					target := c.StringArg("member")
+					srcs := sendSources(c.Bool("text"), c.StringArgs("files"))
 
 					for _, src := range srcs {
 						if src.path == "" {
@@ -488,12 +495,10 @@ func run() error {
 				Name:     "dismiss",
 				Usage:    "refuse delivery of one held item",
 				Category: "transfer",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "id-or-name", Required: true},
+				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) != 1 {
-						return fmt.Errorf("%w: dismiss takes <id or file name> (see catbox status)", errUsage)
-					}
-
 					id, _, err := loadPeerID("", "")
 					if err != nil {
 						return err
@@ -522,7 +527,7 @@ func run() error {
 						return err
 					}
 
-					did, err := resolveDismiss(pend.Items, args[0])
+					did, err := resolveDismiss(pend.Items, c.StringArg("id-or-name"))
 					if err != nil {
 						return err
 					}
@@ -540,16 +545,14 @@ func run() error {
 				Name:     "remove",
 				Usage:    "drop a member from the roster (admins over the wire, anyone on the stash)",
 				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "member", Required: true},
+				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Usage: "stash data dir: run there to remove any member without being admin"},
 					&cli.BoolFlag{Name: "yes", Usage: "confirm: drop the member and every file parked for them"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) != 1 {
-						return fmt.Errorf("%w: remove takes <member> (see catbox status)", errUsage)
-					}
-
 					// Both forms destroy parked files irrecoverably,
 					// so both carry the same friction as reset.
 					if !c.Bool("yes") {
@@ -564,11 +567,11 @@ func run() error {
 							return err
 						}
 
-						if err := removeMemberLocal(ctx, dataDir, args[0], log); err != nil {
+						if err := removeMemberLocal(ctx, dataDir, c.StringArg("member"), log); err != nil {
 							return err
 						}
 
-						fmt.Printf("removed %s\n", args[0])
+						fmt.Printf("removed %s\n", c.StringArg("member"))
 
 						return nil
 					}
@@ -595,11 +598,11 @@ func run() error {
 					defer func() { _ = cl.Close() }()
 					defer func() { _ = conn.Close() }()
 
-					if err := clientRemove(conn, args[0]); err != nil {
+					if err := clientRemove(conn, c.StringArg("member")); err != nil {
 						return err
 					}
 
-					fmt.Printf("removed %s\n", args[0])
+					fmt.Printf("removed %s\n", c.StringArg("member"))
 
 					return nil
 				},
@@ -612,29 +615,27 @@ func run() error {
 				Name:     "admin",
 				Usage:    "grant a member admin (runs on the stash)",
 				Category: "membership",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "member", Required: true},
+				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Usage: "stash data dir (defaults to CATBOX_DATA, else the host default)"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) != 1 {
-						return fmt.Errorf("%w: admin takes <member>", errUsage)
-					}
-
 					dataDir, err := resolveDataDir(c.String("data"))
 					if err != nil {
 						return err
 					}
 
-					changed, err := grantAdmin(ctx, dataDir, args[0])
+					changed, err := grantAdmin(ctx, dataDir, c.StringArg("member"))
 					if err != nil {
 						return err
 					}
 
 					if changed {
-						fmt.Printf("%s is now an admin\n", args[0])
+						fmt.Printf("%s is now an admin\n", c.StringArg("member"))
 					} else {
-						fmt.Printf("%s is already an admin\n", args[0])
+						fmt.Printf("%s is already an admin\n", c.StringArg("member"))
 					}
 
 					return nil
