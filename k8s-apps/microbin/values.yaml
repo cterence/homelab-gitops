@@ -320,6 +320,11 @@ app-template:
               service:
                 identifier: main
                 port: http
+            - path: /file
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
             - path: /static
               pathType: Prefix
               service:
