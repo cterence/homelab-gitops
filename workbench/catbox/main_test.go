@@ -78,8 +78,8 @@ func TestHelpExitsZero(t *testing.T) {
 				t.Fatalf("catbox %v: exit = %d, want 0", tt.args, code)
 			}
 
-			if !strings.Contains(out, "usage:") {
-				t.Fatalf("catbox %v: no usage in output: %q", tt.args, out)
+			if !strings.Contains(out, "USAGE:") || !strings.Contains(out, "serve") {
+				t.Fatalf("catbox %v: no generated help in output: %q", tt.args, out)
 			}
 		})
 	}

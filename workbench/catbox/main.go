@@ -131,8 +131,8 @@ func newLogger() *slog.Logger {
 }
 
 // onUsage maps flag parse failures onto errUsage: exit code 2.
-func onUsage(context.Context, *cli.Command, error, bool) error {
-	return errUsage
+func onUsage(_ context.Context, _ *cli.Command, err error, _ bool) error {
+	return fmt.Errorf("%w: %v", errUsage, err)
 }
 
 func run() error {
@@ -142,28 +142,23 @@ func run() error {
 	defer stop()
 
 	cmd := &cli.Command{
-		Name:                          "catbox",
-		UsageText:                     usageText,
-		CustomRootCommandHelpTemplate: "{{.UsageText}}",
-		OnUsageError:                  onUsage,
-		// Bare invocation prints the usage; a non-command argument is
+		Name:         "catbox",
+		Usage:        "async file transfer over tailcat, one stash, daemonless peers",
+		OnUsageError: onUsage,
+		// Bare invocation shows the help; a non-command argument is
 		// the unknown-command error.
 		Action: func(_ context.Context, c *cli.Command) error {
 			if c.Args().Present() {
-				fmt.Fprintf(os.Stderr, "catbox: unknown command %q\n", c.Args().First())
-				usage(os.Stderr)
-
-				return errUsage
+				return fmt.Errorf("%w: unknown command %q", errUsage, c.Args().First())
 			}
 
-			usage(os.Stdout)
-
-			return nil
+			return cli.ShowRootCommandHelp(c)
 		},
 		Commands: []*cli.Command{
 			{
-				Name:  "serve",
-				Usage: "run the always-on stash; first boot creates its identity",
+				Name:     "serve",
+				Usage:    "run the always-on stash; first boot creates its identity",
+				Category: "stash",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Usage: "data dir for identity, roster, and spool (defaults to CATBOX_DATA, else the host default)"},
 					&cli.Int64Flag{Name: "region", Usage: "DERP region ID; 0 probes once on first boot"},
@@ -186,8 +181,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "addr",
-				Usage: "print the stash's tailcat address from its data dir",
+				Name:     "addr",
+				Usage:    "print the stash's tailcat address from its data dir",
+				Category: "stash",
 				// Reads the same dir serve uses: --data is not offered,
 				// the resolution matches (CATBOX_DATA, else the host
 				// default).
@@ -208,8 +204,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "join",
-				Usage: "register this machine under a name",
+				Name:     "join",
+				Usage:    "register this machine under a name",
+				Category: "membership",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					args := c.Args().Slice()
 					if len(args) != 2 {
@@ -258,8 +255,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "rename",
-				Usage: "change this member's name",
+				Name:     "rename",
+				Usage:    "change this member's name",
+				Category: "membership",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					args := c.Args().Slice()
 					if len(args) != 1 {
@@ -306,8 +304,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "recv",
-				Usage: "pull held files into the inbox dir",
+				Name:     "recv",
+				Usage:    "pull held files into the inbox dir",
+				Category: "transfer",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "dir", Usage: "inbox dir (default: OS downloads + /catbox)"},
 				},
@@ -326,8 +325,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "listen",
-				Usage: "receive direct sends (Ctrl-C to stop)",
+				Name:     "listen",
+				Usage:    "receive direct sends (Ctrl-C to stop)",
+				Category: "transfer",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "dir", Usage: "inbox dir (default: OS downloads + /catbox)"},
 				},
@@ -346,8 +346,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "invite",
-				Usage: "print a one-time invite token (admin)",
+				Name:     "invite",
+				Usage:    "print a one-time invite token (admin)",
+				Category: "membership",
 				Action: func(ctx context.Context, _ *cli.Command) error {
 					id, _, err := loadPeerID("", "")
 					if err != nil {
@@ -385,8 +386,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "status",
-				Usage: "who's in the mesh and what's waiting for you",
+				Name:     "status",
+				Usage:    "who's in the mesh and what's waiting for you",
+				Category: "membership",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "json", Usage: "machine-readable status for UIs"},
 				},
@@ -399,8 +401,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "send",
-				Usage: "seal and ship files to a member",
+				Name:     "send",
+				Usage:    "seal and ship files to a member",
+				Category: "transfer",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "text", Usage: "send the trailing args as text-<date>.txt instead of files"},
 				},
@@ -482,8 +485,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "dismiss",
-				Usage: "refuse delivery of one held item",
+				Name:     "dismiss",
+				Usage:    "refuse delivery of one held item",
+				Category: "transfer",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					args := c.Args().Slice()
 					if len(args) != 1 {
@@ -533,8 +537,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "remove",
-				Usage: "drop a member from the roster (admins over the wire, anyone on the stash)",
+				Name:     "remove",
+				Usage:    "drop a member from the roster (admins over the wire, anyone on the stash)",
+				Category: "membership",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Usage: "stash data dir: run there to remove any member without being admin"},
 					&cli.BoolFlag{Name: "yes", Usage: "confirm: drop the member and every file parked for them"},
@@ -604,8 +609,9 @@ func run() error {
 				// operator grants the first admin (or rescues an
 				// admin-less mesh). Admins mint invites and remove
 				// members over the wire.
-				Name:  "admin",
-				Usage: "grant a member admin (runs on the stash)",
+				Name:     "admin",
+				Usage:    "grant a member admin (runs on the stash)",
+				Category: "membership",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Usage: "stash data dir (defaults to CATBOX_DATA, else the host default)"},
 				},
@@ -635,8 +641,9 @@ func run() error {
 				},
 			},
 			{
-				Name:  "reset",
-				Usage: "leave the mesh (best effort) and wipe this machine's identity",
+				Name:     "reset",
+				Usage:    "leave the mesh (best effort) and wipe this machine's identity",
+				Category: "membership",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "yes", Usage: "confirm: leave the mesh and wipe the identity"},
 				},
@@ -771,52 +778,6 @@ func runStatus(ctx context.Context, jsonOut bool) error {
 	}
 
 	return clientStatus(conn, os.Stdout, id)
-}
-
-const usageText = `catbox: async file transfer over tailcat, one stash, daemonless peers
-
-usage:
-  catbox <command> [flags]
-
-stash commands:
-  serve     run the always-on stash; first boot creates its identity
-            [--data DIR] [--region N] [--max 100G] [--ttl 720h] [--health :8081]
-  addr      print the stash's tailcat address from its data dir
-
-membership commands:
-  join      register this machine under a name
-            <name> <invite-token> | <name> <stash-addr> (fresh mesh);
-            "-" reads the token from stdin
-  invite    print a one-time invite token (admin)
-  rename    change this member's name
-            <new-name>
-  remove    drop a member from the roster (admins over the wire,
-            anyone on the stash)
-            <member> --yes | --data DIR <member> --yes
-  admin     grant a member admin (runs on the stash)
-            --data DIR <member>
-  reset     leave the mesh (best effort) and wipe this machine's identity
-            --yes
-  status    who's in the mesh and what's waiting for you
-            [--json]
-
-transfer commands:
-  send      seal and ship files to a member
-            <member> <file|-|...> | <member> --text <string>
-  recv      pull held files into the inbox dir
-            [--dir DIR] [<id>...]
-  listen    receive direct sends (Ctrl-C to stop)
-            [--dir DIR]
-  dismiss   refuse delivery of one held item
-            <id | name>
-
-other commands:
-  version   print the build version and time
-  help      print this usage
-`
-
-func usage(w io.Writer) {
-	_, _ = fmt.Fprint(w, usageText)
 }
 
 // parseSize parses "100", "10K", "100G", "1.5T" into bytes.
