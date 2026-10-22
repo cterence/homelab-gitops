@@ -16,8 +16,11 @@ import (
 // errUsage marks invalid command-line usage; main exits 2 for it.
 var errUsage = errors.New("usage")
 
-// onUsage maps flag parse failures onto errUsage: exit code 2.
-func onUsage(_ context.Context, _ *cli.Command, err error, _ bool) error {
+// onUsage shows the command help, then maps the failure onto errUsage:
+// exit code 2.
+func onUsage(_ context.Context, c *cli.Command, err error, _ bool) error {
+	_ = cli.ShowSubcommandHelp(c)
+
 	return fmt.Errorf("%w: %v", errUsage, err)
 }
 
@@ -29,6 +32,8 @@ func run(ctx context.Context, args []string) error {
 		OnUsageError: onUsage,
 		Action: func(_ context.Context, c *cli.Command) error {
 			if c.Args().Present() {
+				_ = cli.ShowRootCommandHelp(c)
+
 				return fmt.Errorf("%w: unknown command %q", errUsage, c.Args().First())
 			}
 
@@ -43,6 +48,9 @@ func run(ctx context.Context, args []string) error {
 			{
 				Name:  "tts",
 				Usage: "convert an article to MP3; prints the cache path unless -o is given",
+				Arguments: []cli.Argument{
+					&cli.StringArg{Name: "url", Required: true},
+				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Aliases: []string{"o"}, Usage: "where to write the MP3"},
 					&cli.StringFlag{Name: "model", Usage: "TTS model"},
@@ -53,15 +61,12 @@ func run(ctx context.Context, args []string) error {
 					&cli.StringFlag{Name: "voice-fr", Usage: "voice for non-English text"},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) != 1 {
-						_ = cli.ShowSubcommandHelp(c)
-
-						return errUsage
+					if c.Args().Present() {
+						return onUsage(ctx, c, fmt.Errorf("unexpected arguments %v: tts takes one url", c.Args().Slice()), true)
 					}
 
 					return runTTS(ctx, ttsFlags{
-						url:        args[0],
+						url:        c.StringArg("url"),
 						output:     c.String("output"),
 						apiBase:    c.String("api-base"),
 						cleanModel: c.String("clean-model"),
@@ -75,18 +80,14 @@ func run(ctx context.Context, args []string) error {
 			{
 				Name:  "send",
 				Usage: "message the owner chat",
+				Arguments: []cli.Argument{
+					&cli.StringArgs{Name: "text", Min: 1, Max: -1},
+				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "parse-mode", Usage: `"" (plain text), HTML, or MarkdownV2`},
 				},
 				Action: func(ctx context.Context, c *cli.Command) error {
-					args := c.Args().Slice()
-					if len(args) == 0 {
-						_ = cli.ShowSubcommandHelp(c)
-
-						return errUsage
-					}
-
-					return runSend(ctx, strings.Join(args, " "), c.String("parse-mode"))
+					return runSend(ctx, strings.Join(c.StringArgs("text"), " "), c.String("parse-mode"))
 				},
 			},
 		},
