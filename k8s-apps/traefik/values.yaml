@@ -437,6 +437,9 @@ modsecurity:
 
           SecRule REQUEST_URI "(?i)^/audiobookshelf/" \
             "id:1000032,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
+          SecRule REQUEST_URI "@rx ^/signin/v1/identifier/_/authorize" \
+            "id:1000033,phase:1,pass,nolog,ctl:ruleRemoveById=931100,ctl:ruleRemoveById=934110"
     ok-server-script:
       data:
         index.ts: |
