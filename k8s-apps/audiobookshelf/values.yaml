@@ -289,7 +289,26 @@ app-template:
             - path: /ebooks
         webdav:
           main:
-            - path: /var/lib/dav/data
+            - path: /var/lib/dav/data/ebooks
+              readOnly: true
+    mangas:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      advancedMounts:
+        main:
+          main:
+            - path: /mangas
+        shelfmark:
+          main:
+            - path: /mangas
+        webdav:
+          main:
+            - path: /var/lib/dav/data/mangas
               readOnly: true
     podcasts:
       enabled: true
