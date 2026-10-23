@@ -434,6 +434,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/data/" \
             "id:1000031,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
+          SecRule REQUEST_URI "(?i)^/audiobookshelf/" \
+            "id:1000032,phase:1,pass,nolog,ctl:ruleEngine=Off"
     ok-server-script:
       data:
         index.ts: |
