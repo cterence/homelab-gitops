@@ -22,7 +22,7 @@ app-template:
             - serve
           image:
             repository: registry.terence.cloud/telegram-hub
-            tag: "8"
+            tag: "9"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
