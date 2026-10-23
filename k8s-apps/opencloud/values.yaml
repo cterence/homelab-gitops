@@ -21,6 +21,7 @@ app-template:
         STORAGE_USERS_ID_CACHE_STORE: "nats-js-kv"
         START_ADDITIONAL_SERVICES: "auth-app"
         PROXY_ENABLE_APP_AUTH: "true"
+        FRONTEND_ARCHIVER_MAX_SIZE: "50000000000"
 
   controllers:
     main:
