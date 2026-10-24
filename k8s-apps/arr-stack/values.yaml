@@ -729,6 +729,17 @@ app-template:
                       values:
                         - "{{ .Release.Name }}"
                 topologyKey: kubernetes.io/hostname
+      # kubelet creates a missing subPath dir as root; chown it to the app uid
+      initContainers:
+        fix-downloads-owner:
+          enabled: true
+          image:
+            repository: ghcr.io/arabcoders/ytptube
+            tag: v2.7.5@sha256:3ba09ac58f0b541aa7182feb9198b44d3c62158a7749ec00d26de1abad7ca8d7
+          command: ["chown", "1000:1000", "/downloads"]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
       containers:
         ytptube:
           image:
@@ -1222,6 +1233,9 @@ app-template:
             - path: /data-pool
               subPath: arr-stack
         ytptube:
+          fix-downloads-owner:
+            - path: /downloads
+              subPath: arr-stack/ytptube
           ytptube:
             - path: /downloads
               subPath: arr-stack/ytptube
