@@ -58,6 +58,7 @@ jobs:
           server-url: https://niks3.terence.cloud
       - name: Build
         run: |
+          set -euo pipefail
           # Every package for this system — new flake outputs join
           # automatically. (nix build . alone needs a "default" attr.)
           attrs=$(nix eval --json '.#packages.${{ matrix.system }}' --apply builtins.attrNames | jq -r '.[]')
@@ -90,4 +91,5 @@ jobs:
           server-url: https://niks3.terence.cloud
       - name: Build catbox-android
         run: |
+          set -euo pipefail
           nix build --print-out-paths .#catbox-android | tee -a "$GITHUB_STEP_SUMMARY"
