@@ -130,7 +130,7 @@ let
     '';
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-AcdUnDkvrPyuxz+2fn7831A9zttq7i9rZ8IcU8r29gk=";
+    outputHash = "sha256-ylFvlIgwNx2MH24U+RYYa25oUFcJTQ5pEZPld48uNgE=";
   };
 in
 {
