@@ -89,6 +89,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale |
 | [telegram-hub](./scripts/../k8s-apps/telegram-hub) | Telegram MCP server (send_message, tts_article) and article-to-audio bot |
 | [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller |
+| [tubearchivist](./scripts/../k8s-apps/tubearchivist) | Tube Archivist |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust |
 | [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes |
 | [versity-gw](./scripts/../k8s-apps/versity-gw) | High-performance S3 translation service |
