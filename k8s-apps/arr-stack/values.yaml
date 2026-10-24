@@ -718,7 +718,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: ytptube-downloads
+          backup.velero.io/backup-volumes-excludes: data-storage-pool
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -736,8 +736,6 @@ app-template:
             tag: v2.7.5@sha256:3ba09ac58f0b541aa7182feb9198b44d3c62158a7749ec00d26de1abad7ca8d7
           env:
             TZ: Europe/Paris
-            YTP_TEMP_PATH: /downloads/tmp
-            YTP_DOWNLOAD_PATH: /downloads/files
           ports:
             - name: http
               containerPort: 8081
@@ -1201,6 +1199,8 @@ app-template:
           jellyfin:
             - path: /data-pool/media
               subPath: arr-stack/media
+            - path: /data-pool/media/videos
+              subPath: arr-stack/ytptube
         sonarr:
           sonarr:
             - path: /data-pool
@@ -1221,6 +1221,10 @@ app-template:
           filebrowser-quantum:
             - path: /data-pool
               subPath: arr-stack
+        ytptube:
+          ytptube:
+            - path: /downloads
+              subPath: arr-stack/ytptube
 
     music:
       enabled: true
@@ -1249,24 +1253,6 @@ app-template:
         rangemusique:
           rangemusique:
             - path: /out
-
-    ytptube-downloads:
-      enabled: true
-      type: persistentVolumeClaim
-      labels:
-        velero.io/exclude-from-backup: "true"
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 100Gi
-      advancedMounts:
-        ytptube:
-          ytptube:
-            - path: /downloads
-        jellyfin:
-          jellyfin:
-            - path: /data/media/videos
 
     ytptube-config:
       enabled: true
