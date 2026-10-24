@@ -14,7 +14,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: storage-pool
+          backup.velero.io/backup-volumes-excludes: media,cache
       containers:
         tubearchivist:
           image:
@@ -24,7 +24,7 @@ app-template:
             TZ: Europe/Paris
             ES_URL: http://tubearchivist-elasticsearch:9200
             REDIS_CON: redis://tubearchivist-valkey:6379
-            TA_HOST: https://ta.terence.cloud
+            TA_HOST: https://ta.terence.cloud http://localhost:8000
             TA_USERNAME: terence
             HOST_UID: "1000"
             HOST_GID: "1000"
@@ -46,16 +46,20 @@ app-template:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /api/health/
+                exec:
+                  command:
+                    - curl
+                    - -fs
+                    - http://localhost:8000/api/health/
             readiness:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /api/health/
+                exec:
+                  command:
+                    - curl
+                    - -fs
+                    - http://localhost:8000/api/health/
 
     valkey:
       type: deployment
@@ -90,6 +94,12 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 0
+          fsGroup: 1000
+          fsGroupChangePolicy: "OnRootMismatch"
       containers:
         elasticsearch:
           image:
@@ -166,17 +176,36 @@ app-template:
             - *host
 
   persistence:
-    storage-pool:
+    media:
       enabled: true
       type: persistentVolumeClaim
-      existingClaim: storage-pool
+      storageClass: local-path-storage-pool
+      accessMode: ReadWriteOnce
+      size: 500Gi
+      labels:
+        velero.io/exclude-from-backup: "true"
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
       advancedMounts:
         tubearchivist:
           tubearchivist:
             - path: /youtube
-              subPath: tubearchivist/media
+    cache:
+      enabled: true
+      type: persistentVolumeClaim
+      storageClass: local-path-storage-pool
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      labels:
+        velero.io/exclude-from-backup: "true"
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      advancedMounts:
+        tubearchivist:
+          tubearchivist:
             - path: /cache
-              subPath: tubearchivist/cache
     valkey-data:
       enabled: true
       type: persistentVolumeClaim
