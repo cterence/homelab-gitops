@@ -65,7 +65,7 @@ app-template:
               prompt: |
                 An Alertmanager alert fired. Payload:
 
-                {{.JSON}}
+                {{`{{.JSON}}`}}
 
                 Investigate per your instructions and send your report via Telegram.
               dedup_key: alerts.0.labels.alertname
