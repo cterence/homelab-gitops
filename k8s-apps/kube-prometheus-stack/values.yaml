@@ -290,7 +290,7 @@ kube-prometheus-stack:
           telegram_configs:
             - send_resolved: true
               bot_token_file: /etc/alertmanager/secrets/telegram-bot-token/token
-              chat_id: -1002235030838
+              chat_id_file: /etc/alertmanager/secrets/telegram-bot-token/chat-id
               parse_mode: HTML
               message: |
                 {{ if eq .Status "firing" }}<b>🔥 FIRING: {{ .Alerts.Firing | len }}</b>{{ else }}<b>✅ RESOLVED: {{ .Alerts.Resolved | len }}</b>{{ end }}
