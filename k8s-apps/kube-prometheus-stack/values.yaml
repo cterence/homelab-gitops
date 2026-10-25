@@ -379,7 +379,7 @@ kube-prometheus-stack:
                   SMART overall health status is FAILED on device {{ $labels.device }}.
                   Back up and replace the disk.
             - alert: SmartDeviceHighTemperature
-              expr: smartctl_device_temperature > 60
+              expr: smartctl_device_temperature{temperature_type="current"} > 60
               for: 10m
               labels:
                 severity: warning

@@ -43,11 +43,11 @@ func TestSmartctlPanelQueries(t *testing.T) {
 		expr  string
 	}{
 		{"panel-1", "SMART status", "smartctl_device_smart_status"},
-		{"panel-2", "Temperature", "smartctl_device_temperature"},
+		{"panel-2", "Temperature", `smartctl_device_temperature{temperature_type="current"}`},
 		{"panel-3", "Reallocated sectors", `smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"}`},
 		{"panel-4", "Pending sectors", `smartctl_device_attribute{attribute_name="Current_Pending_Sector",attribute_value_type="raw"}`},
 		{"panel-5", "Power on hours", `smartctl_device_attribute{attribute_name="Power_On_Hours",attribute_value_type="raw"}`},
-		{"panel-6", "Temperature", "smartctl_device_temperature"},
+		{"panel-6", "Temperature", `smartctl_device_temperature{temperature_type="current"}`},
 		{"panel-7", "Sector errors", `smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"}`},
 	}
 

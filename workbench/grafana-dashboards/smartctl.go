@@ -11,10 +11,11 @@ const (
 	reallocatedSectors = `smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"}`
 	pendingSectors     = `smartctl_device_attribute{attribute_name="Current_Pending_Sector",attribute_value_type="raw"}`
 	powerOnHours       = `smartctl_device_attribute{attribute_name="Power_On_Hours",attribute_value_type="raw"}`
+	currentTemperature = `smartctl_device_temperature{temperature_type="current"}`
 )
 
 func smartStatPanel(id int, title, expr, unit string, steps []dashboardv2.Threshold) *dashboardv2.PanelBuilder {
-	return statPanel(float64(id), title, expr, title, unit, common.BigValueGraphModeNone, steps)
+	return statPanel(float64(id), title, expr, "{{device}}", unit, common.BigValueGraphModeNone, steps)
 }
 
 func temperatureTimeseriesPanel() *dashboardv2.PanelBuilder {
@@ -22,7 +23,7 @@ func temperatureTimeseriesPanel() *dashboardv2.PanelBuilder {
 		Id(6).
 		Title("Temperature").
 		Data(dashboardv2.NewQueryGroupBuilder().
-			Target(promTarget("A", "smartctl_device_temperature", "{{device}}", false))).
+			Target(promTarget("A", currentTemperature, "{{device}}", false))).
 		Visualization(timeseries.NewVisualizationV2Builder().
 			Unit("celsius").
 			ColorScheme(dashboardv2.NewFieldColorBuilder().Mode(dashboardv2.FieldColorModeIdPaletteClassic)).
@@ -79,7 +80,7 @@ func smartctl() *dashboardv2.DashboardBuilder {
 			thresholdStep("dark-red", 0),
 			thresholdStep("green", 1),
 		})).
-		Panel("panel-2", smartStatPanel(2, "Temperature", "smartctl_device_temperature", "celsius", []dashboardv2.Threshold{
+		Panel("panel-2", smartStatPanel(2, "Temperature", currentTemperature, "celsius", []dashboardv2.Threshold{
 			thresholdStep("green", 0),
 			thresholdStep("#EAB839", 45),
 			thresholdStep("dark-red", 60),

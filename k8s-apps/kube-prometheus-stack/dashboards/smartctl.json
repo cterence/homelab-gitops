@@ -54,7 +54,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_smart_status",
                         "instant": false,
-                        "legendFormat": "SMART status",
+                        "legendFormat": "{{device}}",
                         "range": true
                       }
                     },
@@ -137,9 +137,9 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "smartctl_device_temperature",
+                        "expr": "smartctl_device_temperature{temperature_type=\"current\"}",
                         "instant": false,
-                        "legendFormat": "Temperature",
+                        "legendFormat": "{{device}}",
                         "range": true
                       }
                     },
@@ -228,7 +228,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_attribute{attribute_name=\"Reallocated_Sector_Ct\",attribute_value_type=\"raw\"}",
                         "instant": false,
-                        "legendFormat": "Reallocated sectors",
+                        "legendFormat": "{{device}}",
                         "range": true
                       }
                     },
@@ -313,7 +313,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_attribute{attribute_name=\"Current_Pending_Sector\",attribute_value_type=\"raw\"}",
                         "instant": false,
-                        "legendFormat": "Pending sectors",
+                        "legendFormat": "{{device}}",
                         "range": true
                       }
                     },
@@ -398,7 +398,7 @@
                         "exemplar": false,
                         "expr": "smartctl_device_attribute{attribute_name=\"Power_On_Hours\",attribute_value_type=\"raw\"}",
                         "instant": false,
-                        "legendFormat": "Power on hours",
+                        "legendFormat": "{{device}}",
                         "range": true
                       }
                     },
@@ -477,7 +477,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "smartctl_device_temperature",
+                        "expr": "smartctl_device_temperature{temperature_type=\"current\"}",
                         "instant": false,
                         "legendFormat": "{{device}}",
                         "range": true
