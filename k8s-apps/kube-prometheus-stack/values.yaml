@@ -418,6 +418,23 @@ kube-prometheus-stack:
                   No smartctl metrics scraped from homelab3 for 10 minutes.
                   The exporter or the host may be down.
 
+    pv-hygiene:
+      groups:
+        - name: pv-hygiene
+          rules:
+            - alert: PersistentVolumeReleased
+              expr: kube_persistentvolume_status_phase{phase="Released"} == 1
+              for: 15m
+              labels:
+                severity: info
+              annotations:
+                summary: "PersistentVolume {{ $labels.persistentvolume }} is Released"
+                description: >-
+                  PV {{ $labels.persistentvolume }} has been Released for 15
+                  minutes: its claim was deleted but the volume and its data
+                  are retained. Clean up the data on the node, then delete the
+                  PV.
+
   kubeEtcd:
     enabled: false
 
