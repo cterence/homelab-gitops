@@ -15,6 +15,11 @@ app-template:
       pod:
         annotations:
           backup.velero.io/backup-volumes-excludes: media,cache
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          fsGroupChangePolicy: "OnRootMismatch"
       containers:
         tubearchivist:
           image:
@@ -26,8 +31,6 @@ app-template:
             REDIS_CON: redis://tubearchivist-valkey:6379
             TA_HOST: https://ta.terence.cloud http://localhost:8000
             TA_USERNAME: terence
-            HOST_UID: "1000"
-            HOST_GID: "1000"
             TA_PASSWORD:
               valueFrom:
                 secretKeyRef:
