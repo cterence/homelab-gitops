@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# snc - enable or disable ArgoCD autosync for apps and appsets.
+# Usage: snc [--unsync] <name> [name...]
+# Default enables automated prune+selfHeal; --unsync removes automated sync.
+# Each name is patched as an Application, or as an ApplicationSet template
+# if no Application with that name exists.
+# The usnc command is a stub that calls this script with --unsync.
+set -euo pipefail
+
+cmd=$(basename "$0")
+unsync=0
+if [[ "${1:-}" == "--unsync" ]]; then
+  unsync=1
+  shift
+fi
+
+if [[ $# -lt 1 ]]; then
+  echo "usage: $cmd [--unsync] <name> [name...]" >&2
+  exit 2
+fi
+
+if [[ $unsync -eq 1 ]]; then
+  # unsync: remove automated sync
+  app='{"spec":{"syncPolicy":{"automated":null}}}'
+  appset='{"spec":{"template":{"spec":{"syncPolicy":{"automated":null}}}}}'
+else
+  # sync: enable automated prune+selfHeal
+  app='{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
+  appset='{"spec":{"template":{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}}}'
+fi
+
+for name in "$@"; do
+  if kubectl get applicationset -n argocd "$name" >/dev/null 2>&1; then
+    kubectl patch applicationset -n argocd "$name" --type=merge -p "$appset"
+  else
+    kubectl patch application -n argocd "$name" --type=merge -p "$app"
+  fi
+done

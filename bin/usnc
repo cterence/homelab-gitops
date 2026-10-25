@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# unsync stub: same as running snc --unsync.
+exec "$(dirname "$0")/snc" --unsync "$@"
