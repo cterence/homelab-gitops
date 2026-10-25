@@ -10,13 +10,17 @@ urls:
   - https://jf.terence.cloud/health
   - https://jstat.terence.cloud/auth/isconfigured
   - https://git.terence.cloud/api/healthz
+  - https://grafana.terence.cloud/api/health
   - https://lid.terence.cloud/ping
   - https://next.terence.cloud/status.php
   - https://niks3.terence.cloud/health
+  - https://oc.terence.cloud/status
   - https://paperless.terence.cloud/accounts/login/?next=/
   - https://prometheus.terence.cloud/-/healthy
+  - https://prow.terence.cloud/ping
   - https://qb.terence.cloud
   - https://rad.terence.cloud/ping
+  - https://registry.terence.cloud/v2/
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
   - https://versity.terence.cloud/health
@@ -25,6 +29,8 @@ urls:
 cnpgClusters:
   - name: arr-stack-cnpg-cluster-jellystat
     namespace: arr-stack
+  - name: gitea-cnpg-cluster
+    namespace: gitea
   - name: home-assistant-cnpg-cluster
     namespace: home-assistant
   - name: immich-cnpg-cluster-blue
