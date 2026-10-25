@@ -74,7 +74,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols |
 | [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker |
-| [nextcloud](./scripts/../k8s-apps/nextcloud) | A safe home for all your data |
 | [niks3](./scripts/../k8s-apps/niks3) | S3-backed Nix binary cache with garbage collection |
 | [openbao](./scripts/../k8s-apps/openbao) | Open source, community-driven fork of Vault managed by the Linux Foundation |
 | [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing |
