@@ -104,7 +104,7 @@ app-template:
         elasticsearch:
           image:
             repository: bbilly1/tubearchivist-es
-            tag: 8.19.0@sha256:9da63fb1973ec3d57daf6916be948eddd0d8a404cc8e447c938480c85fe2c554
+            tag: 9.5.5@sha256:9513a22cd332402cb6fd6ef69844f4f78717190ba9e2e08cb72b3288839d84fa
           env:
             TZ: Europe/Paris
             ES_JAVA_OPTS: -Xms512m -Xmx1g
