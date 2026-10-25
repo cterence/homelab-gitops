@@ -711,61 +711,6 @@ app-template:
             runAsGroup: 0
             privileged: true
 
-    ytptube:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      pod:
-        annotations:
-          backup.velero.io/backup-volumes-excludes: data-storage-pool
-        affinity:
-          podAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - "{{ .Release.Name }}"
-                topologyKey: kubernetes.io/hostname
-      # kubelet creates a missing subPath dir as root; chown it to the app uid
-      initContainers:
-        fix-downloads-owner:
-          enabled: true
-          image:
-            repository: ghcr.io/arabcoders/ytptube
-            tag: v2.7.5@sha256:3ba09ac58f0b541aa7182feb9198b44d3c62158a7749ec00d26de1abad7ca8d7
-          command: ["chown", "1000:1000", "/downloads"]
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-      containers:
-        ytptube:
-          image:
-            repository: ghcr.io/arabcoders/ytptube
-            tag: v2.7.5@sha256:3ba09ac58f0b541aa7182feb9198b44d3c62158a7749ec00d26de1abad7ca8d7
-          env:
-            TZ: Europe/Paris
-          ports:
-            - name: http
-              containerPort: 8081
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /api/ping
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /api/ping
-
     soularr:
       type: cronjob
       pod:
@@ -869,12 +814,6 @@ app-template:
       ports:
         http:
           port: 5030
-    ytptube:
-      controller: ytptube
-      type: ClusterIP
-      ports:
-        http:
-          port: 8081
 
   ingress:
     jellyfin:
@@ -1132,27 +1071,6 @@ app-template:
           hosts:
             - *host
 
-    ytptube:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        external-dns.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-      className: "traefik"
-      hosts:
-        - host: &host ytp.terence.cloud
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: ytptube
-                port: http
-      tls:
-        - secretName: ytptube-tls
-          hosts:
-            - *host
-
   persistence:
     data:
       enabled: true
@@ -1210,8 +1128,6 @@ app-template:
           jellyfin:
             - path: /data-pool/media
               subPath: arr-stack/media
-            - path: /data-pool/media/videos
-              subPath: arr-stack/ytptube
         sonarr:
           sonarr:
             - path: /data-pool
@@ -1232,14 +1148,6 @@ app-template:
           filebrowser-quantum:
             - path: /data-pool
               subPath: arr-stack
-        ytptube:
-          fix-downloads-owner:
-            - path: /downloads
-              subPath: arr-stack/ytptube
-          ytptube:
-            - path: /downloads
-              subPath: arr-stack/ytptube
-
     music:
       enabled: true
       type: persistentVolumeClaim
@@ -1267,19 +1175,6 @@ app-template:
         rangemusique:
           rangemusique:
             - path: /out
-
-    ytptube-config:
-      enabled: true
-      type: persistentVolumeClaim
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 1Gi
-      advancedMounts:
-        ytptube:
-          ytptube:
-            - path: /config
 
     jellyfin-config:
       enabled: true
