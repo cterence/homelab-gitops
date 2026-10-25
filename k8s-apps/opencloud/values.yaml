@@ -83,6 +83,7 @@ app-template:
         external-dns.kubernetes.io/target: home.terence.cloud
         external-dns.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host oc.terence.cloud
@@ -105,6 +106,7 @@ app-template:
         external-dns.kubernetes.io/target: home.terence.cloud
         external-dns.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         traefik.ingress.kubernetes.io/router.priority: "100"
       className: "traefik"
       hosts:
