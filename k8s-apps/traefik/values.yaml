@@ -443,6 +443,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/konnect/v1/token" \
             "id:1000034,phase:1,pass,nolog,ctl:ruleRemoveById=931100,ctl:ruleRemoveById=934110"
+
+          SecRule REQUEST_HEADERS:Content-Encoding "@rx (?i)(^|[ ,])br([ ,;]|$)" \
+            "id:1000035,phase:1,deny,status:415,t:lowercase,msg:'Brotli-encoded request bodies are rejected (CVE-2026-111497)'"
     ok-server-script:
       data:
         index.ts: |
@@ -494,7 +497,7 @@ modsecurity:
         ok-server:
           image:
             repository: docker.io/oven/bun
-            tag: 1.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a
+            tag: 1.4.4-alpine
           env:
             TZ: Europe/Paris
             PORT: "8082"
