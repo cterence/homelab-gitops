@@ -444,6 +444,9 @@ modsecurity:
 
           SecRule REQUEST_HEADERS:Content-Encoding "@rx (?i)(^|[ ,])br([ ,;]|$)" \
             "id:1000035,phase:1,deny,status:415,t:lowercase,msg:'Brotli-encoded request bodies are rejected (CVE-2026-111497)'"
+
+          SecRule REQUEST_URI "@rx ^/config\.json$" \
+            "id:1000036,phase:1,pass,nolog,ctl:ruleRemoveById=930130"
     ok-server-script:
       data:
         index.ts: |
