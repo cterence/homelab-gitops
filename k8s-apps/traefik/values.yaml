@@ -87,8 +87,8 @@ traefik:
         insecure: false
       http:
         middlewares:
-          - traefik-geoblock@kubernetescrd
           - traefik-secure-headers@kubernetescrd
+          - traefik-geoblock@kubernetescrd
           - traefik-jail@kubernetescrd
     websecure:
       port: 8443
@@ -121,8 +121,8 @@ traefik:
           certResolver: ""
           domains: []
         middlewares:
-          - traefik-geoblock@kubernetescrd
           - traefik-secure-headers@kubernetescrd
+          - traefik-geoblock@kubernetescrd
           - traefik-jail@kubernetescrd
     metrics:
       port: 9100
@@ -192,6 +192,7 @@ traefik:
         namespace: traefik
       spec:
         headers:
+          contentSecurityPolicy: "frame-ancestors 'self'"
           browserXssFilter: true
           contentTypeNosniff: true
           customFrameOptionsValue: "SAMEORIGIN"
