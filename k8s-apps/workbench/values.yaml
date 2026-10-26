@@ -12,7 +12,7 @@ subPath: "" # required: path within the repo, e.g. "workbench/my-app"
 registry: registry.registry:5000
 repoURL: github.com/cterence/homelab-gitops
 branch: main
-kanikoImage: ghcr.io/osscontainertools/kaniko:v1.28.6@sha256:2fa20b0a4b40c7db72b479d57e55c2cf79f2178533b2d3bcbd129d6bd3c087ed
+kanikoImage: ghcr.io/osscontainertools/kaniko:v1.29.0@sha256:0c0b6c02991bba44090fad918ae177d193e1bd3fd0ccc643e7cc1f9f1a5a373d
 backoffLimit: 2
 # No ttlSecondsAfterFinished: keeping completed Jobs is what stops ArgoCD's
 # selfHeal from recreating (and re-running Kaniko for) an already-built tag.
