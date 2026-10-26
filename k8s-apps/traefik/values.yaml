@@ -448,6 +448,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/config\.json$" \
             "id:1000036,phase:1,pass,nolog,ctl:ruleRemoveById=930130"
+
+          SecRule REQUEST_URI "@rx ^/System/Configuration/branding" \
+            "id:1000037,phase:1,pass,nolog,ctl:ruleRemoveById=941100,ctl:ruleRemoveById=941160"
     ok-server-script:
       data:
         index.ts: |
