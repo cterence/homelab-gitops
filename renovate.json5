@@ -93,7 +93,7 @@
       ],
     },
     {
-      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?<compatibility>ubu\\d+)-ls(?<build>\\d+)$',
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?<compatibility>ubu\\d+)-ls(?<build>\\d+)$',
       matchPackageNames: [
         '/^lscr.io\\/linuxserver\\/jellyfin/',
       ],
