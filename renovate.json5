@@ -93,13 +93,13 @@
       ],
     },
     {
-      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?<compatibility>ubu\\d+)-ls(?<build>\\d+)$',
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?:ubu\\d+)-ls(?<build>\\d+)$',
       matchPackageNames: [
         '/^lscr.io\\/linuxserver\\/jellyfin/',
       ],
     },
     {
-      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<compatibility>r\\d)-ls(?<build>\\d+)$',
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:-r\\d+|_v\\d+(?:\\.\\d+)*)-ls(?<build>\\d+)$',
       matchPackageNames: [
         '/^lscr.io\\/linuxserver\\/qbittorrent/',
       ],
