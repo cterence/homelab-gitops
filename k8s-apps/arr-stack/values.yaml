@@ -403,7 +403,7 @@ app-template:
         rangemusique:
           image:
             repository: registry.terence.cloud/rangemusique
-            tag: "10"
+            tag: "11"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
