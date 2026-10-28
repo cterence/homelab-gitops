@@ -32,6 +32,7 @@ spec:
     name: k8s-{{ .namespace }}
   target:
     name: {{ .name }}-uri
+    deletionPolicy: Delete
   data:
     - secretKey: uri
       remoteRef:
