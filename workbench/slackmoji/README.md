@@ -54,10 +54,12 @@ pay for it.
   leftover budget buys, shown with the byte budget under the
   preview. The handle always shows the last outcome. Reset to
   optimal (and switching shape) unlocks everything back to the
-  default. The size slider steps by 16 px and the frames slider in
-  about sixteen bands anchored at the full count; the value under
-  each dial always shows the true outcome, which may sit between
-  steps.
+  default. The size slider steps by 16 px; the frames slider spans
+  the original frame count in about sixteen bands anchored at the
+  full count, but the ask never goes past what the locked size can
+  hold - it clamps to the most frames that size fits. The value
+  under each dial always shows the true outcome, which may sit
+  between steps.
 - `POST /convert` — multipart form with `file`, `mode`
   (`ratio` | `square`) and the optional pins `frames` (1..1000,
   hold exactly this many frames), `side` (32-128 px, hold exactly

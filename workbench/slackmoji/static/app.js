@@ -36,6 +36,11 @@
   var sizeHold = 0;
   // the true outcome side, which a stepped slider may not be able to show
   var sizeNow = 0;
+  var framesInCount = 0;
+  // the most frames the locked size holds: the outcome of every
+  // conversion that ran with frames free (upload, reset, shape, size
+  // drag). Frames drags hold the size, so it cannot go stale.
+  var framesMax = 0;
   var report = null;
 
   function fmtKB(bytes) {
@@ -58,15 +63,21 @@
   // the dragged axis is pinned at its slider value; every other axis
   // sits at the optimum. The size slider is chosen first: frames
   // drags hold it through sizeHold. Colors are never pinned: they are
-  // whatever budget is left, always maximized.
+  // whatever budget is left, always maximized. A frames ask never
+  // goes past what the locked size can hold.
   function pin(axis) {
-    return priority === axis ? +sliders[axis].value : 0;
+    if (priority !== axis) return 0;
+
+    var v = +sliders[axis].value;
+    if (axis === 'frames') v = Math.min(v, framesMax);
+
+    return v;
   }
 
   function updateLabels() {
     if (!report) {
-      hints.frames.textContent = 'all';
-      hints.side.textContent = '128 px max';
+      hints.frames.textContent = '';
+      hints.side.textContent = '';
       return;
     }
 
@@ -94,8 +105,11 @@
     // slider must land on the grid.
     sliders.side.dataset.inPx = Math.max(rep.inputWidth, rep.inputHeight);
 
-    // frames step in ~16 bands; the grid is anchored at the full count
-    // so keeping every frame is always exactly selectable
+    // the slider spans the original frame count; the size caps the
+    // ask (pin() clamps to framesMax)
+    framesInCount = rep.framesIn;
+    if (priority !== 'frames') framesMax = rep.framesOut;
+
     var fStep = Math.max(1, Math.round(rep.framesIn / 16));
     var fMin = 1 + ((rep.framesIn - 1) % fStep);
 
@@ -219,6 +233,8 @@
     report = null;
     controlsActive = false;
     priority = '';
+    framesInCount = 0;
+    framesMax = 0;
 
     resetAdjustments();
 
@@ -232,6 +248,11 @@
     stageMeta.textContent = '';
     downloadBtn.textContent = 'Download';
     error.hidden = true;
+
+    AXES.forEach(function (axis) {
+      ends[axis][0].textContent = '';
+      ends[axis][1].textContent = '';
+    });
 
     setControlsEnabled(true);
     updateLabels();
@@ -266,7 +287,7 @@
       if (report) {
         var v = +sliders[axis].value;
         hints[axis].textContent = axis === 'frames'
-          ? v + ' of ' + sliders.frames.max
+          ? v + ' of ' + framesInCount
           : v + ' px';
       }
     });
