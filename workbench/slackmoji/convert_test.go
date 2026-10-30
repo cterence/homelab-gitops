@@ -868,3 +868,61 @@ func TestConvertMovingSubjectOverTransparency(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizePins(t *testing.T) {
+	tests := []struct {
+		name   string
+		opts   Options
+		frames int
+		w, h   int
+		want   Options
+	}{
+		{
+			name:   "square pin at the limit holds",
+			opts:   Options{Mode: ModeSquare, PinSide: 128, Priority: "side"},
+			frames: 10, w: 64, h: 64,
+			want: Options{Mode: ModeSquare, PinSide: 128, Priority: "side"},
+		},
+		{
+			name:   "ratio pin at the input side is a no-op",
+			opts:   Options{Mode: ModeRatio, PinSide: 128, Priority: "side"},
+			frames: 10, w: 64, h: 64,
+			want: Options{Mode: ModeRatio},
+		},
+		{
+			name:   "ratio pin below the input side holds",
+			opts:   Options{Mode: ModeRatio, PinSide: 96, Priority: "side"},
+			frames: 10, w: 500, h: 281,
+			want: Options{Mode: ModeRatio, PinSide: 96, Priority: "side"},
+		},
+		{
+			name:   "frames pin at the full count is a no-op",
+			opts:   Options{Mode: ModeSquare, PinFrames: 10, Priority: "frames"},
+			frames: 10, w: 64, h: 64,
+			want: Options{Mode: ModeSquare},
+		},
+		{
+			name:   "colors pin at the ceiling is a no-op",
+			opts:   Options{Mode: ModeSquare, PinColors: 255, Priority: "colors"},
+			frames: 10, w: 64, h: 64,
+			want: Options{Mode: ModeSquare},
+		},
+		{
+			name:   "unknown priority is dropped",
+			opts:   Options{Mode: ModeSquare, Priority: "bogus"},
+			frames: 10, w: 64, h: 64,
+			want: Options{Mode: ModeSquare},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.opts
+			normalizePins(&got, tt.frames, tt.w, tt.h)
+
+			if got != tt.want {
+				t.Errorf("normalizePins() = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}

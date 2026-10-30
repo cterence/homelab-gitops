@@ -190,7 +190,6 @@ button.clear:disabled, button.reset:disabled { opacity: 0.4; cursor: default; }
 .dial-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
 .dial-label { color: var(--muted); }
 .dial-value { min-width: 0; }
-.lock { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: var(--fs-small); }
 .dial input[type="range"] { width: 100%; accent-color: var(--accent); }
 .dial input:disabled { opacity: 0.4; }
 .dial-ends { display: flex; justify-content: space-between; margin-top: 2px; color: var(--muted); font-size: var(--fs-small); }

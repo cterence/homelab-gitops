@@ -143,7 +143,7 @@ func checkInput(w, h, frames int) error {
 // Convert adapts data (gif, png, jpeg or webp) to Slack emoji limits:
 // at most 128KB and 128x128px. All frames are kept by default; palette
 // quality is reduced first and frames are thinned only as a last resort,
-// or earlier when Options caps them. Input that already fits (and no cap
+// or earlier when Options pins them. Input that already fits (and no pin
 // would change it) is returned byte-for-byte. The context bounds the
 // conversion: it stops at the next frame or encode boundary when done.
 // normalizePins clears pins that ask for what the input already is, so
@@ -157,9 +157,10 @@ func normalizePins(opts *Options, frames, w, h int) {
 		opts.PinColors = 0
 	}
 
-	// ratio mode never upscales: a pin at or above the input side is a
-	// no-op there; in square mode the pin at the limit is the uncapped ask
-	if opts.PinSide >= maxSide || (opts.Mode == ModeRatio && opts.PinSide >= max(w, h)) {
+	// ratio mode never upscales: a pin at or above the input side cannot
+	// change anything there. Square mode holds every pin exactly - 128
+	// means stretch to exactly 128, not "uncapped".
+	if opts.Mode == ModeRatio && opts.PinSide >= max(w, h) {
 		opts.PinSide = 0
 	}
 

@@ -37,20 +37,24 @@ pay for it.
    almost nothing, so the size cost is small.
    A pinned axis leaves this search where it is: size stays at the
    pinned side, frames at the pinned count, colors at the pinned
-   palette, and only the free axes move.
+   palette, and only the free axes move. In square mode a pin at
+   128 holds exactly 128 (it is not an uncapped ask).
 
 ## Endpoints
 
 - `GET /` — web UI: one panel, a fixed frame that is a dropzone
   before upload and the preview after (click the preview to replace
   the file, Clear to go back to the empty dropzone), with the shape
-  toggle and a slider column beside it (frames, colors, size).
-  Dragging a slider pins that axis at the dragged value and makes it
-  the priority, so the free axes degrade to pay for it; a lock
-  checkbox freezes an axis so it neither improves nor degrades; the
-  handle always shows the last outcome. Reset to optimal clears the
-  pins, locks and priority. The only data outside the sliders is the
-  byte budget under the preview.
+  toggle and a slider column beside it (size, frames).
+  The axes have a fixed priority: size first, then frames, then
+  colors. The default size is the one that keeps the most frames;
+  dragging the size slider locks it at the dragged value and
+  re-optimizes frames under it, while frames drags hold the locked
+  size. Colors are never adjusted: they are always the maximum the
+  leftover budget buys, shown with the byte budget under the
+  preview. The handle always shows the last outcome. Reset to
+  optimal (and switching shape) unlocks everything back to the
+  default.
 - `POST /convert` — multipart form with `file`, `mode`
   (`ratio` | `square`) and the optional pins `frames` (1..1000,
   hold exactly this many frames), `side` (32-128 px, hold exactly

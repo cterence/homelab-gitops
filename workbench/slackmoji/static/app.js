@@ -10,25 +10,17 @@
   var error = document.getElementById('error');
   var resetBtn = document.getElementById('reset-btn');
 
-  var AXES = ['frames', 'colors', 'side'];
+  var AXES = ['frames', 'side'];
   var sliders = {
     frames: document.getElementById('frames-slider'),
-    colors: document.getElementById('colors-slider'),
     side: document.getElementById('size-slider')
   };
   var hints = {
     frames: document.getElementById('frames-out'),
-    colors: document.getElementById('colors-out'),
     side: document.getElementById('size-out')
-  };
-  var locks = {
-    frames: document.getElementById('lock-frames'),
-    colors: document.getElementById('lock-colors'),
-    side: document.getElementById('lock-size')
   };
   var ends = {
     frames: [document.getElementById('frames-min'), document.getElementById('frames-base')],
-    colors: [document.getElementById('colors-min'), document.getElementById('colors-base')],
     side: [document.getElementById('size-min'), document.getElementById('size-base')]
   };
 
@@ -37,9 +29,11 @@
   var busy = false;
   // sliders live only once a file has converted
   var controlsActive = false;
-  // the axis the user dragged last: its pin yields first when the
-  // pinned set cannot fit, so a drag is a request, never an error
+  // the axis the user dragged last: it is held at the dragged value,
+  // and yields first when the pinned set cannot fit
   var priority = '';
+  // the size is chosen first: frames drags hold it here
+  var sizeHold = 0;
   var report = null;
 
   function fmtKB(bytes) {
@@ -59,23 +53,22 @@
     return Math.min(+sliders.side.dataset.inPx || 128, 128);
   }
 
-  // a locked or priority axis is pinned exactly; the free axes degrade
-  // to pay for it. A slider left at its maximum is a free axis.
+  // the dragged axis is pinned at its slider value; every other axis
+  // sits at the optimum. The size slider is chosen first: frames
+  // drags hold it through sizeHold. Colors are never pinned: they are
+  // whatever budget is left, always maximized.
   function pin(axis) {
-    if (locks[axis].checked || priority === axis) return +sliders[axis].value;
-    return 0;
+    return priority === axis ? +sliders[axis].value : 0;
   }
 
   function updateLabels() {
     if (!report) {
       hints.frames.textContent = 'all';
-      hints.colors.textContent = 'best';
       hints.side.textContent = '128 px max';
       return;
     }
 
     hints.frames.textContent = report.framesOut + ' of ' + report.framesIn;
-    hints.colors.textContent = plural(report.colors, 'color');
     hints.side.textContent = Math.max(report.width, report.height) + ' px';
   }
 
@@ -89,8 +82,10 @@
     slot.classList.add('has-file');
     slot.setAttribute('aria-label', 'Replace image');
 
-    // the one fact no slider carries: the byte budget
-    stageMeta.textContent = fmtKB(rep.outputSize) + ' of 128 KB';
+    // the facts no slider carries: the byte budget and the palette the
+    // leftover budget buys, always maximized
+    stageMeta.textContent = fmtKB(rep.outputSize) + ' of 128 KB \u00b7 ' +
+      plural(rep.colors, 'color');
 
     // full ranges so any drag expresses a priority; the handle always
     // shows the outcome
@@ -99,21 +94,15 @@
     sliders.frames.min = 1;
     sliders.frames.max = rep.framesIn;
 
-    sliders.colors.min = Math.min(16, rep.colors);
-    sliders.colors.max = 255;
-
     sliders.side.min = Math.min(32, naturalMax());
     sliders.side.max = naturalMax();
 
     ends.frames[0].textContent = sliders.frames.min;
     ends.frames[1].textContent = sliders.frames.max;
-    ends.colors[0].textContent = sliders.colors.min;
-    ends.colors[1].textContent = sliders.colors.max;
     ends.side[0].textContent = sliders.side.min + ' px';
     ends.side[1].textContent = sliders.side.max + ' px';
 
     sliders.frames.value = rep.framesOut;
-    sliders.colors.value = rep.colors;
     sliders.side.value = Math.max(rep.width, rep.height);
 
     current = { dataUrl: rep.dataUrl, name: rep.name };
@@ -137,9 +126,7 @@
     var on = enabled && controlsActive;
 
     AXES.forEach(function (axis) {
-      // a locked slider cannot be dragged: its value moves for nothing
-      sliders[axis].disabled = !on || locks[axis].checked;
-      locks[axis].disabled = !on;
+      sliders[axis].disabled = !on;
     });
 
     document.querySelectorAll('input[name="mode"]').forEach(function (r) {
@@ -169,6 +156,8 @@
       var p = pin(axis);
       if (p) body.append(axis, p);
     });
+
+    if (sizeHold) body.append('side', sizeHold);
 
     if (priority) body.append('priority', priority);
 
@@ -237,9 +226,7 @@
 
   function resetAdjustments() {
     priority = '';
-    AXES.forEach(function (axis) {
-      locks[axis].checked = false;
-    });
+    sizeHold = 0;
   }
 
   fileInput.addEventListener('change', function () {
@@ -267,24 +254,28 @@
         var v = +sliders[axis].value;
         hints[axis].textContent = axis === 'frames'
           ? v + ' of ' + sliders.frames.max
-          : axis === 'colors' ? plural(v, 'color') : v + ' px';
+          : v + ' px';
       }
     });
 
     sliders[axis].addEventListener('change', function () {
-      if (!currentFile || locks[axis].checked) return;
-      priority = axis;
-      convert(currentFile);
-    });
+      if (!currentFile) return;
 
-    // locking freezes the value; no conversion runs for a lock alone
-    locks[axis].addEventListener('change', function () {
-      setControlsEnabled(true);
+      priority = axis;
+
+      // the size is chosen first: frames drags hold it, a size drag
+      // re-optimizes everything else
+      sizeHold = axis === 'side' ? 0 : +sliders.side.value;
+
+      convert(currentFile);
     });
   });
 
   document.querySelectorAll('input[name="mode"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
+      // a new shape is a fresh start: the optimum in that shape
+      resetAdjustments();
+
       if (currentFile) convert(currentFile);
     });
   });
