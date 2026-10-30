@@ -139,6 +139,8 @@ button { cursor: pointer; }
 
 /* adjustments: shape, frame and size presets in one row */
 .adjust-row { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; justify-content: space-between; }
+.adjust-reset { align-self: flex-end; height: var(--control-height); }
+
 .preset { border: 0; padding: 0; margin: 0; }
 .preset legend { padding: 0; margin-bottom: 8px; color: var(--muted); }
 .preset-controls { display: flex; align-items: center; gap: 12px; }

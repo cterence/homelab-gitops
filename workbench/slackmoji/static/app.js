@@ -7,7 +7,10 @@
   var preview = document.getElementById('preview');
   var error = document.getElementById('error');
   var resultMeta = document.getElementById('result-meta');
-  var framesOut = document.getElementById('frames-out');
+  var framesHint = document.getElementById('frames-out');
+  var colorsHint = document.getElementById('colors-out');
+  var sizeHint = document.getElementById('size-out');
+  var resetBtn = document.getElementById('reset-btn');
 
   var fields = {
     size: document.getElementById('f-size'),
@@ -22,6 +25,8 @@
   var busy = false;
   var pending = false;
   var framesIn = 0;
+  var inPx = 0;
+  var bestColors = 0;
 
   function fmtKB(bytes) {
     return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + ' KB';
@@ -36,28 +41,52 @@
   }
 
   function preset(name) {
-    return +document.querySelector('input[name="' + name + '"]:checked').value;
+    return document.querySelector('input[name="' + name + '"]:checked').value;
   }
 
-  // framesIn 0 means no animated file yet; the frame presets stay disabled.
+  function naturalMax() {
+    if (mode() === 'square') return 128;
+    return Math.min(inPx || 128, 128);
+  }
+
+  // relative caps, resolved against the current file
   function frameCap() {
-    var pct = preset('framesPct');
+    var pct = +preset('framesPct');
 
     if (framesIn < 2 || pct >= 100) return 0;
     return Math.max(1, Math.round(framesIn * pct / 100));
   }
 
-  function updateLabels() {
-    if (framesIn < 2) {
-      framesOut.textContent = 'all';
-    } else {
-      framesOut.textContent = 'all ' + framesIn;
-    }
+  function sizeCap() {
+    var pct = +preset('sizePct');
 
-    if (frameCap() > 0) framesOut.textContent = frameCap() + ' frames';
+    if (pct >= 100) return 0;
+    return Math.min(128, Math.max(32, Math.round(naturalMax() * pct / 100)));
   }
 
-  function showResult(report, dataUrl, name) {
+  function colorsCap() {
+    var v = preset('colorsPct');
+
+    if (v === '100') return 0;
+    if (v === 'floor') return 16;
+    return Math.max(16, Math.round(bestColors * (+v) / 100));
+  }
+
+  function updateLabels() {
+    if (framesIn < 2 || frameCap() === 0) {
+      framesHint.textContent = framesIn < 2 ? 'all' : 'all ' + framesIn;
+    } else {
+      framesHint.textContent = frameCap() + ' frames';
+    }
+
+    var sc = sizeCap();
+    sizeHint.textContent = (sc || naturalMax()) + ' px';
+
+    var cc = colorsCap();
+    colorsHint.textContent = cc === 0 ? (bestColors ? plural(bestColors, 'color') : 'best') : cc + ' colors';
+  }
+
+  function showResult(report, dataUrl, name, request) {
     error.hidden = true;
     previewCol.hidden = false;
 
@@ -67,18 +96,18 @@
 
     if (report.framesIn > 1) {
       framesIn = report.framesIn;
-
-      document.querySelectorAll('input[name="framesPct"]').forEach(function (r) {
-        r.disabled = false;
-      });
     }
 
-    updateLabels();
+    inPx = Math.max(report.inputWidth, report.inputHeight);
+
+    // the anchor for the relative color scale is the uncapped proposal
+    if (!report.passthrough && request.colors === '100') {
+      bestColors = report.colors;
+    }
 
     resultMeta.textContent = report.passthrough ? 'unchanged' : 'converted';
 
     var px = Math.max(report.width, report.height);
-    var inPx = Math.max(report.inputWidth, report.inputHeight);
 
     fields.size.textContent = fmtKB(report.outputSize) + ' of 128 KB';
     fields.dims.textContent = report.width + ' × ' + report.height + ' px';
@@ -90,18 +119,22 @@
     fields.dims.classList.toggle('dropped', !report.passthrough && px < inPx);
     fields.frames.classList.toggle('dropped', report.framesOut < report.framesIn);
 
-    // the controls display the algorithm's decision, so touching one
-    // always changes something from the shown state
+    // a control the user has not touched shows the algorithm's decision;
+    // a control the user set stays set
     if (!report.passthrough) {
-      syncControls(px, report.framesOut, report.framesIn, report.colors);
+      syncControls(px, report.framesOut, report.framesIn, request);
     }
+
+    updateLabels();
 
     current = { dataUrl: dataUrl, name: name };
     downloadBtn.hidden = false;
     downloadBtn.textContent = 'Download ' + (dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
   }
 
-  function nearestPreset(name, value) {
+  function nearestPreset(name, value, min) {
+    if (value < min) return;
+
     var nearest = null;
     var bestDist = 1e9;
 
@@ -119,14 +152,31 @@
     });
   }
 
-  function syncControls(px, framesOut, framesIn, colors) {
-    document.querySelectorAll('input[name="maxSide"]').forEach(function (r) {
-      r.checked = +r.value === px;
-    });
+  function syncControls(px, framesOut, framesIn, request) {
+    // snap size to the smallest preset whose cap still covers the
+    // outcome, so the next conversion can always reach the same point
+    if (request.size >= 100) {
+      var steps = [25, 50, 75, 100];
 
-    if (framesIn >= 2) nearestPreset('framesPct', Math.round(framesOut / framesIn * 100));
+      for (var i = 0; i < steps.length; i++) {
+        var cap = steps[i] >= 100
+          ? naturalMax()
+          : Math.min(128, Math.max(32, Math.round(naturalMax() * steps[i] / 100)));
 
-    nearestPreset('maxColors', colors);
+        if (cap >= px) {
+          check('sizePct', steps[i]);
+          break;
+        }
+      }
+    }
+
+    if (framesIn >= 2 && request.frames >= 100) {
+      nearestPreset('framesPct', Math.round(framesOut / framesIn * 100), 10);
+    }
+
+    if (request.colors === '100') {
+      check('colorsPct', 100);
+    }
   }
 
   function showError(message) {
@@ -148,17 +198,20 @@
     busy = true;
     error.hidden = true;
 
-    var cap = frameCap();
+    // what the user asked for, before the algorithm has its say
+    var request = {
+      frames: +preset('framesPct'),
+      size: +preset('sizePct'),
+      colors: preset('colorsPct')
+    };
 
     var body = new FormData();
     body.append('file', file);
     body.append('mode', mode());
 
-    if (cap > 0) body.append('maxFrames', cap);
-
-    if (preset('maxSide') < 128) body.append('maxSide', preset('maxSide'));
-
-    if (preset('maxColors') < 255) body.append('maxColors', preset('maxColors'));
+    if (frameCap() > 0) body.append('maxFrames', frameCap());
+    if (sizeCap() > 0) body.append('maxSide', sizeCap());
+    if (colorsCap() > 0) body.append('maxColors', colorsCap());
 
     fetch('/convert', { method: 'POST', body: body })
       .then(function (r) {
@@ -166,7 +219,7 @@
       })
       .then(function (res) {
         if (!res.ok) throw new Error(res.j.error || 'Conversion failed');
-        showResult(res.j.report, res.j.data, file.name);
+        showResult(res.j.report, res.j.data, file.name, request);
       })
       .catch(function (err) {
         showError(err.message);
@@ -187,7 +240,28 @@
     currentFile = file;
     fileName.textContent = file.name + ', ' + fmtKB(file.size);
     fileName.hidden = false;
+    resetBtn.hidden = false;
+
+    // a new file gets a fresh proposal: presets back to uncapped and active
+    ['framesPct', 'colorsPct', 'sizePct'].forEach(function (name) {
+      document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+        r.disabled = false;
+      });
+    });
+
+    resetPresets();
     convert(file);
+  }
+
+  function resetPresets() {
+    check('framesPct', 100);
+    check('colorsPct', 100);
+    check('sizePct', 100);
+    updateLabels();
+  }
+
+  function check(name, value) {
+    document.querySelector('input[name="' + name + '"][value="' + value + '"]').checked = true;
   }
 
   fileInput.addEventListener('change', function () {
@@ -195,7 +269,7 @@
   });
 
   document.querySelectorAll(
-    'input[name="mode"], input[name="framesPct"], input[name="maxSide"], input[name="maxColors"]'
+    'input[name="mode"], input[name="framesPct"], input[name="sizePct"], input[name="colorsPct"]'
   ).forEach(function (radio) {
     radio.addEventListener('change', function () {
       updateLabels();
@@ -205,6 +279,13 @@
   });
 
   updateLabels();
+
+  resetBtn.addEventListener('click', function () {
+    if (!currentFile) return;
+
+    resetPresets();
+    convert(currentFile);
+  });
 
   downloadBtn.addEventListener('click', function () {
     if (!current) return;
