@@ -25,56 +25,56 @@
       <span class="meta">GIF, PNG, JPEG or WebP, up to 32&nbsp;MB</span>
     </header>
 
-    <div class="input-row">
-      <div class="drop" id="drop">
-        <input type="file" id="file" name="file"
-               accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/jpeg,image/webp">
-        <label for="file" class="drop-label">Choose a file</label>
-        <span class="drop-hint">or drop it here</span>
-        <span class="file-name" id="file-name" hidden></span>
-      </div>
-
-      <fieldset class="shape">
-        <legend>Shape</legend>
-        <div class="segmented" role="radiogroup" aria-label="Shape">
-          <label>
-            <input type="radio" name="mode" value="ratio" checked>
-            <span>Keep aspect</span>
-          </label>
-          <label>
-            <input type="radio" name="mode" value="square">
-            <span>Stretch to square</span>
-          </label>
-        </div>
-      </fieldset>
+    <div class="drop" id="drop">
+      <input type="file" id="file" name="file"
+             accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/jpeg,image/webp">
+      <label for="file" class="drop-label">Choose a file</label>
+      <span class="drop-hint">or drop it here</span>
+      <span class="file-name" id="file-name" hidden></span>
     </div>
 
     <div class="adjust-row">
       <fieldset class="preset">
-        <legend>Frames</legend>
-        <div class="segmented" role="radiogroup" aria-label="Frames">
+        <legend>Shape</legend>
+        <div class="segmented" role="radiogroup" aria-label="Shape">
           <label>
-            <input type="radio" name="framesPct" value="100" checked disabled>
-            <span>All</span>
+            <input type="radio" name="mode" value="ratio">
+            <span>Keep aspect</span>
           </label>
           <label>
-            <input type="radio" name="framesPct" value="75" disabled>
-            <span>75%</span>
-          </label>
-          <label>
-            <input type="radio" name="framesPct" value="50" disabled>
-            <span>50%</span>
-          </label>
-          <label>
-            <input type="radio" name="framesPct" value="25" disabled>
-            <span>25%</span>
-          </label>
-          <label>
-            <input type="radio" name="framesPct" value="10" disabled>
-            <span>10%</span>
+            <input type="radio" name="mode" value="square" checked>
+            <span>Stretch to square</span>
           </label>
         </div>
-        <span class="preset-hint" id="frames-out">all</span>
+      </fieldset>
+
+      <fieldset class="preset">
+        <legend>Frames</legend>
+        <div class="preset-controls">
+          <div class="segmented" role="radiogroup" aria-label="Frames">
+            <label>
+              <input type="radio" name="framesPct" value="100" checked disabled>
+              <span>All</span>
+            </label>
+            <label>
+              <input type="radio" name="framesPct" value="75" disabled>
+              <span>75%</span>
+            </label>
+            <label>
+              <input type="radio" name="framesPct" value="50" disabled>
+              <span>50%</span>
+            </label>
+            <label>
+              <input type="radio" name="framesPct" value="25" disabled>
+              <span>25%</span>
+            </label>
+            <label>
+              <input type="radio" name="framesPct" value="10" disabled>
+              <span>10%</span>
+            </label>
+          </div>
+          <span class="preset-hint" id="frames-out">all</span>
+        </div>
       </fieldset>
 
       <fieldset class="preset">
@@ -109,7 +109,9 @@
 
     <div class="result-row">
       <div class="preview" id="preview-col" hidden>
-        <img id="preview" alt="">
+        <div class="preview-slot">
+          <img id="preview" alt="">
+        </div>
         <button type="button" class="primary" id="download-btn" hidden>Download</button>
       </div>
 

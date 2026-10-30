@@ -64,7 +64,6 @@
 
     preview.src = dataUrl;
     preview.alt = 'Converted preview, ' + report.width + ' by ' + report.height + ' pixels';
-    preview.style.width = report.width * 4 + 'px';
     preview.hidden = false;
 
     if (report.framesIn > 1) {
@@ -77,20 +76,26 @@
 
     updateLabels();
 
+    var sizeNote = '';
+
+    if (!report.passthrough && Math.max(report.width, report.height) < Math.min(preset('maxSide'), 128)) {
+      sizeNote = ' at ' + Math.max(report.width, report.height) + ' px';
+    }
+
     var framesText;
     if (report.passthrough) {
       finding.textContent = 'Already within the limits, returned unchanged.';
     } else if (report.framesOut === report.framesIn) {
       framesText = 'all ' + plural(report.framesIn, 'frame') + ' kept';
-      finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText + '.';
+      finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText + sizeNote + '.';
     } else if (report.framesOut === requestedFrames) {
       framesText = report.framesOut + ' of ' + report.framesIn + ' frames kept';
       finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText +
-        ' at your frame cap.';
+        ' at your frame cap' + sizeNote + '.';
     } else {
       framesText = report.framesOut + ' of ' + report.framesIn + ' frames kept';
       finding.innerHTML = 'Fits the limits: ' + fmtKB(report.outputSize) +
-        ' of 128 KB, <span class="dropped">' + framesText + '</span> after quality was exhausted.';
+        ' of 128 KB, <span class="dropped">' + framesText + '</span> after quality was exhausted' + sizeNote + '.';
     }
 
     resultMeta.textContent = report.passthrough ? 'unchanged' : 'converted';

@@ -22,6 +22,10 @@ const (
 
 	ModeRatio  = "ratio"
 	ModeSquare = "square"
+
+	// colorFloor: below this, dithering cannot hide posterization, so the
+	// pipeline degrades size (then frames) instead of going lower.
+	colorFloor = 16
 )
 
 // Options tune a conversion. Zero values mean "no manual adjustment".
@@ -141,34 +145,79 @@ func finish(
 	loopCount int,
 	report *Report,
 ) ([]byte, *Report, error) {
-	tw, th := targetSize(w, h, opts)
+	sizes := sizeLadder(side(opts))
 
-	small := make([]*image.NRGBA, len(frames))
+	// resize once per candidate size; thinning below picks subsets
+	resized := make([][]*image.NRGBA, len(sizes))
+	dims := make([][2]int, len(sizes))
 
-	for i, f := range frames {
-		small[i] = resizeFrame(f, tw, th)
+	for i, s := range sizes {
+		tw, th := targetSize(w, h, opts.Mode, s)
+		dims[i] = [2]int{tw, th}
+
+		r := make([]*image.NRGBA, len(frames))
+
+		for j, f := range frames {
+			r[j] = resizeFrame(f, tw, th)
+		}
+
+		resized[i] = r
 	}
 
-	out, colors, framesOut, err := fitBudget(small, delays, loopCount, opts.MaxFrames)
-	if err != nil {
-		return nil, nil, err
+	keep := len(frames)
+
+	if opts.MaxFrames > 0 && opts.MaxFrames < keep {
+		keep = opts.MaxFrames
 	}
 
-	report.OutputSize = len(out)
-	report.Width, report.Height = tw, th
-	report.FramesOut = framesOut
-	report.Colors = colors
+	for ; keep >= 1; keep /= 2 {
+		for i := range sizes {
+			kf, kd := thinFrames(resized[i], delays, keep)
 
-	return out, report, nil
+			out, colors, err := searchPalette(kf, kd, loopCount)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if out == nil {
+				continue
+			}
+
+			report.OutputSize = len(out)
+			report.Width, report.Height = dims[i][0], dims[i][1]
+			report.FramesOut = len(kf)
+			report.Colors = colors
+
+			return out, report, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf(
+		"cannot fit under %d bytes even at %d colors, %d px and 1 frame",
+		maxBytes, colorFloor, sizes[len(sizes)-1])
+}
+
+// sizeLadder is the degradation order for resolution: the user's side
+// limit first, then the steps below it, never above.
+func sizeLadder(maxSide int) []int {
+	all := [...]int{128, 96, 64, 48}
+
+	var out []int
+
+	for _, s := range all {
+		if s <= maxSide {
+			out = append(out, s)
+		}
+	}
+
+	return out
 }
 
 // targetSize returns the output dimensions for the given mode and side
 // limit. Square mode always stretches to the limit; ratio mode never
 // upscales.
-func targetSize(w, h int, opts Options) (int, int) {
-	s := side(opts)
-
-	if opts.Mode == ModeSquare {
+func targetSize(w, h int, mode string, s int) (int, int) {
+	if mode == ModeSquare {
 		return s, s
 	}
 
@@ -181,73 +230,42 @@ func targetSize(w, h int, opts Options) (int, int) {
 	return max(1, int(math.Round(float64(w)*scale))), max(1, int(math.Round(float64(h)*scale)))
 }
 
-// fitBudget encodes frames under maxBytes. The frame count starts at the
-// caller's cap (or every frame) and is halved as the last resort; at every
-// frame count the palette is exhausted first (binary search from 256 down
-// to 2 colors).
-func fitBudget(frames []*image.NRGBA, delays []int, loopCount int, maxFrames int) ([]byte, int, int, error) {
-	keep := len(frames)
-
-	if maxFrames > 0 && maxFrames < keep {
-		keep = maxFrames
-	}
-
-	for ; keep >= 1; keep /= 2 {
-		kf, kd := thinFrames(frames, delays, keep)
-
-		out, colors, err := searchPalette(kf, kd, loopCount)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-
-		if out != nil {
-			return out, colors, len(kf), nil
-		}
-	}
-
-	return nil, 0, 0, fmt.Errorf("cannot fit under %d bytes even at 2 colors and 1 frame", maxBytes)
-}
-
-// searchPalette binary-searches the largest palette (2..256) whose
-// encoding fits the budget, dithered first and undithered as a fallback.
-// Returns nil when even 2 colors do not fit either way.
+// searchPalette binary-searches the largest palette (colorFloor..255)
+// whose dithered encoding fits the budget. Returns nil when even the
+// color floor does not fit.
 func searchPalette(
 	frames []*image.NRGBA,
 	delays []int,
 	loopCount int,
 ) ([]byte, int, error) {
-	for _, dither := range [...]bool{true, false} {
-		loOut, err := encodeGIF(quantizeFrames(frames, 2, dither), delays, loopCount)
+	loOut, err := encodeGIF(quantizeFrames(frames, colorFloor, true), delays, loopCount)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if len(loOut) > maxBytes {
+		return nil, 0, nil
+	}
+
+	lo, loColors := colorFloor, colorFloor
+
+	for hi := 255; lo < hi; {
+		mid := (lo + hi + 1) / 2
+
+		out, err := encodeGIF(quantizeFrames(frames, mid, true), delays, loopCount)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		if len(loOut) > maxBytes {
+		if len(out) > maxBytes {
+			hi = mid - 1
 			continue
 		}
 
-		lo, loColors := 2, 2
-
-		for hi := 255; lo < hi; {
-			mid := (lo + hi + 1) / 2
-
-			out, err := encodeGIF(quantizeFrames(frames, mid, dither), delays, loopCount)
-			if err != nil {
-				return nil, 0, err
-			}
-
-			if len(out) > maxBytes {
-				hi = mid - 1
-				continue
-			}
-
-			lo, loOut, loColors = mid, out, mid
-		}
-
-		return loOut, loColors, nil
+		lo, loOut, loColors = mid, out, mid
 	}
 
-	return nil, 0, nil
+	return loOut, loColors, nil
 }
 
 // thinFrames keeps the first and last frame plus evenly spread frames,

@@ -7,6 +7,8 @@ import (
 	"image/gif"
 	"image/png"
 	"math/rand/v2"
+	"slices"
+	"strconv"
 	"testing"
 )
 
@@ -102,10 +104,10 @@ func TestTargetSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotW, gotH := targetSize(tt.w, tt.h, Options{Mode: tt.mode})
+			gotW, gotH := targetSize(tt.w, tt.h, tt.mode, 128)
 
 			if gotW != tt.wantW || gotH != tt.wantH {
-				t.Errorf("targetSize(%d, %d, %s) = %dx%d, want %dx%d",
+				t.Errorf("targetSize(%d, %d, %s, 128) = %dx%d, want %dx%d",
 					tt.w, tt.h, tt.mode, gotW, gotH, tt.wantW, tt.wantH)
 			}
 		})
@@ -169,7 +171,7 @@ func TestConvertFitsBudgetKeepAllFrames(t *testing.T) {
 	}
 }
 
-func TestConvertDropsFramesLast(t *testing.T) {
+func TestConvertDegradesSizeBeforeFrames(t *testing.T) {
 	input := noiseGIF(t, 128, 128, 120, 2)
 
 	out, report, err := Convert(input, Options{Mode: ModeRatio})
@@ -181,13 +183,18 @@ func TestConvertDropsFramesLast(t *testing.T) {
 		t.Errorf("output %d bytes, want <= %d", len(out), maxBytes)
 	}
 
-	if report.FramesOut >= report.FramesIn || report.FramesOut < 1 {
-		t.Errorf("frames %d -> %d, want some dropped but at least one kept",
-			report.FramesIn, report.FramesOut)
+	if report.Colors < colorFloor {
+		t.Errorf("colors = %d, want at least the %d-color floor", report.Colors, colorFloor)
 	}
 
-	if report.FramesOut > 1 && report.Colors > 8 {
-		t.Errorf("frames dropped but palette still at %d colors, want quality exhausted first", report.Colors)
+	if report.Width >= 128 && report.Height >= 128 && report.FramesOut == report.FramesIn {
+		t.Error("nothing was degraded despite the budget being impossible")
+	}
+
+	// size degrades at every frame count before frames drop, so the
+	// moment frames are lost, resolution is already at the bottom step
+	if report.FramesOut < report.FramesIn && report.Width > 48 {
+		t.Errorf("frames dropped at %dpx, want size degraded to 48px first", report.Width)
 	}
 }
 
@@ -317,21 +324,43 @@ func TestTargetSizeMaxSide(t *testing.T) {
 	tests := []struct {
 		name         string
 		w, h         int
-		opts         Options
+		mode         string
+		side         int
 		wantW, wantH int
 	}{
-		{"ratio smaller side", 200, 100, Options{Mode: ModeRatio, MaxSide: 64}, 64, 32},
-		{"square smaller side", 200, 100, Options{Mode: ModeSquare, MaxSide: 64}, 64, 64},
-		{"ratio already within side", 60, 40, Options{Mode: ModeRatio, MaxSide: 64}, 60, 40},
+		{"ratio smaller side", 200, 100, ModeRatio, 64, 64, 32},
+		{"square smaller side", 200, 100, ModeSquare, 64, 64, 64},
+		{"ratio already within side", 60, 40, ModeRatio, 64, 60, 40},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotW, gotH := targetSize(tt.w, tt.h, tt.opts)
+			gotW, gotH := targetSize(tt.w, tt.h, tt.mode, tt.side)
 
 			if gotW != tt.wantW || gotH != tt.wantH {
-				t.Errorf("targetSize(%d, %d, %+v) = %dx%d, want %dx%d",
-					tt.w, tt.h, tt.opts, gotW, gotH, tt.wantW, tt.wantH)
+				t.Errorf("targetSize(%d, %d, %s, %d) = %dx%d, want %dx%d",
+					tt.w, tt.h, tt.mode, tt.side, gotW, gotH, tt.wantW, tt.wantH)
+			}
+		})
+	}
+}
+
+func TestSizeLadder(t *testing.T) {
+	tests := []struct {
+		maxSide int
+		want    []int
+	}{
+		{128, []int{128, 96, 64, 48}},
+		{96, []int{96, 64, 48}},
+		{48, []int{48}},
+	}
+
+	for _, tt := range tests {
+		t.Run(strconv.Itoa(tt.maxSide), func(t *testing.T) {
+			got := sizeLadder(tt.maxSide)
+
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("sizeLadder(%d) = %v, want %v", tt.maxSide, got, tt.want)
 			}
 		})
 	}

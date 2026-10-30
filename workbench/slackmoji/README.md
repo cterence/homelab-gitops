@@ -14,14 +14,15 @@ quality first; frames are thinned only as a last resort.
    - `ratio`: the longest side becomes 128 px, aspect preserved, never
      upscaled.
    - `square`: stretched to exactly 128x128 px.
-4. **Budget search** — the encoder binary-searches the largest palette
-   that fits: 256 down to 2 colors (median cut, one palette per frame,
-   so each frame keeps its own best colors). Input that still exceeds
-   128 KB at 2 colors is thinned to every other frame (then a quarter,
-   and so on), merging delays so the total duration is preserved.
-   128x128 is never shrunk further; the last resort is a single frame
-   at 2 colors. Frame disposal methods are honored when compositing,
-   and each output frame is full-canvas.
+4. **Budget search** — the degradation order is: colors binary-searched
+   from 255 down to a 16-color floor (dithered; below 16 a GIF
+   posterizes, so nothing goes lower), then resolution steps down
+   128 → 96 → 64 → 48 px (never above the requested `maxSide`), and
+   only then frames, thinned to every other frame (then a quarter, and
+   so on) with delays merged so the total duration is preserved.
+   Median cut picks one shared palette built from the pixels that
+   change between frames; frames after the first store only their
+   changed pixels. Frame disposal methods are honored when compositing.
 
 ## Endpoints
 
