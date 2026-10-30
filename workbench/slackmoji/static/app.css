@@ -167,9 +167,12 @@ button.primary:disabled { opacity: 0.4; cursor: default; }
 .result-row { display: flex; gap: 32px; align-items: stretch; }
 .preview {
   flex: 0 0 auto;
+  width: 512px;
+  height: 512px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
 }
 .preview img { image-rendering: pixelated; }
@@ -194,4 +197,5 @@ button.primary:disabled { opacity: 0.4; cursor: default; }
 @media (max-width: 768px) {
   .input-row { flex-direction: column; align-items: stretch; }
   .result-row { flex-direction: column; }
+  .preview { width: 100%; height: auto; }
 }

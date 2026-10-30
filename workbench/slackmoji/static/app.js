@@ -115,7 +115,6 @@
     if (!file || busy) return;
 
     busy = true;
-    finding.textContent = 'Converting ' + file.name + '…';
     error.hidden = true;
 
     requestedFrames = frameCap();
