@@ -38,12 +38,12 @@
         <legend>Shape</legend>
         <div class="segmented" role="radiogroup" aria-label="Shape">
           <label>
-            <input type="radio" name="mode" value="ratio" checked>
-            <span>Keep aspect</span>
+            <input type="radio" name="mode" value="square" checked>
+            <span>Stretch to square</span>
           </label>
           <label>
-            <input type="radio" name="mode" value="square">
-            <span>Stretch to square</span>
+            <input type="radio" name="mode" value="ratio">
+            <span>Keep aspect</span>
           </label>
         </div>
       </fieldset>
@@ -78,8 +78,34 @@
       </fieldset>
 
       <fieldset class="preset">
-        <legend>Max size (px)</legend>
-        <div class="segmented" role="radiogroup" aria-label="Max size">
+        <legend>Colors</legend>
+        <div class="segmented" role="radiogroup" aria-label="Colors">
+          <label>
+            <input type="radio" name="maxColors" value="255" checked>
+            <span>Max</span>
+          </label>
+          <label>
+            <input type="radio" name="maxColors" value="128">
+            <span>128</span>
+          </label>
+          <label>
+            <input type="radio" name="maxColors" value="64">
+            <span>64</span>
+          </label>
+          <label>
+            <input type="radio" name="maxColors" value="32">
+            <span>32</span>
+          </label>
+          <label>
+            <input type="radio" name="maxColors" value="16">
+            <span>16</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="preset">
+        <legend>Size (px)</legend>
+        <div class="segmented" role="radiogroup" aria-label="Size">
           <label>
             <input type="radio" name="maxSide" value="128" checked>
             <span>128</span>

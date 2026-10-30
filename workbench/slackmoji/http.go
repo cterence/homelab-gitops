@@ -96,6 +96,16 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		opts.MaxSide = n
 	}
 
+	if v := r.FormValue("maxColors"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < colorFloor || n > 255 {
+			writeError(w, http.StatusBadRequest, fmt.Errorf("maxColors must be between %d and 255", colorFloor))
+			return
+		}
+
+		opts.MaxColors = n
+	}
+
 	out, report, err := Convert(data, opts)
 	if err != nil {
 		writeError(w, http.StatusUnprocessableEntity, err)

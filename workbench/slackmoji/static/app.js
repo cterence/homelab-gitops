@@ -20,8 +20,8 @@
   var current = null;
   var currentFile = null;
   var busy = false;
+  var pending = false;
   var framesIn = 0;
-  var requestedFrames = 0;
 
   function fmtKB(bytes) {
     return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + ' KB';
@@ -78,6 +78,7 @@
     resultMeta.textContent = report.passthrough ? 'unchanged' : 'converted';
 
     var px = Math.max(report.width, report.height);
+    var inPx = Math.max(report.inputWidth, report.inputHeight);
 
     fields.size.textContent = fmtKB(report.outputSize) + ' of 128 KB';
     fields.dims.textContent = report.width + ' × ' + report.height + ' px';
@@ -85,16 +86,47 @@
     fields.colors.textContent = plural(report.colors, 'color');
     fields.input.textContent = fmtKB(report.inputSize);
 
-    // red marks what the pipeline sacrificed on its own, not what the
-    // user's own caps asked for
-    fields.dims.classList.toggle('dropped',
-      !report.passthrough && px < Math.min(preset('maxSide'), 128));
-    fields.frames.classList.toggle('dropped',
-      report.framesOut < report.framesIn && report.framesOut !== requestedFrames);
+    // red marks what was sacrificed relative to the input
+    fields.dims.classList.toggle('dropped', !report.passthrough && px < inPx);
+    fields.frames.classList.toggle('dropped', report.framesOut < report.framesIn);
+
+    // the controls display the algorithm's decision, so touching one
+    // always changes something from the shown state
+    if (!report.passthrough) {
+      syncControls(px, report.framesOut, report.framesIn, report.colors);
+    }
 
     current = { dataUrl: dataUrl, name: name };
     downloadBtn.hidden = false;
     downloadBtn.textContent = 'Download ' + (dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
+  }
+
+  function nearestPreset(name, value) {
+    var nearest = null;
+    var bestDist = 1e9;
+
+    document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+      var d = Math.abs(+r.value - value);
+
+      if (d < bestDist) {
+        bestDist = d;
+        nearest = +r.value;
+      }
+    });
+
+    document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+      r.checked = +r.value === nearest;
+    });
+  }
+
+  function syncControls(px, framesOut, framesIn, colors) {
+    document.querySelectorAll('input[name="maxSide"]').forEach(function (r) {
+      r.checked = +r.value === px;
+    });
+
+    if (framesIn >= 2) nearestPreset('framesPct', Math.round(framesOut / framesIn * 100));
+
+    nearestPreset('maxColors', colors);
   }
 
   function showError(message) {
@@ -103,20 +135,30 @@
   }
 
   function convert(file) {
-    if (!file || busy) return;
+    if (!file) return;
+
+    // a control changed while a conversion is running: run again with
+    // the latest settings once it finishes, instead of dropping the click
+    if (busy) {
+      pending = true;
+
+      return;
+    }
 
     busy = true;
     error.hidden = true;
 
-    requestedFrames = frameCap();
+    var cap = frameCap();
 
     var body = new FormData();
     body.append('file', file);
     body.append('mode', mode());
 
-    if (requestedFrames > 0) body.append('maxFrames', requestedFrames);
+    if (cap > 0) body.append('maxFrames', cap);
 
     if (preset('maxSide') < 128) body.append('maxSide', preset('maxSide'));
+
+    if (preset('maxColors') < 255) body.append('maxColors', preset('maxColors'));
 
     fetch('/convert', { method: 'POST', body: body })
       .then(function (r) {
@@ -131,6 +173,11 @@
       })
       .finally(function () {
         busy = false;
+
+        if (pending) {
+          pending = false;
+          convert(currentFile);
+        }
       });
   }
 
@@ -147,7 +194,9 @@
     onFile(fileInput.files[0]);
   });
 
-  document.querySelectorAll('input[name="mode"], input[name="framesPct"], input[name="maxSide"]').forEach(function (radio) {
+  document.querySelectorAll(
+    'input[name="mode"], input[name="framesPct"], input[name="maxSide"], input[name="maxColors"]'
+  ).forEach(function (radio) {
     radio.addEventListener('change', function () {
       updateLabels();
 
