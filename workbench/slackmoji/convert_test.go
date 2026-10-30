@@ -142,32 +142,30 @@ func TestConvertPassthrough(t *testing.T) {
 	}
 }
 
-func TestConvertFitsBudgetKeepAllFrames(t *testing.T) {
-	input := noiseGIF(t, 256, 256, 20, 1)
+func TestConvertInterleavesSizeAndFrames(t *testing.T) {
+	input := noiseGIF(t, 256, 256, 20, 3)
 
 	out, report, err := Convert(input, Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
 
-	if report.Passthrough {
-		t.Fatal("expected re-encode, got passthrough")
-	}
-
 	if len(out) > maxBytes {
 		t.Errorf("output %d bytes, want <= %d", len(out), maxBytes)
 	}
 
-	if report.Width > maxSide || report.Height > maxSide {
-		t.Errorf("output %dx%d exceeds %dpx", report.Width, report.Height, maxSide)
+	if report.Colors < colorFloor {
+		t.Errorf("colors = %d, want at least the %d-color floor", report.Colors, colorFloor)
 	}
 
-	if report.FramesOut != report.FramesIn {
-		t.Errorf("frames %d -> %d, want all frames kept", report.FramesIn, report.FramesOut)
+	// the interleaved ladder prefers one frame halving at a larger size
+	// over dropping the size: (128, half) beats (96, all)
+	if report.FramesOut != report.FramesIn/2 {
+		t.Errorf("frames = %d, want the single halving at 128px", report.FramesOut)
 	}
 
-	if _, err := gif.Decode(bytes.NewReader(out)); err != nil {
-		t.Errorf("output is not a valid gif: %v", err)
+	if report.Width != 128 {
+		t.Errorf("width = %d, want 128 (first size that fits after halving)", report.Width)
 	}
 }
 
@@ -474,6 +472,36 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 		if a == 0 || r == 0 {
 			t.Errorf("frame %d composites to a non-red pixel", i)
 		}
+	}
+}
+
+func TestConvertColorCap(t *testing.T) {
+	input := noiseGIF(t, 256, 256, 20, 4)
+
+	out, report, err := Convert(input, Options{Mode: ModeRatio, MaxSide: 64, MaxColors: 16})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	if report.Colors != 16 {
+		t.Errorf("colors = %d, want the 16-color cap", report.Colors)
+	}
+
+	if len(out) > maxBytes {
+		t.Errorf("output %d bytes, want <= %d", len(out), maxBytes)
+	}
+}
+
+func TestConvertColorCapDisablesPassthrough(t *testing.T) {
+	input := solidGIF(t, 64, 64, 3)
+
+	_, report, err := Convert(input, Options{Mode: ModeRatio, MaxColors: 32})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	if report.Passthrough {
+		t.Error("color cap must force re-encoding, not passthrough")
 	}
 }
 

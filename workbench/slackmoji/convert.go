@@ -33,12 +33,15 @@ type Options struct {
 	Mode      string
 	MaxFrames int // 0: keep every frame
 	MaxSide   int // 0: 128px (the Slack limit)
+	MaxColors int // 0: 255 (fill the budget)
 }
 
 // Report describes what the conversion did to the input.
 type Report struct {
 	Passthrough bool   `json:"passthrough"`
 	InputSize   int    `json:"inputSize"`
+	InputWidth  int    `json:"inputWidth"`
+	InputHeight int    `json:"inputHeight"`
 	OutputSize  int    `json:"outputSize"`
 	Width       int    `json:"width"`
 	Height      int    `json:"height"`
@@ -79,15 +82,18 @@ func convertGIF(data []byte, opts Options, ct string) ([]byte, *Report, error) {
 	}
 
 	report := &Report{
-		InputSize: len(data),
-		FramesIn:  len(g.Image),
-		Format:    ct,
+		InputSize:   len(data),
+		InputWidth:  g.Config.Width,
+		InputHeight: g.Config.Height,
+		FramesIn:    len(g.Image),
+		Format:      ct,
 	}
 
 	s := side(opts)
 
 	if len(data) <= maxBytes && g.Config.Width <= s && g.Config.Height <= s &&
-		(opts.MaxFrames == 0 || opts.MaxFrames >= len(g.Image)) {
+		(opts.MaxFrames == 0 || opts.MaxFrames >= len(g.Image)) &&
+		(opts.MaxColors <= 0 || opts.MaxColors >= 255) {
 		report.Passthrough = true
 		report.OutputSize = len(data)
 		report.Width, report.Height = g.Config.Width, g.Config.Height
@@ -116,14 +122,17 @@ func convertStill(data []byte, opts Options, ct string) ([]byte, *Report, error)
 	b := img.Bounds()
 
 	report := &Report{
-		InputSize: len(data),
-		FramesIn:  1,
-		Format:    ct,
+		InputSize:   len(data),
+		InputWidth:  b.Dx(),
+		InputHeight: b.Dy(),
+		FramesIn:    1,
+		Format:      ct,
 	}
 
 	s := side(opts)
 
-	if len(data) <= maxBytes && b.Dx() <= s && b.Dy() <= s {
+	if len(data) <= maxBytes && b.Dx() <= s && b.Dy() <= s &&
+		(opts.MaxColors <= 0 || opts.MaxColors >= 255) {
 		report.Passthrough = true
 		report.OutputSize = len(data)
 		report.Width, report.Height = b.Dx(), b.Dy()
@@ -164,32 +173,77 @@ func finish(
 		resized[i] = r
 	}
 
-	keep := len(frames)
+	startKeep := len(frames)
 
-	if opts.MaxFrames > 0 && opts.MaxFrames < keep {
-		keep = opts.MaxFrames
+	if opts.MaxFrames > 0 && opts.MaxFrames < startKeep {
+		startKeep = opts.MaxFrames
 	}
 
-	for ; keep >= 1; keep /= 2 {
-		for i := range sizes {
-			kf, kd := thinFrames(resized[i], delays, keep)
+	// attempt one (size, frame count) candidate; ok=false means the color
+	// floor does not fit there
+	ceil := 255
 
-			out, colors, err := searchPalette(kf, kd, loopCount)
+	if opts.MaxColors > 0 && opts.MaxColors < ceil {
+		ceil = opts.MaxColors
+	}
+
+	try := func(sizeIdx, keep int) (out []byte, colors, kept int, ok bool, err error) {
+		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
+
+		out, colors, err = searchPalette(kf, kd, loopCount, ceil)
+		if err != nil || out == nil {
+			return nil, 0, 0, false, err
+		}
+
+		return out, colors, len(kf), true, nil
+	}
+
+	// interleaved ladder: one frame halving inside each size step before
+	// the resolution drops, so (64px, half frames) beats (48px, all
+	// frames) - a smaller size is not worth more motion
+	for i := range sizes {
+		for _, keep := range [...]int{startKeep, startKeep / 2} {
+			if keep < 1 {
+				continue
+			}
+
+			out, colors, kept, ok, err := try(i, keep)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			if out == nil {
+			if !ok {
 				continue
 			}
 
 			report.OutputSize = len(out)
 			report.Width, report.Height = dims[i][0], dims[i][1]
-			report.FramesOut = len(kf)
+			report.FramesOut = kept
 			report.Colors = colors
 
 			return out, report, nil
 		}
+	}
+
+	// resolution exhausted: keep halving frames at the smallest size
+	for keep := startKeep / 4; keep >= 1; keep /= 2 {
+		last := len(sizes) - 1
+
+		out, colors, kept, ok, err := try(last, keep)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if !ok {
+			continue
+		}
+
+		report.OutputSize = len(out)
+		report.Width, report.Height = dims[last][0], dims[last][1]
+		report.FramesOut = kept
+		report.Colors = colors
+
+		return out, report, nil
 	}
 
 	return nil, nil, fmt.Errorf(
@@ -230,13 +284,14 @@ func targetSize(w, h int, mode string, s int) (int, int) {
 	return max(1, int(math.Round(float64(w)*scale))), max(1, int(math.Round(float64(h)*scale)))
 }
 
-// searchPalette binary-searches the largest palette (colorFloor..255)
+// searchPalette binary-searches the largest palette (colorFloor..hi)
 // whose dithered encoding fits the budget. Returns nil when even the
 // color floor does not fit.
 func searchPalette(
 	frames []*image.NRGBA,
 	delays []int,
 	loopCount int,
+	hi int,
 ) ([]byte, int, error) {
 	loOut, err := encodeGIF(quantizeFrames(frames, colorFloor, true), delays, loopCount)
 	if err != nil {
@@ -249,7 +304,7 @@ func searchPalette(
 
 	lo, loColors := colorFloor, colorFloor
 
-	for hi := 255; lo < hi; {
+	for hi > lo {
 		mid := (lo + hi + 1) / 2
 
 		out, err := encodeGIF(quantizeFrames(frames, mid, true), delays, loopCount)
