@@ -13,44 +13,48 @@ const (
 	maxSamples = 1 << 16
 )
 
-// quantizeFrames converts frames to paletted images sharing one palette
-// of at most maxColors entries (one slot is spent on transparency when the
-// frames have transparent pixels). Median cut picks the palette.
+// quantizeFrames converts each frame to a paletted image with its own
+// palette of at most maxColors entries (one slot is spent on transparency
+// when the frame has transparent pixels). Per-frame palettes let every
+// frame keep its own best colors; the encoder writes a local color table
+// only where a frame's palette differs from the global one. Median cut
+// picks each palette.
 func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
+	out := make([]*image.Paletted, len(frames))
+
+	for i, f := range frames {
+		out[i] = quantizeFrame(f, maxColors)
+	}
+
+	return out
+}
+
+func quantizeFrame(f *image.NRGBA, maxColors int) *image.Paletted {
+	b := f.Bounds()
+
+	stride := max(1, (b.Dx()*b.Dy())/maxSamples)
+
 	var (
 		pixels         []color.RGBA
 		hasTransparent bool
-		total          int
+		i              int
 	)
 
-	for _, f := range frames {
-		b := f.Bounds()
-		total += b.Dx() * b.Dy()
-	}
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			c := f.NRGBAAt(x, y)
+			i++
 
-	stride := max(1, total/maxSamples)
-
-	var i int
-
-	for _, f := range frames {
-		b := f.Bounds()
-
-		for y := b.Min.Y; y < b.Max.Y; y++ {
-			for x := b.Min.X; x < b.Max.X; x++ {
-				c := f.NRGBAAt(x, y)
-				i++
-
-				if c.A < alphaThreshold {
-					hasTransparent = true
-					continue
-				}
-
-				if i%stride != 0 {
-					continue
-				}
-
-				pixels = append(pixels, color.RGBA{R: c.R, G: c.G, B: c.B, A: 255})
+			if c.A < alphaThreshold {
+				hasTransparent = true
+				continue
 			}
+
+			if i%stride != 0 {
+				continue
+			}
+
+			pixels = append(pixels, color.RGBA{R: c.R, G: c.G, B: c.B, A: 255})
 		}
 	}
 
@@ -76,29 +80,22 @@ func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
 
 	pal = append(pal, opaque...)
 
-	out := make([]*image.Paletted, len(frames))
+	p := image.NewPaletted(image.Rect(0, 0, b.Dx(), b.Dy()), pal)
 
-	for i, f := range frames {
-		b := f.Bounds()
-		p := image.NewPaletted(image.Rect(0, 0, b.Dx(), b.Dy()), pal)
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			c := f.NRGBAAt(x, y)
 
-		for y := b.Min.Y; y < b.Max.Y; y++ {
-			for x := b.Min.X; x < b.Max.X; x++ {
-				c := f.NRGBAAt(x, y)
-
-				if c.A < alphaThreshold {
-					p.SetColorIndex(x-b.Min.X, y-b.Min.Y, 0)
-					continue
-				}
-
-				p.SetColorIndex(x-b.Min.X, y-b.Min.Y, uint8(int(nearestIndex(opaque, c))+transparentIndex))
+			if c.A < alphaThreshold {
+				p.SetColorIndex(x-b.Min.X, y-b.Min.Y, 0)
+				continue
 			}
-		}
 
-		out[i] = p
+			p.SetColorIndex(x-b.Min.X, y-b.Min.Y, uint8(int(nearestIndex(opaque, c))+transparentIndex))
+		}
 	}
 
-	return out
+	return p
 }
 
 // medianCut splits the pixel set into at most n boxes along the widest

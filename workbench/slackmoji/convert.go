@@ -25,9 +25,6 @@ const (
 	ModeSquare = "square"
 )
 
-// paletteLadder is tried high to low: quality is dropped before frames.
-var paletteLadder = [...]int{256, 128, 64, 32, 16, 8, 4, 2}
-
 // Report describes what the conversion did to the input.
 type Report struct {
 	Passthrough bool   `json:"passthrough"`
@@ -162,26 +159,60 @@ func targetSize(w, h int, mode string) (int, int) {
 }
 
 // fitBudget encodes frames under maxBytes. Palette quality is exhausted
-// (256 down to 2 colors) at every frame count before any frame is dropped.
+// (binary search from 256 down to 2 colors) at every frame count before
+// any frame is dropped.
 func fitBudget(frames []*image.NRGBA, delays []int, loopCount int) ([]byte, int, int, error) {
 	for keep := len(frames); keep >= 1; keep /= 2 {
 		kf, kd := thinFrames(frames, delays, keep)
 
-		for _, colors := range paletteLadder {
-			pal := quantizeFrames(kf, colors)
+		out, colors, err := searchPalette(kf, kd, loopCount)
+		if err != nil {
+			return nil, 0, 0, err
+		}
 
-			out, err := encodeGIF(pal, kd, loopCount)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-
-			if len(out) <= maxBytes {
-				return out, colors, len(kf), nil
-			}
+		if out != nil {
+			return out, colors, len(kf), nil
 		}
 	}
 
 	return nil, 0, 0, fmt.Errorf("cannot fit under %d bytes even at 2 colors and 1 frame", maxBytes)
+}
+
+// searchPalette binary-searches the largest palette (2..256) whose
+// encoding fits the budget. Returns nil when even 2 colors do not fit.
+func searchPalette(
+	frames []*image.NRGBA,
+	delays []int,
+	loopCount int,
+) ([]byte, int, error) {
+	loOut, err := encodeGIF(quantizeFrames(frames, 2), delays, loopCount)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if len(loOut) > maxBytes {
+		return nil, 0, nil
+	}
+
+	lo, loColors := 2, 2
+
+	for hi := 256; lo < hi; {
+		mid := (lo + hi + 1) / 2
+
+		out, err := encodeGIF(quantizeFrames(frames, mid), delays, loopCount)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		if len(out) > maxBytes {
+			hi = mid - 1
+			continue
+		}
+
+		lo, loOut, loColors = mid, out, mid
+	}
+
+	return loOut, loColors, nil
 }
 
 // thinFrames keeps the first and last frame plus evenly spread frames,
