@@ -134,25 +134,24 @@ external-secrets:
             allowRepeat: true
     # Creates registry-pull-secret (dockerconfigjson + password key) in every
     # namespace whose pods pull from registry.terence.cloud or whose image-wait
-    # hook reads it. Add new workbench consumers' namespaces to matchNames.
+    # hook reads it. Add new workbench consumers' namespaces to spec.namespaces.
     - apiVersion: external-secrets.io/v1
       kind: ClusterExternalSecret
       metadata:
         name: registry-pull-secret
       spec:
-        refreshInterval: 1h
-        namespaceSelector:
-          matchNames:
-            - arr-stack
-            - audiobookshelf
-            - catbox
-            - cnpg-restore-test
-            - gitea
-            - go-healthcheck
-            - lastfm-scrobble-deduplicator
-            - telegram-hub
-            - versity-gw
-            - workbench
+        refreshTime: 1h
+        namespaces:
+          - arr-stack
+          - audiobookshelf
+          - catbox
+          - cnpg-restore-test
+          - gitea
+          - go-healthcheck
+          - lastfm-scrobble-deduplicator
+          - telegram-hub
+          - versity-gw
+          - workbench
         externalSecretSpec:
           refreshInterval: 1h
           secretStoreRef:
