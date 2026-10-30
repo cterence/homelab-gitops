@@ -405,12 +405,12 @@ func ladder(
 	floorFits := func(sizeIdx, keep int) (bool, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		pal, err := quantizeFrames(ctx, kf, floor)
+		pal, disposal, err := quantizeFrames(ctx, kf, floor)
 		if err != nil {
 			return false, err
 		}
 
-		out, err := encodeGIF(pal, kd, loopCount)
+		out, err := encodeGIF(pal, disposal, kd, loopCount)
 		if err != nil {
 			return false, err
 		}
@@ -535,12 +535,12 @@ func searchPalette(
 	floor int,
 	hi int,
 ) ([]byte, int, error) {
-	loPal, err := quantizeFrames(ctx, frames, floor)
+	loPal, loDisposal, err := quantizeFrames(ctx, frames, floor)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	loOut, err := encodeGIF(loPal, delays, loopCount)
+	loOut, err := encodeGIF(loPal, loDisposal, delays, loopCount)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -558,12 +558,12 @@ func searchPalette(
 			return nil, 0, fmt.Errorf("converting: %w", err)
 		}
 
-		pal, err := quantizeFrames(ctx, frames, mid)
+		pal, disposal, err := quantizeFrames(ctx, frames, mid)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		out, err := encodeGIF(pal, delays, loopCount)
+		out, err := encodeGIF(pal, disposal, delays, loopCount)
 		if err != nil {
 			return nil, 0, err
 		}

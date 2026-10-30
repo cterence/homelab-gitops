@@ -74,7 +74,7 @@ func noiseGIF(t *testing.T, w, h, frames int, seedA uint64) []byte {
 			}
 		}
 
-		pals, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 256)
+		pals, _, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 256)
 		if err != nil {
 			t.Fatalf("quantizing noise frame: %v", err)
 		}
@@ -249,7 +249,7 @@ func TestQuantizePaletteSize(t *testing.T) {
 	img.Set(2, 0, color.NRGBA{B: 255, A: 255})
 	img.Set(3, 0, color.NRGBA{R: 128, A: 255})
 
-	pals, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 2)
+	pals, _, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -270,7 +270,7 @@ func TestQuantizeTransparent(t *testing.T) {
 	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
 	img.Set(1, 0, color.NRGBA{A: 0})
 
-	pals, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 4)
+	pals, _, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -446,7 +446,7 @@ func TestQuantizeDeltaFrames(t *testing.T) {
 	}
 
 	// identical second frame: every pixel should delta to index 0
-	pals, err := quantizeFrames(t.Context(), []*image.NRGBA{frame, frame}, 4)
+	pals, _, err := quantizeFrames(t.Context(), []*image.NRGBA{frame, frame}, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -471,12 +471,12 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 		}
 	}
 
-	frames, err := quantizeFrames(t.Context(), []*image.NRGBA{frame, frame}, 4)
+	frames, _, err := quantizeFrames(t.Context(), []*image.NRGBA{frame, frame}, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	out, err := encodeGIF(frames, []int{10, 10}, 0)
+	out, err := encodeGIF(frames, nil, []int{10, 10}, 0)
 	if err != nil {
 		t.Fatalf("encodeGIF() error = %v", err)
 	}
@@ -781,5 +781,90 @@ func TestCompositePreviousDisposal(t *testing.T) {
 
 	if _, g_, _, _ := frames[1].NRGBAAt(15, 15).RGBA(); g_ == 0 {
 		t.Error("subrect frame not composited after restore")
+	}
+}
+
+func TestConvertMovingSubjectOverTransparency(t *testing.T) {
+	// a subject moving over a transparent background: every frame leaves
+	// holes where it used to be, and a delta encoder that writes the
+	// transparent index there ghosts the old subject instead of clearing
+	const size, sub = 200, 20
+
+	pal := color.Palette{color.RGBA{}, color.RGBA{R: 255, A: 255}}
+	g := &gif.GIF{
+		LoopCount: 0,
+		Config:    image.Config{ColorModel: pal, Width: size, Height: size},
+	}
+
+	for i := range 4 {
+		x0 := 20 + i*sub*2
+		fr := image.NewPaletted(image.Rect(0, 0, size, size), pal)
+
+		for y := 40; y < 40+sub; y++ {
+			for x := x0; x < x0+sub; x++ {
+				fr.SetColorIndex(x, y, 1)
+			}
+		}
+
+		g.Image = append(g.Image, fr)
+		g.Disposal = append(g.Disposal, gif.DisposalBackground)
+		g.Delay = append(g.Delay, 10)
+	}
+
+	var in bytes.Buffer
+	if err := gif.EncodeAll(&in, g); err != nil {
+		t.Fatalf("encoding input: %v", err)
+	}
+
+	out, rep, err := Convert(t.Context(), in.Bytes(), Options{Mode: ModeSquare})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	if rep.Passthrough {
+		t.Fatal("expected conversion")
+	}
+
+	dg, err := gif.DecodeAll(bytes.NewReader(out))
+	if err != nil {
+		t.Fatalf("decoding output: %v", err)
+	}
+
+	frames, err := compositeFrames(t.Context(), dg)
+	if err != nil {
+		t.Fatalf("compositing output: %v", err)
+	}
+
+	scale := float64(rep.Width) / size
+
+	// the subject core, 3 input pixels in from the edges: resize
+	// interpolation blends the border with the transparent background
+	subject := func(i, x, y int) bool {
+		x0 := 20 + i*sub*2
+		ix := int(float64(x) / scale)
+		iy := int(float64(y) / scale)
+
+		return ix >= x0+3 && ix < x0+sub-3 && iy >= 43 && iy < 57
+	}
+
+	for i, f := range frames {
+		b := f.Bounds()
+
+		for y := b.Min.Y; y < b.Max.Y; y++ {
+			for x := b.Min.X; x < b.Max.X; x++ {
+				opaque := f.NRGBAAt(x, y).A >= alphaThreshold
+
+				if subject(i, x, y) && !opaque {
+					t.Errorf("frame %d: subject pixel (%d,%d) is transparent", i, x, y)
+				}
+
+				// where the subject used to be, it must be gone
+				for j := range i {
+					if subject(j, x, y) && opaque {
+						t.Errorf("frame %d: ghost of frame %d at (%d,%d)", i, j, x, y)
+					}
+				}
+			}
+		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/gif"
 	"slices"
 )
 
@@ -34,7 +35,12 @@ var bayer = [8][8]int{
 // is built from frame 0 plus the pixels that change between frames
 // (ffmpeg palettegen stats_mode=diff style) and the mapping is
 // ordered-dithered so low color counts read as gradients instead of bands.
-func quantizeFrames(ctx context.Context, frames []*image.NRGBA, maxColors int) ([]*image.Paletted, error) {
+//
+// A transparent index means "keep the underlying pixel", so a gif whose
+// frames punch holes (a subject moving over transparency) cannot express
+// "become transparent" in delta mode: those gifs get disposal background
+// and a full repaint of every opaque pixel instead, so holes really clear.
+func quantizeFrames(ctx context.Context, frames []*image.NRGBA, maxColors int) ([]*image.Paletted, []byte, error) {
 	// the transparent entry is extra, so visible colors cap at 255
 	visible := min(max(1, maxColors), 255)
 	pixels := diffSample(frames)
@@ -44,11 +50,20 @@ func quantizeFrames(ctx context.Context, frames []*image.NRGBA, maxColors int) (
 	pal = append(pal, color.RGBA{})
 	pal = append(pal, opaque...)
 
+	clears := hasHoles(frames)
+	disposal := make([]byte, len(frames))
+
+	if clears {
+		for i := range disposal {
+			disposal[i] = gif.DisposalBackground
+		}
+	}
+
 	out := make([]*image.Paletted, len(frames))
 
 	for i, f := range frames {
 		if err := ctx.Err(); err != nil {
-			return nil, fmt.Errorf("quantizing: %w", err)
+			return nil, nil, fmt.Errorf("quantizing: %w", err)
 		}
 
 		b := f.Bounds()
@@ -66,8 +81,9 @@ func quantizeFrames(ctx context.Context, frames []*image.NRGBA, maxColors int) (
 				}
 
 				// delta: identical to the previous frame means the
-				// previous frame already shows this pixel
-				if i > 0 && unchanged(frames[i-1].NRGBAAt(x, y), c) {
+				// previous frame already shows this pixel. After a
+				// clear there is no underlying pixel to keep.
+				if !clears && i > 0 && unchanged(frames[i-1].NRGBAAt(x, y), c) {
 					p.SetColorIndex(px, py, 0)
 					continue
 				}
@@ -84,7 +100,33 @@ func quantizeFrames(ctx context.Context, frames []*image.NRGBA, maxColors int) (
 		out[i] = p
 	}
 
-	return out, nil
+	return out, disposal, nil
+}
+
+// hasHoles reports whether any frame turns transparent a pixel that the
+// previously displayed state showed opaque, the loop wrap included.
+func hasHoles(frames []*image.NRGBA) bool {
+	for i := 1; i < len(frames); i++ {
+		if frameHasHoles(frames[i-1], frames[i]) {
+			return true
+		}
+	}
+
+	return len(frames) > 1 && frameHasHoles(frames[len(frames)-1], frames[0])
+}
+
+func frameHasHoles(prev, cur *image.NRGBA) bool {
+	b := cur.Bounds()
+
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if prev.NRGBAAt(x, y).A >= alphaThreshold && cur.NRGBAAt(x, y).A < alphaThreshold {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func unchanged(prev, cur color.NRGBA) bool {

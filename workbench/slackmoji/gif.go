@@ -72,10 +72,11 @@ func cloneNRGBA(img *image.NRGBA) *image.NRGBA {
 	return out
 }
 
-func encodeGIF(frames []*image.Paletted, delays []int, loopCount int) ([]byte, error) {
+func encodeGIF(frames []*image.Paletted, disposal []byte, delays []int, loopCount int) ([]byte, error) {
 	g := &gif.GIF{
 		Image:     frames,
 		Delay:     delays,
+		Disposal:  disposal,
 		LoopCount: loopCount,
 		Config: image.Config{
 			ColorModel: frames[0].Palette,

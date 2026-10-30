@@ -29,6 +29,12 @@ pay for it.
    that change between frames; frames after the first store only
    their changed pixels, and delays merge so total duration is
    preserved. Frame disposal methods are honored when compositing.
+   A transparent index in GIF means "keep the underlying pixel", so a
+   gif whose frames punch holes (a subject moving over transparency)
+   cannot use delta encoding without ghosting: those gifs switch to
+   disposal background with a full repaint of each frame's opaque
+   pixels, which clears the holes; transparent areas compress to
+   almost nothing, so the size cost is small.
    A pinned axis leaves this search where it is: size stays at the
    pinned side, frames at the pinned count, colors at the pinned
    palette, and only the free axes move.
