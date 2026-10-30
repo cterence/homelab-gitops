@@ -94,8 +94,14 @@
     // slider must land on the grid.
     sliders.side.dataset.inPx = Math.max(rep.inputWidth, rep.inputHeight);
 
-    sliders.frames.min = 1;
+    // frames step in ~16 bands; the grid is anchored at the full count
+    // so keeping every frame is always exactly selectable
+    var fStep = Math.max(1, Math.round(rep.framesIn / 16));
+    var fMin = 1 + ((rep.framesIn - 1) % fStep);
+
+    sliders.frames.min = fMin;
     sliders.frames.max = rep.framesIn;
+    sliders.frames.step = fStep;
 
     var sMin = Math.min(32, naturalMax());
     var sMax = naturalMax() - ((naturalMax() - sMin) % 16);
