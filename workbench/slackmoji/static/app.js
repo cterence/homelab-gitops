@@ -19,6 +19,9 @@
     size: [document.getElementById('size-min'), document.getElementById('size-base')]
   };
   var spinner = document.getElementById('spinner');
+  var advancedBtn = document.getElementById('advanced-btn');
+  var advanced = document.getElementById('advanced');
+  var advDot = document.getElementById('adv-dot');
   var resetBtn = document.getElementById('reset-btn');
 
   var fields = {
@@ -79,6 +82,9 @@
     sizeHint.textContent = sizeSlider.disabled
       ? '128 px max'
       : (sizeCap() ? sizeCap() + ' px' : naturalMax() + ' px max');
+
+    // the toggle shows when hidden advanced values constrain the result
+    advDot.hidden = !(colorsCap() > 0 || sizeCap() > 0);
   }
 
   function updateSizeRange() {
@@ -262,6 +268,10 @@
   });
 
   updateLabels();
+
+  advancedBtn.addEventListener('click', function () {
+    advanced.hidden = !advanced.hidden;
+  });
 
   resetBtn.addEventListener('click', function () {
     if (!currentFile) return;
