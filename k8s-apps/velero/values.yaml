@@ -30,21 +30,7 @@ velero:
     timeoutSeconds: 5
     successThreshold: 1
     failureThreshold: 5
-  extraObjects:
-    - apiVersion: external-secrets.io/v1
-      kind: ExternalSecret
-      metadata:
-        name: backblaze-credentials
-      spec:
-        secretStoreRef:
-          kind: ClusterSecretStore
-          name: openbao-secret-store
-        target:
-          name: backblaze-credentials
-          creationPolicy: Owner
-        dataFrom:
-          - extract:
-              key: velero/backblaze-credentials
+  extraObjects: []
   metrics:
     enabled: true
     scrapeInterval: 120s
@@ -314,7 +300,6 @@ velero:
           - immich
           - mosquitto
           - nextcloud
-          - openbao
           - paperless-ngx
           - pocket-id
           - vaultwarden

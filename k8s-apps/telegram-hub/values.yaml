@@ -124,29 +124,6 @@ app-template:
             - path: /app/generated
 
   rawResources:
-    credentials:
-      enabled: true
-      forceRename: "credentials"
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        metadata:
-          annotations:
-            argocd.argoproj.io/sync-options: ServerSideApply=true
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: "credentials"
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: telegram-hub/credentials
-                conversionStrategy: Default
-                decodingStrategy: None
-                metadataPolicy: None
-                nullBytePolicy: Ignore
     mcp-auth-middleware:
       enabled: true
       forceRename: mcp-auth

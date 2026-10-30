@@ -37,28 +37,6 @@ app-template:
             - --namespace=$(RESTORE_NAMESPACE)
 
   rawResources:
-    backup-secret:
-      enabled: true
-      forceRename: cnpg-backup-s3-creds
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: cnpg-backup-s3-creds
-            creationPolicy: Owner
-          data:
-            - secretKey: ACCESS_KEY_ID
-              remoteRef:
-                key: versity-gw/versity-gw-credentials
-                property: ROOT_ACCESS_KEY
-            - secretKey: ACCESS_SECRET_KEY
-              remoteRef:
-                key: versity-gw/versity-gw-credentials
-                property: ROOT_SECRET_KEY
     storage-class:
       enabled: true
       forceRename: cnpg-restore-test
