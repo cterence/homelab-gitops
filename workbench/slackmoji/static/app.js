@@ -1,13 +1,13 @@
 (function () {
   var fileInput = document.getElementById('file');
-  var fileName = document.getElementById('file-name');
-  var drop = document.getElementById('drop');
-  var downloadBtn = document.getElementById('download-btn');
-  var previewCol = document.getElementById('preview-col');
+  var slot = document.getElementById('slot');
+  var slotEmpty = document.getElementById('slot-empty');
   var preview = document.getElementById('preview');
-  var error = document.getElementById('error');
-  var resultMeta = document.getElementById('result-meta');
+  var clearBtn = document.getElementById('clear-btn');
+  var downloadBtn = document.getElementById('download-btn');
+  var stageMeta = document.getElementById('stage-meta');
   var spinner = document.getElementById('spinner');
+  var error = document.getElementById('error');
   var resetBtn = document.getElementById('reset-btn');
 
   var AXES = ['frames', 'colors', 'side'];
@@ -30,14 +30,6 @@
     frames: [document.getElementById('frames-min'), document.getElementById('frames-base')],
     colors: [document.getElementById('colors-min'), document.getElementById('colors-base')],
     side: [document.getElementById('size-min'), document.getElementById('size-base')]
-  };
-
-  var fields = {
-    size: document.getElementById('f-size'),
-    dims: document.getElementById('f-dims'),
-    frames: document.getElementById('f-frames'),
-    colors: document.getElementById('f-colors'),
-    input: document.getElementById('f-input')
   };
 
   var current = null;
@@ -89,30 +81,21 @@
 
   function showResult(rep) {
     error.hidden = true;
-    previewCol.hidden = false;
 
     preview.src = rep.dataUrl;
     preview.alt = 'Converted preview, ' + rep.width + ' by ' + rep.height + ' pixels';
     preview.hidden = false;
+    slotEmpty.hidden = true;
+    slot.classList.add('has-file');
+    slot.setAttribute('aria-label', 'Replace image');
 
-    resultMeta.textContent = rep.passthrough ? 'unchanged' : 'converted';
-
-    var px = Math.max(rep.width, rep.height);
-    var inPx = Math.max(rep.inputWidth, rep.inputHeight);
-
-    fields.size.textContent = fmtKB(rep.outputSize) + ' of 128 KB';
-    fields.dims.textContent = rep.width + ' × ' + rep.height + ' px';
-    fields.frames.textContent = rep.framesOut + ' of ' + rep.framesIn;
-    fields.colors.textContent = plural(rep.colors, 'color');
-    fields.input.textContent = fmtKB(rep.inputSize);
-
-    // red marks what was sacrificed relative to the input
-    fields.dims.classList.toggle('dropped', !rep.passthrough && px < inPx);
-    fields.frames.classList.toggle('dropped', rep.framesOut < rep.framesIn);
+    // the one fact no slider carries: the byte budget
+    stageMeta.textContent = fmtKB(rep.outputSize) + ' of 128 KB';
+    stageMeta.hidden = false;
 
     // full ranges so any drag expresses a priority; the handle always
     // shows the outcome
-    sliders.side.dataset.inPx = inPx;
+    sliders.side.dataset.inPx = Math.max(rep.inputWidth, rep.inputHeight);
 
     sliders.frames.min = 1;
     sliders.frames.max = rep.framesIn;
@@ -132,7 +115,7 @@
 
     sliders.frames.value = rep.framesOut;
     sliders.colors.value = rep.colors;
-    sliders.side.value = px;
+    sliders.side.value = Math.max(rep.width, rep.height);
 
     report = rep;
     controlsActive = true;
@@ -142,6 +125,7 @@
     current = { dataUrl: rep.dataUrl, name: rep.name };
     downloadBtn.hidden = false;
     downloadBtn.textContent = 'Download ' + (rep.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
+    clearBtn.hidden = false;
   }
 
   function showError(message) {
@@ -166,8 +150,9 @@
     });
 
     resetBtn.disabled = !on;
-    fileInput.disabled = !enabled;
-    drop.classList.toggle('busy', !enabled);
+    clearBtn.disabled = !enabled;
+    downloadBtn.disabled = !enabled;
+    slot.classList.toggle('busy', !enabled);
 
     spinner.hidden = enabled;
   }
@@ -220,12 +205,40 @@
     if (!file) return;
 
     currentFile = file;
-    fileName.textContent = file.name + ', ' + fmtKB(file.size);
-    fileName.hidden = false;
+    slotEmpty.hidden = true;
     resetBtn.hidden = false;
 
     resetAdjustments();
     convert(file);
+  }
+
+  // back to the empty dropzone: no file, no preview, sliders asleep
+  function clearFile() {
+    if (busy) return;
+
+    currentFile = null;
+    current = null;
+    report = null;
+    controlsActive = false;
+    priority = '';
+
+    resetAdjustments();
+
+    fileInput.value = '';
+    preview.hidden = true;
+    preview.removeAttribute('src');
+    slotEmpty.hidden = false;
+    slot.classList.remove('has-file');
+    slot.setAttribute('aria-label', 'Choose a file');
+
+    stageMeta.hidden = true;
+    downloadBtn.hidden = true;
+    clearBtn.hidden = true;
+    resetBtn.hidden = true;
+    error.hidden = true;
+
+    setControlsEnabled(true);
+    updateLabels();
   }
 
   function resetAdjustments() {
@@ -238,6 +251,20 @@
   fileInput.addEventListener('change', function () {
     onFile(fileInput.files[0]);
   });
+
+  // the filled slot is a replace button: click or Enter picks a new file
+  slot.addEventListener('click', function () {
+    if (currentFile && !busy) fileInput.click();
+  });
+
+  slot.addEventListener('keydown', function (e) {
+    if (currentFile && !busy && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+
+  clearBtn.addEventListener('click', clearFile);
 
   AXES.forEach(function (axis) {
     // dragging shows the live request; releasing makes it the priority
@@ -288,20 +315,20 @@
   });
 
   ['dragenter', 'dragover'].forEach(function (evt) {
-    drop.addEventListener(evt, function (e) {
+    slot.addEventListener(evt, function (e) {
       e.preventDefault();
-      drop.classList.add('over');
+      slot.classList.add('over');
     });
   });
 
   ['dragleave', 'drop'].forEach(function (evt) {
-    drop.addEventListener(evt, function (e) {
+    slot.addEventListener(evt, function (e) {
       e.preventDefault();
-      drop.classList.remove('over');
+      slot.classList.remove('over');
     });
   });
 
-  drop.addEventListener('drop', function (e) {
+  slot.addEventListener('drop', function (e) {
     var file = e.dataTransfer.files[0];
 
     if (file) {

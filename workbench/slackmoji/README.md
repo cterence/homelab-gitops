@@ -35,13 +35,16 @@ pay for it.
 
 ## Endpoints
 
-- `GET /` — web UI: choosing or dropping a file converts immediately.
-  Shape, plus a slider per axis (frames, colors, size): dragging a
-  slider pins that axis at the dragged value and makes it the
-  priority, so the free axes degrade to pay for it; a lock checkbox
-  freezes an axis so it neither improves nor degrades; the handle
-  always shows the last outcome. Reset to optimal clears the pins,
-  locks and priority.
+- `GET /` — web UI: one panel, a fixed frame that is a dropzone
+  before upload and the preview after (click the preview to replace
+  the file, Clear to go back to the empty dropzone), with the shape
+  toggle and a slider column beside it (frames, colors, size).
+  Dragging a slider pins that axis at the dragged value and makes it
+  the priority, so the free axes degrade to pay for it; a lock
+  checkbox freezes an axis so it neither improves nor degrades; the
+  handle always shows the last outcome. Reset to optimal clears the
+  pins, locks and priority. The only data outside the sliders is the
+  byte budget under the preview.
 - `POST /convert` — multipart form with `file`, `mode`
   (`ratio` | `square`) and the optional pins `frames` (1..1000,
   hold exactly this many frames), `side` (32-128 px, hold exactly
