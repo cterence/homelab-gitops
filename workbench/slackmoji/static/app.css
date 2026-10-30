@@ -177,11 +177,10 @@ button.primary:disabled { opacity: 0.4; cursor: default; }
 }
 .preview img { image-rendering: auto; }
 
-.result-side { flex: 0 0 600px; min-width: 0; }
-.finding { font-size: var(--fs-body); }
-.finding .dropped { color: var(--negative); }
+.result-side { flex: 1 1 480px; min-width: 280px; }
+.dropped { color: var(--negative); }
 
-.ledger { margin-top: 14px; }
+.ledger { margin-top: 0; }
 .ledger > div {
   display: flex;
   justify-content: space-between;
@@ -194,7 +193,7 @@ button.primary:disabled { opacity: 0.4; cursor: default; }
 
 .error { margin-top: 10px; color: var(--negative); }
 
-@media (max-width: 768px) {
+@media (max-width: 880px) {
   .result-row { flex-direction: column; }
-  .result-side { flex: 0 0 auto; }
+  .result-side { flex: 0 0 auto; min-width: 0; }
 }

@@ -38,11 +38,11 @@
         <legend>Shape</legend>
         <div class="segmented" role="radiogroup" aria-label="Shape">
           <label>
-            <input type="radio" name="mode" value="ratio">
+            <input type="radio" name="mode" value="ratio" checked>
             <span>Keep aspect</span>
           </label>
           <label>
-            <input type="radio" name="mode" value="square" checked>
+            <input type="radio" name="mode" value="square">
             <span>Stretch to square</span>
           </label>
         </div>
@@ -116,8 +116,6 @@
       </div>
 
       <div class="result-side">
-        <p class="finding" id="finding" aria-live="polite">Every frame is kept; colors are reduced only as far as needed.</p>
-
         <dl class="ledger" id="ledger">
           <div><dt>Size</dt><dd id="f-size">128 KB max</dd></div>
           <div><dt>Dimensions</dt><dd id="f-dims">128 × 128 px max</dd></div>

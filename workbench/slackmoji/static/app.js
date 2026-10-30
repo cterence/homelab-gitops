@@ -5,7 +5,6 @@
   var downloadBtn = document.getElementById('download-btn');
   var previewCol = document.getElementById('preview-col');
   var preview = document.getElementById('preview');
-  var finding = document.getElementById('finding');
   var error = document.getElementById('error');
   var resultMeta = document.getElementById('result-meta');
   var framesOut = document.getElementById('frames-out');
@@ -76,35 +75,22 @@
 
     updateLabels();
 
-    var sizeNote = '';
-
-    if (!report.passthrough && Math.max(report.width, report.height) < Math.min(preset('maxSide'), 128)) {
-      sizeNote = ' at ' + Math.max(report.width, report.height) + ' px';
-    }
-
-    var framesText;
-    if (report.passthrough) {
-      finding.textContent = 'Already within the limits, returned unchanged.';
-    } else if (report.framesOut === report.framesIn) {
-      framesText = 'all ' + plural(report.framesIn, 'frame') + ' kept';
-      finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText + sizeNote + '.';
-    } else if (report.framesOut === requestedFrames) {
-      framesText = report.framesOut + ' of ' + report.framesIn + ' frames kept';
-      finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText +
-        ' at your frame cap' + sizeNote + '.';
-    } else {
-      framesText = report.framesOut + ' of ' + report.framesIn + ' frames kept';
-      finding.innerHTML = 'Fits the limits: ' + fmtKB(report.outputSize) +
-        ' of 128 KB, <span class="dropped">' + framesText + '</span> after quality was exhausted' + sizeNote + '.';
-    }
-
     resultMeta.textContent = report.passthrough ? 'unchanged' : 'converted';
+
+    var px = Math.max(report.width, report.height);
 
     fields.size.textContent = fmtKB(report.outputSize) + ' of 128 KB';
     fields.dims.textContent = report.width + ' × ' + report.height + ' px';
     fields.frames.textContent = report.framesOut + ' of ' + report.framesIn;
     fields.colors.textContent = plural(report.colors, 'color');
     fields.input.textContent = fmtKB(report.inputSize);
+
+    // red marks what the pipeline sacrificed on its own, not what the
+    // user's own caps asked for
+    fields.dims.classList.toggle('dropped',
+      !report.passthrough && px < Math.min(preset('maxSide'), 128));
+    fields.frames.classList.toggle('dropped',
+      report.framesOut < report.framesIn && report.framesOut !== requestedFrames);
 
     current = { dataUrl: dataUrl, name: name };
     downloadBtn.hidden = false;
