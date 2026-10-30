@@ -1,6 +1,6 @@
 # slackmoji
 
-Small web app that adapts a GIF (or still image) to Slack emoji limits:
+Small web app that turns a GIF, PNG, JPEG or WebP into a Slack emoji:
 at most 128 KB and at most 128x128 px. By default it keeps every frame
 and drops quality first; frames are thinned only as a last resort. Any
 axis can instead be pinned (held exactly) and the free axes degrade to
@@ -59,7 +59,7 @@ pay for it.
   full count, but the ask never goes past what the locked size can
   hold - it clamps to the most frames that size fits. The value
   under each dial always shows the true outcome, which may sit
-  between steps.
+  between steps. The frames dial is greyed out for still images.
 - `POST /convert` — multipart form with `file`, `mode`
   (`ratio` | `square`) and the optional pins `frames` (1..1000,
   hold exactly this many frames), `side` (32-128 px, hold exactly

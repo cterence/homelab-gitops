@@ -44,6 +44,8 @@
   // the true outcome side, which a stepped slider may not be able to show
   var sizeNow = 0;
   var framesInCount = 0;
+  // false for still images: the frames dial has nothing to say
+  var framesLive = false;
   // the most frames the locked size holds: the outcome of every
   // conversion that ran with frames free (upload, reset, shape, size
   // drag). Frames drags hold the size, so it cannot go stale.
@@ -115,6 +117,7 @@
     // the slider spans the original frame count; the size caps the
     // ask (pin() clamps to framesMax)
     framesInCount = rep.framesIn;
+    framesLive = rep.framesIn > 1;
     if (priority !== 'frames') framesMax = rep.framesOut;
 
     var fStep = Math.max(1, Math.round(rep.framesIn / 16));
@@ -160,7 +163,8 @@
     var on = enabled && controlsActive;
 
     AXES.forEach(function (axis) {
-      sliders[axis].disabled = !on;
+      // a still image has no frames to thin
+      sliders[axis].disabled = !on || (axis === 'frames' && !framesLive);
     });
 
     document.querySelectorAll('input[name="mode"]').forEach(function (r) {
@@ -242,6 +246,7 @@
     priority = '';
     framesInCount = 0;
     framesMax = 0;
+    framesLive = false;
 
     resetAdjustments();
 
