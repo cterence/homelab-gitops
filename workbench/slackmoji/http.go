@@ -30,9 +30,18 @@ func newRouter() http.Handler {
 		panic(err)
 	}
 
-	mux.Handle("GET /", http.FileServerFS(sub))
+	mux.Handle("GET /", noCache(http.FileServerFS(sub)))
 
 	return mux
+}
+
+// noCache keeps long-lived tabs from serving a stale UI after a redeploy:
+// embedded files have no mod time, so the browser gets no validators.
+func noCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		next.ServeHTTP(w, r)
+	})
 }
 
 type convertResponse struct {
