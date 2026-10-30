@@ -140,16 +140,6 @@ button { cursor: pointer; }
 
 /* adjustments: shape, and stepped sliders positioned by the algorithm */
 .adjust-row { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; align-items: flex-end; }
-.advanced-row { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; align-items: flex-end; }
-.adv-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
 .adjust-reset { align-self: flex-end; height: var(--control-height); }
 
 .preset { border: 0; padding: 0; margin: 0; }
