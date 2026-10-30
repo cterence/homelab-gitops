@@ -6,7 +6,7 @@ require (
 	github.com/tailscale/tailcat v0.7.1-0.20261007201807-52fbad323e9d
 	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/crypto v0.58.0
-	tailscale.com v1.104.2
+	tailscale.com v1.104.4
 )
 
 require (
@@ -35,7 +35,7 @@ require (
 	github.com/pkg/sftp v1.13.11 // indirect
 	github.com/safchain/ethtool v0.7.0 // indirect
 	github.com/tailscale/certstore v0.1.1-0.20260409135935-3638fb84b77d // indirect
-	github.com/tailscale/gliderssh v0.3.4-0.20260716005906-1a0f895faf28 // indirect
+	github.com/tailscale/gliderssh v0.3.4-0.20261026144310-31f7cf365d3a // indirect
 	github.com/tailscale/go-winio v0.0.0-20231025203758-c4f33415bf55 // indirect
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/tailscale/peercred v0.0.0-20250107143737-35a0c7bd7edc // indirect
