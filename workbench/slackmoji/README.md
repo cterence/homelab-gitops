@@ -26,9 +26,9 @@ quality first; frames are thinned only as a last resort.
 ## Endpoints
 
 - `GET /` — web UI: choosing or dropping a file converts immediately;
-  the shape toggle and the frame/size sliders re-convert. The frame
-  slider is a percentage of the input's frames (the count is sent as
-  `maxFrames`); the size slider is `maxSide` in px.
+  the shape toggle and the frame/size presets re-convert. The frame
+  presets are percentages of the input's frames (the count is sent as
+  `maxFrames`); the size presets are `maxSide` in px.
 - `POST /convert` — multipart form with `file`, `mode`
   (`ratio` | `square`) and the optional caps `maxFrames` (drop frames
   down to this count before the quality search; 0 or absent = keep

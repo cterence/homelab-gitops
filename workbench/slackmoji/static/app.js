@@ -8,10 +8,7 @@
   var finding = document.getElementById('finding');
   var error = document.getElementById('error');
   var resultMeta = document.getElementById('result-meta');
-  var framesSlider = document.getElementById('max-frames');
-  var framesOut = document.getElementById('max-frames-out');
-  var sideSlider = document.getElementById('max-side');
-  var sideOut = document.getElementById('max-side-out');
+  var framesOut = document.getElementById('frames-out');
 
   var fields = {
     size: document.getElementById('f-size'),
@@ -39,23 +36,26 @@
     return document.querySelector('input[name="mode"]:checked').value;
   }
 
-  // framesIn 0 means no animated file yet; the slider then stays disabled.
-  function frameCap() {
-    if (framesSlider.disabled || framesIn < 2) return 0;
-    if (+framesSlider.value >= +framesSlider.max) return 0;
-    return Math.max(1, Math.round(framesIn * +framesSlider.value / 100));
+  function preset(name) {
+    return +document.querySelector('input[name="' + name + '"]:checked').value;
   }
 
-  function updateSliderLabels() {
-    if (framesSlider.disabled || framesIn < 2) {
+  // framesIn 0 means no animated file yet; the frame presets stay disabled.
+  function frameCap() {
+    var pct = preset('framesPct');
+
+    if (framesIn < 2 || pct >= 100) return 0;
+    return Math.max(1, Math.round(framesIn * pct / 100));
+  }
+
+  function updateLabels() {
+    if (framesIn < 2) {
       framesOut.textContent = 'all';
-    } else if (+framesSlider.value >= +framesSlider.max) {
-      framesOut.textContent = 'all ' + framesIn;
     } else {
-      framesOut.textContent = framesSlider.value + '% · ' + frameCap();
+      framesOut.textContent = 'all ' + framesIn;
     }
 
-    sideOut.textContent = sideSlider.value + ' px';
+    if (frameCap() > 0) framesOut.textContent = frameCap() + ' frames';
   }
 
   function showResult(report, dataUrl, name) {
@@ -69,10 +69,13 @@
 
     if (report.framesIn > 1) {
       framesIn = report.framesIn;
-      framesSlider.disabled = false;
+
+      document.querySelectorAll('input[name="framesPct"]').forEach(function (r) {
+        r.disabled = false;
+      });
     }
 
-    updateSliderLabels();
+    updateLabels();
 
     var framesText;
     if (report.passthrough) {
@@ -123,7 +126,7 @@
 
     if (requestedFrames > 0) body.append('maxFrames', requestedFrames);
 
-    if (+sideSlider.value < +sideSlider.max) body.append('maxSide', sideSlider.value);
+    if (preset('maxSide') < 128) body.append('maxSide', preset('maxSide'));
 
     fetch('/convert', { method: 'POST', body: body })
       .then(function (r) {
@@ -154,23 +157,15 @@
     onFile(fileInput.files[0]);
   });
 
-  document.querySelectorAll('input[name="mode"]').forEach(function (radio) {
+  document.querySelectorAll('input[name="mode"], input[name="framesPct"], input[name="maxSide"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
+      updateLabels();
+
       if (currentFile) convert(currentFile);
     });
   });
 
-  framesSlider.addEventListener('change', function () {
-    updateSliderLabels();
-    if (currentFile) convert(currentFile);
-  });
-
-  sideSlider.addEventListener('change', function () {
-    updateSliderLabels();
-    if (currentFile) convert(currentFile);
-  });
-
-  updateSliderLabels();
+  updateLabels();
 
   downloadBtn.addEventListener('click', function () {
     if (!current) return;

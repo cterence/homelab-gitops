@@ -136,17 +136,18 @@ button { cursor: pointer; }
   padding: 0 14px;
   background: var(--surface);
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
   transition: background-color 150ms ease, color 150ms ease;
 }
 .segmented input:checked + span { background: var(--accent); color: var(--primary-ink); }
 .segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-/* adjustments: frames and size caps */
-.adjust-row { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; }
-.slider { display: flex; align-items: center; gap: 10px; }
-.slider label { color: var(--muted); }
-.slider input[type="range"] { width: 160px; accent-color: var(--accent); }
-.slider output { min-width: 88px; font-variant-numeric: tabular-nums; }
+/* adjustments: frame and size presets */
+.adjust-row { display: flex; gap: 40px; margin-top: 16px; flex-wrap: wrap; }
+.preset { border: 0; padding: 0; margin: 0; }
+.preset legend { padding: 0; margin-bottom: 8px; color: var(--muted); }
+.preset-hint { margin-left: 12px; color: var(--muted); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+.segmented input:disabled + span { opacity: 0.4; }
 
 .actions { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 button.primary {
@@ -193,5 +194,4 @@ button.primary:disabled { opacity: 0.4; cursor: default; }
 @media (max-width: 768px) {
   .input-row { flex-direction: column; align-items: stretch; }
   .result-row { flex-direction: column; }
-  .slider input[type="range"] { width: 120px; }
 }

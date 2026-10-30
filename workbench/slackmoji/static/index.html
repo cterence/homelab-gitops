@@ -50,16 +50,54 @@
     </div>
 
     <div class="adjust-row">
-      <div class="slider">
-        <label for="max-frames">Frames</label>
-        <input type="range" id="max-frames" min="1" max="100" value="100" disabled>
-        <output id="max-frames-out" for="max-frames">all</output>
-      </div>
-      <div class="slider">
-        <label for="max-side">Max size</label>
-        <input type="range" id="max-side" min="32" max="128" value="128">
-        <output id="max-side-out" for="max-side">128 px</output>
-      </div>
+      <fieldset class="preset">
+        <legend>Frames</legend>
+        <div class="segmented" role="radiogroup" aria-label="Frames">
+          <label>
+            <input type="radio" name="framesPct" value="100" checked disabled>
+            <span>All</span>
+          </label>
+          <label>
+            <input type="radio" name="framesPct" value="75" disabled>
+            <span>75%</span>
+          </label>
+          <label>
+            <input type="radio" name="framesPct" value="50" disabled>
+            <span>50%</span>
+          </label>
+          <label>
+            <input type="radio" name="framesPct" value="25" disabled>
+            <span>25%</span>
+          </label>
+          <label>
+            <input type="radio" name="framesPct" value="10" disabled>
+            <span>10%</span>
+          </label>
+        </div>
+        <span class="preset-hint" id="frames-out">all</span>
+      </fieldset>
+
+      <fieldset class="preset">
+        <legend>Max size (px)</legend>
+        <div class="segmented" role="radiogroup" aria-label="Max size">
+          <label>
+            <input type="radio" name="maxSide" value="128" checked>
+            <span>128</span>
+          </label>
+          <label>
+            <input type="radio" name="maxSide" value="96">
+            <span>96</span>
+          </label>
+          <label>
+            <input type="radio" name="maxSide" value="64">
+            <span>64</span>
+          </label>
+          <label>
+            <input type="radio" name="maxSide" value="48">
+            <span>48</span>
+          </label>
+        </div>
+      </fieldset>
     </div>
   </section>
 
