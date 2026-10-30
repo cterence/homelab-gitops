@@ -7,19 +7,30 @@
   var preview = document.getElementById('preview');
   var error = document.getElementById('error');
   var resultMeta = document.getElementById('result-meta');
-  var framesSlider = document.getElementById('frames-slider');
-  var colorsSlider = document.getElementById('colors-slider');
-  var sizeSlider = document.getElementById('size-slider');
-  var framesHint = document.getElementById('frames-out');
-  var colorsHint = document.getElementById('colors-out');
-  var sizeHint = document.getElementById('size-out');
+  var spinner = document.getElementById('spinner');
+  var resetBtn = document.getElementById('reset-btn');
+
+  var AXES = ['frames', 'colors', 'side'];
+  var sliders = {
+    frames: document.getElementById('frames-slider'),
+    colors: document.getElementById('colors-slider'),
+    side: document.getElementById('size-slider')
+  };
+  var hints = {
+    frames: document.getElementById('frames-out'),
+    colors: document.getElementById('colors-out'),
+    side: document.getElementById('size-out')
+  };
+  var locks = {
+    frames: document.getElementById('lock-frames'),
+    colors: document.getElementById('lock-colors'),
+    side: document.getElementById('lock-size')
+  };
   var ends = {
     frames: [document.getElementById('frames-min'), document.getElementById('frames-base')],
     colors: [document.getElementById('colors-min'), document.getElementById('colors-base')],
-    size: [document.getElementById('size-min'), document.getElementById('size-base')]
+    side: [document.getElementById('size-min'), document.getElementById('size-base')]
   };
-  var spinner = document.getElementById('spinner');
-  var resetBtn = document.getElementById('reset-btn');
 
   var fields = {
     size: document.getElementById('f-size'),
@@ -32,10 +43,12 @@
   var current = null;
   var currentFile = null;
   var busy = false;
-
-  // a slider the user has dragged is theirs until Reset or a new file;
-  // untouched sliders sit at the algorithm's outcome
-  var touched = { frames: false, colors: false, size: false };
+  // sliders live only once a file has converted
+  var controlsActive = false;
+  // the axis the user dragged last: its pin yields first when the
+  // pinned set cannot fit, so a drag is a request, never an error
+  var priority = '';
+  var report = null;
 
   function fmtKB(bytes) {
     return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + ' KB';
@@ -51,92 +64,84 @@
 
   function naturalMax() {
     if (mode() === 'square') return 128;
-    return Math.min(+sizeSlider.dataset.inPx || 128, 128);
+    return Math.min(+sliders.side.dataset.inPx || 128, 128);
   }
 
-  // a slider at its maximum means uncapped
-  function frameCap() {
-    return +framesSlider.value < +framesSlider.max ? +framesSlider.value : 0;
-  }
-
-  function sizeCap() {
-    return +sizeSlider.value < +sizeSlider.max ? +sizeSlider.value : 0;
-  }
-
-  function colorsCap() {
-    return +colorsSlider.value < +colorsSlider.max ? +colorsSlider.value : 0;
+  // a locked or priority axis is pinned exactly; the free axes degrade
+  // to pay for it. A slider left at its maximum is a free axis.
+  function pin(axis) {
+    if (locks[axis].checked || priority === axis) return +sliders[axis].value;
+    return 0;
   }
 
   function updateLabels() {
-    framesHint.textContent = framesSlider.disabled
-      ? 'all'
-      : (+framesSlider.max < 2
-          ? 'single frame'
-          : (frameCap() ? frameCap() + ' of ' + framesSlider.max : 'all ' + framesSlider.max));
-    colorsHint.textContent = colorsSlider.disabled
-      ? 'best'
-      : (colorsCap() ? colorsCap() + ' colors' : 'uncapped');
-    sizeHint.textContent = sizeSlider.disabled
-      ? '128 px max'
-      : (sizeCap() ? sizeCap() + ' px' : naturalMax() + ' px max');
+    if (!report) {
+      hints.frames.textContent = 'all';
+      hints.colors.textContent = 'best';
+      hints.side.textContent = '128 px max';
+      return;
+    }
+
+    hints.frames.textContent = report.framesOut + ' of ' + report.framesIn;
+    hints.colors.textContent = plural(report.colors, 'color');
+    hints.side.textContent = Math.max(report.width, report.height) + ' px';
   }
 
-  function updateSizeRange() {
-    sizeSlider.min = Math.min(32, naturalMax());
-    sizeSlider.max = naturalMax();
-    ends.size[1].textContent = naturalMax() + ' px';
-    ends.size[0].textContent = sizeSlider.min + ' px';
-  }
-
-  function showResult(report) {
+  function showResult(rep) {
     error.hidden = true;
     previewCol.hidden = false;
 
-    preview.src = report.dataUrl;
-    preview.alt = 'Converted preview, ' + report.width + ' by ' + report.height + ' pixels';
+    preview.src = rep.dataUrl;
+    preview.alt = 'Converted preview, ' + rep.width + ' by ' + rep.height + ' pixels';
     preview.hidden = false;
 
-    resultMeta.textContent = report.passthrough ? 'unchanged' : 'converted';
+    resultMeta.textContent = rep.passthrough ? 'unchanged' : 'converted';
 
-    var px = Math.max(report.width, report.height);
-    var inPx = Math.max(report.inputWidth, report.inputHeight);
+    var px = Math.max(rep.width, rep.height);
+    var inPx = Math.max(rep.inputWidth, rep.inputHeight);
 
-    fields.size.textContent = fmtKB(report.outputSize) + ' of 128 KB';
-    fields.dims.textContent = report.width + ' × ' + report.height + ' px';
-    fields.frames.textContent = report.framesOut + ' of ' + report.framesIn;
-    fields.colors.textContent = plural(report.colors, 'color');
-    fields.input.textContent = fmtKB(report.inputSize);
+    fields.size.textContent = fmtKB(rep.outputSize) + ' of 128 KB';
+    fields.dims.textContent = rep.width + ' × ' + rep.height + ' px';
+    fields.frames.textContent = rep.framesOut + ' of ' + rep.framesIn;
+    fields.colors.textContent = plural(rep.colors, 'color');
+    fields.input.textContent = fmtKB(rep.inputSize);
 
     // red marks what was sacrificed relative to the input
-    fields.dims.classList.toggle('dropped', !report.passthrough && px < inPx);
-    fields.frames.classList.toggle('dropped', report.framesOut < report.framesIn);
+    fields.dims.classList.toggle('dropped', !rep.passthrough && px < inPx);
+    fields.frames.classList.toggle('dropped', rep.framesOut < rep.framesIn);
 
-    // sliders describe the file's ranges: base on the left, floor on
-    // the right, handle at the algorithm's outcome
-    framesSlider.max = report.framesIn;
-    colorsSlider.max = 255;
-    sizeSlider.dataset.inPx = inPx;
-    updateSizeRange();
-    [framesSlider, colorsSlider, sizeSlider].forEach(function (s) {
-      s.disabled = false;
-    });
+    // full ranges so any drag expresses a priority; the handle always
+    // shows the outcome
+    sliders.side.dataset.inPx = inPx;
+
+    sliders.frames.min = 1;
+    sliders.frames.max = rep.framesIn;
+
+    sliders.colors.min = Math.min(16, rep.colors);
+    sliders.colors.max = 255;
+
+    sliders.side.min = Math.min(32, naturalMax());
+    sliders.side.max = naturalMax();
+
+    ends.frames[0].textContent = sliders.frames.min;
+    ends.frames[1].textContent = sliders.frames.max;
+    ends.colors[0].textContent = sliders.colors.min;
+    ends.colors[1].textContent = sliders.colors.max;
+    ends.side[0].textContent = sliders.side.min + ' px';
+    ends.side[1].textContent = sliders.side.max + ' px';
+
+    sliders.frames.value = rep.framesOut;
+    sliders.colors.value = rep.colors;
+    sliders.side.value = px;
+
+    report = rep;
     controlsActive = true;
-
-    ends.frames[1].textContent = report.framesIn;
-    ends.frames[0].textContent = 1;
-    ends.colors[1].textContent = 255;
-    ends.colors[0].textContent = 16;
-
-    // ...and untouched sliders sit at the algorithm's outcome
-    if (!touched.frames) framesSlider.value = report.framesOut;
-    if (!touched.size) sizeSlider.value = px;
-    if (!touched.colors) colorsSlider.value = report.colors;
-
+    setControlsEnabled(true);
     updateLabels();
 
-    current = { dataUrl: report.dataUrl, name: report.name };
+    current = { dataUrl: rep.dataUrl, name: rep.name };
     downloadBtn.hidden = false;
-    downloadBtn.textContent = 'Download ' + (report.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
+    downloadBtn.textContent = 'Download ' + (rep.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
   }
 
   function showError(message) {
@@ -147,22 +152,20 @@
   // the fixed budget for one conversion, including the ladder searches
   var CONVERT_TIMEOUT_MS = 20000;
 
-  // sliders live only once a file has converted; before that they stay
-  // disabled even when controls are otherwise enabled
-  var controlsActive = false;
-
   function setControlsEnabled(enabled) {
     var on = enabled && controlsActive;
 
-    [framesSlider, colorsSlider, sizeSlider].forEach(function (s) {
-      s.disabled = !on;
+    AXES.forEach(function (axis) {
+      // a locked slider cannot be dragged: its value moves for nothing
+      sliders[axis].disabled = !on || locks[axis].checked;
+      locks[axis].disabled = !on;
     });
 
     document.querySelectorAll('input[name="mode"]').forEach(function (r) {
       r.disabled = !enabled;
     });
 
-    resetBtn.disabled = !enabled;
+    resetBtn.disabled = !on;
     fileInput.disabled = !enabled;
     drop.classList.toggle('busy', !enabled);
 
@@ -180,9 +183,12 @@
     body.append('file', file);
     body.append('mode', mode());
 
-    if (frameCap() > 0) body.append('maxFrames', frameCap());
-    if (sizeCap() > 0) body.append('maxSide', sizeCap());
-    if (colorsCap() > 0) body.append('maxColors', colorsCap());
+    AXES.forEach(function (axis) {
+      var p = pin(axis);
+      if (p) body.append(axis, p);
+    });
+
+    if (priority) body.append('priority', priority);
 
     var ctrl = new AbortController();
 
@@ -218,45 +224,46 @@
     fileName.hidden = false;
     resetBtn.hidden = false;
 
-    resetPresets();
+    resetAdjustments();
     convert(file);
   }
 
-  function resetPresets() {
-    touched = { frames: false, colors: false, size: false };
-
-    framesSlider.value = framesSlider.max;
-    colorsSlider.value = colorsSlider.max;
-    updateSizeRange();
-    sizeSlider.value = sizeSlider.max;
-
-    updateLabels();
+  function resetAdjustments() {
+    priority = '';
+    AXES.forEach(function (axis) {
+      locks[axis].checked = false;
+    });
   }
 
   fileInput.addEventListener('change', function () {
     onFile(fileInput.files[0]);
   });
 
-  [framesSlider, colorsSlider, sizeSlider].forEach(function (slider) {
-    var key = slider.id.split('-')[0];
-
-    // dragging marks the slider as the user's and shows the live value;
-    // releasing converts
-    slider.addEventListener('input', function () {
-      touched[key] = true;
-      updateLabels();
+  AXES.forEach(function (axis) {
+    // dragging shows the live request; releasing makes it the priority
+    sliders[axis].addEventListener('input', function () {
+      if (report) {
+        var v = +sliders[axis].value;
+        hints[axis].textContent = axis === 'frames'
+          ? v + ' of ' + sliders.frames.max
+          : axis === 'colors' ? plural(v, 'color') : v + ' px';
+      }
     });
 
-    slider.addEventListener('change', function () {
-      if (currentFile) convert(currentFile);
+    sliders[axis].addEventListener('change', function () {
+      if (!currentFile || locks[axis].checked) return;
+      priority = axis;
+      convert(currentFile);
+    });
+
+    // locking freezes the value; no conversion runs for a lock alone
+    locks[axis].addEventListener('change', function () {
+      setControlsEnabled(true);
     });
   });
 
   document.querySelectorAll('input[name="mode"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
-      updateSizeRange();
-      updateLabels();
-
       if (currentFile) convert(currentFile);
     });
   });
@@ -266,7 +273,7 @@
   resetBtn.addEventListener('click', function () {
     if (!currentFile) return;
 
-    resetPresets();
+    resetAdjustments();
     convert(currentFile);
   });
 

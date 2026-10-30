@@ -1,8 +1,10 @@
 # slackmoji
 
 Small web app that adapts a GIF (or still image) to Slack emoji limits:
-at most 128 KB and at most 128x128 px. It keeps every frame and drops
-quality first; frames are thinned only as a last resort.
+at most 128 KB and at most 128x128 px. By default it keeps every frame
+and drops quality first; frames are thinned only as a last resort. Any
+axis can instead be pinned (held exactly) and the free axes degrade to
+pay for it.
 
 ## How it works
 
@@ -27,18 +29,27 @@ quality first; frames are thinned only as a last resort.
    that change between frames; frames after the first store only
    their changed pixels, and delays merge so total duration is
    preserved. Frame disposal methods are honored when compositing.
+   A pinned axis leaves this search where it is: size stays at the
+   pinned side, frames at the pinned count, colors at the pinned
+   palette, and only the free axes move.
 
 ## Endpoints
 
-- `GET /` — web UI: choosing or dropping a file converts immediately;
-  the shape toggle and the frame/color/size presets re-convert, and
-  after every conversion the presets display what the algorithm chose
-  (frames as a percentage, size and colors by nearest preset).
+- `GET /` — web UI: choosing or dropping a file converts immediately.
+  Shape, plus a slider per axis (frames, colors, size): dragging a
+  slider pins that axis at the dragged value and makes it the
+  priority, so the free axes degrade to pay for it; a lock checkbox
+  freezes an axis so it neither improves nor degrades; the handle
+  always shows the last outcome. Reset to optimal clears the pins,
+  locks and priority.
 - `POST /convert` — multipart form with `file`, `mode`
-  (`ratio` | `square`) and the optional caps `maxFrames` (drop frames
-  down to this count before the quality search; 0 or absent = keep
-  every frame), `maxSide` (32-128 px output size limit; absent = 128)
-  and `maxColors` (16-255 palette cap; absent = fill the budget).
+  (`ratio` | `square`) and the optional pins `frames` (1..1000,
+  hold exactly this many frames), `side` (32-128 px, hold exactly
+  this output side) and `colors` (16-255, hold exactly this palette
+  size). Absent means the axis is free and sits at its optimum.
+  `priority` (`frames` | `side` | `colors`) names the pin that yields
+  first when the pinned set cannot fit under 128 KB, so an
+  over-ambitious drag degrades that axis instead of failing.
   Returns JSON:
   `{"report": {...}, "data": "data:<mime>;base64,..."}` where `report`
   carries `inputSize`, `inputWidth`, `inputHeight`, `outputSize`,
@@ -46,10 +57,11 @@ quality first; frames are thinned only as a last resort.
   `passthrough`.
 - `GET /health` — 200 OK, for probes.
 
-Errors return JSON `{"error": "..."}` with status 400 (bad mode or
-caps), 413 (over 32 MB), 422 (undecodable/unsupported input, input
-over the decode budgets, or a conversion that missed the server
-deadline) or 503 (both conversion slots busy).
+Errors return JSON `{"error": "..."}` with status 400 (bad mode,
+pins or priority), 413 (over 32 MB), 422 (undecodable/unsupported
+input, input over the decode budgets, a conversion that missed the
+server deadline, or pins that cannot fit even after the priority
+yielded) or 503 (both conversion slots busy).
 
 ## Limits
 
@@ -63,7 +75,7 @@ deadline) or 503 (both conversion slots busy).
   20 s timeout.
 
 Input already within the limits is returned byte-for-byte, unless a
-cap would change the output.
+pin would change the output.
 
 ## Configuration
 

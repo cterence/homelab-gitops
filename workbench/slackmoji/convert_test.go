@@ -384,7 +384,7 @@ func TestSizeLadder(t *testing.T) {
 func TestConvertFrameCap(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 3)
 
-	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxFrames: 4})
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, PinFrames: 4})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -405,7 +405,7 @@ func TestConvertFrameCap(t *testing.T) {
 func TestConvertMaxSide(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 4)
 
-	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxSide: 64})
+	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, PinSide: 64})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -422,7 +422,7 @@ func TestConvertMaxSide(t *testing.T) {
 func TestConvertCapDisablesPassthrough(t *testing.T) {
 	input := solidGIF(t, 64, 64, 3)
 
-	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxFrames: 1})
+	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, PinFrames: 1})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -507,7 +507,7 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 func TestConvertColorCap(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 4)
 
-	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxSide: 64, MaxColors: 16})
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, PinSide: 64, PinColors: 16})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -524,7 +524,7 @@ func TestConvertColorCap(t *testing.T) {
 func TestConvertColorCapDisablesPassthrough(t *testing.T) {
 	input := solidGIF(t, 64, 64, 3)
 
-	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxColors: 32})
+	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, PinColors: 32})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -632,6 +632,66 @@ func TestConvertRespectsDeadline(t *testing.T) {
 	_, _, err := Convert(ctx, input, Options{Mode: ModeRatio})
 	if err == nil {
 		t.Fatal("expected the canceled context to stop the conversion")
+	}
+}
+
+func TestPinColorsDegradesFreeAxes(t *testing.T) {
+	input := noiseGIF(t, 256, 256, 20, 3)
+
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, PinColors: 200})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	// the pin is honored exactly; free axes paid for it
+	if report.Colors != 200 {
+		t.Errorf("colors = %d, want the pinned 200", report.Colors)
+	}
+
+	if report.Width >= 128 {
+		t.Errorf("width = %d, want the free size degraded below 128", report.Width)
+	}
+
+	if len(out) > maxBytes {
+		t.Errorf("output %d bytes, want <= %d", len(out), maxBytes)
+	}
+}
+
+func TestPinnedValuesCannotFit(t *testing.T) {
+	input := noiseGIF(t, 128, 128, 120, 2)
+
+	_, _, err := Convert(t.Context(), input, Options{
+		Mode:      ModeRatio,
+		PinSide:   128,
+		PinFrames: 100,
+	})
+	if err == nil || !strings.Contains(err.Error(), "pinned values cannot fit") {
+		t.Errorf("error = %v, want the cannot-fit error", err)
+	}
+}
+
+func TestPriorityPinRelaxes(t *testing.T) {
+	input := noiseGIF(t, 128, 128, 120, 2)
+
+	_, report, err := Convert(t.Context(), input, Options{
+		Mode:      ModeRatio,
+		PinSide:   96,
+		PinFrames: 100,
+		Priority:  "frames",
+	})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	// the pinned set was impossible, so the priority axis yielded and
+	// the free search took over under the remaining pin
+	if report.Width != 96 {
+		t.Errorf("width = %d, want the pinned 96", report.Width)
+	}
+
+	if report.FramesOut >= report.FramesIn || report.Colors < colorFloor {
+		t.Errorf("frames = %d, colors = %d, want degraded frames at the floor or above",
+			report.FramesOut, report.Colors)
 	}
 }
 

@@ -40,10 +40,15 @@ const (
 
 // Options tune a conversion. Zero values mean "no manual adjustment".
 type Options struct {
-	Mode      string
-	MaxFrames int // 0: keep every frame
-	MaxSide   int // 0: 128px (the Slack limit)
-	MaxColors int // 0: 255 (fill the budget)
+	Mode string
+	// Pins hold an axis at exactly this value; the free axes degrade to
+	// pay for it. Zero means the axis is free and sits at the optimum.
+	PinSide   int // px
+	PinFrames int // frame count
+	PinColors int // palette size
+	// Priority names the axis whose pin yields first when the pinned
+	// set cannot fit: "side", "frames" or "colors" ("" = no fallback).
+	Priority string
 }
 
 // Report describes what the conversion did to the input.
@@ -61,22 +66,13 @@ type Report struct {
 	Format      string `json:"format"`
 }
 
-func side(opts Options) int {
-	if opts.MaxSide > 0 {
-		return opts.MaxSide
-	}
-
-	return maxSide
-}
-
 // fitsBudget reports whether input already satisfies every limit,
 // including the user's caps.
 func fitsBudget(dataLen, w, h, frames int, opts Options) bool {
-	s := side(opts)
+	s := maxSide
 
 	return dataLen <= maxBytes && w <= s && h <= s &&
-		(opts.MaxFrames == 0 || opts.MaxFrames >= frames) &&
-		(opts.MaxColors <= 0 || opts.MaxColors >= 255)
+		opts.PinSide == 0 && opts.PinFrames == 0 && opts.PinColors == 0
 }
 
 // passthroughReport fills a Report for input returned byte-for-byte, so
@@ -150,6 +146,41 @@ func checkInput(w, h, frames int) error {
 // or earlier when Options caps them. Input that already fits (and no cap
 // would change it) is returned byte-for-byte. The context bounds the
 // conversion: it stops at the next frame or encode boundary when done.
+// normalizePins clears pins that ask for what the input already is, so
+// compliant input still passes through untouched.
+func normalizePins(opts *Options, frames, w, h int) {
+	if opts.PinFrames >= frames {
+		opts.PinFrames = 0
+	}
+
+	if opts.PinColors >= 255 {
+		opts.PinColors = 0
+	}
+
+	// ratio mode never upscales: a pin at or above the input side is a
+	// no-op there; in square mode the pin at the limit is the uncapped ask
+	if opts.PinSide >= maxSide || (opts.Mode == ModeRatio && opts.PinSide >= max(w, h)) {
+		opts.PinSide = 0
+	}
+
+	switch opts.Priority {
+	case "side":
+		if opts.PinSide == 0 {
+			opts.Priority = ""
+		}
+	case "frames":
+		if opts.PinFrames == 0 {
+			opts.Priority = ""
+		}
+	case "colors":
+		if opts.PinColors == 0 {
+			opts.Priority = ""
+		}
+	default:
+		opts.Priority = ""
+	}
+}
+
 func Convert(ctx context.Context, data []byte, opts Options) ([]byte, *Report, error) {
 	switch ct := http.DetectContentType(data); ct {
 	case "image/gif":
@@ -176,6 +207,8 @@ func convertGIF(ctx context.Context, data []byte, opts Options, ct string) ([]by
 	if err := checkInput(g.Config.Width, g.Config.Height, len(g.Image)); err != nil {
 		return nil, nil, err
 	}
+
+	normalizePins(&opts, len(g.Image), g.Config.Width, g.Config.Height)
 
 	report := &Report{
 		InputSize:   len(data),
@@ -224,6 +257,8 @@ func convertStill(ctx context.Context, data []byte, opts Options, ct string) ([]
 		return nil, nil, err
 	}
 
+	normalizePins(&opts, 1, b.Dx(), b.Dy())
+
 	report := &Report{
 		InputSize:   len(data),
 		InputWidth:  b.Dx(),
@@ -253,11 +288,55 @@ func finish(
 	loopCount int,
 	report *Report,
 ) ([]byte, *Report, error) {
-	sizes := sizeLadder(side(opts))
+	// the pinned set is tried as asked; if it cannot fit, the axis the
+	// user dragged last yields first, then the pins are impossible
+	attempts := []Options{opts}
 
-	// a small input never benefits from invented pixels: its own size is
-	// the last step of the ladder
-	if in := max(w, h); in < sizes[len(sizes)-1] {
+	if opts.Priority != "" {
+		relaxed := opts
+
+		switch opts.Priority {
+		case "side":
+			relaxed.PinSide = 0
+		case "frames":
+			relaxed.PinFrames = 0
+		case "colors":
+			relaxed.PinColors = 0
+		}
+
+		relaxed.Priority = ""
+		attempts = append(attempts, relaxed)
+	}
+
+	for _, o := range attempts {
+		out, rep, err := ladder(ctx, frames, delays, w, h, o, loopCount, report)
+		if err != nil || out != nil {
+			return out, rep, err
+		}
+	}
+
+	return nil, nil, fmt.Errorf("the pinned values cannot fit under %d bytes", maxBytes)
+}
+
+// ladder walks the degradation order under the pins: pinned axes hold
+// exactly their value while free axes sit at the best point the budget
+// allows. A nil result means nothing fits.
+func ladder(
+	ctx context.Context,
+	frames []*image.NRGBA,
+	delays []int,
+	w, h int,
+	opts Options,
+	loopCount int,
+	report *Report,
+) ([]byte, *Report, error) {
+	sizes := sizeLadder(maxSide)
+
+	if opts.PinSide > 0 {
+		sizes = []int{opts.PinSide}
+	} else if in := max(w, h); in < sizes[len(sizes)-1] {
+		// a small input never benefits from invented pixels: its own
+		// size is the last step of the ladder
 		sizes = append(sizes, in)
 	}
 
@@ -292,22 +371,24 @@ func finish(
 	candidates := len(resized)
 
 	startKeep := len(frames)
+	pinnedKeep := false
 
-	if opts.MaxFrames > 0 && opts.MaxFrames < startKeep {
-		startKeep = opts.MaxFrames
+	if opts.PinFrames > 0 {
+		startKeep = opts.PinFrames
+		pinnedKeep = true
 	}
 
 	// attempt a (size, frame count) candidate with a full palette search
-	ceil := 255
+	floor, ceil := colorFloor, 255
 
-	if opts.MaxColors > 0 && opts.MaxColors < ceil {
-		ceil = opts.MaxColors
+	if opts.PinColors > 0 {
+		floor, ceil = opts.PinColors, opts.PinColors
 	}
 
 	accept := func(sizeIdx, keep int) ([]byte, *Report, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		out, colors, err := searchPalette(ctx, kf, kd, loopCount, ceil)
+		out, colors, err := searchPalette(ctx, kf, kd, loopCount, floor, ceil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -324,7 +405,7 @@ func finish(
 	floorFits := func(sizeIdx, keep int) (bool, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		pal, err := quantizeFrames(ctx, kf, colorFloor)
+		pal, err := quantizeFrames(ctx, kf, floor)
 		if err != nil {
 			return false, err
 		}
@@ -371,12 +452,12 @@ func finish(
 	for i := range candidates {
 		probes = append(probes, probe{i, startKeep, startKeep})
 
-		if half >= 1 {
+		if !pinnedKeep && half >= 1 {
 			probes = append(probes, probe{i, half, startKeep})
 		}
 	}
 
-	if half >= 1 {
+	if !pinnedKeep && half >= 1 {
 		probes = append(probes, probe{candidates - 1, 1, half})
 	}
 
@@ -402,9 +483,7 @@ func finish(
 		return accept(p.size, keep)
 	}
 
-	return nil, nil, fmt.Errorf(
-		"cannot fit under %d bytes even at %d colors, %d px and 1 frame",
-		maxBytes, colorFloor, dims[candidates-1][0])
+	return nil, nil, nil
 }
 
 // sizeLadder is the degradation order for resolution: the user's side
@@ -453,9 +532,10 @@ func searchPalette(
 	frames []*image.NRGBA,
 	delays []int,
 	loopCount int,
+	floor int,
 	hi int,
 ) ([]byte, int, error) {
-	loPal, err := quantizeFrames(ctx, frames, colorFloor)
+	loPal, err := quantizeFrames(ctx, frames, floor)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -469,7 +549,7 @@ func searchPalette(
 		return nil, 0, nil
 	}
 
-	lo, loColors := colorFloor, colorFloor
+	lo, loColors := floor, floor
 
 	for hi > lo {
 		mid := (lo + hi + 1) / 2

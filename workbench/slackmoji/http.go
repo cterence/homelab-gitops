@@ -86,29 +86,36 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 
 	opts := Options{Mode: mode}
 
-	n, err := formInt(r, "maxFrames", 0, 1<<30)
+	n, err := formInt(r, "side", minSide, maxSide)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	opts.MaxFrames = n
+	opts.PinSide = n
 
-	n, err = formInt(r, "maxSide", minSide, maxSide)
+	n, err = formInt(r, "frames", 1, maxInputFrames)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	opts.MaxSide = n
+	opts.PinFrames = n
 
-	n, err = formInt(r, "maxColors", colorFloor, 255)
+	n, err = formInt(r, "colors", colorFloor, 255)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	opts.MaxColors = n
+	opts.PinColors = n
+
+	opts.Priority = r.FormValue("priority")
+	if opts.Priority != "" &&
+		opts.Priority != "side" && opts.Priority != "frames" && opts.Priority != "colors" {
+		writeError(w, http.StatusBadRequest, errors.New("priority must be side, frames or colors"))
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), convertDeadline)
 	defer cancel()
