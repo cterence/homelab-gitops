@@ -80,19 +80,18 @@ button { cursor: pointer; }
   min-width: 0;
 }
 .work-panel { width: fit-content; max-width: 100%; margin-inline: auto; }
-/* stretch: the stage matches the dials' height, and the slot grows to
-   keep the download row level with the reset button */
+/* stretch plus margin-top: auto on the last row of each column keeps
+   the download row level with the reset button whichever column is
+   taller, without the slot stretching */
 .work { display: flex; gap: 32px; align-items: stretch; }
 
-/* stage: the fixed frame that is a dropzone before upload and the
-   preview after; the slot grows but never shrinks below 192px */
+/* stage: the fixed square frame that is a dropzone before upload and
+   the preview after */
 .stage { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; flex: 0 0 auto; }
 .slot {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 192px;
-  aspect-ratio: 1;
-  align-self: flex-start;
+  width: 224px;
+  height: 224px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,7 +132,7 @@ button { cursor: pointer; }
   margin: -7px 0 0 -7px;
 }
 .stage-meta { color: var(--muted); font-size: var(--fs-small); min-height: 20px; }
-.stage-actions { display: flex; gap: 8px; }
+.stage-actions { display: flex; gap: 8px; margin-top: auto; }
 
 .spinner {
   width: 14px;
@@ -158,6 +157,7 @@ button.primary {
 }
 button.primary:hover { opacity: 0.85; }
 button.primary:disabled { opacity: 0.4; cursor: default; }
+button.reset { margin-top: auto; align-self: flex-start; }
 button.clear, button.reset {
   height: var(--control-height);
   padding: 0 12px;
