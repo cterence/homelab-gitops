@@ -76,25 +76,25 @@ loki:
     - apiVersion: v1
       kind: ConfigMap
       metadata:
-        name: loki-rules-traefik-jail
+        name: loki-rules-traefik-fail2ban
         namespace: '{{ .Release.Namespace }}'
         labels:
           loki_rule: ""
       data:
-        traefik-jail.yaml: |
+        traefik-fail2ban.yaml: |
           groups:
-            - name: traefik-jail
+            - name: traefik-fail2ban
               rules:
-                - alert: TraefikJailBanned
+                - alert: TraefikFail2BanBlocked
                   expr: |
-                    sum by (ip, banCount, duration) (count_over_time({k8s_container_name="traefik"} |= "traefik-jail: banned" | regexp "ip=(?P<ip>[0-9.]+) banCount=(?P<banCount>[0-9]+) duration=(?P<duration>[0-9a-z]+)" [5m])) > 0
+                    sum by (ip, reason) (count_over_time({k8s_container_name="traefik"} | json | msg="Plugin: FailToBan: IP blocked" [5m])) > 0
                   for: 0m
                   labels:
                     severity: info
                     context: traefik
                   annotations:
-                    summary: "IP {{ "{{ $labels.ip }}" }} banned by traefik-jail (ban #{{ "{{ $labels.banCount }}" }}, {{ "{{ $labels.duration }}" }})"
-                    description: "IP {{ "{{ $labels.ip }}" }} was banned after exceeding the 4xx error threshold. This is ban #{{ "{{ $labels.banCount }}" }} with duration {{ "{{ $labels.duration }}" }}."
+                    summary: "IP {{ "{{ $labels.ip }}" }} blocked by traefik fail2ban ({{ "{{ $labels.reason }}" }})"
+                    description: "IP {{ "{{ $labels.ip }}" }} was blocked by the traefik fail2ban plugin. Reason: {{ "{{ $labels.reason }}" }}."
 
         jellyfin.yaml: |
           groups:

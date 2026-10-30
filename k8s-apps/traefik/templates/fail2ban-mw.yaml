@@ -1,0 +1,97 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: fail2ban
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  plugin:
+    fail2ban:
+      enabled: true
+      rules:
+        # jail: threshold 30 / window 120s / errorCodes 400-498
+        statuscode: "400-498"
+        findtime: "2m"
+        maxretry: 30
+        # fixed ban, fail2ban has no exponential backoff
+        bantime: "1h"
+        urlregexps:
+          # block: instant ban on first match
+          - regexp: '(?i)^/\.env'
+            mode: block
+          - regexp: '(?i)^/api/\.env'
+            mode: block
+          - regexp: '(?i)^/\.ssh/'
+            mode: block
+          - regexp: '(?i)^/\.git/'
+            mode: block
+          - regexp: '(?i)^/\.svn/'
+            mode: block
+          - regexp: '(?i)^/\.aws/'
+            mode: block
+          - regexp: '(?i)^/\.bash_history'
+            mode: block
+          - regexp: '(?i)^/\.npmrc'
+            mode: block
+          - regexp: '(?i)^/\.vscode/sftp\.json'
+            mode: block
+          - regexp: '(?i)^/_vti_pvt/'
+            mode: block
+          - regexp: '(?i)^/wp-config\.php'
+            mode: block
+          - regexp: '(?i)^/wp-admin/setup-config\.php'
+            mode: block
+          - regexp: '(?i)^/phpinfo\.php'
+            mode: block
+          - regexp: '(?i)/(wordpress|wp|blog)/wp/v2/users'
+            mode: block
+          - regexp: '(?i)^/(backup|dump|database|database_backup)\.sql'
+            mode: block
+          - regexp: '(?i)\.sql$'
+            mode: block
+          - regexp: '(?i)^/secrets?\.json'
+            mode: block
+          - regexp: '(?i)^/server\.key'
+            mode: block
+          - regexp: '(?i)^/docker-compose\.yml'
+            mode: block
+          - regexp: '(?i)^/(firebase-key|firebase-adminsdk|keyfile|key|google-key)\.json'
+            mode: block
+          - regexp: '(?i)^/\.config/gcloud/'
+            mode: block
+          - regexp: '(?i)^/dbadmin/'
+            mode: block
+          - regexp: '(?i)^/storage/logs/laravel\.log'
+            mode: block
+          - regexp: '(?i)^/user_secrets\.yml'
+            mode: block
+          - regexp: '(?i)^/zzcanary-'
+            mode: block
+          # fail2ban botsearch-common.conf patterns
+          - regexp: '(?i)^/roundcube(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/(ext)?mail(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/horde(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/(v-?)?webmail(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/(typo3/|xampp/|admin/|)(pma|(php)?[Mm]y[Aa]dmin)(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/wp-(login|signup|admin)\.php(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/cgi-bin(?:/|[-._0-9]|$)'
+            mode: block
+          - regexp: '(?i)^/mysqladmin(?:/|[-._0-9]|$)'
+            mode: block
+          # allow: skip fail2ban entirely (was jail excludeURLs; host can't
+          # be matched, so these apply to every host)
+          - regexp: '(?i)^/[^/]*\.narinfo'
+            mode: allow
+          - regexp: '(?i)^/api/'
+            mode: allow
+      allowlist:
+        ip:
+          {{- range .Values.allowListIPs }}
+          - {{ . }}
+          {{- end }}

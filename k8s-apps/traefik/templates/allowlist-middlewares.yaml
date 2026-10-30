@@ -10,28 +10,3 @@ spec:
       {{- range .Values.allowListIPs }}
       - {{ . }}
       {{- end }}
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: jail
-  namespace: traefik
-spec:
-  plugin:
-    traefik-jail:
-      threshold: 30
-      window: 120
-      baseBan: 60
-      maxBan: 3600
-      resetAfter: 3600
-      statsInterval: 300
-      errorCodes: "400-498"
-      patternsFile: /plugins-local/src/github.com/cterence/homelab-gitops/workbench/traefikjail/patterns.txt
-      patternWeight: 5
-      excludeURLs:
-        - niks3.terence.cloud/*.narinfo
-        - niks3.terence.cloud/api/*
-      allowList:
-        {{- range .Values.allowListIPs }}
-        - {{ . }}
-        {{- end }}

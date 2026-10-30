@@ -1,4 +1,4 @@
-# Shared IP allowlist used by both the ip-allowlist middleware and the jail plugin
+# Shared IP allowlist used by both the ip-allowlist middleware and the fail2ban plugin
 allowListIPs:
   - 10.0.0.0/8
   - 192.168.1.0/24
@@ -11,10 +11,6 @@ traefik:
   deployment:
     enabled: true
     replicas: 1
-    additionalVolumes:
-      - name: traefik-jail-plugin
-        configMap:
-          name: traefik-jail-plugin
     initContainers:
       - name: wait-for-modsecurity
         image: alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
@@ -41,15 +37,12 @@ traefik:
       geoblock:
         moduleName: github.com/PascalMinder/geoblock
         version: v0.3.3
+      fail2ban:
+        moduleName: github.com/tomMoulard/fail2ban
+        version: v0.9.0
       sablier:
         moduleName: github.com/sablierapp/sablier
         version: v1.10.1
-    localPlugins:
-      traefik-jail:
-        moduleName: github.com/cterence/homelab-gitops/workbench/traefikjail
-        type: localPath
-        mountPath: /plugins-local/src/github.com/cterence/homelab-gitops/workbench/traefikjail
-        volumeName: traefik-jail-plugin
     otlpLogs: false
     knative: false
 
@@ -90,7 +83,7 @@ traefik:
         middlewares:
           - traefik-secure-headers@kubernetescrd
           - traefik-geoblock@kubernetescrd
-          - traefik-jail@kubernetescrd
+          - traefik-fail2ban@kubernetescrd
     websecure:
       port: 8443
       expose:
@@ -124,7 +117,7 @@ traefik:
         middlewares:
           - traefik-secure-headers@kubernetescrd
           - traefik-geoblock@kubernetescrd
-          - traefik-jail@kubernetescrd
+          - traefik-fail2ban@kubernetescrd
     metrics:
       port: 9100
       expose:
