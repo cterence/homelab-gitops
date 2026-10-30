@@ -197,6 +197,9 @@ button.clear:disabled, button.reset:disabled { opacity: 0.4; cursor: default; }
 .dial input[type="range"] { width: 100%; accent-color: var(--accent); }
 .dial input:disabled { opacity: 0.4; }
 .dial-ends { display: flex; justify-content: space-between; margin-top: 2px; color: var(--muted); font-size: var(--fs-small); }
+/* the note keeps its line even when empty so nothing shifts when it
+   appears */
+.dial-note { margin-top: 8px; color: var(--muted); font-size: var(--fs-small); min-height: 20px; }
 
 .error { color: var(--negative); }
 

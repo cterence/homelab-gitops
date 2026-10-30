@@ -9,6 +9,13 @@
   var spinner = document.getElementById('spinner');
   var error = document.getElementById('error');
   var resetBtn = document.getElementById('reset-btn');
+  var framesNote = document.getElementById('frames-note');
+  var FRAMES_NOTE = 'Lower the size to keep more frames';
+
+  // the note's line is always reserved; only its text comes and goes
+  function note(show) {
+    framesNote.textContent = show ? FRAMES_NOTE : '';
+  }
 
   var AXES = ['frames', 'side'];
   var sliders = {
@@ -252,6 +259,7 @@
     AXES.forEach(function (axis) {
       ends[axis][0].textContent = '';
       ends[axis][1].textContent = '';
+      sliders[axis].value = sliders[axis].min;
     });
 
     setControlsEnabled(true);
@@ -261,6 +269,7 @@
   function resetAdjustments() {
     priority = '';
     sizeHold = 0;
+    note(false);
   }
 
   fileInput.addEventListener('change', function () {
@@ -300,6 +309,26 @@
       // the size is chosen first: frames drags hold it at its true
       // outcome, which the stepped slider may not be able to show
       sizeHold = axis === 'side' ? 0 : sizeNow;
+
+      if (axis === 'frames') {
+        var raw = +sliders.frames.value;
+        var ask = Math.min(raw, framesMax);
+
+        // the size cannot hold more than the current state: settle
+        // the handle and explain instead of converting to the same
+        // result
+        if (ask === report.framesOut) {
+          note(raw > framesMax);
+          sliders.frames.value = report.framesOut;
+          updateLabels();
+          return;
+        }
+      }
+
+      // any release past the bound explains itself, whether the
+      // conversion below it changes the state or not; every other
+      // action clears the note
+      note(axis === 'frames' && +sliders.frames.value > framesMax);
 
       convert(currentFile);
     });
