@@ -1,5 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 app-template:
+  defaultPodOptions:
+    imagePullSecrets:
+      - name: registry-pull-secret
+
   configMaps:
     config:
       data:
@@ -44,7 +48,7 @@ app-template:
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
-            tag: latest@sha256:f04924f64aec5fcfc35226433d76b749068398b2abf548b2ee8c2c93c0d11e45
+            tag: latest@sha256:a631d6fcf9da17b5ff34f2a405e84a528659c1dce748cc87f741bc6220b54ffb
           ports:
             - name: http
               containerPort: 3000
@@ -92,27 +96,3 @@ app-template:
         app:
           app:
             - path: /app/data
-
-  rawResources:
-    lastfm-credentials:
-      enabled: true
-      forceRename: lastfm-credentials
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: lastfm-credentials
-            creationPolicy: Owner
-          data:
-            - secretKey: LASTFM_USERNAME
-              remoteRef:
-                key: "lastfm-scrobble-deduplicator/lastfm-credentials"
-                property: LASTFM_USERNAME
-            - secretKey: LASTFM_PASSWORD
-              remoteRef:
-                key: "lastfm-scrobble-deduplicator/lastfm-credentials"
-                property: LASTFM_PASSWORD

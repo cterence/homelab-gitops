@@ -28,6 +28,10 @@ spec:
         - name: kaniko
           image: {{ .Values.kanikoImage }}
           resources: {{ toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: registry-auth
+              mountPath: /kaniko/.docker
+              readOnly: true
           args:
             - --context=git://{{ .Values.repoURL }}.git#refs/heads/{{ .Values.branch }}
             - --context-sub-path={{ .Values.subPath }}
@@ -39,4 +43,11 @@ spec:
             {{- range $k, $v := .Values.buildArgs }}
             - --build-arg={{ $k }}={{ $v }}
             {{- end }}
+      volumes:
+        - name: registry-auth
+          secret:
+            secretName: registry-pull-secret
+            items:
+              - key: .dockerconfigjson
+                path: config.json
 {{- end }}

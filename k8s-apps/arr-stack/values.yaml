@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 app-template:
   defaultPodOptions:
+    imagePullSecrets:
+      - name: registry-pull-secret
     automountServiceAccountToken: false
     securityContext:
       runAsUser: 1000
@@ -1630,60 +1632,6 @@ app-template:
               storage: 8Ti
           storageClassName: nfs
           volumeName: storage-pool
-    cnpg-backup-s3-creds:
-      enabled: true
-      forceRename: cnpg-backup-s3-creds
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: cnpg-backup-s3-creds
-            creationPolicy: Owner
-          data:
-            - secretKey: ACCESS_KEY_ID
-              remoteRef:
-                key: versity-gw/versity-gw-credentials
-                property: ROOT_ACCESS_KEY
-            - secretKey: ACCESS_SECRET_KEY
-              remoteRef:
-                key: versity-gw/versity-gw-credentials
-                property: ROOT_SECRET_KEY
-    configarr-secrets:
-      enabled: true
-      forceRename: configarr-secrets
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: configarr-secrets
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: arr-stack/configarr-secrets
-    gluetun-wg-vm-keys:
-      enabled: true
-      forceRename: gluetun-wg-vm-keys
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: gluetun-wg-vm-keys
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: arr-stack/gluetun-wg-vm-keys
     jellystat-jwt-secret:
       enabled: true
       forceRename: jellystat-jwt-secret
@@ -1740,54 +1688,6 @@ app-template:
               sessionDuration: 10m
               ignoreUserAgent: curl
               group: fbq
-    rangemusique-api-keys:
-      enabled: true
-      forceRename: rangemusique-api-keys
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: rangemusique-api-keys
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: arr-stack/rangemusique-api-keys
-    slskd-config:
-      enabled: true
-      forceRename: slskd-config
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: slskd-config
-          dataFrom:
-            - extract:
-                key: arr-stack/slskd-config
-    soularr-config:
-      enabled: true
-      forceRename: soularr-config
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: soularr-config
-            template:
-              engineVersion: v2
-          dataFrom:
-            - extract:
-                key: arr-stack/soularr-config
     qbittorrent-tunnel-monitor:
       enabled: true
       forceRename: qbittorrent-tunnel
