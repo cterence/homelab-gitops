@@ -47,7 +47,7 @@ spec:
             mode: block
           - regexp: '(?i)^/(backup|dump|database|database_backup)\.sql'
             mode: block
-          - regexp: '(?i)\.sql$'
+          - regexp: '(?i)^/[^/?]*\.sql$'
             mode: block
           - regexp: '(?i)^/secrets?\.json'
             mode: block
