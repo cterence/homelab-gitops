@@ -48,88 +48,23 @@
         </div>
       </fieldset>
 
-      <fieldset class="preset">
-        <legend>Frames</legend>
-        <div class="preset-controls">
-          <div class="segmented" role="radiogroup" aria-label="Frames">
-            <label>
-              <input type="radio" name="framesPct" value="100" checked disabled>
-              <span>All</span>
-            </label>
-            <label>
-              <input type="radio" name="framesPct" value="75" disabled>
-              <span>75%</span>
-            </label>
-            <label>
-              <input type="radio" name="framesPct" value="50" disabled>
-              <span>50%</span>
-            </label>
-            <label>
-              <input type="radio" name="framesPct" value="25" disabled>
-              <span>25%</span>
-            </label>
-            <label>
-              <input type="radio" name="framesPct" value="10" disabled>
-              <span>10%</span>
-            </label>
-          </div>
-          <span class="preset-hint" id="frames-out">all</span>
-        </div>
-      </fieldset>
+      <div class="slider">
+        <label for="frames-slider" class="slider-label">Frames</label>
+        <input type="range" id="frames-slider" min="1" max="100" value="100" step="1" disabled>
+        <span class="slider-value" id="frames-out">all</span>
+      </div>
 
-      <fieldset class="preset">
-        <legend>Colors</legend>
-        <div class="preset-controls">
-          <div class="segmented" role="radiogroup" aria-label="Colors">
-            <label>
-              <input type="radio" name="colorsPct" value="100" checked disabled>
-              <span>Best</span>
-            </label>
-            <label>
-              <input type="radio" name="colorsPct" value="75" disabled>
-              <span>75%</span>
-            </label>
-            <label>
-              <input type="radio" name="colorsPct" value="50" disabled>
-              <span>50%</span>
-            </label>
-            <label>
-              <input type="radio" name="colorsPct" value="25" disabled>
-              <span>25%</span>
-            </label>
-            <label>
-              <input type="radio" name="colorsPct" value="floor" disabled>
-              <span>Min</span>
-            </label>
-          </div>
-          <span class="preset-hint" id="colors-out">best</span>
-        </div>
-      </fieldset>
+      <div class="slider">
+        <label for="colors-slider" class="slider-label">Colors</label>
+        <input type="range" id="colors-slider" min="16" max="255" value="255" step="1" disabled>
+        <span class="slider-value" id="colors-out">best</span>
+      </div>
 
-      <fieldset class="preset">
-        <legend>Size</legend>
-        <div class="preset-controls">
-          <div class="segmented" role="radiogroup" aria-label="Size">
-            <label>
-              <input type="radio" name="sizePct" value="100" checked disabled>
-              <span>Max</span>
-            </label>
-            <label>
-              <input type="radio" name="sizePct" value="75" disabled>
-              <span>75%</span>
-            </label>
-            <label>
-              <input type="radio" name="sizePct" value="50" disabled>
-              <span>50%</span>
-            </label>
-            <label>
-              <input type="radio" name="sizePct" value="25" disabled>
-              <span>25%</span>
-            </label>
-          </div>
-          <span class="preset-hint" id="size-out">128 px</span>
-        </div>
-      </fieldset>
+      <div class="slider">
+        <label for="size-slider" class="slider-label">Size</label>
+        <input type="range" id="size-slider" min="32" max="128" value="128" step="8" disabled>
+        <span class="slider-value" id="size-out">128 px</span>
+      </div>
 
       <button type="button" class="card-link adjust-reset" id="reset-btn" hidden>Reset to optimal</button>
     </div>

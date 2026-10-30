@@ -137,15 +137,19 @@ button { cursor: pointer; }
 .segmented input:checked + span { background: var(--accent); color: var(--primary-ink); }
 .segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-/* adjustments: shape, frame and size presets in one row */
-.adjust-row { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; justify-content: space-between; }
+/* adjustments: shape, and stepped sliders positioned by the algorithm */
+.adjust-row { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; align-items: flex-end; }
 .adjust-reset { align-self: flex-end; height: var(--control-height); }
 
 .preset { border: 0; padding: 0; margin: 0; }
 .preset legend { padding: 0; margin-bottom: 8px; color: var(--muted); }
-.preset-controls { display: flex; align-items: center; gap: 12px; }
-.preset-hint { color: var(--muted); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
 .segmented input:disabled + span { opacity: 0.4; }
+
+.slider { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; }
+.slider-label { color: var(--muted); }
+.slider input[type="range"] { width: 160px; accent-color: var(--accent); }
+.slider input:disabled { opacity: 0.4; }
+.slider-value { min-width: 88px; color: var(--muted); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
 
 .actions { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 button.primary {
