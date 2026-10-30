@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>slackmoji</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<main class="canvas">
+  <div class="title-row">
+    <div>
+      <h1>slackmoji</h1>
+      <p class="sub">Turn a GIF, PNG, JPEG or WebP into a Slack emoji: 128&nbsp;KB, 128&nbsp;px.</p>
+    </div>
+  </div>
+
+  <section class="panel work-panel">
+   <div class="work">
+    <div class="stage">
+      <div class="slot" id="slot" role="button" tabindex="0" aria-label="Choose a file">
+        <input type="file" id="file" name="file"
+               accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/jpeg,image/webp">
+        <label for="file" class="slot-empty" id="slot-empty">
+          <span class="slot-title">Choose a file</span>
+          <span class="slot-hint">or drop a GIF, PNG, JPEG or WebP</span>
+        </label>
+        <img id="preview" alt="" hidden>
+        <span class="spinner" id="spinner" hidden aria-label="Converting"></span>
+      </div>
+
+      <p class="stage-meta num" id="stage-meta"></p>
+
+      <div class="stage-actions">
+        <button type="button" class="primary" id="download-btn" disabled>Download emoji</button>
+        <button type="button" class="clear" id="clear-btn" disabled>Clear</button>
+      </div>
+
+      <p class="error" id="error" role="alert" hidden></p>
+    </div>
+
+    <div class="dials">
+      <fieldset class="preset">
+        <legend>Shape</legend>
+        <div class="segmented" role="radiogroup" aria-label="Shape">
+          <label>
+            <input type="radio" name="mode" value="square" checked>
+            <span>Stretch to square</span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="ratio">
+            <span>Keep aspect</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="dial">
+        <div class="dial-head">
+          <span class="dial-label">Size</span>
+          <span class="dial-value num" id="size-out"></span>
+        </div>
+        <input type="range" id="size-slider" min="32" max="128" value="32" step="16" disabled
+               aria-label="Size">
+        <div class="dial-ends num"><span id="size-min"></span><span id="size-base"></span></div>
+      </div>
+
+      <div class="dial">
+        <div class="dial-head">
+          <span class="dial-label">Frames</span>
+          <span class="dial-value num" id="frames-out"></span>
+        </div>
+        <input type="range" id="frames-slider" min="1" max="100" value="1" step="1" disabled
+               aria-label="Frames">
+        <div class="dial-ends num"><span id="frames-min"></span><span id="frames-base"></span></div>
+        <p class="dial-note" id="frames-note"></p>
+      </div>
+
+      <button type="button" class="reset" id="reset-btn">Reset to optimal</button>
+    </div>
+   </div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

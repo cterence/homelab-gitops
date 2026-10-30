@@ -1,0 +1,212 @@
+/* slackmoji — achromatic-ledger (tasteskill sheet, seed 2121207780) */
+
+:root {
+  --ground: #f8f8f8;
+  --surface: #ffffff;
+  --raised: #eeeeee;
+  --border: #e6e6e6;
+  --rule: #f0f0f0;
+  --control: #d4d4d4;
+  --text: #0a0a0a;
+  --muted: #6b6b6b;
+  --accent: #141414;
+  --negative: #c4242a;
+  --primary: #141414;
+  --primary-ink: #ffffff;
+
+  --font: "Geist", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-title: 24px;
+  --fs-section: 16px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+
+  --pad: 24px;
+  --gap: 12px;
+  --card-pad: 20px;
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --control-height: 36px;
+
+  color-scheme: light dark;
+}
+
+/* true neutral darks, elevation by lightness step; no colour in the chrome */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #101010;
+    --surface: #181818;
+    --raised: #222222;
+    --border: #282828;
+    --rule: #202020;
+    --control: #3d3d3d;
+    --text: #f2f2f2;
+    --muted: #a3a3a3;
+    --accent: #f2f2f2;
+    --negative: #e5566f;
+    --primary: #f2f2f2;
+    --primary-ink: #101010;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font: var(--fs-body)/20px var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, p, dl, dd, dt, figure, figcaption { margin: 0; }
+img { display: block; max-width: 100%; }
+button, input, output { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+
+.canvas { padding: var(--pad); width: fit-content; max-width: 100%; margin-inline: auto; }
+
+.title-row { margin-bottom: 20px; }
+.title-row h1 { font-size: var(--fs-title); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+.title-row .sub { margin-top: 4px; color: var(--muted); }
+
+/* one panel: the media stage and the dials beside it */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--card-pad);
+  min-width: 0;
+}
+.work-panel { width: fit-content; max-width: 100%; margin-inline: auto; }
+/* stretch plus margin-top: auto on the last row of each column keeps
+   the download row level with the reset button whichever column is
+   taller, without the slot stretching */
+.work { display: flex; gap: 32px; align-items: stretch; }
+
+/* stage: the fixed square frame that is a dropzone before upload and
+   the preview after */
+.stage { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; flex: 0 0 auto; }
+.slot {
+  position: relative;
+  width: 224px;
+  height: 224px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--control);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.slot.over { background: var(--raised); border-color: var(--accent); }
+.slot.busy { opacity: 0.6; }
+.slot.has-file {
+  border-style: solid;
+  cursor: pointer;
+}
+.slot.has-file:hover, .slot.has-file:focus-visible { background: var(--raised); }
+.slot input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.slot-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  cursor: pointer;
+}
+.slot-title { font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.slot-hint { color: var(--muted); font-size: var(--fs-small); }
+.slot img { max-width: 100%; max-height: 100%; }
+.slot .spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -7px 0 0 -7px;
+}
+.stage-meta { color: var(--muted); font-size: var(--fs-small); min-height: 20px; }
+.stage-actions { display: flex; gap: 8px; margin-top: auto; }
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--control);
+  border-top-color: var(--accent);
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+button.primary {
+  height: var(--control-height);
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-weight: 500;
+  transition: opacity 120ms ease;
+}
+button.primary:hover { opacity: 0.85; }
+button.primary:disabled { opacity: 0.4; cursor: default; }
+button.reset { margin-top: auto; align-self: flex-start; }
+button.clear, button.reset {
+  height: var(--control-height);
+  padding: 0 12px;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--muted);
+  transition: background-color 120ms ease, color 120ms ease;
+}
+button.clear:hover, button.reset:hover:not(:disabled) { background: var(--raised); color: var(--text); }
+button.clear:disabled, button.reset:disabled { opacity: 0.4; cursor: default; }
+
+/* dials: shape, then one block per axis, stacked and aligned */
+.dials { flex: 1 1 320px; min-width: 280px; display: flex; flex-direction: column; gap: 20px; }
+.preset { border: 0; padding: 0; margin: 0; }
+.preset legend { padding: 0; margin-bottom: 8px; color: var(--muted); }
+.segmented { display: inline-flex; border: 1px solid var(--control); border-radius: var(--radius-control); overflow: hidden; }
+.segmented label { position: relative; }
+.segmented input { position: absolute; opacity: 0; inset: 0; }
+.segmented span {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-height);
+  padding: 0 14px;
+  background: var(--surface);
+  color: var(--muted);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.segmented input:checked + span { background: var(--accent); color: var(--primary-ink); }
+.segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.segmented input:disabled + span { opacity: 0.4; }
+
+.dial { display: flex; flex-direction: column; }
+.dial-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.dial-label { color: var(--muted); }
+.dial-value { min-width: 0; }
+.dial input[type="range"] { width: 100%; accent-color: var(--accent); }
+.dial input:disabled { opacity: 0.4; }
+/* the ends keep their line even when empty so nothing shifts when
+   the first conversion fills them */
+.dial-ends { display: flex; justify-content: space-between; margin-top: 2px; color: var(--muted); font-size: var(--fs-small); min-height: 20px; }
+/* the note keeps its line even when empty so nothing shifts when it
+   appears */
+.dial-note { margin-top: 8px; color: var(--muted); font-size: var(--fs-small); min-height: 20px; }
+
+.error { color: var(--negative); }
+
+@media (max-width: 880px) {
+  .work { flex-direction: column; align-items: center; }
+  .dials { width: 100%; }
+  .dial { max-width: 420px; margin-inline: auto; width: 100%; }
+}

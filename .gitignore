@@ -11,4 +11,6 @@ docs/superpowers/
 .pre-commit-config.yaml
 result.apk
 *.mp3
+.taste-skill/
+workbench/slackmoji/slackmoji
 result
