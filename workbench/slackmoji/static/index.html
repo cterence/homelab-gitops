@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>slackmoji</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<main class="canvas">
+  <div class="title-row">
+    <div>
+      <h1>slackmoji</h1>
+      <p class="sub">Shrink a GIF to Slack emoji limits: 128&nbsp;KB, 128&nbsp;px, every frame kept.</p>
+    </div>
+  </div>
+
+  <section class="panel">
+    <header>
+      <h2>Input</h2>
+      <span class="meta">GIF, PNG, JPEG or WebP, up to 32&nbsp;MB</span>
+    </header>
+
+    <form id="convert-form" class="input-row">
+      <div class="drop" id="drop">
+        <input type="file" id="file" name="file" required
+               accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/jpeg,image/webp">
+        <label for="file" class="drop-label">Choose a file</label>
+        <span class="drop-hint">or drop it here</span>
+        <span class="file-name" id="file-name" hidden></span>
+      </div>
+
+      <fieldset class="shape">
+        <legend>Shape</legend>
+        <div class="segmented" role="radiogroup" aria-label="Shape">
+          <label>
+            <input type="radio" name="mode" value="ratio" checked>
+            <span>Keep aspect</span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="square">
+            <span>Stretch to square</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="primary" id="convert-btn">Convert to emoji</button>
+        <button type="button" class="card-link" id="sample-btn">Try a sample GIF</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <header>
+      <h2>Result</h2>
+      <span class="meta" id="result-meta">sample</span>
+    </header>
+
+    <div class="result-row">
+      <div class="stage" id="stage">
+        <figure>
+          <img id="preview" src="/sample.gif" alt="Sample GIF, 360 by 360 pixels">
+          <figcaption id="stage-cap">Sample GIF · 2.2 MB · 360 × 360 px · 24 frames</figcaption>
+        </figure>
+      </div>
+
+      <div class="result-side">
+        <p class="finding" id="finding" aria-live="polite">This is the sample GIF. Convert yours to see the result.</p>
+
+        <dl class="ledger" id="ledger">
+          <div><dt>Size</dt><dd id="f-size">128 KB max</dd></div>
+          <div><dt>Dimensions</dt><dd id="f-dims">128 × 128 px max</dd></div>
+          <div><dt>Frames</dt><dd id="f-frames">all kept</dd></div>
+          <div><dt>Colors</dt><dd id="f-colors">reduced if needed</dd></div>
+          <div><dt>Input</dt><dd id="f-input">32 MB max</dd></div>
+        </dl>
+
+        <div class="actions">
+          <button type="button" class="primary" id="download-btn" hidden>Download</button>
+        </div>
+
+        <p class="error" id="error" role="alert" hidden></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
