@@ -14,17 +14,19 @@ quality first; frames are thinned only as a last resort.
    - `ratio`: the longest side becomes 128 px, aspect preserved, never
      upscaled.
    - `square`: stretched to exactly 128x128 px.
-4. **Budget search** — the encoder walks a quality ladder: palette 256
-   down to 2 colors (median cut, one shared palette). Input that still
-   exceeds 128 KB at 2 colors is thinned to every other frame (then a
-   quarter, and so on), merging delays so the total duration is
-   preserved. 128x128 is never shrunk further; the last resort is a
-   single frame at 2 colors. Frame disposal methods are honored when
-   compositing, and each output frame is full-canvas.
+4. **Budget search** — the encoder binary-searches the largest palette
+   that fits: 256 down to 2 colors (median cut, one palette per frame,
+   so each frame keeps its own best colors). Input that still exceeds
+   128 KB at 2 colors is thinned to every other frame (then a quarter,
+   and so on), merging delays so the total duration is preserved.
+   128x128 is never shrunk further; the last resort is a single frame
+   at 2 colors. Frame disposal methods are honored when compositing,
+   and each output frame is full-canvas.
 
 ## Endpoints
 
-- `GET /` — web UI (upload, shape toggle, live preview, download).
+- `GET /` — web UI: choosing or dropping a file converts immediately;
+  the shape toggle re-converts. Result preview, size ledger, download.
 - `POST /convert` — multipart form with `file` and `mode`
   (`ratio` | `square`). Returns JSON:
   `{"report": {...}, "data": "data:<mime>;base64,..."}` where `report`
@@ -41,7 +43,6 @@ Errors return JSON `{"error": "..."}` with status 400 (bad mode),
 
 ## Notes
 
-- `static/sample.gif` is a generated sample shown in the UI's empty
-  state and offered through the "Try a sample GIF" button.
+- The UI follows the system colour scheme (light and dark).
 - The UI style was dealt with tasteskill (app screen, achromatic-ledger
   style, seed 2121207780).

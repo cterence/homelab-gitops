@@ -1,12 +1,10 @@
 (function () {
-  var form = document.getElementById('convert-form');
   var fileInput = document.getElementById('file');
   var fileName = document.getElementById('file-name');
   var drop = document.getElementById('drop');
-  var convertBtn = document.getElementById('convert-btn');
-  var sampleBtn = document.getElementById('sample-btn');
   var downloadBtn = document.getElementById('download-btn');
-  var stageCap = document.getElementById('stage-cap');
+  var stage = document.getElementById('stage');
+  var canvasLimit = document.getElementById('canvas-limit');
   var preview = document.getElementById('preview');
   var finding = document.getElementById('finding');
   var error = document.getElementById('error');
@@ -21,6 +19,8 @@
   };
 
   var current = null;
+  var currentFile = null;
+  var busy = false;
 
   function fmtKB(bytes) {
     return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + ' KB';
@@ -30,17 +30,18 @@
     return n + ' ' + noun + (n === 1 ? '' : 's');
   }
 
-  function setBusy(busy) {
-    convertBtn.disabled = busy;
-    convertBtn.textContent = busy ? 'Converting…' : 'Convert to emoji';
+  function mode() {
+    return document.querySelector('input[name="mode"]:checked').value;
   }
 
   function showResult(report, dataUrl, name) {
     error.hidden = true;
+    stage.classList.remove('empty');
+    canvasLimit.hidden = true;
 
     preview.src = dataUrl;
     preview.alt = 'Converted preview, ' + report.width + ' by ' + report.height + ' pixels';
-    stageCap.hidden = true;
+    preview.hidden = false;
 
     var framesText;
     if (report.passthrough) {
@@ -62,13 +63,9 @@
     fields.colors.textContent = plural(report.colors, 'color');
     fields.input.textContent = fmtKB(report.inputSize);
 
-    Object.keys(fields).forEach(function (k) {
-      fields[k].classList.remove('empty');
-    });
-
     current = { dataUrl: dataUrl, name: name };
     downloadBtn.hidden = false;
-    downloadBtn.textContent = 'Download ' + name.split('.').pop().toUpperCase();
+    downloadBtn.textContent = 'Download ' + (dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
   }
 
   function showError(message) {
@@ -76,14 +73,16 @@
     error.hidden = false;
   }
 
-  function submit(file, mode) {
-    if (!file) return;
+  function convert(file) {
+    if (!file || busy) return;
+
+    busy = true;
+    finding.textContent = 'Converting ' + file.name + '…';
+    error.hidden = true;
 
     var body = new FormData();
     body.append('file', file);
-    body.append('mode', mode);
-
-    setBusy(true);
+    body.append('mode', mode());
 
     fetch('/convert', { method: 'POST', body: body })
       .then(function (r) {
@@ -97,39 +96,27 @@
         showError(err.message);
       })
       .finally(function () {
-        setBusy(false);
+        busy = false;
       });
   }
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    showError('');
-    error.hidden = true;
+  function onFile(file) {
+    if (!file) return;
 
-    var mode = form.querySelector('input[name="mode"]:checked').value;
-
-    submit(fileInput.files[0], mode);
-  });
-
-  sampleBtn.addEventListener('click', function () {
-    fetch('/sample.gif')
-      .then(function (r) { return r.blob(); })
-      .then(function (blob) {
-        var file = new File([blob], 'sample.gif', { type: 'image/gif' });
-        var dt = new DataTransfer();
-        dt.items.add(file);
-        fileInput.files = dt.files;
-        fileName.textContent = 'sample.gif, ' + fmtKB(blob.size);
-        fileName.hidden = false;
-        submit(file, form.querySelector('input[name="mode"]:checked').value);
-      });
-  });
+    currentFile = file;
+    fileName.textContent = file.name + ', ' + fmtKB(file.size);
+    fileName.hidden = false;
+    convert(file);
+  }
 
   fileInput.addEventListener('change', function () {
-    if (fileInput.files[0]) {
-      fileName.textContent = fileInput.files[0].name + ', ' + fmtKB(fileInput.files[0].size);
-      fileName.hidden = false;
-    }
+    onFile(fileInput.files[0]);
+  });
+
+  document.querySelectorAll('input[name="mode"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      if (currentFile) convert(currentFile);
+    });
   });
 
   downloadBtn.addEventListener('click', function () {
@@ -163,8 +150,8 @@
       var dt = new DataTransfer();
       dt.items.add(file);
       fileInput.files = dt.files;
-      fileName.textContent = file.name + ', ' + fmtKB(file.size);
-      fileName.hidden = false;
     }
+
+    onFile(file);
   });
 })();
