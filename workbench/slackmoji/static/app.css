@@ -128,7 +128,7 @@ button { cursor: pointer; }
   top: 50%;
   margin: -7px 0 0 -7px;
 }
-.stage-meta { color: var(--muted); font-size: var(--fs-small); }
+.stage-meta { color: var(--muted); font-size: var(--fs-small); min-height: 20px; }
 .stage-actions { display: flex; gap: 8px; }
 
 .spinner {

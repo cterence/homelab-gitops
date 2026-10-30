@@ -20,6 +20,7 @@
   </div>
 
   <section class="panel work-panel">
+   <div class="work">
     <div class="stage">
       <div class="slot" id="slot" role="button" tabindex="0" aria-label="Choose a file">
         <input type="file" id="file" name="file"
@@ -32,11 +33,11 @@
         <span class="spinner" id="spinner" hidden aria-label="Converting"></span>
       </div>
 
-      <p class="stage-meta num" id="stage-meta" hidden></p>
+      <p class="stage-meta num" id="stage-meta"></p>
 
       <div class="stage-actions">
-        <button type="button" class="primary" id="download-btn" hidden>Download</button>
-        <button type="button" class="clear" id="clear-btn" hidden>Clear</button>
+        <button type="button" class="primary" id="download-btn" disabled>Download</button>
+        <button type="button" class="clear" id="clear-btn" disabled>Clear</button>
       </div>
 
       <p class="error" id="error" role="alert" hidden></p>
@@ -90,8 +91,9 @@
         <div class="dial-ends num"><span id="size-min">32 px</span><span id="size-base">128 px</span></div>
       </div>
 
-      <button type="button" class="reset" id="reset-btn" hidden>Reset to optimal</button>
+      <button type="button" class="reset" id="reset-btn">Reset to optimal</button>
     </div>
+   </div>
   </section>
 </main>
 

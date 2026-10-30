@@ -91,7 +91,6 @@
 
     // the one fact no slider carries: the byte budget
     stageMeta.textContent = fmtKB(rep.outputSize) + ' of 128 KB';
-    stageMeta.hidden = false;
 
     // full ranges so any drag expresses a priority; the handle always
     // shows the outcome
@@ -117,15 +116,13 @@
     sliders.colors.value = rep.colors;
     sliders.side.value = Math.max(rep.width, rep.height);
 
+    current = { dataUrl: rep.dataUrl, name: rep.name };
+    downloadBtn.textContent = 'Download ' + (rep.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
+
     report = rep;
     controlsActive = true;
     setControlsEnabled(true);
     updateLabels();
-
-    current = { dataUrl: rep.dataUrl, name: rep.name };
-    downloadBtn.hidden = false;
-    downloadBtn.textContent = 'Download ' + (rep.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
-    clearBtn.hidden = false;
   }
 
   function showError(message) {
@@ -150,8 +147,8 @@
     });
 
     resetBtn.disabled = !on;
-    clearBtn.disabled = !enabled;
-    downloadBtn.disabled = !enabled;
+    clearBtn.disabled = !enabled || !currentFile;
+    downloadBtn.disabled = !enabled || !current;
     slot.classList.toggle('busy', !enabled);
 
     spinner.hidden = enabled;
@@ -206,7 +203,6 @@
 
     currentFile = file;
     slotEmpty.hidden = true;
-    resetBtn.hidden = false;
 
     resetAdjustments();
     convert(file);
@@ -231,10 +227,8 @@
     slot.classList.remove('has-file');
     slot.setAttribute('aria-label', 'Choose a file');
 
-    stageMeta.hidden = true;
-    downloadBtn.hidden = true;
-    clearBtn.hidden = true;
-    resetBtn.hidden = true;
+    stageMeta.textContent = '';
+    downloadBtn.textContent = 'Download';
     error.hidden = true;
 
     setControlsEnabled(true);
