@@ -1,5 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 app-template:
+  defaultPodOptions:
+    imagePullSecrets:
+      - name: registry-pull-secret
+
   configMaps:
     config:
       data:

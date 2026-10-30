@@ -132,6 +132,66 @@ external-secrets:
             symbols: 0
             noUpper: false
             allowRepeat: true
+    # Creates registry-pull-secret (dockerconfigjson + password key) in every
+    # namespace whose pods pull from registry.terence.cloud or whose image-wait
+    # hook reads it. Add new workbench consumers' namespaces to matchNames.
+    - apiVersion: external-secrets.io/v1
+      kind: ClusterExternalSecret
+      metadata:
+        name: registry-pull-secret
+      spec:
+        refreshInterval: 1h
+        namespaceSelector:
+          matchNames:
+            - arr-stack
+            - audiobookshelf
+            - catbox
+            - cnpg-restore-test
+            - gitea
+            - go-healthcheck
+            - lastfm-scrobble-deduplicator
+            - telegram-hub
+            - versity-gw
+            - workbench
+        externalSecretSpec:
+          refreshInterval: 1h
+          secretStoreRef:
+            kind: ClusterSecretStore
+            name: k8s-registry
+          target:
+            name: registry-pull-secret
+            creationPolicy: Owner
+            template:
+              type: kubernetes.io/dockerconfigjson
+              engineVersion: v2
+              data:
+                password: '{{ `{{ .password }}` }}'
+                .dockerconfigjson: '{{ `{"auths":{"registry.terence.cloud":{"auth":"{{ printf "registry:%s" .password | b64enc }}"},"registry.registry:5000":{"auth":"{{ printf "registry:%s" .password | b64enc }}"}}}` }}'
+          dataFrom:
+            - extract:
+                key: registry-auth
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: k8s-secret-store
+        namespace: registry
+      rules:
+        - apiGroups: [""]
+          resources: [secrets]
+          verbs: [get, list, watch]
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: k8s-secret-store
+        namespace: registry
+      subjects:
+        - kind: ServiceAccount
+          name: k8s-secret-store
+          namespace: external-secrets
+      roleRef:
+        kind: Role
+        name: k8s-secret-store
+        apiGroup: rbac.authorization.k8s.io
     - apiVersion: v1
       kind: ServiceAccount
       metadata:

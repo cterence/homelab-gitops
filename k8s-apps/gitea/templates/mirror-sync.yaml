@@ -38,6 +38,8 @@ spec:
             app.kubernetes.io/managed-by: {{ .Release.Name }}-mirror-sync
         spec:
           restartPolicy: Never
+          imagePullSecrets:
+            - name: registry-pull-secret
           automountServiceAccountToken: false
           securityContext:
             runAsNonRoot: true

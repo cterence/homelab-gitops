@@ -16,6 +16,9 @@ app-template:
             REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
             REGISTRY_LOG_LEVEL: "info"
             REGISTRY_STORAGE_DELETE_ENABLED: "true"
+            REGISTRY_AUTH: htpasswd
+            REGISTRY_AUTH_HTPASSWD_REALM: basic-realm
+            REGISTRY_AUTH_HTPASSWD_PATH: /etc/docker/registry/auth/htpasswd
           resources:
             requests:
               cpu: 50m
@@ -92,6 +95,35 @@ app-template:
             delete:
               enabled: true
 
+  rawResources:
+    # Lets the registry-pull-secret ClusterExternalSecret (external-secrets
+    # app) read the terraform-managed registry-auth secret in this namespace.
+    k8s-registry:
+      enabled: true
+      forceRename: k8s-registry
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ClusterSecretStore
+        metadata:
+          name: k8s-registry
+          annotations:
+            argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+        spec:
+          provider:
+            kubernetes:
+              remoteNamespace: registry
+              server:
+                url: "https://kubernetes.default"
+                caProvider:
+                  type: ConfigMap
+                  name: kube-root-ca.crt
+                  namespace: external-secrets
+                  key: ca.crt
+              auth:
+                serviceAccount:
+                  name: "k8s-secret-store"
+                  namespace: external-secrets
+
   service:
     main:
       annotations:
@@ -124,6 +156,14 @@ app-template:
             - *host
 
   persistence:
+    # terraform-managed secret (htpasswd + password keys); on rotation
+    # regenerate the bcrypt htpasswd alongside the password
+    auth:
+      type: secret
+      name: registry-auth
+      globalMounts:
+        - path: /etc/docker/registry/auth
+          readOnly: true
     data:
       enabled: true
       type: persistentVolumeClaim

@@ -31,10 +31,15 @@ spec:
               value: {{ trimPrefix "registry.terence.cloud/" $repo | quote }}
             - name: TAG
               value: {{ dig "image" "tag" "" $ctr | quote }}
+            - name: REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: registry-pull-secret
+                  key: password
           args:
             - |
               i=0
-              until curl -sf "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
+              until curl -sf -u "registry:${REGISTRY_PASSWORD}" "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
                 i=$((i+1))
                 [ "$i" -ge 180 ] && { echo "timeout waiting for ${REPO}:${TAG}"; exit 1; }
                 sleep 10
@@ -68,10 +73,15 @@ spec:
               value: {{ dig "image" "repository" "" $ms | quote }}
             - name: TAG
               value: {{ dig "image" "tag" "" $ms | quote }}
+            - name: REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: registry-pull-secret
+                  key: password
           args:
             - |
               i=0
-              until curl -sf "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
+              until curl -sf -u "registry:${REGISTRY_PASSWORD}" "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
                 i=$((i+1))
                 [ "$i" -ge 180 ] && { echo "timeout waiting for ${REPO}:${TAG}"; exit 1; }
                 sleep 10
