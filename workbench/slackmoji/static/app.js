@@ -43,7 +43,6 @@
   var sizeHold = 0;
   // the true outcome side, which a stepped slider may not be able to show
   var sizeNow = 0;
-  var framesInCount = 0;
   // false for still images: the frames dial has nothing to say
   var framesLive = false;
   // the most frames the locked size holds: the outcome of every
@@ -90,7 +89,8 @@
       return;
     }
 
-    hints.frames.textContent = report.framesOut + ' of ' + report.framesIn;
+    // a still image has no frame count to show
+    hints.frames.textContent = framesLive ? String(report.framesOut) : '';
     hints.side.textContent = Math.max(report.width, report.height) + ' px';
   }
 
@@ -116,7 +116,6 @@
 
     // the slider spans the original frame count; the size caps the
     // ask (pin() clamps to framesMax)
-    framesInCount = rep.framesIn;
     framesLive = rep.framesIn > 1;
     if (priority !== 'frames') framesMax = rep.framesOut;
 
@@ -133,8 +132,8 @@
     sliders.side.min = sMin;
     sliders.side.max = sMax;
 
-    ends.frames[0].textContent = sliders.frames.min;
-    ends.frames[1].textContent = sliders.frames.max;
+    ends.frames[0].textContent = framesLive ? sliders.frames.min : '';
+    ends.frames[1].textContent = framesLive ? sliders.frames.max : '';
     ends.side[0].textContent = sMin + ' px';
     ends.side[1].textContent = sMax + ' px';
 
@@ -244,7 +243,6 @@
     report = null;
     controlsActive = false;
     priority = '';
-    framesInCount = 0;
     framesMax = 0;
     framesLive = false;
 
@@ -301,7 +299,7 @@
       if (report) {
         var v = +sliders[axis].value;
         hints[axis].textContent = axis === 'frames'
-          ? v + ' of ' + framesInCount
+          ? String(v)
           : v + ' px';
       }
     });
