@@ -38,6 +38,13 @@ ApplicationSet git generator matches `k8s-apps/*/appset.yaml`). That file also
 carries per-app flags: `namespace`, `serverSideApply`, `serverSideDiff`,
 `scaleToZero`. Undeployed charts live in `k8s-apps/archive/`.
 
+New apps pulling from `registry.terence.cloud` need two things, both easy to
+forget (missing either leaves the app in ImagePullBackOff): their namespace in
+the `registry-pull-secret` ClusterExternalSecret's `spec.namespaces` in
+`k8s-apps/registry/values.yaml` — the registry app distributes its own pull
+secret — and `imagePullSecrets: [{name: registry-pull-secret}]` under
+`app-template.defaultPodOptions` in the app's own values.yaml.
+
 Tool/API documentation for workbench apps lives in each app's `README.md` — update it whenever an app's interface (tool arguments, endpoints, env vars) changes.
 
 ## Grafana dashboards

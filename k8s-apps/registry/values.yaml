@@ -96,8 +96,8 @@ app-template:
               enabled: true
 
   rawResources:
-    # Lets the registry-pull-secret ClusterExternalSecret (external-secrets
-    # app) read the terraform-managed registry-auth secret in this namespace.
+    # Lets the registry-pull-secret ClusterExternalSecret below read the
+    # terraform-managed registry-auth secret in this namespace.
     k8s-registry:
       enabled: true
       forceRename: k8s-registry
@@ -123,6 +123,53 @@ app-template:
                 serviceAccount:
                   name: "k8s-secret-store"
                   namespace: external-secrets
+
+    # The registry hands out its own pull credentials: a
+    # registry-pull-secret (dockerconfigjson + password key) in every
+    # namespace whose pods pull from registry.terence.cloud or whose
+    # image-wait hook reads it. Add new consumers to spec.namespaces.
+    registry-pull-secret:
+      enabled: true
+      forceRename: registry-pull-secret
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ClusterExternalSecret
+        metadata:
+          name: registry-pull-secret
+          annotations:
+            argocd.argoproj.io/sync-options: ServerSideApply=true
+        spec:
+          refreshTime: 1h
+          namespaces:
+            - arr-stack
+            - audiobookshelf
+            - catbox
+            - cnpg-restore-test
+            - gitea
+            - go-healthcheck
+            - lastfm-scrobble-deduplicator
+            - slackmoji
+            - telegram-hub
+            - versity-gw
+            - workbench
+          externalSecretSpec:
+            refreshInterval: 1h
+            secretStoreRef:
+              kind: ClusterSecretStore
+              name: k8s-registry
+            target:
+              name: registry-pull-secret
+              creationPolicy: Owner
+              template:
+                type: kubernetes.io/dockerconfigjson
+                engineVersion: v2
+                data:
+                  password: "{{ `{{ .password }}` }}"
+                  .dockerconfigjson: '{{ `{"auths":{"registry.terence.cloud":{"auth":"{{ printf "registry:%s" .password | b64enc }}"},"registry.registry:5000":{"auth":"{{ printf "registry:%s" .password | b64enc }}"}}}` }}'
+            dataFrom:
+              - extract:
+                  key: registry-auth
+
 
   service:
     main:
