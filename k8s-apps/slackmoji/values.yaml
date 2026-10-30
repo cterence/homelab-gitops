@@ -17,6 +17,12 @@ app-template:
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
           ports:
             - name: http
               containerPort: 3000

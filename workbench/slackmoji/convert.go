@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -27,6 +28,14 @@ const (
 	// colorFloor: below this, dithering cannot hide posterization, so the
 	// pipeline degrades size (then frames) instead of going lower.
 	colorFloor = 16
+
+	// Input budgets: the GIF screen is four attacker-picked header bytes
+	// and pixel data decompresses, so decode work is bounded before any
+	// allocation. Slack emoji output is 128px; larger input is wasted.
+	maxInputSide    = 4096
+	maxInputPixels  = 4 << 20
+	maxInputFrames  = 1000
+	maxInputTotalPx = 64 << 20
 )
 
 // Options tune a conversion. Zero values mean "no manual adjustment".
@@ -101,26 +110,71 @@ func colorCount(img image.Image) int {
 	return len(seen)
 }
 
+// checkDims bounds the decode before any allocation. The GIF logical
+// screen comes from four header bytes; the still path reads the header
+// only, so oversized input never materializes.
+func checkDims(w, h int) error {
+	if w > maxInputSide || h > maxInputSide || w <= 0 || h <= 0 {
+		return fmt.Errorf("input %dx%d exceeds the %dpx per-side limit", w, h, maxInputSide)
+	}
+
+	if w*h > maxInputPixels {
+		return fmt.Errorf("input %dx%d (%d pixels) exceeds the %d-pixel limit",
+			w, h, w*h, maxInputPixels)
+	}
+
+	return nil
+}
+
+// checkInput bounds the compositing work: canvas plus a clone per frame.
+func checkInput(w, h, frames int) error {
+	if err := checkDims(w, h); err != nil {
+		return err
+	}
+
+	if frames > maxInputFrames {
+		return fmt.Errorf("input has %d frames, over the %d-frame limit", frames, maxInputFrames)
+	}
+
+	if w*h*frames > maxInputTotalPx {
+		return fmt.Errorf("input is %d pixels over %d frames, over the %d total-pixel limit",
+			w*h*frames, frames, maxInputTotalPx)
+	}
+
+	return nil
+}
+
 // Convert adapts data (gif, png, jpeg or webp) to Slack emoji limits:
 // at most 128KB and 128x128px. All frames are kept by default; palette
 // quality is reduced first and frames are thinned only as a last resort,
 // or earlier when Options caps them. Input that already fits (and no cap
-// would change it) is returned byte-for-byte.
-func Convert(data []byte, opts Options) ([]byte, *Report, error) {
+// would change it) is returned byte-for-byte. The context bounds the
+// conversion: it stops at the next frame or encode boundary when done.
+func Convert(ctx context.Context, data []byte, opts Options) ([]byte, *Report, error) {
 	switch ct := http.DetectContentType(data); ct {
 	case "image/gif":
-		return convertGIF(data, opts, ct)
+		return convertGIF(ctx, data, opts, ct)
 	case "image/png", "image/jpeg", "image/webp":
-		return convertStill(data, opts, ct)
+		return convertStill(ctx, data, opts, ct)
 	default:
 		return nil, nil, fmt.Errorf("unsupported content type %q: want gif, png, jpeg or webp", ct)
 	}
 }
 
-func convertGIF(data []byte, opts Options, ct string) ([]byte, *Report, error) {
+func convertGIF(ctx context.Context, data []byte, opts Options, ct string) ([]byte, *Report, error) {
+	if cfg, err := gif.DecodeConfig(bytes.NewReader(data)); err == nil {
+		if err := checkDims(cfg.Width, cfg.Height); err != nil {
+			return nil, nil, err
+		}
+	}
+
 	g, err := gif.DecodeAll(bytes.NewReader(data))
 	if err != nil {
 		return nil, nil, fmt.Errorf("decoding gif: %w", err)
+	}
+
+	if err := checkInput(g.Config.Width, g.Config.Height, len(g.Image)); err != nil {
+		return nil, nil, err
 	}
 
 	report := &Report{
@@ -138,23 +192,37 @@ func convertGIF(data []byte, opts Options, ct string) ([]byte, *Report, error) {
 		return data, report, nil
 	}
 
-	frames := compositeFrames(g)
+	frames, err := compositeFrames(ctx, g)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	delays := make([]int, len(frames))
 
 	for i := range delays {
 		delays[i] = g.Delay[i]
 	}
 
-	return finish(frames, delays, g.Config.Width, g.Config.Height, opts, g.LoopCount, report)
+	return finish(ctx, frames, delays, g.Config.Width, g.Config.Height, opts, g.LoopCount, report)
 }
 
-func convertStill(data []byte, opts Options, ct string) ([]byte, *Report, error) {
+func convertStill(ctx context.Context, data []byte, opts Options, ct string) ([]byte, *Report, error) {
+	if cfg, _, err := image.DecodeConfig(bytes.NewReader(data)); err == nil {
+		if err := checkDims(cfg.Width, cfg.Height); err != nil {
+			return nil, nil, err
+		}
+	}
+
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		return nil, nil, fmt.Errorf("decoding image: %w", err)
 	}
 
 	b := img.Bounds()
+
+	if err := checkInput(b.Dx(), b.Dy(), 1); err != nil {
+		return nil, nil, err
+	}
 
 	report := &Report{
 		InputSize:   len(data),
@@ -173,10 +241,11 @@ func convertStill(data []byte, opts Options, ct string) ([]byte, *Report, error)
 	frame := image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
 	draw.Draw(frame, frame.Bounds(), img, b.Min, draw.Src)
 
-	return finish([]*image.NRGBA{frame}, []int{0}, b.Dx(), b.Dy(), opts, 0, report)
+	return finish(ctx, []*image.NRGBA{frame}, []int{0}, b.Dx(), b.Dy(), opts, 0, report)
 }
 
 func finish(
+	ctx context.Context,
 	frames []*image.NRGBA,
 	delays []int,
 	w, h int,
@@ -210,6 +279,10 @@ func finish(
 		r := make([]*image.NRGBA, len(frames))
 
 		for j, f := range frames {
+			if err := ctx.Err(); err != nil {
+				return nil, nil, fmt.Errorf("converting: %w", err)
+			}
+
 			r[j] = resizeFrame(f, tw, th)
 		}
 
@@ -234,7 +307,7 @@ func finish(
 	accept := func(sizeIdx, keep int) ([]byte, *Report, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		out, colors, err := searchPalette(kf, kd, loopCount, ceil)
+		out, colors, err := searchPalette(ctx, kf, kd, loopCount, ceil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -251,7 +324,12 @@ func finish(
 	floorFits := func(sizeIdx, keep int) (bool, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		out, err := encodeGIF(quantizeFrames(kf, colorFloor), kd, loopCount)
+		pal, err := quantizeFrames(ctx, kf, colorFloor)
+		if err != nil {
+			return false, err
+		}
+
+		out, err := encodeGIF(pal, kd, loopCount)
 		if err != nil {
 			return false, err
 		}
@@ -303,6 +381,10 @@ func finish(
 	}
 
 	for _, p := range probes {
+		if err := ctx.Err(); err != nil {
+			return nil, nil, fmt.Errorf("converting: %w", err)
+		}
+
 		fits, err := floorFits(p.size, p.lo)
 		if err != nil {
 			return nil, nil, err
@@ -367,12 +449,18 @@ func targetSize(w, h int, mode string, s int) (int, int) {
 // whose dithered encoding fits the budget. Returns nil when even the
 // color floor does not fit.
 func searchPalette(
+	ctx context.Context,
 	frames []*image.NRGBA,
 	delays []int,
 	loopCount int,
 	hi int,
 ) ([]byte, int, error) {
-	loOut, err := encodeGIF(quantizeFrames(frames, colorFloor), delays, loopCount)
+	loPal, err := quantizeFrames(ctx, frames, colorFloor)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	loOut, err := encodeGIF(loPal, delays, loopCount)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -386,7 +474,16 @@ func searchPalette(
 	for hi > lo {
 		mid := (lo + hi + 1) / 2
 
-		out, err := encodeGIF(quantizeFrames(frames, mid), delays, loopCount)
+		if err := ctx.Err(); err != nil {
+			return nil, 0, fmt.Errorf("converting: %w", err)
+		}
+
+		pal, err := quantizeFrames(ctx, frames, mid)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		out, err := encodeGIF(pal, delays, loopCount)
 		if err != nil {
 			return nil, 0, err
 		}

@@ -47,7 +47,20 @@ quality first; frames are thinned only as a last resort.
 - `GET /health` — 200 OK, for probes.
 
 Errors return JSON `{"error": "..."}` with status 400 (bad mode or
-caps), 413 (over 32 MB) or 422 (undecodable/unsupported input).
+caps), 413 (over 32 MB), 422 (undecodable/unsupported input, input
+over the decode budgets, or a conversion that missed the server
+deadline) or 503 (both conversion slots busy).
+
+## Limits
+
+- Decode budgets (before any allocation): input at most 4096 px per
+  side, 4M pixels per frame, 1000 frames, 64M total pixels. The GIF
+  logical screen is four attacker-picked header bytes, so dims are
+  validated from the header before the frames decode.
+- Server-side: conversions run at most 2 at a time and are bounded by
+  a 30 s deadline; the context cancels compositing, resizing, probing
+  and quantizing at their frame boundaries. The browser adds its own
+  20 s timeout.
 
 Input already within the limits is returned byte-for-byte, unless a
 cap would change the output.

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -12,7 +13,7 @@ import (
 
 // compositeFrames renders every gif frame onto a full-canvas image,
 // honoring disposal methods, so each output frame stands alone.
-func compositeFrames(g *gif.GIF) []*image.NRGBA {
+func compositeFrames(ctx context.Context, g *gif.GIF) ([]*image.NRGBA, error) {
 	canvas := image.NewNRGBA(image.Rect(0, 0, g.Config.Width, g.Config.Height))
 	frames := make([]*image.NRGBA, len(g.Image))
 
@@ -22,6 +23,10 @@ func compositeFrames(g *gif.GIF) []*image.NRGBA {
 	)
 
 	for i, fr := range g.Image {
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("compositing: %w", err)
+		}
+
 		if i > 0 {
 			switch g.Disposal[i-1] {
 			case gif.DisposalBackground:
@@ -47,7 +52,7 @@ func compositeFrames(g *gif.GIF) []*image.NRGBA {
 		frames[i] = cloneNRGBA(canvas)
 	}
 
-	return frames
+	return frames, nil
 }
 
 func clearRect(img *image.NRGBA, r image.Rectangle) {

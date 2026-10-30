@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/base64"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 //go:embed static
@@ -48,6 +50,14 @@ type convertResponse struct {
 	Report *Report `json:"report"`
 	Data   string  `json:"data"`
 }
+
+// conversion work is CPU- and memory-bound: a small semaphore makes
+// concurrent requests queue instead of multiplying load, and a deadline
+// bounds the ladder searches server-side (the client timeout only stops
+// the browser waiting, not the work).
+var convertSlots = make(chan struct{}, 2)
+
+const convertDeadline = 30 * time.Second
 
 func handleConvert(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxUpload)
@@ -100,7 +110,18 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 
 	opts.MaxColors = n
 
-	out, report, err := Convert(data, opts)
+	ctx, cancel := context.WithTimeout(r.Context(), convertDeadline)
+	defer cancel()
+
+	select {
+	case convertSlots <- struct{}{}:
+		defer func() { <-convertSlots }()
+	case <-ctx.Done():
+		writeError(w, http.StatusServiceUnavailable, errors.New("server busy, try again"))
+		return
+	}
+
+	out, report, err := Convert(ctx, data, opts)
 	if err != nil {
 		writeError(w, http.StatusUnprocessableEntity, err)
 		return

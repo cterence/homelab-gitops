@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"slices"
@@ -32,7 +34,7 @@ var bayer = [8][8]int{
 // is built from frame 0 plus the pixels that change between frames
 // (ffmpeg palettegen stats_mode=diff style) and the mapping is
 // ordered-dithered so low color counts read as gradients instead of bands.
-func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
+func quantizeFrames(ctx context.Context, frames []*image.NRGBA, maxColors int) ([]*image.Paletted, error) {
 	// the transparent entry is extra, so visible colors cap at 255
 	visible := min(max(1, maxColors), 255)
 	pixels := diffSample(frames)
@@ -45,6 +47,10 @@ func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
 	out := make([]*image.Paletted, len(frames))
 
 	for i, f := range frames {
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("quantizing: %w", err)
+		}
+
 		b := f.Bounds()
 		p := image.NewPaletted(image.Rect(0, 0, b.Dx(), b.Dy()), pal)
 
@@ -78,7 +84,7 @@ func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
 		out[i] = p
 	}
 
-	return out
+	return out, nil
 }
 
 func unchanged(prev, cur color.NRGBA) bool {

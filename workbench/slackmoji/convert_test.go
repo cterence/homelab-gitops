@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/color"
 	"image/gif"
@@ -9,7 +10,9 @@ import (
 	"math/rand/v2"
 	"slices"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 )
 
 func solidGIF(t *testing.T, w, h, frames int) []byte {
@@ -71,9 +74,12 @@ func noiseGIF(t *testing.T, w, h, frames int, seedA uint64) []byte {
 			}
 		}
 
-		pal := quantizeFrames([]*image.NRGBA{img}, 256)[0]
+		pals, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 256)
+		if err != nil {
+			t.Fatalf("quantizing noise frame: %v", err)
+		}
 
-		g.Image = append(g.Image, pal)
+		g.Image = append(g.Image, pals[0])
 		g.Delay = append(g.Delay, 4)
 	}
 
@@ -126,7 +132,7 @@ func TestConvertPassthrough(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, report, err := Convert(tt.data, Options{Mode: tt.mode})
+			out, report, err := Convert(t.Context(), tt.data, Options{Mode: tt.mode})
 			if err != nil {
 				t.Fatalf("Convert() error = %v", err)
 			}
@@ -145,7 +151,7 @@ func TestConvertPassthrough(t *testing.T) {
 func TestConvertInterleavesSizeAndFrames(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 3)
 
-	out, report, err := Convert(input, Options{Mode: ModeRatio})
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -172,7 +178,7 @@ func TestConvertInterleavesSizeAndFrames(t *testing.T) {
 func TestConvertDegradesSizeBeforeFrames(t *testing.T) {
 	input := noiseGIF(t, 128, 128, 120, 2)
 
-	out, report, err := Convert(input, Options{Mode: ModeRatio})
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -243,7 +249,12 @@ func TestQuantizePaletteSize(t *testing.T) {
 	img.Set(2, 0, color.NRGBA{B: 255, A: 255})
 	img.Set(3, 0, color.NRGBA{R: 128, A: 255})
 
-	pal := quantizeFrames([]*image.NRGBA{img}, 2)[0]
+	pals, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pal := pals[0]
 
 	if got := len(pal.Palette); got > 3 {
 		t.Errorf("palette has %d entries (2 colors + transparent), want <= 3", got)
@@ -259,7 +270,12 @@ func TestQuantizeTransparent(t *testing.T) {
 	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
 	img.Set(1, 0, color.NRGBA{A: 0})
 
-	pal := quantizeFrames([]*image.NRGBA{img}, 4)[0]
+	pals, err := quantizeFrames(t.Context(), []*image.NRGBA{img}, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pal := pals[0]
 
 	_, _, _, a := pal.Palette[pal.ColorIndexAt(1, 0)].RGBA()
 	if a != 0 {
@@ -281,7 +297,7 @@ func TestConvertStillImage(t *testing.T) {
 		t.Fatalf("encoding test png: %v", err)
 	}
 
-	out, report, err := Convert(buf.Bytes(), Options{Mode: ModeRatio})
+	out, report, err := Convert(t.Context(), buf.Bytes(), Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -304,7 +320,7 @@ func TestConvertStillPassthrough(t *testing.T) {
 		t.Fatalf("encoding test png: %v", err)
 	}
 
-	out, report, err := Convert(buf.Bytes(), Options{Mode: ModeRatio})
+	out, report, err := Convert(t.Context(), buf.Bytes(), Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -368,7 +384,7 @@ func TestSizeLadder(t *testing.T) {
 func TestConvertFrameCap(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 3)
 
-	out, report, err := Convert(input, Options{Mode: ModeRatio, MaxFrames: 4})
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxFrames: 4})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -389,7 +405,7 @@ func TestConvertFrameCap(t *testing.T) {
 func TestConvertMaxSide(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 4)
 
-	_, report, err := Convert(input, Options{Mode: ModeRatio, MaxSide: 64})
+	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxSide: 64})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -406,7 +422,7 @@ func TestConvertMaxSide(t *testing.T) {
 func TestConvertCapDisablesPassthrough(t *testing.T) {
 	input := solidGIF(t, 64, 64, 3)
 
-	_, report, err := Convert(input, Options{Mode: ModeRatio, MaxFrames: 1})
+	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxFrames: 1})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -430,7 +446,12 @@ func TestQuantizeDeltaFrames(t *testing.T) {
 	}
 
 	// identical second frame: every pixel should delta to index 0
-	pal := quantizeFrames([]*image.NRGBA{frame, frame}, 4)
+	pals, err := quantizeFrames(t.Context(), []*image.NRGBA{frame, frame}, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pal := pals
 
 	if got := pal[1].ColorIndexAt(1, 1); got != 0 {
 		t.Errorf("unchanged pixel stored as index %d, want transparent delta", got)
@@ -450,7 +471,10 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 		}
 	}
 
-	frames := quantizeFrames([]*image.NRGBA{frame, frame}, 4)
+	frames, err := quantizeFrames(t.Context(), []*image.NRGBA{frame, frame}, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	out, err := encodeGIF(frames, []int{10, 10}, 0)
 	if err != nil {
@@ -462,7 +486,11 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 		t.Fatalf("decoding delta gif: %v", err)
 	}
 
-	decoded := compositeFrames(g)
+	decoded, err := compositeFrames(t.Context(), g)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if len(decoded) != 2 {
 		t.Fatalf("got %d frames, want 2", len(decoded))
 	}
@@ -479,7 +507,7 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 func TestConvertColorCap(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 4)
 
-	out, report, err := Convert(input, Options{Mode: ModeRatio, MaxSide: 64, MaxColors: 16})
+	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxSide: 64, MaxColors: 16})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -496,7 +524,7 @@ func TestConvertColorCap(t *testing.T) {
 func TestConvertColorCapDisablesPassthrough(t *testing.T) {
 	input := solidGIF(t, 64, 64, 3)
 
-	_, report, err := Convert(input, Options{Mode: ModeRatio, MaxColors: 32})
+	_, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio, MaxColors: 32})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -516,7 +544,7 @@ func TestConvertStillPassthroughReportContract(t *testing.T) {
 		t.Fatalf("encoding test png: %v", err)
 	}
 
-	_, report, err := Convert(buf.Bytes(), Options{Mode: ModeRatio})
+	_, report, err := Convert(t.Context(), buf.Bytes(), Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -533,8 +561,82 @@ func TestConvertStillPassthroughReportContract(t *testing.T) {
 	}
 }
 
+func tinyFrameGIF(t *testing.T, w, h, frames int) []byte {
+	t.Helper()
+
+	g := &gif.GIF{
+		LoopCount: 0,
+		Config:    image.Config{Width: w, Height: h},
+	}
+
+	one := image.NewPaletted(image.Rect(0, 0, 1, 1), color.Palette{color.RGBA{R: 255, A: 255}})
+
+	for range frames {
+		g.Image = append(g.Image, one)
+		g.Delay = append(g.Delay, 10)
+	}
+
+	var buf bytes.Buffer
+	if err := gif.EncodeAll(&buf, g); err != nil {
+		t.Fatalf("encoding test gif: %v", err)
+	}
+
+	return buf.Bytes()
+}
+
+// a 49-byte GIF can claim a huge logical screen: the dims are rejected
+// before decode allocates anything
+func TestConvertRejectsScreenBomb(t *testing.T) {
+	input := tinyFrameGIF(t, 65535, 65535, 1)
+
+	_, _, err := Convert(t.Context(), input, Options{Mode: ModeRatio})
+	if err == nil {
+		t.Fatal("expected the oversized screen to be rejected")
+	}
+
+	if !strings.Contains(err.Error(), "per-side limit") {
+		t.Errorf("error = %v, want the per-side limit", err)
+	}
+}
+
+func TestConvertRejectsFrameBomb(t *testing.T) {
+	input := tinyFrameGIF(t, 100, 100, maxInputFrames+1)
+
+	_, _, err := Convert(t.Context(), input, Options{Mode: ModeRatio})
+	if err == nil || !strings.Contains(err.Error(), "frame limit") {
+		t.Errorf("error = %v, want the frame limit", err)
+	}
+}
+
+func TestConvertRejectsTotalPixelBomb(t *testing.T) {
+	// 2048x2040 fits the per-image budget; enough frames blow the total
+	w, h := 2048, 2040
+	frames := maxInputTotalPx/(w*h) + 1
+
+	input := tinyFrameGIF(t, w, h, frames)
+
+	_, _, err := Convert(t.Context(), input, Options{Mode: ModeRatio})
+	if err == nil || !strings.Contains(err.Error(), "total-pixel limit") {
+		t.Errorf("error = %v, want the total-pixel limit", err)
+	}
+}
+
+func TestConvertRespectsDeadline(t *testing.T) {
+	input := noiseGIF(t, 256, 256, 60, 9)
+
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Millisecond)
+	defer cancel()
+
+	time.Sleep(5 * time.Millisecond)
+
+	_, _, err := Convert(ctx, input, Options{Mode: ModeRatio})
+	if err == nil {
+		t.Fatal("expected the canceled context to stop the conversion")
+	}
+}
+
 func TestConvertRejectsBadInput(t *testing.T) {
-	_, _, err := Convert([]byte("this is not an image at all"), Options{Mode: ModeRatio})
+	_, _, err := Convert(t.Context(), []byte("this is not an image at all"), Options{Mode: ModeRatio})
 	if err == nil {
 		t.Fatal("expected error for non-image input")
 	}
@@ -570,7 +672,11 @@ func TestCompositeBackgroundDisposal(t *testing.T) {
 		Config:   image.Config{Width: 50, Height: 50},
 	}
 
-	frames := compositeFrames(g)
+	frames, err := compositeFrames(t.Context(), g)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if len(frames) != 2 {
 		t.Fatalf("got %d frames, want 2", len(frames))
 	}
@@ -604,7 +710,10 @@ func TestCompositePreviousDisposal(t *testing.T) {
 		Config:   image.Config{Width: 50, Height: 50},
 	}
 
-	frames := compositeFrames(g)
+	frames, err := compositeFrames(t.Context(), g)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if _, _, _, a := frames[1].NRGBAAt(5, 5).RGBA(); a != 0 {
 		t.Error("previous disposal did not restore the pre-frame canvas")
