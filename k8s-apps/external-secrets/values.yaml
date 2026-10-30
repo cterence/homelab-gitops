@@ -149,6 +149,7 @@ external-secrets:
           - gitea
           - go-healthcheck
           - lastfm-scrobble-deduplicator
+          - slackmoji
           - telegram-hub
           - versity-gw
           - workbench
@@ -164,7 +165,7 @@ external-secrets:
               type: kubernetes.io/dockerconfigjson
               engineVersion: v2
               data:
-                password: '{{ `{{ .password }}` }}'
+                password: "{{ `{{ .password }}` }}"
                 .dockerconfigjson: '{{ `{"auths":{"registry.terence.cloud":{"auth":"{{ printf "registry:%s" .password | b64enc }}"},"registry.registry:5000":{"auth":"{{ printf "registry:%s" .password | b64enc }}"}}}` }}'
           dataFrom:
             - extract:
