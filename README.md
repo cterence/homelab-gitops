@@ -81,6 +81,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [registry](./scripts/../k8s-apps/registry) | In-cluster OCI image registry (CNCF distribution) |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig |
 | [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity |
+| [slackmoji](./scripts/../k8s-apps/slackmoji) | Shrink GIFs to Slack emoji limits |
 | [steam-headless](./scripts/../k8s-apps/steam-headless) | Headless Steam with Sunshine for Moonlight game streaming |
 | [tailscale-operator](./scripts/../k8s-apps/tailscale-operator) | A Kubernetes Operator for Tailscale |
 | [telegram-hub](./scripts/../k8s-apps/telegram-hub) | Telegram MCP server (send_message, tts_article) and article-to-audio bot |
