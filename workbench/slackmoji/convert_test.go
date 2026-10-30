@@ -158,14 +158,14 @@ func TestConvertInterleavesSizeAndFrames(t *testing.T) {
 		t.Errorf("colors = %d, want at least the %d-color floor", report.Colors, colorFloor)
 	}
 
-	// the interleaved ladder prefers one frame halving at a larger size
-	// over dropping the size: (128, half) beats (96, all)
-	if report.FramesOut != report.FramesIn/2 {
-		t.Errorf("frames = %d, want the single halving at 128px", report.FramesOut)
+	// the interleaved ladder searches the frame count between half and
+	// full at each size instead of jumping straight to one half
+	if report.FramesOut <= report.FramesIn/2 || report.FramesOut > report.FramesIn {
+		t.Errorf("frames = %d, want the searched maximum above %d", report.FramesOut, report.FramesIn/2)
 	}
 
 	if report.Width != 128 {
-		t.Errorf("width = %d, want 128 (first size that fits after halving)", report.Width)
+		t.Errorf("width = %d, want 128 (first size that fits after searching)", report.Width)
 	}
 }
 
@@ -351,6 +351,7 @@ func TestSizeLadder(t *testing.T) {
 		{128, []int{128, 96, 64, 48}},
 		{96, []int{96, 64, 48}},
 		{48, []int{48}},
+		{32, []int{32}},
 	}
 
 	for _, tt := range tests {

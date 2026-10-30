@@ -156,13 +156,26 @@ func finish(
 ) ([]byte, *Report, error) {
 	sizes := sizeLadder(side(opts))
 
-	// resize once per candidate size; thinning below picks subsets
-	resized := make([][]*image.NRGBA, len(sizes))
-	dims := make([][2]int, len(sizes))
+	// a small input never benefits from invented pixels: its own size is
+	// the last step of the ladder
+	if in := max(w, h); in < sizes[len(sizes)-1] {
+		sizes = append(sizes, in)
+	}
 
-	for i, s := range sizes {
+	// resize once per candidate size; thinning below picks subsets.
+	// Ratio mode never upscales, so several steps can mean the same
+	// output size - encode each distinct size only once.
+	resized := make([][]*image.NRGBA, 0, len(sizes))
+	dims := make([][2]int, 0, len(sizes))
+
+	for _, s := range sizes {
 		tw, th := targetSize(w, h, opts.Mode, s)
-		dims[i] = [2]int{tw, th}
+
+		if len(dims) > 0 && dims[len(dims)-1] == [2]int{tw, th} {
+			continue
+		}
+
+		dims = append(dims, [2]int{tw, th})
 
 		r := make([]*image.NRGBA, len(frames))
 
@@ -170,8 +183,10 @@ func finish(
 			r[j] = resizeFrame(f, tw, th)
 		}
 
-		resized[i] = r
+		resized = append(resized, r)
 	}
+
+	candidates := len(resized)
 
 	startKeep := len(frames)
 
@@ -179,80 +194,125 @@ func finish(
 		startKeep = opts.MaxFrames
 	}
 
-	// attempt one (size, frame count) candidate; ok=false means the color
-	// floor does not fit there
+	// attempt a (size, frame count) candidate with a full palette search
 	ceil := 255
 
 	if opts.MaxColors > 0 && opts.MaxColors < ceil {
 		ceil = opts.MaxColors
 	}
 
-	try := func(sizeIdx, keep int) (out []byte, colors, kept int, ok bool, err error) {
+	accept := func(sizeIdx, keep int) ([]byte, *Report, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		out, colors, err = searchPalette(kf, kd, loopCount, ceil)
-		if err != nil || out == nil {
-			return nil, 0, 0, false, err
-		}
-
-		return out, colors, len(kf), true, nil
-	}
-
-	// interleaved ladder: one frame halving inside each size step before
-	// the resolution drops, so (64px, half frames) beats (48px, all
-	// frames) - a smaller size is not worth more motion
-	for i := range sizes {
-		for _, keep := range [...]int{startKeep, startKeep / 2} {
-			if keep < 1 {
-				continue
-			}
-
-			out, colors, kept, ok, err := try(i, keep)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			if !ok {
-				continue
-			}
-
-			report.OutputSize = len(out)
-			report.Width, report.Height = dims[i][0], dims[i][1]
-			report.FramesOut = kept
-			report.Colors = colors
-
-			return out, report, nil
-		}
-	}
-
-	// resolution exhausted: keep halving frames at the smallest size
-	for keep := startKeep / 4; keep >= 1; keep /= 2 {
-		last := len(sizes) - 1
-
-		out, colors, kept, ok, err := try(last, keep)
+		out, colors, err := searchPalette(kf, kd, loopCount, ceil)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if !ok {
-			continue
-		}
-
 		report.OutputSize = len(out)
-		report.Width, report.Height = dims[last][0], dims[last][1]
-		report.FramesOut = kept
+		report.Width, report.Height = dims[sizeIdx][0], dims[sizeIdx][1]
+		report.FramesOut = len(kf)
 		report.Colors = colors
 
 		return out, report, nil
 	}
 
+	// does the color floor fit at this (size, frame count)?
+	floorFits := func(sizeIdx, keep int) (bool, error) {
+		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
+
+		out, err := encodeGIF(quantizeFrames(kf, colorFloor, true), kd, loopCount)
+		if err != nil {
+			return false, err
+		}
+
+		return len(out) <= maxBytes, nil
+	}
+
+	// the largest keep in [lo, hi] whose floor encoding fits; lo must fit
+	maxKeep := func(sizeIdx, lo, hi int) (int, error) {
+		for lo < hi {
+			mid := (lo + hi + 1) / 2
+
+			fits, err := floorFits(sizeIdx, mid)
+			if err != nil {
+				return 0, err
+			}
+
+			if fits {
+				lo = mid
+			} else {
+				hi = mid - 1
+			}
+		}
+
+		return lo, nil
+	}
+
+	half := startKeep / 2
+
+	// interleaved ladder per size: the full frame request, then (if the
+	// request does not fit) the largest frame count between half and the
+	// full request - the count is searched, not halved, so a 75% request
+	// never silently becomes 37%
+	for i := range candidates {
+		fits, err := floorFits(i, startKeep)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if fits {
+			return accept(i, startKeep)
+		}
+
+		if half < 1 {
+			continue
+		}
+
+		fits, err = floorFits(i, half)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if fits {
+			keep, err := maxKeep(i, half, startKeep)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			return accept(i, keep)
+		}
+	}
+
+	// resolution exhausted: the most frames the smallest size can hold
+	if half >= 1 {
+		fitsOne, err := floorFits(candidates-1, 1)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if !fitsOne {
+			return nil, nil, fmt.Errorf(
+				"cannot fit under %d bytes even at %d colors, %d px and 1 frame",
+				maxBytes, colorFloor, dims[candidates-1][0])
+		}
+
+		keep, err := maxKeep(candidates-1, 1, half)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return accept(candidates-1, keep)
+	}
+
 	return nil, nil, fmt.Errorf(
 		"cannot fit under %d bytes even at %d colors, %d px and 1 frame",
-		maxBytes, colorFloor, sizes[len(sizes)-1])
+		maxBytes, colorFloor, dims[candidates-1][0])
 }
 
 // sizeLadder is the degradation order for resolution: the user's side
-// limit first, then the steps below it, never above.
+// limit first, then the steps below it, never above. A limit below the
+// smallest step stands on its own.
 func sizeLadder(maxSide int) []int {
 	all := [...]int{128, 96, 64, 48}
 
@@ -262,6 +322,10 @@ func sizeLadder(maxSide int) []int {
 		if s <= maxSide {
 			out = append(out, s)
 		}
+	}
+
+	if len(out) == 0 {
+		out = []int{maxSide}
 	}
 
 	return out
