@@ -26,16 +26,22 @@ quality first; frames are thinned only as a last resort.
 ## Endpoints
 
 - `GET /` — web UI: choosing or dropping a file converts immediately;
-  the shape toggle re-converts. Result preview, size ledger, download.
-- `POST /convert` — multipart form with `file` and `mode`
-  (`ratio` | `square`). Returns JSON:
+  the shape toggle and the frame/size sliders re-convert.
+- `POST /convert` — multipart form with `file`, `mode`
+  (`ratio` | `square`) and the optional caps `maxFrames` (drop frames
+  down to this count before the quality search; 0 or absent = keep
+  every frame) and `maxSide` (32-128 px output size limit; absent =
+  128). Returns JSON:
   `{"report": {...}, "data": "data:<mime>;base64,..."}` where `report`
   carries `inputSize`, `outputSize`, `width`, `height`, `framesIn`,
   `framesOut`, `colors`, `format`, `passthrough`.
 - `GET /health` — 200 OK, for probes.
 
-Errors return JSON `{"error": "..."}` with status 400 (bad mode),
-413 (over 32 MB) or 422 (undecodable/unsupported input).
+Errors return JSON `{"error": "..."}` with status 400 (bad mode or
+caps), 413 (over 32 MB) or 422 (undecodable/unsupported input).
+
+Input already within the limits is returned byte-for-byte, unless a
+cap would change the output.
 
 ## Configuration
 

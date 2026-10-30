@@ -5,10 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strconv"
 )
 
 //go:embed static
@@ -63,7 +65,29 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, report, err := Convert(data, mode)
+	opts := Options{Mode: mode}
+
+	if v := r.FormValue("maxFrames"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 {
+			writeError(w, http.StatusBadRequest, errors.New("maxFrames must be a non-negative integer"))
+			return
+		}
+
+		opts.MaxFrames = n
+	}
+
+	if v := r.FormValue("maxSide"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < minSide || n > maxSide {
+			writeError(w, http.StatusBadRequest, fmt.Errorf("maxSide must be between %d and %d", minSide, maxSide))
+			return
+		}
+
+		opts.MaxSide = n
+	}
+
+	out, report, err := Convert(data, opts)
 	if err != nil {
 		writeError(w, http.StatusUnprocessableEntity, err)
 		return

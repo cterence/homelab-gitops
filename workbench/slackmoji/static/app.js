@@ -3,12 +3,15 @@
   var fileName = document.getElementById('file-name');
   var drop = document.getElementById('drop');
   var downloadBtn = document.getElementById('download-btn');
-  var stage = document.getElementById('stage');
-  var canvasLimit = document.getElementById('canvas-limit');
+  var previewCol = document.getElementById('preview-col');
   var preview = document.getElementById('preview');
   var finding = document.getElementById('finding');
   var error = document.getElementById('error');
   var resultMeta = document.getElementById('result-meta');
+  var framesSlider = document.getElementById('max-frames');
+  var framesOut = document.getElementById('max-frames-out');
+  var sideSlider = document.getElementById('max-side');
+  var sideOut = document.getElementById('max-side-out');
 
   var fields = {
     size: document.getElementById('f-size'),
@@ -21,6 +24,7 @@
   var current = null;
   var currentFile = null;
   var busy = false;
+  var requestedFrames = 0;
 
   function fmtKB(bytes) {
     return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + ' KB';
@@ -34,14 +38,36 @@
     return document.querySelector('input[name="mode"]:checked').value;
   }
 
+  function frameCap() {
+    if (framesSlider.disabled || +framesSlider.value >= +framesSlider.max) return 0;
+    return +framesSlider.value;
+  }
+
+  function updateSliderLabels() {
+    if (framesSlider.disabled) {
+      framesOut.textContent = 'all';
+    } else if (+framesSlider.value >= +framesSlider.max) {
+      framesOut.textContent = 'all frames';
+    } else {
+      framesOut.textContent = framesSlider.value + ' of ' + framesSlider.max;
+    }
+
+    sideOut.textContent = sideSlider.value + ' px';
+  }
+
   function showResult(report, dataUrl, name) {
     error.hidden = true;
-    stage.classList.remove('empty');
-    canvasLimit.hidden = true;
+    previewCol.hidden = false;
 
     preview.src = dataUrl;
     preview.alt = 'Converted preview, ' + report.width + ' by ' + report.height + ' pixels';
+    preview.style.width = report.width * 4 + 'px';
     preview.hidden = false;
+
+    if (report.framesIn > 1) {
+      framesSlider.disabled = false;
+      framesSlider.max = report.framesIn;
+    }
 
     var framesText;
     if (report.passthrough) {
@@ -49,6 +75,10 @@
     } else if (report.framesOut === report.framesIn) {
       framesText = 'all ' + plural(report.framesIn, 'frame') + ' kept';
       finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText + '.';
+    } else if (report.framesOut === requestedFrames) {
+      framesText = plural(report.framesOut, 'frame') + ' of ' + plural(report.framesIn, 'frame') + ' kept';
+      finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText +
+        ' at your frame cap.';
     } else {
       framesText = plural(report.framesOut, 'frame') + ' of ' + plural(report.framesIn, 'frame') + ' kept';
       finding.innerHTML = 'Fits the limits: ' + fmtKB(report.outputSize) +
@@ -80,9 +110,15 @@
     finding.textContent = 'Converting ' + file.name + '…';
     error.hidden = true;
 
+    requestedFrames = frameCap();
+
     var body = new FormData();
     body.append('file', file);
     body.append('mode', mode());
+
+    if (requestedFrames > 0) body.append('maxFrames', requestedFrames);
+
+    if (+sideSlider.value < +sideSlider.max) body.append('maxSide', sideSlider.value);
 
     fetch('/convert', { method: 'POST', body: body })
       .then(function (r) {
@@ -118,6 +154,18 @@
       if (currentFile) convert(currentFile);
     });
   });
+
+  framesSlider.addEventListener('change', function () {
+    updateSliderLabels();
+    if (currentFile) convert(currentFile);
+  });
+
+  sideSlider.addEventListener('change', function () {
+    updateSliderLabels();
+    if (currentFile) convert(currentFile);
+  });
+
+  updateSliderLabels();
 
   downloadBtn.addEventListener('click', function () {
     if (!current) return;

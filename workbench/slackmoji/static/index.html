@@ -48,20 +48,31 @@
         </div>
       </fieldset>
     </div>
+
+    <div class="adjust-row">
+      <div class="slider">
+        <label for="max-frames">Frames</label>
+        <input type="range" id="max-frames" min="1" max="128" value="128" disabled>
+        <output id="max-frames-out" for="max-frames">all</output>
+      </div>
+      <div class="slider">
+        <label for="max-side">Max size</label>
+        <input type="range" id="max-side" min="32" max="128" value="128">
+        <output id="max-side-out" for="max-side">128 px</output>
+      </div>
+    </div>
   </section>
 
-  <section class="panel">
+  <section class="panel result">
     <header>
       <h2>Result</h2>
       <span class="meta" id="result-meta"></span>
     </header>
 
     <div class="result-row">
-      <div class="stage empty" id="stage">
-        <div class="canvas-limit" id="canvas-limit">
-          <p>128 × 128 px</p>
-        </div>
-        <img id="preview" alt="" hidden>
+      <div class="preview" id="preview-col" hidden>
+        <img id="preview" alt="">
+        <button type="button" class="primary" id="download-btn" hidden>Download</button>
       </div>
 
       <div class="result-side">
@@ -74,10 +85,6 @@
           <div><dt>Colors</dt><dd id="f-colors">reduced if needed</dd></div>
           <div><dt>Input</dt><dd id="f-input">32 MB max</dd></div>
         </dl>
-
-        <div class="actions">
-          <button type="button" class="primary" id="download-btn" hidden>Download</button>
-        </div>
 
         <p class="error" id="error" role="alert" hidden></p>
       </div>

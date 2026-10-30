@@ -102,7 +102,7 @@ func TestTargetSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotW, gotH := targetSize(tt.w, tt.h, tt.mode)
+			gotW, gotH := targetSize(tt.w, tt.h, Options{Mode: tt.mode})
 
 			if gotW != tt.wantW || gotH != tt.wantH {
 				t.Errorf("targetSize(%d, %d, %s) = %dx%d, want %dx%d",
@@ -124,7 +124,7 @@ func TestConvertPassthrough(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, report, err := Convert(tt.data, tt.mode)
+			out, report, err := Convert(tt.data, Options{Mode: tt.mode})
 			if err != nil {
 				t.Fatalf("Convert() error = %v", err)
 			}
@@ -143,7 +143,7 @@ func TestConvertPassthrough(t *testing.T) {
 func TestConvertFitsBudgetKeepAllFrames(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 1)
 
-	out, report, err := Convert(input, ModeRatio)
+	out, report, err := Convert(input, Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -156,8 +156,8 @@ func TestConvertFitsBudgetKeepAllFrames(t *testing.T) {
 		t.Errorf("output %d bytes, want <= %d", len(out), maxBytes)
 	}
 
-	if report.Width > maxDim || report.Height > maxDim {
-		t.Errorf("output %dx%d exceeds %dpx", report.Width, report.Height, maxDim)
+	if report.Width > maxSide || report.Height > maxSide {
+		t.Errorf("output %dx%d exceeds %dpx", report.Width, report.Height, maxSide)
 	}
 
 	if report.FramesOut != report.FramesIn {
@@ -172,7 +172,7 @@ func TestConvertFitsBudgetKeepAllFrames(t *testing.T) {
 func TestConvertDropsFramesLast(t *testing.T) {
 	input := noiseGIF(t, 128, 128, 120, 2)
 
-	out, report, err := Convert(input, ModeRatio)
+	out, report, err := Convert(input, Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -276,13 +276,13 @@ func TestConvertStillImage(t *testing.T) {
 		t.Fatalf("encoding test png: %v", err)
 	}
 
-	out, report, err := Convert(buf.Bytes(), ModeRatio)
+	out, report, err := Convert(buf.Bytes(), Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
 
-	if report.Width > maxDim || report.Height > maxDim {
-		t.Errorf("output %dx%d exceeds %dpx", report.Width, report.Height, maxDim)
+	if report.Width > maxSide || report.Height > maxSide {
+		t.Errorf("output %dx%d exceeds %dpx", report.Width, report.Height, maxSide)
 	}
 
 	if _, err := gif.Decode(bytes.NewReader(out)); err != nil {
@@ -299,7 +299,7 @@ func TestConvertStillPassthrough(t *testing.T) {
 		t.Fatalf("encoding test png: %v", err)
 	}
 
-	out, report, err := Convert(buf.Bytes(), ModeRatio)
+	out, report, err := Convert(buf.Bytes(), Options{Mode: ModeRatio})
 	if err != nil {
 		t.Fatalf("Convert() error = %v", err)
 	}
@@ -313,8 +313,87 @@ func TestConvertStillPassthrough(t *testing.T) {
 	}
 }
 
+func TestTargetSizeMaxSide(t *testing.T) {
+	tests := []struct {
+		name         string
+		w, h         int
+		opts         Options
+		wantW, wantH int
+	}{
+		{"ratio smaller side", 200, 100, Options{Mode: ModeRatio, MaxSide: 64}, 64, 32},
+		{"square smaller side", 200, 100, Options{Mode: ModeSquare, MaxSide: 64}, 64, 64},
+		{"ratio already within side", 60, 40, Options{Mode: ModeRatio, MaxSide: 64}, 60, 40},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotW, gotH := targetSize(tt.w, tt.h, tt.opts)
+
+			if gotW != tt.wantW || gotH != tt.wantH {
+				t.Errorf("targetSize(%d, %d, %+v) = %dx%d, want %dx%d",
+					tt.w, tt.h, tt.opts, gotW, gotH, tt.wantW, tt.wantH)
+			}
+		})
+	}
+}
+
+func TestConvertFrameCap(t *testing.T) {
+	input := noiseGIF(t, 256, 256, 20, 3)
+
+	out, report, err := Convert(input, Options{Mode: ModeRatio, MaxFrames: 4})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	if report.FramesOut != 4 {
+		t.Errorf("frames = %d, want 4", report.FramesOut)
+	}
+
+	if len(out) > maxBytes {
+		t.Errorf("output %d bytes, want <= %d", len(out), maxBytes)
+	}
+
+	if report.Colors < 64 {
+		t.Errorf("colors = %d with 4 frames, want the freed budget spent on quality", report.Colors)
+	}
+}
+
+func TestConvertMaxSide(t *testing.T) {
+	input := noiseGIF(t, 256, 256, 20, 4)
+
+	_, report, err := Convert(input, Options{Mode: ModeRatio, MaxSide: 64})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	if report.Width > 64 || report.Height > 64 {
+		t.Errorf("output %dx%d, want <= 64px", report.Width, report.Height)
+	}
+
+	if report.FramesOut != report.FramesIn {
+		t.Errorf("frames = %d, want all kept at the smaller size", report.FramesOut)
+	}
+}
+
+func TestConvertCapDisablesPassthrough(t *testing.T) {
+	input := solidGIF(t, 64, 64, 3)
+
+	_, report, err := Convert(input, Options{Mode: ModeRatio, MaxFrames: 1})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	if report.Passthrough {
+		t.Error("frame cap must force re-encoding, not passthrough")
+	}
+
+	if report.FramesOut != 1 {
+		t.Errorf("frames = %d, want 1", report.FramesOut)
+	}
+}
+
 func TestConvertRejectsBadInput(t *testing.T) {
-	_, _, err := Convert([]byte("this is not an image at all"), ModeRatio)
+	_, _, err := Convert([]byte("this is not an image at all"), Options{Mode: ModeRatio})
 	if err == nil {
 		t.Fatal("expected error for non-image input")
 	}
