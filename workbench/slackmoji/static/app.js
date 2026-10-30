@@ -34,6 +34,8 @@
   var priority = '';
   // the size is chosen first: frames drags hold it here
   var sizeHold = 0;
+  // the true outcome side, which a stepped slider may not be able to show
+  var sizeNow = 0;
   var report = null;
 
   function fmtKB(bytes) {
@@ -84,26 +86,31 @@
 
     // the facts no slider carries: the byte budget and the palette the
     // leftover budget buys, always maximized
-    stageMeta.textContent = fmtKB(rep.outputSize) + ' of 128 KB \u00b7 ' +
+    stageMeta.textContent = fmtKB(rep.outputSize) + ' of 128 KB · ' +
       plural(rep.colors, 'color');
 
     // full ranges so any drag expresses a priority; the handle always
-    // shows the outcome
+    // shows the outcome. The size steps by 16, so the top of the
+    // slider must land on the grid.
     sliders.side.dataset.inPx = Math.max(rep.inputWidth, rep.inputHeight);
 
     sliders.frames.min = 1;
     sliders.frames.max = rep.framesIn;
 
-    sliders.side.min = Math.min(32, naturalMax());
-    sliders.side.max = naturalMax();
+    var sMin = Math.min(32, naturalMax());
+    var sMax = naturalMax() - ((naturalMax() - sMin) % 16);
+
+    sliders.side.min = sMin;
+    sliders.side.max = sMax;
 
     ends.frames[0].textContent = sliders.frames.min;
     ends.frames[1].textContent = sliders.frames.max;
-    ends.side[0].textContent = sliders.side.min + ' px';
-    ends.side[1].textContent = sliders.side.max + ' px';
+    ends.side[0].textContent = sMin + ' px';
+    ends.side[1].textContent = sMax + ' px';
 
     sliders.frames.value = rep.framesOut;
     sliders.side.value = Math.max(rep.width, rep.height);
+    sizeNow = Math.max(rep.width, rep.height);
 
     current = { dataUrl: rep.dataUrl, name: rep.name };
     downloadBtn.textContent = 'Download ' + (rep.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
@@ -263,9 +270,9 @@
 
       priority = axis;
 
-      // the size is chosen first: frames drags hold it, a size drag
-      // re-optimizes everything else
-      sizeHold = axis === 'side' ? 0 : +sliders.side.value;
+      // the size is chosen first: frames drags hold it at its true
+      // outcome, which the stepped slider may not be able to show
+      sizeHold = axis === 'side' ? 0 : sizeNow;
 
       convert(currentFile);
     });

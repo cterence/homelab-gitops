@@ -60,22 +60,22 @@
 
       <div class="dial">
         <div class="dial-head">
+          <span class="dial-label">Size</span>
+          <span class="dial-value num" id="size-out">128 px max</span>
+        </div>
+        <input type="range" id="size-slider" min="32" max="128" value="128" step="16" disabled
+               aria-label="Size">
+        <div class="dial-ends num"><span id="size-min">32 px</span><span id="size-base">128 px</span></div>
+      </div>
+
+      <div class="dial">
+        <div class="dial-head">
           <span class="dial-label">Frames</span>
           <span class="dial-value num" id="frames-out">all</span>
         </div>
         <input type="range" id="frames-slider" min="1" max="100" value="100" step="1" disabled
                aria-label="Frames">
         <div class="dial-ends num"><span id="frames-min">1</span><span id="frames-base">all</span></div>
-      </div>
-
-      <div class="dial">
-        <div class="dial-head">
-          <span class="dial-label">Size</span>
-          <span class="dial-value num" id="size-out">128 px max</span>
-        </div>
-        <input type="range" id="size-slider" min="32" max="128" value="128" step="1" disabled
-               aria-label="Size">
-        <div class="dial-ends num"><span id="size-min">32 px</span><span id="size-base">128 px</span></div>
       </div>
 
       <button type="button" class="reset" id="reset-btn">Reset to optimal</button>
