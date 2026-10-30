@@ -48,7 +48,7 @@ cap would change the output.
 
 ## Configuration
 
-- `PORT` — listen port (default `3000`).
+- `--port` / `PORT` — listen port (default `3000`).
 
 ## Notes
 

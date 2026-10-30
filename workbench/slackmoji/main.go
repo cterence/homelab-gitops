@@ -11,23 +11,41 @@ import (
 	"syscall"
 	"time"
 
-	"cmp"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
-	if err := run(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	var port string
+
+	cmd := &cli.Command{
+		Name:    "slackmoji",
+		Usage:   "Shrink GIFs to Slack emoji limits (128 KB, 128 px)",
+		Version: "dev",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "port",
+				Usage:       "HTTP listen port",
+				Value:       "3000",
+				Sources:     cli.NewValueSourceChain(cli.EnvVar("PORT")),
+				Destination: &port,
+			},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			return serve(ctx, port)
+		},
+	}
+
+	if err := cmd.Run(ctx, os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, "slackmoji:", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
+func serve(ctx context.Context, port string) error {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	port := cmp.Or(os.Getenv("PORT"), "3000")
 
 	srv := &http.Server{
 		Addr:              ":" + port,
