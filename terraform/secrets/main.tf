@@ -24,10 +24,14 @@ locals {
       "argocd.argoproj.io/secret-type" = "repository"
     }
   }
+
+  # data_wo never enters state or plan, so value edits are invisible to
+  # terraform: bump this to rewrite every secret.
+  data_wo_revision = 1
 }
 
 resource "kubernetes_secret_v1" "secrets" {
-  for_each = local.secret_map
+  for_each = nonsensitive(local.secret_map)
 
   metadata {
     name      = split("/", each.key)[1]
@@ -35,5 +39,6 @@ resource "kubernetes_secret_v1" "secrets" {
     labels    = try(local.secret_labels[each.key], null)
   }
 
-  data = each.value
+  data_wo          = each.value
+  data_wo_revision = local.data_wo_revision
 }
