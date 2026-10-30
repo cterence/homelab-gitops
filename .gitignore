@@ -11,3 +11,4 @@ docs/superpowers/
 .pre-commit-config.yaml
 result.apk
 *.mp3
+result

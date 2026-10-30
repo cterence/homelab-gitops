@@ -18,10 +18,17 @@ locals {
     } : path => merge(pairs...)
   }
 
-  # Secrets discovered by label scanning instead of name references.
+  # ArgoCD's settings informer only resolves $secret:key refs in
+  # secrets labeled app.kubernetes.io/part-of=argocd.
   secret_labels = {
     "argocd/argo-github-repository-credentials" = {
       "argocd.argoproj.io/secret-type" = "repository"
+    }
+    "argocd/argo-pocket-id-credentials" = {
+      "app.kubernetes.io/part-of" = "argocd"
+    }
+    "argocd/argo-webhook-secret" = {
+      "app.kubernetes.io/part-of" = "argocd"
     }
   }
 
