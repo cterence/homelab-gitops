@@ -38,7 +38,10 @@ func compositeFrames(g *gif.GIF) []*image.NRGBA {
 			saved = cloneNRGBA(canvas)
 		}
 
-		draw.Draw(canvas, fr.Rect, fr, fr.Rect.Min, draw.Src)
+		// GIF frames replace their rect, but palette-transparent pixels
+		// leave the underlying pixel untouched (that is how the delta
+		// encoding round-trips), which is draw.Over for paletted sources.
+		draw.Draw(canvas, fr.Rect, fr, fr.Rect.Min, draw.Over)
 		prevRect = fr.Rect
 
 		frames[i] = cloneNRGBA(canvas)

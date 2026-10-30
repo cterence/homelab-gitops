@@ -8,94 +8,128 @@ import (
 
 const (
 	alphaThreshold = 0x80
-	// maxSamples caps how many pixels median cut inspects; enough for a
-	// 128x128 canvas many times over.
+	// maxSamples caps how many pixels median cut inspects.
 	maxSamples = 1 << 16
 )
 
-// quantizeFrames converts each frame to a paletted image with its own
-// palette of at most maxColors entries (one slot is spent on transparency
-// when the frame has transparent pixels). Per-frame palettes let every
-// frame keep its own best colors; the encoder writes a local color table
-// only where a frame's palette differs from the global one. Median cut
-// picks each palette.
-func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
+// bayer is the classic 8x8 ordered-dither matrix (values 0-63).
+var bayer = [8][8]int{
+	{0, 32, 8, 40, 2, 34, 10, 42},
+	{48, 16, 56, 24, 50, 18, 58, 26},
+	{12, 44, 4, 36, 14, 46, 6, 38},
+	{60, 28, 52, 20, 62, 30, 54, 22},
+	{3, 35, 11, 43, 1, 33, 9, 41},
+	{51, 19, 59, 27, 49, 17, 57, 25},
+	{15, 47, 7, 39, 13, 45, 5, 37},
+	{63, 31, 55, 23, 61, 29, 53, 21},
+}
+
+// quantizeFrames converts frames to paletted images sharing one global
+// palette: maxColors visible colors plus one transparent entry (index 0),
+// which also marks unchanged pixels. Every frame after the first stores
+// only its pixels that differ from the previous frame (gifsicle -O3
+// style), which makes mostly-static animations far smaller. The palette
+// is built from frame 0 plus the pixels that change between frames
+// (ffmpeg palettegen stats_mode=diff style) and the mapping is
+// ordered-dithered so low color counts read as gradients instead of bands.
+func quantizeFrames(frames []*image.NRGBA, maxColors int, dither bool) []*image.Paletted {
+	// the transparent entry is extra, so visible colors cap at 255
+	visible := min(max(1, maxColors), 255)
+	pixels := diffSample(frames)
+	opaque := medianCut(pixels, visible)
+
+	pal := make(color.Palette, 0, maxColors+1)
+	pal = append(pal, color.RGBA{})
+	pal = append(pal, opaque...)
+
 	out := make([]*image.Paletted, len(frames))
 
 	for i, f := range frames {
-		out[i] = quantizeFrame(f, maxColors)
+		b := f.Bounds()
+		p := image.NewPaletted(image.Rect(0, 0, b.Dx(), b.Dy()), pal)
+
+		for y := b.Min.Y; y < b.Max.Y; y++ {
+			for x := b.Min.X; x < b.Max.X; x++ {
+				c := f.NRGBAAt(x, y)
+
+				px, py := x-b.Min.X, y-b.Min.Y
+
+				if c.A < alphaThreshold {
+					p.SetColorIndex(px, py, 0)
+					continue
+				}
+
+				// delta: identical to the previous frame means the
+				// previous frame already shows this pixel
+				if i > 0 && c == frames[i-1].NRGBAAt(x, y) {
+					p.SetColorIndex(px, py, 0)
+					continue
+				}
+
+				if dither {
+					off := int((float64(bayer[py&7][px&7])/63.5 - 0.5) * 64)
+					c.R = clampU8(int(c.R) + off)
+					c.G = clampU8(int(c.G) + off)
+					c.B = clampU8(int(c.B) + off)
+				}
+
+				p.SetColorIndex(px, py, nearestIndex(opaque, c)+1)
+			}
+		}
+
+		out[i] = p
 	}
 
 	return out
 }
 
-func quantizeFrame(f *image.NRGBA, maxColors int) *image.Paletted {
-	b := f.Bounds()
+// diffSample collects the pixels that carry motion: every pixel of the
+// first frame plus the pixels where consecutive frames differ.
+func diffSample(frames []*image.NRGBA) []color.RGBA {
+	total := 0
 
-	stride := max(1, (b.Dx()*b.Dy())/maxSamples)
+	for _, f := range frames {
+		b := f.Bounds()
+		total += b.Dx() * b.Dy()
+	}
+
+	stride := max(1, total/maxSamples)
 
 	var (
-		pixels         []color.RGBA
-		hasTransparent bool
-		i              int
+		pixels []color.RGBA
+		n      int
 	)
 
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			c := f.NRGBAAt(x, y)
-			i++
+	for i, f := range frames {
+		b := f.Bounds()
 
-			if c.A < alphaThreshold {
-				hasTransparent = true
-				continue
+		for y := b.Min.Y; y < b.Max.Y; y++ {
+			for x := b.Min.X; x < b.Max.X; x++ {
+				c := f.NRGBAAt(x, y)
+				n++
+
+				if i > 0 && c == frames[i-1].NRGBAAt(x, y) {
+					continue
+				}
+
+				if c.A < alphaThreshold {
+					continue
+				}
+
+				if n%stride != 0 {
+					continue
+				}
+
+				pixels = append(pixels, color.RGBA{R: c.R, G: c.G, B: c.B, A: 255})
 			}
-
-			if i%stride != 0 {
-				continue
-			}
-
-			pixels = append(pixels, color.RGBA{R: c.R, G: c.G, B: c.B, A: 255})
 		}
 	}
 
-	budget := maxColors
+	return pixels
+}
 
-	if hasTransparent {
-		budget--
-	}
-
-	opaque := medianCut(pixels, budget)
-
-	transparentIndex := 0
-
-	if hasTransparent {
-		transparentIndex = 1
-	}
-
-	pal := make(color.Palette, 0, maxColors)
-
-	if hasTransparent {
-		pal = append(pal, color.RGBA{})
-	}
-
-	pal = append(pal, opaque...)
-
-	p := image.NewPaletted(image.Rect(0, 0, b.Dx(), b.Dy()), pal)
-
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			c := f.NRGBAAt(x, y)
-
-			if c.A < alphaThreshold {
-				p.SetColorIndex(x-b.Min.X, y-b.Min.Y, 0)
-				continue
-			}
-
-			p.SetColorIndex(x-b.Min.X, y-b.Min.Y, uint8(int(nearestIndex(opaque, c))+transparentIndex))
-		}
-	}
-
-	return p
+func clampU8(n int) uint8 {
+	return uint8(min(255, max(0, n)))
 }
 
 // medianCut splits the pixel set into at most n boxes along the widest

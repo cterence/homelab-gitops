@@ -209,40 +209,45 @@ func fitBudget(frames []*image.NRGBA, delays []int, loopCount int, maxFrames int
 }
 
 // searchPalette binary-searches the largest palette (2..256) whose
-// encoding fits the budget. Returns nil when even 2 colors do not fit.
+// encoding fits the budget, dithered first and undithered as a fallback.
+// Returns nil when even 2 colors do not fit either way.
 func searchPalette(
 	frames []*image.NRGBA,
 	delays []int,
 	loopCount int,
 ) ([]byte, int, error) {
-	loOut, err := encodeGIF(quantizeFrames(frames, 2), delays, loopCount)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	if len(loOut) > maxBytes {
-		return nil, 0, nil
-	}
-
-	lo, loColors := 2, 2
-
-	for hi := 256; lo < hi; {
-		mid := (lo + hi + 1) / 2
-
-		out, err := encodeGIF(quantizeFrames(frames, mid), delays, loopCount)
+	for _, dither := range [...]bool{true, false} {
+		loOut, err := encodeGIF(quantizeFrames(frames, 2, dither), delays, loopCount)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		if len(out) > maxBytes {
-			hi = mid - 1
+		if len(loOut) > maxBytes {
 			continue
 		}
 
-		lo, loOut, loColors = mid, out, mid
+		lo, loColors := 2, 2
+
+		for hi := 255; lo < hi; {
+			mid := (lo + hi + 1) / 2
+
+			out, err := encodeGIF(quantizeFrames(frames, mid, dither), delays, loopCount)
+			if err != nil {
+				return nil, 0, err
+			}
+
+			if len(out) > maxBytes {
+				hi = mid - 1
+				continue
+			}
+
+			lo, loOut, loColors = mid, out, mid
+		}
+
+		return loOut, loColors, nil
 	}
 
-	return loOut, loColors, nil
+	return nil, 0, nil
 }
 
 // thinFrames keeps the first and last frame plus evenly spread frames,

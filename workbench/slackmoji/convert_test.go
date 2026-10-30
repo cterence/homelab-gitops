@@ -69,7 +69,7 @@ func noiseGIF(t *testing.T, w, h, frames int, seedA uint64) []byte {
 			}
 		}
 
-		pal := quantizeFrames([]*image.NRGBA{img}, 256)[0]
+		pal := quantizeFrames([]*image.NRGBA{img}, 256, false)[0]
 
 		g.Image = append(g.Image, pal)
 		g.Delay = append(g.Delay, 4)
@@ -238,10 +238,10 @@ func TestQuantizePaletteSize(t *testing.T) {
 	img.Set(2, 0, color.NRGBA{B: 255, A: 255})
 	img.Set(3, 0, color.NRGBA{R: 128, A: 255})
 
-	pal := quantizeFrames([]*image.NRGBA{img}, 2)[0]
+	pal := quantizeFrames([]*image.NRGBA{img}, 2, false)[0]
 
-	if got := len(pal.Palette); got > 2 {
-		t.Errorf("palette has %d colors, want <= 2", got)
+	if got := len(pal.Palette); got > 3 {
+		t.Errorf("palette has %d entries (2 colors + transparent), want <= 3", got)
 	}
 
 	if pal.Bounds() != img.Bounds() {
@@ -254,7 +254,7 @@ func TestQuantizeTransparent(t *testing.T) {
 	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
 	img.Set(1, 0, color.NRGBA{A: 0})
 
-	pal := quantizeFrames([]*image.NRGBA{img}, 4)[0]
+	pal := quantizeFrames([]*image.NRGBA{img}, 4, false)[0]
 
 	_, _, _, a := pal.Palette[pal.ColorIndexAt(1, 0)].RGBA()
 	if a != 0 {
@@ -389,6 +389,62 @@ func TestConvertCapDisablesPassthrough(t *testing.T) {
 
 	if report.FramesOut != 1 {
 		t.Errorf("frames = %d, want 1", report.FramesOut)
+	}
+}
+
+func TestQuantizeDeltaFrames(t *testing.T) {
+	frame := image.NewNRGBA(image.Rect(0, 0, 4, 4))
+
+	for y := range 4 {
+		for x := range 4 {
+			frame.SetNRGBA(x, y, color.NRGBA{R: 255, A: 255})
+		}
+	}
+
+	// identical second frame: every pixel should delta to index 0
+	pal := quantizeFrames([]*image.NRGBA{frame, frame}, 4, false)
+
+	if got := pal[1].ColorIndexAt(1, 1); got != 0 {
+		t.Errorf("unchanged pixel stored as index %d, want transparent delta", got)
+	}
+
+	if got := pal[0].ColorIndexAt(1, 1); got == 0 {
+		t.Error("first frame pixel marked as delta")
+	}
+}
+
+func TestDeltaGIFCompositesIdentically(t *testing.T) {
+	frame := image.NewNRGBA(image.Rect(0, 0, 4, 4))
+
+	for y := range 4 {
+		for x := range 4 {
+			frame.SetNRGBA(x, y, color.NRGBA{R: 255, A: 255})
+		}
+	}
+
+	frames := quantizeFrames([]*image.NRGBA{frame, frame}, 4, false)
+
+	out, err := encodeGIF(frames, []int{10, 10}, 0)
+	if err != nil {
+		t.Fatalf("encodeGIF() error = %v", err)
+	}
+
+	g, err := gif.DecodeAll(bytes.NewReader(out))
+	if err != nil {
+		t.Fatalf("decoding delta gif: %v", err)
+	}
+
+	decoded := compositeFrames(g)
+	if len(decoded) != 2 {
+		t.Fatalf("got %d frames, want 2", len(decoded))
+	}
+
+	for i, f := range decoded {
+		r, _, _, a := f.NRGBAAt(1, 1).RGBA()
+
+		if a == 0 || r == 0 {
+			t.Errorf("frame %d composites to a non-red pixel", i)
+		}
 	}
 }
 
