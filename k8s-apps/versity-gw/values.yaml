@@ -263,22 +263,6 @@ app-template:
               sessionDuration: 10m
               ignoreUserAgent: curl
               group: "{{ .Release.Name }}"
-    versity-gw-credentials:
-      enabled: true
-      forceRename: versity-gw-credentials
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: versity-gw-credentials
-            creationPolicy: Owner
-          dataFrom:
-            - extract:
-                key: versity-gw/versity-gw-credentials
     webdav-password:
       enabled: true
       forceRename: "{{ .Release.Name }}-webdav-password"

@@ -92,27 +92,3 @@ app-template:
         app:
           app:
             - path: /app/data
-
-  rawResources:
-    lastfm-credentials:
-      enabled: true
-      forceRename: lastfm-credentials
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        spec:
-          secretStoreRef:
-            kind: ClusterSecretStore
-            name: openbao-secret-store
-          target:
-            name: lastfm-credentials
-            creationPolicy: Owner
-          data:
-            - secretKey: LASTFM_USERNAME
-              remoteRef:
-                key: "lastfm-scrobble-deduplicator/lastfm-credentials"
-                property: LASTFM_USERNAME
-            - secretKey: LASTFM_PASSWORD
-              remoteRef:
-                key: "lastfm-scrobble-deduplicator/lastfm-credentials"
-                property: LASTFM_PASSWORD
