@@ -24,6 +24,7 @@
   var current = null;
   var currentFile = null;
   var busy = false;
+  var framesIn = 0;
   var requestedFrames = 0;
 
   function fmtKB(bytes) {
@@ -38,18 +39,20 @@
     return document.querySelector('input[name="mode"]:checked').value;
   }
 
+  // framesIn 0 means no animated file yet; the slider then stays disabled.
   function frameCap() {
-    if (framesSlider.disabled || +framesSlider.value >= +framesSlider.max) return 0;
-    return +framesSlider.value;
+    if (framesSlider.disabled || framesIn < 2) return 0;
+    if (+framesSlider.value >= +framesSlider.max) return 0;
+    return Math.max(1, Math.round(framesIn * +framesSlider.value / 100));
   }
 
   function updateSliderLabels() {
-    if (framesSlider.disabled) {
+    if (framesSlider.disabled || framesIn < 2) {
       framesOut.textContent = 'all';
     } else if (+framesSlider.value >= +framesSlider.max) {
-      framesOut.textContent = 'all frames';
+      framesOut.textContent = 'all ' + framesIn;
     } else {
-      framesOut.textContent = framesSlider.value + ' of ' + framesSlider.max;
+      framesOut.textContent = framesSlider.value + '% · ' + frameCap();
     }
 
     sideOut.textContent = sideSlider.value + ' px';
@@ -65,9 +68,11 @@
     preview.hidden = false;
 
     if (report.framesIn > 1) {
+      framesIn = report.framesIn;
       framesSlider.disabled = false;
-      framesSlider.max = report.framesIn;
     }
+
+    updateSliderLabels();
 
     var framesText;
     if (report.passthrough) {
@@ -76,11 +81,11 @@
       framesText = 'all ' + plural(report.framesIn, 'frame') + ' kept';
       finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText + '.';
     } else if (report.framesOut === requestedFrames) {
-      framesText = plural(report.framesOut, 'frame') + ' of ' + plural(report.framesIn, 'frame') + ' kept';
+      framesText = report.framesOut + ' of ' + report.framesIn + ' frames kept';
       finding.textContent = 'Fits the limits: ' + fmtKB(report.outputSize) + ' of 128 KB, ' + framesText +
         ' at your frame cap.';
     } else {
-      framesText = plural(report.framesOut, 'frame') + ' of ' + plural(report.framesIn, 'frame') + ' kept';
+      framesText = report.framesOut + ' of ' + report.framesIn + ' frames kept';
       finding.innerHTML = 'Fits the limits: ' + fmtKB(report.outputSize) +
         ' of 128 KB, <span class="dropped">' + framesText + '</span> after quality was exhausted.';
     }
