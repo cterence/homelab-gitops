@@ -117,8 +117,7 @@
       ],
     },
     {
-      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?-(?:apache|nginx)(?:-alpine)?-(?<build>\\d+)$',
-      allowedVersions: '^(\\d+\\.)+\\d*-apache-alpine-\\d+$',
+      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?-(?<compatibility>apache|nginx)(?:-alpine)?-(?<build>\\d+)$',
       matchPackageNames: [
         '/modsecurity-crs/',
       ],
