@@ -1,4 +1,8 @@
-github.com/grafana/grafana-foundation-sdk/go v0.0.21 h1:3E6n7pzmv6vlh9dBYZqhTlmtk2wiWHCL0zAa7J7i+UM=
-github.com/grafana/grafana-foundation-sdk/go v0.0.21/go.mod h1:48EA8jF85SrReYflLa39Sk34b6NpxwJPBwjF3TJgRpE=
+github.com/grafana/grafana-foundation-sdk/go v0.0.22 h1:bE+NJ+nE/ouwQaXtPQTz98yIzevuXlyZ4L5pdPLyiC4=
+github.com/grafana/grafana-foundation-sdk/go v0.0.22/go.mod h1:48EA8jF85SrReYflLa39Sk34b6NpxwJPBwjF3TJgRpE=
+github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
+github.com/stretchr/testify v1.12.1/go.mod h1:MDEgiDPPsNp5cuIrHPPCyornHKgEVbtFUmoNlxoYthg=
 github.com/urfave/cli/v3 v3.14.0 h1:a8414NQlHJs0c/iBsulKLzlES0n/lEAskbL2LKpU4/s=
 github.com/urfave/cli/v3 v3.14.0/go.mod h1:vXn6HxPNccJSzQr2QvwVncOKrgYGIHU0HY5h8B2nQj4=
+go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=
+go.yaml.in/yaml/v3 v3.0.5/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
