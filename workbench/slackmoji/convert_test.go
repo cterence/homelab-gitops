@@ -71,7 +71,7 @@ func noiseGIF(t *testing.T, w, h, frames int, seedA uint64) []byte {
 			}
 		}
 
-		pal := quantizeFrames([]*image.NRGBA{img}, 256, false)[0]
+		pal := quantizeFrames([]*image.NRGBA{img}, 256)[0]
 
 		g.Image = append(g.Image, pal)
 		g.Delay = append(g.Delay, 4)
@@ -243,7 +243,7 @@ func TestQuantizePaletteSize(t *testing.T) {
 	img.Set(2, 0, color.NRGBA{B: 255, A: 255})
 	img.Set(3, 0, color.NRGBA{R: 128, A: 255})
 
-	pal := quantizeFrames([]*image.NRGBA{img}, 2, false)[0]
+	pal := quantizeFrames([]*image.NRGBA{img}, 2)[0]
 
 	if got := len(pal.Palette); got > 3 {
 		t.Errorf("palette has %d entries (2 colors + transparent), want <= 3", got)
@@ -259,7 +259,7 @@ func TestQuantizeTransparent(t *testing.T) {
 	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
 	img.Set(1, 0, color.NRGBA{A: 0})
 
-	pal := quantizeFrames([]*image.NRGBA{img}, 4, false)[0]
+	pal := quantizeFrames([]*image.NRGBA{img}, 4)[0]
 
 	_, _, _, a := pal.Palette[pal.ColorIndexAt(1, 0)].RGBA()
 	if a != 0 {
@@ -430,7 +430,7 @@ func TestQuantizeDeltaFrames(t *testing.T) {
 	}
 
 	// identical second frame: every pixel should delta to index 0
-	pal := quantizeFrames([]*image.NRGBA{frame, frame}, 4, false)
+	pal := quantizeFrames([]*image.NRGBA{frame, frame}, 4)
 
 	if got := pal[1].ColorIndexAt(1, 1); got != 0 {
 		t.Errorf("unchanged pixel stored as index %d, want transparent delta", got)
@@ -450,7 +450,7 @@ func TestDeltaGIFCompositesIdentically(t *testing.T) {
 		}
 	}
 
-	frames := quantizeFrames([]*image.NRGBA{frame, frame}, 4, false)
+	frames := quantizeFrames([]*image.NRGBA{frame, frame}, 4)
 
 	out, err := encodeGIF(frames, []int{10, 10}, 0)
 	if err != nil {
@@ -503,6 +503,33 @@ func TestConvertColorCapDisablesPassthrough(t *testing.T) {
 
 	if report.Passthrough {
 		t.Error("color cap must force re-encoding, not passthrough")
+	}
+}
+
+func TestConvertStillPassthroughReportContract(t *testing.T) {
+	img := image.NewNRGBA(image.Rect(0, 0, 32, 32))
+	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
+	img.Set(16, 16, color.NRGBA{G: 255, A: 255})
+
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("encoding test png: %v", err)
+	}
+
+	_, report, err := Convert(buf.Bytes(), Options{Mode: ModeRatio})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	// the report must be fully populated on the passthrough path too
+	if report.FramesOut != 1 || report.Colors != 2 {
+		t.Errorf("passthrough report = %d frames, %d colors; want 1 and 2",
+			report.FramesOut, report.Colors)
+	}
+
+	if report.Width != 32 || report.Height != 32 || report.OutputSize != len(buf.Bytes()) {
+		t.Errorf("passthrough report dims = %dx%d, %d bytes; want 32x32, %d",
+			report.Width, report.Height, report.OutputSize, len(buf.Bytes()))
 	}
 }
 

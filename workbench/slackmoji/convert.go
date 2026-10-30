@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	"image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -59,6 +60,47 @@ func side(opts Options) int {
 	return maxSide
 }
 
+// fitsBudget reports whether input already satisfies every limit,
+// including the user's caps.
+func fitsBudget(dataLen, w, h, frames int, opts Options) bool {
+	s := side(opts)
+
+	return dataLen <= maxBytes && w <= s && h <= s &&
+		(opts.MaxFrames == 0 || opts.MaxFrames >= frames) &&
+		(opts.MaxColors <= 0 || opts.MaxColors >= 255)
+}
+
+// passthroughReport fills a Report for input returned byte-for-byte, so
+// every path emits the same contract.
+func passthroughReport(r *Report, dataLen, w, h, frames, colors int) {
+	r.Passthrough = true
+	r.OutputSize = dataLen
+	r.Width, r.Height = w, h
+	r.FramesOut = frames
+	r.Colors = colors
+}
+
+// colorCount counts distinct opaque colors of a small image.
+func colorCount(img image.Image) int {
+	b := img.Bounds()
+
+	seen := make(map[color.RGBA]struct{})
+
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			cr, cg, cb, ca := img.At(x, y).RGBA()
+
+			if ca < alphaThreshold<<8 {
+				continue
+			}
+
+			seen[color.RGBA{R: uint8(cr >> 8), G: uint8(cg >> 8), B: uint8(cb >> 8), A: 255}] = struct{}{}
+		}
+	}
+
+	return len(seen)
+}
+
 // Convert adapts data (gif, png, jpeg or webp) to Slack emoji limits:
 // at most 128KB and 128x128px. All frames are kept by default; palette
 // quality is reduced first and frames are thinned only as a last resort,
@@ -89,16 +131,9 @@ func convertGIF(data []byte, opts Options, ct string) ([]byte, *Report, error) {
 		Format:      ct,
 	}
 
-	s := side(opts)
-
-	if len(data) <= maxBytes && g.Config.Width <= s && g.Config.Height <= s &&
-		(opts.MaxFrames == 0 || opts.MaxFrames >= len(g.Image)) &&
-		(opts.MaxColors <= 0 || opts.MaxColors >= 255) {
-		report.Passthrough = true
-		report.OutputSize = len(data)
-		report.Width, report.Height = g.Config.Width, g.Config.Height
-		report.FramesOut = len(g.Image)
-		report.Colors = paletteSize(g)
+	if fitsBudget(len(data), g.Config.Width, g.Config.Height, len(g.Image), opts) {
+		passthroughReport(report, len(data), g.Config.Width, g.Config.Height,
+			len(g.Image), paletteSize(g))
 
 		return data, report, nil
 	}
@@ -129,13 +164,8 @@ func convertStill(data []byte, opts Options, ct string) ([]byte, *Report, error)
 		Format:      ct,
 	}
 
-	s := side(opts)
-
-	if len(data) <= maxBytes && b.Dx() <= s && b.Dy() <= s &&
-		(opts.MaxColors <= 0 || opts.MaxColors >= 255) {
-		report.Passthrough = true
-		report.OutputSize = len(data)
-		report.Width, report.Height = b.Dx(), b.Dy()
+	if fitsBudget(len(data), b.Dx(), b.Dy(), 1, opts) {
+		passthroughReport(report, len(data), b.Dx(), b.Dy(), 1, colorCount(img))
 
 		return data, report, nil
 	}
@@ -221,7 +251,7 @@ func finish(
 	floorFits := func(sizeIdx, keep int) (bool, error) {
 		kf, kd := thinFrames(resized[sizeIdx], delays, keep)
 
-		out, err := encodeGIF(quantizeFrames(kf, colorFloor, true), kd, loopCount)
+		out, err := encodeGIF(quantizeFrames(kf, colorFloor), kd, loopCount)
 		if err != nil {
 			return false, err
 		}
@@ -251,58 +281,43 @@ func finish(
 
 	half := startKeep / 2
 
-	// interleaved ladder per size: the full frame request, then (if the
-	// request does not fit) the largest frame count between half and the
-	// full request - the count is searched, not halved, so a 75% request
-	// never silently becomes 37%
+	// the ladder as data: per size, the full frame request, then the
+	// largest count between half and the full request - the count is
+	// searched, not halved, so a 75% request never silently becomes 37%.
+	// After the sizes are exhausted, the smallest size keeps as many
+	// frames as it can hold.
+	type probe struct{ size, lo, hi int }
+
+	probes := make([]probe, 0, 2*candidates+1)
+
 	for i := range candidates {
-		fits, err := floorFits(i, startKeep)
-		if err != nil {
-			return nil, nil, err
-		}
+		probes = append(probes, probe{i, startKeep, startKeep})
 
-		if fits {
-			return accept(i, startKeep)
-		}
-
-		if half < 1 {
-			continue
-		}
-
-		fits, err = floorFits(i, half)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if fits {
-			keep, err := maxKeep(i, half, startKeep)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			return accept(i, keep)
+		if half >= 1 {
+			probes = append(probes, probe{i, half, startKeep})
 		}
 	}
 
-	// resolution exhausted: the most frames the smallest size can hold
 	if half >= 1 {
-		fitsOne, err := floorFits(candidates-1, 1)
+		probes = append(probes, probe{candidates - 1, 1, half})
+	}
+
+	for _, p := range probes {
+		fits, err := floorFits(p.size, p.lo)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if !fitsOne {
-			return nil, nil, fmt.Errorf(
-				"cannot fit under %d bytes even at %d colors, %d px and 1 frame",
-				maxBytes, colorFloor, dims[candidates-1][0])
+		if !fits {
+			continue
 		}
 
-		keep, err := maxKeep(candidates-1, 1, half)
+		keep, err := maxKeep(p.size, p.lo, p.hi)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		return accept(candidates-1, keep)
+		return accept(p.size, keep)
 	}
 
 	return nil, nil, fmt.Errorf(
@@ -357,7 +372,7 @@ func searchPalette(
 	loopCount int,
 	hi int,
 ) ([]byte, int, error) {
-	loOut, err := encodeGIF(quantizeFrames(frames, colorFloor, true), delays, loopCount)
+	loOut, err := encodeGIF(quantizeFrames(frames, colorFloor), delays, loopCount)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -371,7 +386,7 @@ func searchPalette(
 	for hi > lo {
 		mid := (lo + hi + 1) / 2
 
-		out, err := encodeGIF(quantizeFrames(frames, mid, true), delays, loopCount)
+		out, err := encodeGIF(quantizeFrames(frames, mid), delays, loopCount)
 		if err != nil {
 			return nil, 0, err
 		}

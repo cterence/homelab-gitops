@@ -32,7 +32,7 @@ var bayer = [8][8]int{
 // is built from frame 0 plus the pixels that change between frames
 // (ffmpeg palettegen stats_mode=diff style) and the mapping is
 // ordered-dithered so low color counts read as gradients instead of bands.
-func quantizeFrames(frames []*image.NRGBA, maxColors int, dither bool) []*image.Paletted {
+func quantizeFrames(frames []*image.NRGBA, maxColors int) []*image.Paletted {
 	// the transparent entry is extra, so visible colors cap at 255
 	visible := min(max(1, maxColors), 255)
 	pixels := diffSample(frames)
@@ -61,17 +61,15 @@ func quantizeFrames(frames []*image.NRGBA, maxColors int, dither bool) []*image.
 
 				// delta: identical to the previous frame means the
 				// previous frame already shows this pixel
-				if i > 0 && c == frames[i-1].NRGBAAt(x, y) {
+				if i > 0 && unchanged(frames[i-1].NRGBAAt(x, y), c) {
 					p.SetColorIndex(px, py, 0)
 					continue
 				}
 
-				if dither {
-					off := int((float64(bayer[py&7][px&7])/63.5 - 0.5) * 64)
-					c.R = clampU8(int(c.R) + off)
-					c.G = clampU8(int(c.G) + off)
-					c.B = clampU8(int(c.B) + off)
-				}
+				off := int((float64(bayer[py&7][px&7])/63.5 - 0.5) * 64)
+				c.R = clampU8(int(c.R) + off)
+				c.G = clampU8(int(c.G) + off)
+				c.B = clampU8(int(c.B) + off)
 
 				p.SetColorIndex(px, py, nearestIndex(opaque, c)+1)
 			}
@@ -81,6 +79,10 @@ func quantizeFrames(frames []*image.NRGBA, maxColors int, dither bool) []*image.
 	}
 
 	return out
+}
+
+func unchanged(prev, cur color.NRGBA) bool {
+	return prev == cur
 }
 
 // diffSample collects the pixels that carry motion: every pixel of the
@@ -108,7 +110,7 @@ func diffSample(frames []*image.NRGBA) []color.RGBA {
 				c := f.NRGBAAt(x, y)
 				n++
 
-				if i > 0 && c == frames[i-1].NRGBAAt(x, y) {
+				if i > 0 && unchanged(frames[i-1].NRGBAAt(x, y), c) {
 					continue
 				}
 

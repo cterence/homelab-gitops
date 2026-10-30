@@ -76,35 +76,29 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 
 	opts := Options{Mode: mode}
 
-	if v := r.FormValue("maxFrames"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil || n < 0 {
-			writeError(w, http.StatusBadRequest, errors.New("maxFrames must be a non-negative integer"))
-			return
-		}
-
-		opts.MaxFrames = n
+	n, err := formInt(r, "maxFrames", 0, 1<<30)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
-	if v := r.FormValue("maxSide"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil || n < minSide || n > maxSide {
-			writeError(w, http.StatusBadRequest, fmt.Errorf("maxSide must be between %d and %d", minSide, maxSide))
-			return
-		}
+	opts.MaxFrames = n
 
-		opts.MaxSide = n
+	n, err = formInt(r, "maxSide", minSide, maxSide)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
-	if v := r.FormValue("maxColors"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil || n < colorFloor || n > 255 {
-			writeError(w, http.StatusBadRequest, fmt.Errorf("maxColors must be between %d and 255", colorFloor))
-			return
-		}
+	opts.MaxSide = n
 
-		opts.MaxColors = n
+	n, err = formInt(r, "maxColors", colorFloor, 255)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
 	}
+
+	opts.MaxColors = n
 
 	out, report, err := Convert(data, opts)
 	if err != nil {
@@ -134,6 +128,22 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		Report: report,
 		Data:   "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(out),
 	})
+}
+
+// formInt reads an optional integer form field with bounds. An absent
+// field is the zero value.
+func formInt(r *http.Request, name string, min, max int) (int, error) {
+	v := r.FormValue(name)
+	if v == "" {
+		return 0, nil
+	}
+
+	n, err := strconv.Atoi(v)
+	if err != nil || n < min || n > max {
+		return 0, fmt.Errorf("%s must be between %d and %d", name, min, max)
+	}
+
+	return n, nil
 }
 
 func writeError(w http.ResponseWriter, status int, err error) {

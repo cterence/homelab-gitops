@@ -14,10 +14,11 @@
   var colorsHint = document.getElementById('colors-out');
   var sizeHint = document.getElementById('size-out');
   var ends = {
-    frames: [document.getElementById('frames-base'), document.getElementById('frames-min')],
-    colors: [document.getElementById('colors-base'), document.getElementById('colors-min')],
-    size: [document.getElementById('size-base'), document.getElementById('size-min')]
+    frames: [document.getElementById('frames-min'), document.getElementById('frames-base')],
+    colors: [document.getElementById('colors-min'), document.getElementById('colors-base')],
+    size: [document.getElementById('size-min'), document.getElementById('size-base')]
   };
+  var spinner = document.getElementById('spinner');
   var resetBtn = document.getElementById('reset-btn');
 
   var fields = {
@@ -31,7 +32,6 @@
   var current = null;
   var currentFile = null;
   var busy = false;
-  var pending = false;
 
   // a slider the user has dragged is theirs until Reset or a new file;
   // untouched sliders sit at the algorithm's outcome
@@ -84,8 +84,8 @@
   function updateSizeRange() {
     sizeSlider.min = Math.min(32, naturalMax());
     sizeSlider.max = naturalMax();
-    ends.size[0].textContent = naturalMax() + ' px';
-    ends.size[1].textContent = sizeSlider.min + ' px';
+    ends.size[1].textContent = naturalMax() + ' px';
+    ends.size[0].textContent = sizeSlider.min + ' px';
   }
 
   function showResult(report) {
@@ -120,11 +120,12 @@
     [framesSlider, colorsSlider, sizeSlider].forEach(function (s) {
       s.disabled = false;
     });
+    controlsActive = true;
 
-    ends.frames[0].textContent = report.framesIn;
-    ends.frames[1].textContent = 1;
-    ends.colors[0].textContent = 255;
-    ends.colors[1].textContent = 16;
+    ends.frames[1].textContent = report.framesIn;
+    ends.frames[0].textContent = 1;
+    ends.colors[1].textContent = 255;
+    ends.colors[0].textContent = 16;
 
     // ...and untouched sliders sit at the algorithm's outcome
     if (!touched.frames) framesSlider.value = report.framesOut;
@@ -143,19 +144,37 @@
     error.hidden = false;
   }
 
+  // the fixed budget for one conversion, including the ladder searches
+  var CONVERT_TIMEOUT_MS = 20000;
+
+  // sliders live only once a file has converted; before that they stay
+  // disabled even when controls are otherwise enabled
+  var controlsActive = false;
+
+  function setControlsEnabled(enabled) {
+    var on = enabled && controlsActive;
+
+    [framesSlider, colorsSlider, sizeSlider].forEach(function (s) {
+      s.disabled = !on;
+    });
+
+    document.querySelectorAll('input[name="mode"]').forEach(function (r) {
+      r.disabled = !enabled;
+    });
+
+    resetBtn.disabled = !enabled;
+    fileInput.disabled = !enabled;
+    drop.classList.toggle('busy', !enabled);
+
+    spinner.hidden = enabled;
+  }
+
   function convert(file) {
-    if (!file) return;
-
-    // a control changed while a conversion is running: run again with
-    // the latest settings once it finishes, instead of dropping the click
-    if (busy) {
-      pending = true;
-
-      return;
-    }
+    if (!file || busy) return;
 
     busy = true;
     error.hidden = true;
+    setControlsEnabled(false);
 
     var body = new FormData();
     body.append('file', file);
@@ -165,7 +184,13 @@
     if (sizeCap() > 0) body.append('maxSide', sizeCap());
     if (colorsCap() > 0) body.append('maxColors', colorsCap());
 
-    fetch('/convert', { method: 'POST', body: body })
+    var ctrl = new AbortController();
+
+    var timer = setTimeout(function () {
+      ctrl.abort();
+    }, CONVERT_TIMEOUT_MS);
+
+    fetch('/convert', { method: 'POST', body: body, signal: ctrl.signal })
       .then(function (r) {
         return r.json().then(function (j) { return { ok: r.ok, j: j }; });
       })
@@ -174,15 +199,14 @@
         showResult(Object.assign({ dataUrl: res.j.data, name: file.name }, res.j.report));
       })
       .catch(function (err) {
-        showError(err.message);
+        showError(err.name === 'AbortError'
+          ? 'Timed out: no optimum found within ' + (CONVERT_TIMEOUT_MS / 1000) + ' s'
+          : err.message);
       })
       .finally(function () {
+        clearTimeout(timer);
         busy = false;
-
-        if (pending) {
-          pending = false;
-          convert(currentFile);
-        }
+        setControlsEnabled(true);
       });
   }
 

@@ -11,9 +11,11 @@ quality first; frames are thinned only as a last resort.
 2. **Pass-through** — input already within the limits is returned
    byte-for-byte, whatever its format.
 3. **Shape** — two modes:
-   - `ratio`: the longest side becomes 128 px, aspect preserved, never
-     upscaled.
-   - `square`: stretched to exactly 128x128 px.
+   - `ratio`: the longest side becomes at most 128 px, aspect preserved,
+     never upscaled.
+   - `square`: stretched to fill the square when converting.
+   Input already within the limits is returned byte-for-byte in either
+   mode.
 4. **Budget search** — degradation is interleaved: colors
    binary-searched from 255 down to a 16-color floor (dithered; below
    16 a GIF posterizes, so nothing goes lower) at 128 px with every
