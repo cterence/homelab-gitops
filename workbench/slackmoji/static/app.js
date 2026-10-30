@@ -142,7 +142,6 @@
     sizeNow = Math.max(rep.width, rep.height);
 
     current = { dataUrl: rep.dataUrl, name: rep.name };
-    downloadBtn.textContent = 'Download ' + (rep.dataUrl.indexOf('image/gif') !== -1 ? 'GIF' : 'PNG');
 
     report = rep;
     controlsActive = true;
@@ -256,7 +255,6 @@
     slot.setAttribute('aria-label', 'Choose a file');
 
     stageMeta.textContent = '';
-    downloadBtn.textContent = 'Download';
     error.hidden = true;
 
     AXES.forEach(function (axis) {
