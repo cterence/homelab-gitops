@@ -147,8 +147,11 @@ button { cursor: pointer; }
 
 .slider { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; }
 .slider-label { color: var(--muted); }
-.slider input[type="range"] { width: 160px; accent-color: var(--accent); }
+.slider-stack { display: flex; flex-direction: column; }
+/* base on the left, floor on the right: sliding right degrades */
+.slider input[type="range"] { width: 160px; accent-color: var(--accent); direction: rtl; }
 .slider input:disabled { opacity: 0.4; }
+.slider-ends { display: flex; justify-content: space-between; color: var(--muted); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
 .slider-value { min-width: 88px; color: var(--muted); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
 
 .actions { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }

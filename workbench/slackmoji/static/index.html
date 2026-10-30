@@ -50,19 +50,28 @@
 
       <div class="slider">
         <label for="frames-slider" class="slider-label">Frames</label>
-        <input type="range" id="frames-slider" min="1" max="100" value="100" step="1" disabled>
+        <div class="slider-stack">
+          <input type="range" id="frames-slider" min="1" max="100" value="100" step="1" disabled>
+          <div class="slider-ends"><span id="frames-base">base</span><span id="frames-min">1</span></div>
+        </div>
         <span class="slider-value" id="frames-out">all</span>
       </div>
 
       <div class="slider">
         <label for="colors-slider" class="slider-label">Colors</label>
-        <input type="range" id="colors-slider" min="16" max="255" value="255" step="1" disabled>
+        <div class="slider-stack">
+          <input type="range" id="colors-slider" min="16" max="255" value="255" step="1" disabled>
+          <div class="slider-ends"><span id="colors-base">base</span><span id="colors-min">16</span></div>
+        </div>
         <span class="slider-value" id="colors-out">best</span>
       </div>
 
       <div class="slider">
         <label for="size-slider" class="slider-label">Size</label>
-        <input type="range" id="size-slider" min="32" max="128" value="128" step="8" disabled>
+        <div class="slider-stack">
+          <input type="range" id="size-slider" min="32" max="128" value="128" step="8" disabled>
+          <div class="slider-ends"><span id="size-base">base</span><span id="size-min">32</span></div>
+        </div>
         <span class="slider-value" id="size-out">128 px</span>
       </div>
 

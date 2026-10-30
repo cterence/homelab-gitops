@@ -13,6 +13,11 @@
   var framesHint = document.getElementById('frames-out');
   var colorsHint = document.getElementById('colors-out');
   var sizeHint = document.getElementById('size-out');
+  var ends = {
+    frames: [document.getElementById('frames-base'), document.getElementById('frames-min')],
+    colors: [document.getElementById('colors-base'), document.getElementById('colors-min')],
+    size: [document.getElementById('size-base'), document.getElementById('size-min')]
+  };
   var resetBtn = document.getElementById('reset-btn');
 
   var fields = {
@@ -76,6 +81,13 @@
       : (sizeCap() ? sizeCap() + ' px' : naturalMax() + ' px max');
   }
 
+  function updateSizeRange() {
+    sizeSlider.min = Math.min(32, naturalMax());
+    sizeSlider.max = naturalMax();
+    ends.size[0].textContent = naturalMax() + ' px';
+    ends.size[1].textContent = sizeSlider.min + ' px';
+  }
+
   function showResult(report) {
     error.hidden = true;
     previewCol.hidden = false;
@@ -99,15 +111,20 @@
     fields.dims.classList.toggle('dropped', !report.passthrough && px < inPx);
     fields.frames.classList.toggle('dropped', report.framesOut < report.framesIn);
 
-    // sliders describe the file's ranges...
+    // sliders describe the file's ranges: base on the left, floor on
+    // the right, handle at the algorithm's outcome
     framesSlider.max = report.framesIn;
     colorsSlider.max = 255;
     sizeSlider.dataset.inPx = inPx;
-    sizeSlider.min = Math.min(32, naturalMax());
-    sizeSlider.max = naturalMax();
+    updateSizeRange();
     [framesSlider, colorsSlider, sizeSlider].forEach(function (s) {
       s.disabled = false;
     });
+
+    ends.frames[0].textContent = report.framesIn;
+    ends.frames[1].textContent = 1;
+    ends.colors[0].textContent = 255;
+    ends.colors[1].textContent = 16;
 
     // ...and untouched sliders sit at the algorithm's outcome
     if (!touched.frames) framesSlider.value = report.framesOut;
@@ -186,7 +203,7 @@
 
     framesSlider.value = framesSlider.max;
     colorsSlider.value = colorsSlider.max;
-    sizeSlider.max = naturalMax();
+    updateSizeRange();
     sizeSlider.value = sizeSlider.max;
 
     updateLabels();
@@ -213,10 +230,7 @@
 
   document.querySelectorAll('input[name="mode"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
-      if (!touched.size) {
-        sizeSlider.max = naturalMax();
-      }
-
+      updateSizeRange();
       updateLabels();
 
       if (currentFile) convert(currentFile);
