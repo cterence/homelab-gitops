@@ -50,6 +50,7 @@ jobs:
         uses: Mic92/niks3-action@6d24bc1d87acdfac8e5dc3266f7b28ae99051adf # v1.5.0
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
+          substituter: http://niks3.snow-delta.ts.net:5751
 
       - name: Bump
         run: |
