@@ -46,6 +46,15 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:github-actions
+      - name: Restore DNS after Tailscale
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          tsip=$(tailscale status --json | jq -r '.Peer[] | select(.DNSName | startswith("niks3.")) | .TailscaleIPs[0]')
+          test -n "$tsip"
+          echo "$tsip niks3.snow-delta.ts.net" | sudo tee -a /etc/hosts
+          sudo networksetup -setdnsservers Ethernet Empty
+          sudo networksetup -setsearchdomains Ethernet Empty
       - name: Setup niks3 cache
         uses: Mic92/niks3-action@6d24bc1d87acdfac8e5dc3266f7b28ae99051adf # v1.5.0
         with:
