@@ -24,7 +24,7 @@ niks3:
     oidcProviders:
       github:
         issuer: https://token.actions.githubusercontent.com
-        audience: https://niks3.terence.cloud
+        audience: http://niks3.snow-delta.ts.net:5751
         bound_claims:
           repository_owner: ["cterence"]
         # The slug entry covers the repo by name; the ID entry survives
