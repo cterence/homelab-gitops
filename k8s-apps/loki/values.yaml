@@ -117,14 +117,32 @@ loki:
               rules:
                 - alert: VeleroRepoMaintenanceFailed
                   expr: |
-                    sum by (repo) (count_over_time({k8s_container_name="velero"} |= "Pruning repository failed" | regexp "backupRepo=(?P<repo>[^ ]+)" [10m])) > 0
-                  for: 0m
+                    sum by (repo) (count_over_time({k8s_container_name="velero"} |= "Pruning repository failed" | regexp "backupRepo=(?P<repo>[^ ]+)" [1h])) > 2
                   labels:
                     severity: warning
                     context: velero
                   annotations:
-                    summary: "Velero repo {{ "{{ $labels.repo }}" }} maintenance failed"
-                    description: "Runbook (replace NS and BLOB): kubectl logs -n velero deploy/velero | grep 'error loading index blob' to find BLOB. aws s3 --endpoint-url https://s3.eu-central-003.backblazeb2.com rm s3://velero-backup-tch/v2/kopia/NS/BLOB (creds from: kubectl get secret -n velero backblaze-credentials -o jsonpath='{.data.config}' | base64 -d). kopia repo connect s3 --bucket=velero-backup-tch --prefix=v2/kopia/NS/ --endpoint=s3.eu-central-003.backblazeb2.com --password='$(kubectl get secret -n velero velero-repo-credentials -o jsonpath=\"{.data.repository-password}\" | base64 -d)'. kopia blob delete --dangerous-commands=enabled BLOB. kopia maintenance run --force. kopia repo disconnect. kubectl patch backuprepository -n velero REPO --type merge -p '{\"status\":{\"lastMaintenanceTime\":null}}'. Verify: kubectl get backuprepository -n velero REPO -o jsonpath='{.status.recentMaintenance}'."
+                    summary: "Velero repo {{ "{{ $labels.repo }}" }} maintenance repeatedly failing"
+                    description: >-
+                      Fires on 3+ failures within 1h; a single failed maintenance that velero
+                      retries successfully does not page. The log line carries error=<nil>, the real
+                      error is in the repo status (REPO = repo label without the namespace prefix):
+                      kubectl get backuprepository -n velero REPO -o jsonpath='{.status.recentMaintenance}'.
+                      If it ends with "Service unavailable" on GetBlob: transient Backblaze B2 outage.
+                      Do NOT delete blobs. Velero retries every ~10-15m; wait for a Succeeded run and
+                      check backups taken meanwhile: kubectl get backups.velero.io -n velero | grep -v Completed.
+                      Only if the index blob is corrupt (error loading index blob persists while B2 is
+                      reachable) use the kopia runbook (replace NS and BLOB): kubectl logs -n velero
+                      deploy/velero | grep 'error loading index blob' to find BLOB. aws s3 --endpoint-url
+                      https://s3.eu-central-003.backblazeb2.com rm s3://velero-backup-tch/v2/kopia/NS/BLOB
+                      (creds from: kubectl get secret -n velero backblaze-credentials -o jsonpath='{.data.config}'
+                      | base64 -d). kopia repo connect s3 --bucket=velero-backup-tch --prefix=v2/kopia/NS/
+                      --endpoint=s3.eu-central-003.backblazeb2.com --password='$(kubectl get secret -n velero
+                      velero-repo-credentials -o jsonpath="{.data.repository-password}" | base64 -d)'.
+                      kopia blob delete --dangerous-commands=enabled BLOB. kopia maintenance run --force.
+                      kopia repo disconnect. kubectl patch backuprepository -n velero REPO --type merge
+                      -p '{"status":{"lastMaintenanceTime":null}}'. Verify: kubectl get backuprepository
+                      -n velero REPO -o jsonpath='{.status.recentMaintenance}'.
 
   ingester:
     replicas: 0
