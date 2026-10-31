@@ -40,6 +40,15 @@ jobs:
             exit 0
           fi
           git commit -m "docs: [ci] updated deployed apps table"
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+          # main can move between fetch and push; retry the rebase a few times.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; exit 1; }
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push attempt $attempt failed (main moved), retrying..."
+            sleep $((attempt * 5))
+          done
+          echo "::error::Could not push to main after 3 attempts"
+          exit 1
