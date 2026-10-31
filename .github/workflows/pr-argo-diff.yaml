@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -49,6 +50,13 @@ jobs:
           echo "Diffing:  ${apps:-<none>}"
           echo "apps=$apps" >> "$GITHUB_OUTPUT"
 
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+
       - name: Login to ArgoCD
         if: steps.apps.outputs.apps != ''
         env:
@@ -56,7 +64,7 @@ jobs:
         run: |
           # Retry to ride out transient 503s / server restarts.
           for attempt in 1 2 3 4 5; do
-            if argocd login argocd.terence.cloud --grpc-web \
+            if argocd login argocd.snow-delta.ts.net --plaintext --grpc-web \
               --username admin --password "$ARGOCD_ADMIN_PASSWORD"; then
               exit 0
             fi
