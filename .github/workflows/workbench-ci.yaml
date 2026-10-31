@@ -31,7 +31,9 @@ jobs:
           apps=$(git diff --name-only "$mb" HEAD -- workbench/ | cut -d/ -f2 | sort -u)
           go="[]"; docker="[]"
           for app in $apps; do
-            [ -f "workbench/$app/go.mod" ] && go=$(jq -c --arg a "$app" '. + [$a]' <<<"$go")
+            # go.mod alone is not enough: workbench/docs carries a Hugo
+            # module go.mod with no Go source.
+            [ -f "workbench/$app/go.mod" ] && find "workbench/$app" -name '*.go' | grep -q . && go=$(jq -c --arg a "$app" '. + [$a]' <<<"$go")
             [ -f "workbench/$app/Dockerfile" ] && docker=$(jq -c --arg a "$app" '. + [$a]' <<<"$docker")
           done
           echo "go=$go" >> "$GITHUB_OUTPUT"
