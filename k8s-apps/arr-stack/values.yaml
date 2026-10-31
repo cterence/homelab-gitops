@@ -64,7 +64,7 @@ app-template:
       type: deployment
       strategy: Recreate
       labels:
-        sablier.enable: "true"
+        sablier.enable: "false"
         sablier.group: "js"
       annotations:
         reloader.stakater.com/auto: "true"
