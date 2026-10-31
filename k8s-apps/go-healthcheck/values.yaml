@@ -19,7 +19,9 @@ urls:
   - https://prow.terence.cloud/ping
   - https://qb.terence.cloud
   - https://rad.terence.cloud/ping
-  - https://registry.terence.cloud/v2/
+  # REGISTRY_PASSWORD is replaced at sync time with the password from the
+  # registry-pull-secret (registry htpasswd auth, user "registry")
+  - https://registry:REGISTRY_PASSWORD@registry.terence.cloud/v2/
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
   - https://versity.terence.cloud/health
