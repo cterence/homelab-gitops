@@ -13,4 +13,6 @@ result.apk
 *.mp3
 .taste-skill/
 workbench/slackmoji/slackmoji
+workbench/docs/public/
+workbench/docs/.hugo_build.lock
 result

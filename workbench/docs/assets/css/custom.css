@@ -1,0 +1,12 @@
+/* One language switcher, in the navbar: the sidebar's sticky switcher strip
+ * (data-toggle-animation="show") renders a second switcher on docs pages and
+ * mobile. Hextra has no config flag for it. */
+[data-toggle-animation="show"] {
+  display: none !important;
+}
+
+/* Top-align card text: hextra pins the icon/title/subtitle block to the card
+ * bottom (hx:mt-auto), meant for image cards. Our cards have no image. */
+.hextra-card > .hx\:mt-auto {
+  margin-top: 0;
+}

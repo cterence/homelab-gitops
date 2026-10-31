@@ -1,0 +1,43 @@
+# Hugo configuration file
+title: Documentation
+baseURL: https://docs.terence.cloud/
+defaultContentLanguage: fr
+
+languages:
+  fr:
+    label: Français
+    locale: fr
+    weight: 1
+
+# import hextra as module
+module:
+  imports:
+    - path: github.com/imfing/hextra
+
+markup:
+  # allow raw html
+  goldmark:
+    renderer:
+      unsafe: true
+
+  # enable hextra syntax highlight
+  highlight:
+    noClasses: false
+
+menu:
+  main:
+    - name: Search
+      weight: 1
+      params:
+        type: search
+    - params:
+        type: language-switch
+      weight: 2
+
+params:
+  navbar:
+    displayTitle: true
+    displayLogo: false
+
+  footer:
+    enable: false

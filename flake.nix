@@ -144,6 +144,7 @@
               go
               gotools
               golangci-lint
+              hugo
               uv
               vault
             ]

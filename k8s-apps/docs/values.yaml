@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    imagePullSecrets:
+      - name: registry-pull-secret
+    automountServiceAccountToken: false
+
+  controllers:
+    main:
+      strategy: RollingUpdate
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: registry.terence.cloud/docs
+            tag: "1"
+            pullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 80
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+      className: "traefik"
+      hosts:
+        - host: &host docs.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: docs-tls
+          hosts:
+            - *host

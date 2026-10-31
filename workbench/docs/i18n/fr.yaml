@@ -1,0 +1,8 @@
+# Callout titles for GitHub-style alerts ([!note], [!tip], ...).
+# Hextra's i18n/fr.yaml does not define these; without them the alert
+# title falls back to capitalized English.
+note: Remarque
+tip: Astuce
+important: Important
+warning: Attention
+caution: Prudence
