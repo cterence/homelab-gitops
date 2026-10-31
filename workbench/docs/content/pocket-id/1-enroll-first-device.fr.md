@@ -11,17 +11,15 @@ next: 2-enroll-another-device
 
 ## 1. Ouvrez le code de connexion
 
-Sur votre premier appareil, ouvrez le lien reçu ou allez sur [auth.terence.cloud](https://auth.terence.cloud) et appuyez sur **Méthodes de connexion alternatives -> Code de connexion**.
+Sur votre premier appareil, ouvrez le lien reçu puis passez à l'étape suivante.
 
-<!-- décrire scénario lien -->
-
-Saisissez le code, **il ne fonctionne qu'une seule fois et a une date d'expiration**, contactez-moi si vous rencontrez une erreur.
+Si vous avez juste un code, allez sur [auth.terence.cloud](https://auth.terence.cloud) et cliquez sur **Méthodes de connexion alternatives -> Code de connexion**. Saisissez le code, **il ne fonctionne qu'une seule fois et a une date d'expiration**, contactez-moi si vous rencontrez une erreur.
 
 ## 2. Créez votre clé d'accès
 
-Pocket ID vous demande de configurer une clé d'accès. Appuyez sur **Ajouter une clé d'accès** et confirmez avec votre empreinte, votre visage ou votre code PIN.
+Pocket ID vous demande de configurer une clé d'accès. Cliquez sur **Ajouter une clé d'accès** et confirmez avec votre empreinte, votre visage ou votre code PIN. Ne cliquez pas sur **Ignorer pour le moment**.
 
-Quand on vous demande **où l'enregistrer**, choisissez un compte ou un gestionnaire de mot de passe qui vous suit sur vos autres appareils :
+Quand on vous demande **où l'enregistrer**, privilégiez un compte ou un gestionnaire de mot de passe qui vous suit sur vos autres appareils :
 
 - **iPhone :** trousseau iCloud
 - **Android :** Gestionnaire de mots de passe Google
@@ -30,9 +28,7 @@ Quand on vous demande **où l'enregistrer**, choisissez un compte ou un gestionn
 > Si vous utilisez un gestionnaire de mot de passe supportant les clés d'accès type Bitwarden, Dashlane, 1Password, etc... Choisissez-le en priorité.\
 > Si vous en utilisez un mais l'option n'apparaît pas, un paramétrage est nécessaire.\
 > Exemple pour Bitwarden sur [Android](https://bitwarden.com/help/auto-fill-android/#autofill-passkeys) / [iOS](https://bitwarden.com/help/auto-fill-ios/#use-passkeys), le fonctionnement décrit pour Bitwarden devrait être similaire pour les autres gestionnaires.\
-> Si vous ne pouvez pas le faire maintenant, pas de problème, une nouvelle clé d'accès peut être créée plus tard.
-
-Évitez de choisir « conserver sur cet appareil » : la clé resterait bloquée sur l'appareil.
+> Si vous ne pouvez pas le faire maintenant, pas de problème, une nouvelle clé d'accès peut être créée plus tard dans Pocket ID.
 
 ## 3. C'est fini
 
