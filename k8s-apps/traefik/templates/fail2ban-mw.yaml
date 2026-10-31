@@ -10,7 +10,8 @@ spec:
       enabled: true
       rules:
         # jail: threshold 30 / window 120s / errorCodes 400-498
-        statuscode: "400-498"
+        # 404 excluded: binary-cache misses must not count as failures
+        statuscode: "400-403,405-498"
         findtime: "2m"
         maxretry: 30
         # fixed ban, fail2ban has no exponential backoff
@@ -84,8 +85,8 @@ spec:
             mode: block
           - regexp: '(?i)^/mysqladmin(?:/|[-._0-9]|$)'
             mode: block
-          # allow: skip fail2ban entirely (was jail excludeURLs; host can't
-          # be matched, so these apply to every host)
+          # allow: skip the banned-IP gate only, status-code counting still
+          # applies (host can't be matched, so these apply to every host)
           - regexp: '(?i)^/[^/]*\.narinfo'
             mode: allow
           - regexp: '(?i)^/api/'
