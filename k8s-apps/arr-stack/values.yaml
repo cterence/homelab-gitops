@@ -870,7 +870,7 @@ app-template:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-js@kubernetescrd,traefik-modsecurity@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: "traefik-modsecurity@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host js.terence.cloud
