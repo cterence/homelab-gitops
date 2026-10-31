@@ -199,6 +199,11 @@ argo-cd:
       serviceMonitor:
         enabled: false
 
+    service:
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: argocd
+
     ingress:
       enabled: true
       annotations:
