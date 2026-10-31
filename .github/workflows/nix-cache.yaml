@@ -1,12 +1,3 @@
-# Builds the flake's packages per system and pushes them to the niks3
-# binary cache (https://niks3.terence.cloud). Auth is GitHub Actions
-# OIDC: the audience/subject must be bound in k8s-apps/niks3/values.yaml.
-# On PRs it also builds the catbox nix packages (the catbox-pr job): the
-# hermetic builds are the only proof of the go toolchain/vendorHash and
-# the APK's gradle set (verification metadata, FOD hash), which
-# workbench-ci cannot validate — and Renovate's platformAutomerge can
-# merge the moment required checks pass, so the nix packages must be a
-# required check that reports on every PR.
 name: Nix cache
 
 on:
@@ -17,9 +8,6 @@ on:
       - flake.lock
       - workbench/catbox/**
       - .github/workflows/nix-cache.yaml
-  # Runs on every PR so the catbox-pr check is always reported (it is a
-  # required status check on main); the job skips the build when the PR
-  # touches nothing catbox nix-related.
   pull_request:
   workflow_dispatch:
 
