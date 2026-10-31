@@ -57,6 +57,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [cnpg-restore-test](./scripts/../k8s-apps/cnpg-restore-test) | Daily CNPG backup restore verification |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter |
 | [disk-usage-exporter](./scripts/../k8s-apps/disk-usage-exporter) | Per-directory disk usage Prometheus exporter for local-path volumes |
+| [docs](./scripts/../k8s-apps/docs) | Static documentation site built by the workbench factory |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets |
 | [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go |
