@@ -20,6 +20,8 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -38,10 +40,16 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           determinate: false
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
       - name: Setup niks3 cache
         uses: Mic92/niks3-action@6d24bc1d87acdfac8e5dc3266f7b28ae99051adf # v1.5.0
         with:
-          server-url: https://niks3.terence.cloud
+          server-url: http://niks3.snow-delta.ts.net:5751
       - name: Build
         run: |
           set -euo pipefail
@@ -62,6 +70,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      id-token: write
     concurrency:
       group: ${{ github.workflow }}-catbox-pr-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -85,11 +95,17 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           determinate: false
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
       - name: Setup niks3 cache
         if: steps.catbox.outputs.changed == 'true'
         uses: Mic92/niks3-action@6d24bc1d87acdfac8e5dc3266f7b28ae99051adf # v1.5.0
         with:
-          server-url: https://niks3.terence.cloud
+          server-url: http://niks3.snow-delta.ts.net:5751
       - name: Build catbox nix packages
         if: steps.catbox.outputs.changed == 'true'
         run: |

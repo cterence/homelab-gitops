@@ -17,6 +17,8 @@ jobs:
   bump:
     name: Update vendorHash after go.mod/go.sum changes
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Generate app token
         id: app-token
@@ -37,10 +39,17 @@ jobs:
         with:
           determinate: false
 
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+
       - name: Setup niks3 cache
         uses: Mic92/niks3-action@6d24bc1d87acdfac8e5dc3266f7b28ae99051adf # v1.5.0
         with:
-          server-url: https://niks3.terence.cloud
+          server-url: http://niks3.snow-delta.ts.net:5751
 
       - name: Bump
         run: |
