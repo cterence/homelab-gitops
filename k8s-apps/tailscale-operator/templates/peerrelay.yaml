@@ -1,0 +1,11 @@
+apiVersion: tailscale.com/v1alpha1
+kind: PeerRelay
+metadata:
+  name: relay
+spec:
+  replicas: 1
+  staticEndpoints:
+    - 109.0.228.97:41641
+  service:
+    annotations:
+      metallb.io/loadBalancerIPs: 192.168.1.242
