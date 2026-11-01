@@ -1,5 +1,5 @@
-github.com/cenkalti/backoff/v7 v7.0.1 h1:+ulHti5s1d9QnfyOnLWVmQ/SaZ+TJQF9OdOI0i9BGZI=
-github.com/cenkalti/backoff/v7 v7.0.1/go.mod h1:qcKBGwsu4hpxHtQ8tWYsQ+ifzx2+sS+Xx/3jfe30lI8=
+github.com/cenkalti/backoff/v7 v7.0.3 h1:oJlXCmDgfNcGYViwioz1cZ1kHebejP4OLfJ/gqMQVWA=
+github.com/cenkalti/backoff/v7 v7.0.3/go.mod h1:qcKBGwsu4hpxHtQ8tWYsQ+ifzx2+sS+Xx/3jfe30lI8=
 github.com/chromedp/cdproto v0.157.8 h1:Tkq0AjsUlC3Z4sJfHBzV/uAAxnTF/AZyuSTjfV/1gvk=
 github.com/chromedp/cdproto v0.157.8/go.mod h1:h68JaIuFr9o3yiayxEYhBdvaxgYO3shDrPSYhNlyfu0=
 github.com/chromedp/chromedp v0.21.0 h1:nVHgS2LHyhZJ1l3BWRbG2eFIFYiJMnvkJbELbd8WBoQ=
