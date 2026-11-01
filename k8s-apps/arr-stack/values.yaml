@@ -669,6 +669,7 @@ app-template:
             TZ: Europe/Paris
             SLSKD_CONFIG: /config/slskd.yml
           args:
+            - ./slskd
             - --upload-speed-limit=20480
             - --download-speed-limit=20480
           ports:
