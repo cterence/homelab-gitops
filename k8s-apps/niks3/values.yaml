@@ -14,6 +14,9 @@ niks3:
 
   s3:
     endpoint: versity.terence.cloud
+    # Presigned URLs handed to clients use the tailscale-exposed gateway so
+    # GitHub runners (geoblocked on the public ingress) can upload NARs.
+    publicURL: http://versity.snow-delta.ts.net:7070
     bucket: nix-cache
     region: us-east-1
     useSSL: true
