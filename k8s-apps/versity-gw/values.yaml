@@ -156,6 +156,9 @@ app-template:
     main:
       controller: main
       type: ClusterIP
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: versity
       ports:
         http:
           port: 7070
