@@ -261,12 +261,12 @@ velero:
         includedNamespaces:
           - arr-stack
           - audiobookshelf
-          - calibre-web
           - changedetection
           - gitea
           - home-assistant
           - immich
-          - nextcloud
+          - mosquitto
+          - opencloud
           - paperless-ngx
           - pocket-id
           - vaultwarden
@@ -299,7 +299,7 @@ velero:
           - home-assistant
           - immich
           - mosquitto
-          - nextcloud
+          - opencloud
           - paperless-ngx
           - pocket-id
           - vaultwarden
