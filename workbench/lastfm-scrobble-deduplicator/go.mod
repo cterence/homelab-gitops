@@ -3,7 +3,7 @@ module github.com/cterence/homelab-gitops/workbench/lastfm-scrobble-deduplicator
 go 1.27
 
 require (
-	github.com/cenkalti/backoff/v7 v7.0.1
+	github.com/cenkalti/backoff/v7 v7.0.3
 	github.com/chromedp/cdproto v0.157.8
 	github.com/chromedp/chromedp v0.21.0
 	github.com/go-telegram/bot v1.27.0
