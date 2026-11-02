@@ -74,6 +74,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [metallb](./scripts/../k8s-apps/metallb) | A network load-balancer implementation for Kubernetes using standard routing protocols |
 | [microbin](./scripts/../k8s-apps/microbin) | A secure, configurable file-sharing and URL shortening web app |
 | [mosquitto](./scripts/../k8s-apps/mosquitto) | Open source MQTT broker |
+| [network-policies](./scripts/../k8s-apps/network-policies) | Cluster network policy baseline, allow-list plus per-namespace default deny |
 | [niks3](./scripts/../k8s-apps/niks3) | S3-backed Nix binary cache with garbage collection |
 | [opencloud](./scripts/../k8s-apps/opencloud) | Excellent file sharing |
 | [opentelemetry-collector](./scripts/../k8s-apps/opentelemetry-collector) | Vendor-agnostic implementation on how to receive, process and export telemetry data |
