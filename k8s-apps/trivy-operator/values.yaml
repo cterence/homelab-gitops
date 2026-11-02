@@ -1,3 +1,21 @@
 trivy-operator:
   serviceMonitor:
     enabled: true
+
+  operator:
+    # DB fetched once into a PVC, scan jobs run as thin clients
+    builtInTrivyServer: true
+    scanJobsConcurrentLimit: 2
+    sbomGenerationEnabled: false
+    clusterComplianceEnabled: false
+    infraAssessmentScannerEnabled: false
+
+  trivy:
+    server:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 1Gi
