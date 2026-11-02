@@ -1,0 +1,16 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: k8s-{{ .Release.Namespace }}
+  target:
+    name: {{ .Release.Name }}
+    creationPolicy: Owner
+  data:
+    - secretKey: DB_CONNECTION_STRING
+      remoteRef:
+        key: {{ .Release.Name }}-cnpg-cluster-app
+        property: uri

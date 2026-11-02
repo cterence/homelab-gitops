@@ -200,7 +200,15 @@ pocket-id:
     create: false
     # -- Specifies name of a secret used to configure the pocket-id.
     # If not filled, uses full name.
-    name: ""
+    name: pocket-id-encryption-key
+
+  # -- Additional envFrom sources. Keys must be valid env var names
+  # (ENCRYPTION_KEY, MAXMIND_LICENSE_KEY, DB_CONNECTION_STRING).
+  extraEnvFrom:
+    - secretRef:
+        name: pocket-id-maxmind-key
+    - secretRef:
+        name: pocket-id
 
   # -- Secrets for pulling images.
   imagePullSecrets: []
