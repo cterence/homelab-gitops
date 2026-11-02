@@ -3,6 +3,8 @@ data "sops_file" "secrets" {
 }
 
 locals {
+  revision = 5
+
   # sops keys are "<namespace>.<secret-name>.<key>"
   regex_pattern = "^([^.]+)\\.([^.]+)\\.(.+)$"
 
@@ -32,7 +34,7 @@ locals {
     }
   }
 
-  data_wo_revision = 4
+  data_wo_revision = local.revision
 }
 
 resource "kubernetes_secret_v1" "secrets" {
