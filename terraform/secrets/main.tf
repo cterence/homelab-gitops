@@ -32,9 +32,7 @@ locals {
     }
   }
 
-  # data_wo never enters state or plan, so value edits are invisible to
-  # terraform: bump this to rewrite every secret.
-  data_wo_revision = 3
+  data_wo_revision = 4
 }
 
 resource "kubernetes_secret_v1" "secrets" {
