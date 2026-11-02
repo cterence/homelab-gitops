@@ -60,6 +60,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [docs](./scripts/../k8s-apps/docs) | Static documentation site built by the workbench factory |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets |
+| [falco](./scripts/../k8s-apps/falco) | Cloud Native Runtime Security |
 | [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks |
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first |
