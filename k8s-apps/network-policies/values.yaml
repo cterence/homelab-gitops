@@ -1,0 +1,16 @@
+# Allowed cross-namespace callers; same-namespace is always allowed.
+allowFrom:
+  - traefik
+  - monitoring
+  - go-healthcheck
+  - tailscale-operator
+
+podCIDR: 10.244.0.0/16
+
+# defaultDeny blocks all ingress except allowFrom; allowClusterIngress admits podCIDR.
+namespaces:
+  - name: pocket-id
+    defaultDeny: true
+    allowClusterIngress: true
+  - name: vaultwarden
+    defaultDeny: true
