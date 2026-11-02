@@ -31,6 +31,26 @@ docs/superpowers/  Design specs and implementation plans
 terraform/     Infrastructure provisioning (secrets, external-secrets)
 ```
 
+## Secrets
+
+Secrets are provisioned by `terraform/secrets/` from the SOPS-encrypted
+`secrets.yaml`. Keys follow `<namespace>.<secret-name>.<key>`; each
+`<namespace>/<secret-name>` becomes one k8s Secret (write-only, values never
+land in terraform state). Rules:
+
+- Agents must never run sops operations themselves (decrypt, encrypt, rotate,
+  edit). Write the terraform/chart wiring only; the user adds sops entries and
+  applies with their key.
+- To reuse an existing secret in another namespace, the user copies the values
+  into new sops keys under the target namespace
+  (`<namespace>.<secret-name>.<key>`) — the generic provisioner handles the
+  rest. No per-secret terraform resources.
+- Prefer creating the secret in the target namespace with terraform over
+  external-secrets cross-namespace sharing. ES (ClusterSecretStore per source
+  namespace + RBAC in `k8s-apps/external-secrets/values.yaml` +
+  ExternalSecret in the consumer) is only warranted for wide distribution,
+  e.g. `registry-pull-secret` fanned out to many namespaces.
+
 ## Deployed apps
 
 An app is deployed if and only if `k8s-apps/<name>/appset.yaml` exists (the
