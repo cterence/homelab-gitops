@@ -33,6 +33,23 @@ func TestTrivyManifest(t *testing.T) {
 	}
 }
 
+func TestTrivyTopWorkloadsTableFormat(t *testing.T) {
+	m := buildManifest(t, trivy())
+	elements := m["spec"].(map[string]any)["elements"].(map[string]any)
+	panel := elements["panel-8"].(map[string]any)["spec"].(map[string]any)
+	queries := panel["data"].(map[string]any)["spec"].(map[string]any)["queries"].([]any)
+	query := queries[0].(map[string]any)["spec"].(map[string]any)["query"].(map[string]any)
+	spec := query["spec"].(map[string]any)
+
+	if spec["format"] != "table" {
+		t.Errorf("format: got %v, want table", spec["format"])
+	}
+
+	if spec["instant"] != true {
+		t.Errorf("instant: got %v, want true", spec["instant"])
+	}
+}
+
 func TestTrivyVariable(t *testing.T) {
 	m := buildManifest(t, trivy())
 	variable := m["spec"].(map[string]any)["variables"].([]any)[0].(map[string]any)

@@ -678,8 +678,8 @@
                         "editorMode": "code",
                         "exemplar": false,
                         "expr": "topk(15, sum by (namespace, resource_name, image_repository, image_tag) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"Critical\"}))",
+                        "format": "table",
                         "instant": true,
-                        "legendFormat": "",
                         "range": false
                       }
                     },
@@ -705,6 +705,7 @@
                         "value": 4
                       },
                       "renameByName": {
+                        "Value": "critical",
                         "resource_name": "workload",
                         "value": "critical"
                       }

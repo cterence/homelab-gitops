@@ -11,6 +11,8 @@ trivy-operator:
     infraAssessmentScannerEnabled: false
 
   trivy:
+    # only report CVEs that have a fix available
+    ignoreUnfixed: true
     server:
       resources:
         requests:

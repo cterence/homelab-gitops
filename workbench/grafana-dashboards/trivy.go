@@ -7,6 +7,7 @@ import (
 	"github.com/grafana/grafana-foundation-sdk/go/cog"
 	"github.com/grafana/grafana-foundation-sdk/go/common"
 	dashboardv2 "github.com/grafana/grafana-foundation-sdk/go/dashboardv2"
+	"github.com/grafana/grafana-foundation-sdk/go/prometheus"
 	"github.com/grafana/grafana-foundation-sdk/go/table"
 	"github.com/grafana/grafana-foundation-sdk/go/timeseries"
 )
@@ -125,6 +126,21 @@ func topImagesPanel() *dashboardv2.PanelBuilder {
 			ReduceOptions(lastNotNull()))
 }
 
+// promTableTarget is promTarget for instant queries rendered as a single
+// table frame (labels as columns), instead of one frame per series.
+func promTableTarget(refID, expr string) *dashboardv2.TargetBuilder {
+	return dashboardv2.NewTargetBuilder().
+		RefId(refID).
+		Query(prometheus.NewQueryV2Builder().
+			Datasource(dashboardv2.NewDashboardv2DataQueryKindDatasourceBuilder().Name(promDatasource)).
+			EditorMode(prometheus.QueryEditorModeCode).
+			Exemplar(false).
+			Expr(expr).
+			Format(prometheus.PromQueryFormatTable).
+			Instant(true).
+			Range(false))
+}
+
 func topWorkloadsPanel() *dashboardv2.PanelBuilder {
 	expr := fmt.Sprintf(`topk(15, sum by (namespace, resource_name, image_repository, image_tag) (%s{%s,severity="Critical"}))`, trivyVulns, nsMatch)
 
@@ -132,7 +148,7 @@ func topWorkloadsPanel() *dashboardv2.PanelBuilder {
 		Id(8).
 		Title("Top 15 workloads by criticals").
 		Data(dashboardv2.NewQueryGroupBuilder().
-			Target(promTarget("A", expr, "", true)).
+			Target(promTableTarget("A", expr)).
 			Transformation(dashboardv2.NewTransformationBuilder().
 				Group("organize").
 				Options(map[string]any{
@@ -141,7 +157,11 @@ func topWorkloadsPanel() *dashboardv2.PanelBuilder {
 						"namespace": 0, "resource_name": 1,
 						"image_repository": 2, "image_tag": 3, "value": 4,
 					},
-					"renameByName": map[string]any{"resource_name": "workload", "value": "critical"},
+					"renameByName": map[string]any{
+						"resource_name": "workload",
+						"value":         "critical",
+						"Value":         "critical",
+					},
 				}))).
 		Visualization(table.NewVisualizationV2Builder().
 			Unit("short").
