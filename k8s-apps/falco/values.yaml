@@ -30,6 +30,14 @@ falco:
             sablier, tailscale-operator, velero
           ))
           or (k8smeta.pod.name contains "cnpg-cluster")
+    flaresolverr-chromedriver.yaml: |-
+      # FlareSolverr's undetected-chromedriver patches /app/chromedriver at
+      # container start, tripping "Drop and execute new binary in container".
+      - macro: known_drop_and_execute_activities
+        condition: >
+          (k8smeta.ns.name = "arr-stack"
+           and k8smeta.pod.name startswith "arr-stack-flaresolverr"
+           and proc.exe = "/app/chromedriver")
   grafana:
     dashboards:
       enabled: true
