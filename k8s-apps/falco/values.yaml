@@ -25,16 +25,7 @@ falco:
           folder: Falco
   falcosidekick:
     enabled: true
-    replicaCount: 1
-    serviceMonitor:
-      enabled: true
-    prometheusRules:
-      enabled: true
-    grafana:
-      dashboards:
-        enabled: false
     config:
-      loki:
-        hostport: http://loki-headless.monitoring.svc.cluster.local:3100
-        grafanaDashboard:
-          enabled: false
+      existingSecret: falcosidekick-telegram
+      telegram:
+        minimumpriority: warning
