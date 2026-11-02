@@ -1,0 +1,5 @@
+apiVersion: v2
+name: network-policies
+description: Cluster network policy baseline, allow-list plus per-namespace default deny
+type: application
+version: 0.1.0
