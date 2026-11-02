@@ -35,6 +35,6 @@ falco:
         enabled: false
     config:
       loki:
-        hostport: http://loki-headless.monitoring.svc.cluster.local:3100
+        hostport: http://loki-gateway.loki
         grafanaDashboard:
           enabled: false
