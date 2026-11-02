@@ -17,6 +17,19 @@ falco:
     enabled: true
   serviceMonitor:
     create: true
+  customRules:
+    known-api-server-clients.yaml: |-
+      # Trusted controllers legitimately watching the K8s API; the default
+      # "Contact K8S API Server From Container" rule references this macro.
+      - macro: user_known_contact_k8s_api_server_activities
+        condition: >
+          (k8smeta.ns.name in (
+            argocd, cert-manager, cnpg-system, external-dns, external-secrets,
+            falco, ingress-nginx, kube-system, loki, metallb, monitoring,
+            opentelemetry-collector, opentelemetry-operator, registry, reloader,
+            sablier, tailscale-operator, velero
+          ))
+          or (k8smeta.pod.name contains "cnpg-cluster")
   grafana:
     dashboards:
       enabled: true
