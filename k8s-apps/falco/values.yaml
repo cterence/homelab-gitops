@@ -1,6 +1,6 @@
 falco:
   image:
-    tag: latest
+    tag: 0.45.2@sha256:1562a643953f938e02f47319b5214d93a235f11f646d60e9b8a516fd5a64698e
   falco:
     webserver:
       prometheus_metrics_enabled: true
