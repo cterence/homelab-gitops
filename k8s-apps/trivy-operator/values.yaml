@@ -1,0 +1,3 @@
+trivy-operator:
+  serviceMonitor:
+    enabled: true

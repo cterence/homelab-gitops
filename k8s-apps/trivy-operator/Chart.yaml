@@ -1,0 +1,9 @@
+apiVersion: v2
+name: trivy-operator
+description: Kubernetes-native security toolkit
+type: application
+version: 0.1.0
+dependencies:
+  - name: trivy-operator
+    repository: oci://ghcr.io/aquasecurity/helm-charts/trivy-operator
+    version: 0.38.1
