@@ -427,9 +427,6 @@ kube-prometheus-stack:
       groups:
         - name: network-policies
           rules:
-            # Every namespace except the kube-* system ones must have at
-            # least one NetworkPolicy. Most namespaces firing is expected
-            # until coverage is complete.
             - alert: NetworkPoliciesNotDeployed
               expr: >-
                 kube_namespace_created{namespace!~"kube-system|kube-public|kube-node-lease|k0s-autopilot"}
