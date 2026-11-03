@@ -13,6 +13,25 @@ falco:
   collectors:
     kubernetes:
       enabled: true
+  mounts:
+    volumes:
+      - name: ghcr-dockerconfig
+        secret:
+          secretName: ghcr-dockerconfig
+          items:
+            - key: config.json
+              path: config.json
+  falcoctl:
+    artifact:
+      install:
+        env:
+          - name: DOCKER_CONFIG
+            value: /dockerconfig
+        mounts:
+          volumeMounts:
+            - name: ghcr-dockerconfig
+              mountPath: /dockerconfig
+              readOnly: true
   metrics:
     enabled: true
   serviceMonitor:
