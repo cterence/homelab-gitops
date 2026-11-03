@@ -423,6 +423,24 @@ kube-prometheus-stack:
                   are retained. Clean up the data on the node, then delete the
                   PV.
 
+    network-policies:
+      groups:
+        - name: network-policies
+          rules:
+            - alert: NetworkPoliciesNotDeployed
+              expr: >-
+                kube_namespace_created{namespace!~"kube-system|kube-public|kube-node-lease|k0s-autopilot"}
+                unless on(namespace) (sum by (namespace) (kube_networkpolicy_created))
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "No NetworkPolicies deployed in namespace {{ $labels.namespace }}"
+                description: >-
+                  Namespace {{ $labels.namespace }} has no NetworkPolicy objects.
+                  Add it to k8s-apps/network-policies/values.yaml or deploy a
+                  policy there.
+
   kubeEtcd:
     enabled: false
 

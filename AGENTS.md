@@ -162,6 +162,10 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 - Workbench app images reference the in-cluster registry: `registry.terence.cloud/<app>` with a `tag` matching `build.yaml`.
 - Third-party images are pinned by digest (`tag@sha256:...`).
 
+## Comments
+
+Do not write comments unless there is a sensible justification for one.
+
 ## Commit messages
 
 Format: `<app-name>: <description>` — lowercase, short, imperative.
