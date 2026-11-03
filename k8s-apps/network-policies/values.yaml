@@ -4,6 +4,7 @@ allowFrom:
   - monitoring
   - go-healthcheck
   - tailscale-operator
+  - cnpg-system
 
 podCIDR: 10.244.0.0/16
 
