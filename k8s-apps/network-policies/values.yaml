@@ -59,7 +59,6 @@ namespaces:
   - name: pocket-id
     defaultDeny: true
   - name: registry
-    defaultDeny: true
     extraAllowFrom: [workbench] # ci jobs use in-cluster registry svc
   - name: reloader
     defaultDeny: true
