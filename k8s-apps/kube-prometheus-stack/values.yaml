@@ -430,16 +430,15 @@ kube-prometheus-stack:
             - alert: NetworkPoliciesNotDeployed
               expr: >-
                 kube_namespace_created{namespace!~"kube-system|kube-public|kube-node-lease|k0s-autopilot"}
-                unless on(namespace) (sum by (namespace) (kube_networkpolicy_created))
+                unless on(namespace) (sum by (namespace) (kube_networkpolicy_created{networkpolicy="default-deny-ingress"}))
               for: 5m
               labels:
                 severity: warning
               annotations:
-                summary: "No NetworkPolicies deployed in namespace {{ $labels.namespace }}"
+                summary: "No default-deny NetworkPolicy in namespace {{ $labels.namespace }}"
                 description: >-
-                  Namespace {{ $labels.namespace }} has no NetworkPolicy objects.
-                  Add it to k8s-apps/network-policies/values.yaml or deploy a
-                  policy there.
+                  Namespace {{ $labels.namespace }} has no default-deny-ingress policy.
+                  Set defaultDeny: true in k8s-apps/network-policies/values.yaml.
 
   kubeEtcd:
     enabled: false
