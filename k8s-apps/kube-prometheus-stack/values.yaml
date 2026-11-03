@@ -432,7 +432,7 @@ kube-prometheus-stack:
             # until coverage is complete.
             - alert: NetworkPoliciesNotDeployed
               expr: >-
-                kube_namespace_created{namespace!~"kube-system|kube-public|kube-node-lease"}
+                kube_namespace_created{namespace!~"kube-system|kube-public|kube-node-lease|k0s-autopilot"}
                 unless on(namespace) (sum by (namespace) (kube_networkpolicy_created))
               for: 5m
               labels:
