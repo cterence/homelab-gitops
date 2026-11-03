@@ -436,7 +436,7 @@ kube-prometheus-stack:
                 unless on(namespace) (sum by (namespace) (kube_networkpolicy_created))
               for: 5m
               labels:
-                severity: critical
+                severity: warning
               annotations:
                 summary: "No NetworkPolicies deployed in namespace {{ $labels.namespace }}"
                 description: >-
