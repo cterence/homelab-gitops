@@ -8,10 +8,74 @@ allowFrom:
 
 podCIDR: 10.244.0.0/16
 
-# defaultDeny blocks all ingress except allowFrom; allowClusterIngress admits podCIDR.
+# allow-ingress deploys in every namespace; defaultDeny blocks all other
+# ingress. allowClusterIngress admits podCIDR; extraAllowFrom adds namespaces.
+# Batch 1 = proven + empty/scaled-zero + internal-only + wide-allow services.
 namespaces:
+  - name: arr-stack
+  - name: audiobookshelf
+    defaultDeny: true
+  - name: catbox
+  - name: cert-manager
+  - name: changedetection
+  - name: cnpg-restore-test
+  - name: cnpg-system
+  - name: convertx
+    defaultDeny: true
+  - name: default
+    defaultDeny: true
+  - name: docs
+    defaultDeny: true
+  - name: external-dns
+  - name: external-secrets
+  - name: falco
+    defaultDeny: true
+  - name: gitea
+  - name: go-healthcheck
+    defaultDeny: true
+  - name: home-assistant
+  - name: httpbin
+    defaultDeny: true
+  - name: immich
+  - name: lastfm-scrobble-deduplicator
+  - name: local-path-provisioner
+  - name: loki
+    defaultDeny: true
+    extraAllowFrom: [opentelemetry-collector] # otel pushes logs here
+  - name: metallb
+  - name: microbin
+    defaultDeny: true
+  - name: monitoring
+  - name: mosquitto
+    defaultDeny: true
+    allowClusterIngress: true # mqtt clients configured out-of-band
+  - name: network-policies
+    defaultDeny: true
+  - name: niks3
+  - name: opencloud
+  - name: opentelemetry-collector
+    defaultDeny: true
+  - name: paperless-ngx
   - name: pocket-id
     defaultDeny: true
-    allowClusterIngress: true
+  - name: registry
+    defaultDeny: true
+    extraAllowFrom: [workbench] # ci jobs use in-cluster registry svc
+  - name: reloader
+    defaultDeny: true
+  - name: sablier
+    defaultDeny: true
+  - name: slackmoji
+  - name: tailscale-operator
+  - name: telegram-hub
+  - name: traefik
+  - name: trivy-system
   - name: vaultwarden
     defaultDeny: true
+  - name: velero
+  - name: versity-gw
+    defaultDeny: true
+    allowClusterIngress: true # cnpg barman sidecars + velero backups
+  - name: workbench
+    defaultDeny: true
+  - name: zigbee2mqtt

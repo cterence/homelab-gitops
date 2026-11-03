@@ -17,6 +17,11 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ $caller }}
 {{- end }}
+{{- range $caller := $ns.extraAllowFrom | default list }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $caller }}
+{{- end }}
 {{- if $ns.allowClusterIngress }}
         - ipBlock:
             cidr: {{ $.Values.podCIDR }}
