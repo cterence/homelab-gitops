@@ -3,7 +3,7 @@ data "sops_file" "secrets" {
 }
 
 locals {
-  revision = 5
+  revision = 6
 
   # sops keys are "<namespace>.<secret-name>.<key>"
   regex_pattern = "^([^.]+)\\.([^.]+)\\.(.+)$"
