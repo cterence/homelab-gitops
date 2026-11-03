@@ -1,0 +1,9 @@
+apiVersion: v2
+name: cilium
+description: Cilium CNI with Hubble flow visibility
+type: application
+version: 0.1.0
+dependencies:
+  - name: cilium
+    repository: https://helm.cilium.io/
+    version: 1.20.4
