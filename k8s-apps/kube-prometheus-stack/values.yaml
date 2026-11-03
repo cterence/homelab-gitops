@@ -423,25 +423,26 @@ kube-prometheus-stack:
                   are retained. Clean up the data on the node, then delete the
                   PV.
 
-    # Keep the namespace list in sync with k8s-apps/network-policies/values.yaml.
-    # absent() with equality matchers keeps the namespace label on the alert.
     network-policies:
       groups:
         - name: network-policies
           rules:
+            # Every namespace except the kube-* system ones must have at
+            # least one NetworkPolicy. Most namespaces firing is expected
+            # until coverage is complete.
             - alert: NetworkPoliciesNotDeployed
               expr: >-
-                absent(kube_networkpolicy_created{namespace="pocket-id"})
-                or absent(kube_networkpolicy_created{namespace="vaultwarden"})
+                kube_namespace_created{namespace!~"kube-system|kube-public|kube-node-lease"}
+                unless on(namespace) (sum by (namespace) (kube_networkpolicy_created))
               for: 5m
               labels:
                 severity: critical
               annotations:
                 summary: "No NetworkPolicies deployed in namespace {{ $labels.namespace }}"
                 description: >-
-                  Namespace {{ $labels.namespace }} is listed in
-                  k8s-apps/network-policies/values.yaml but has no NetworkPolicy
-                  objects. The network-policies app may have failed to sync.
+                  Namespace {{ $labels.namespace }} has no NetworkPolicy objects.
+                  Add it to k8s-apps/network-policies/values.yaml or deploy a
+                  policy there.
 
   kubeEtcd:
     enabled: false
