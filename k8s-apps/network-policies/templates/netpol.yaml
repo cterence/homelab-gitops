@@ -13,12 +13,7 @@ spec:
   ingress:
     - from:
         - podSelector: {}
-{{- range $caller := $.Values.allowFrom }}
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: {{ $caller }}
-{{- end }}
-{{- range $caller := $ns.extraAllowFrom | default list }}
+{{- range $caller := $ns.allow | default list }}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ $caller }}

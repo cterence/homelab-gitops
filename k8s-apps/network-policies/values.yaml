@@ -1,80 +1,107 @@
-# Allowed cross-namespace callers; same-namespace is always allowed.
-allowFrom:
-  - traefik
-  - monitoring
-  - go-healthcheck
-  - tailscale-operator
-  - cnpg-system
-
 podCIDR: 10.244.0.0/16
 
-# allow-ingress deploys in every namespace; defaultDeny blocks all other
-# ingress. allowClusterIngress admits podCIDR; extraAllowFrom adds namespaces.
-# Batch 1 = proven + empty/scaled-zero + internal-only + wide-allow services.
+# Per-namespace ingress allow-list, derived from what each namespace actually
+# exposes: traefik (has Ingress), tailscale-operator (tailscale-exposed svc),
+# cnpg-system (has a cnpg Cluster), monitoring (has scrape targets),
+# plus explicit extras (otel->loki, workbench->registry).
+# Same-namespace is always allowed. allowClusterIngress admits podCIDR.
+# Policies render only where defaultDeny is set.
 namespaces:
   - name: arr-stack
+    allow: [traefik, cnpg-system, monitoring]
   - name: audiobookshelf
     defaultDeny: true
+    allow: [traefik]
   - name: catbox
+    allow: [monitoring]
   - name: cert-manager
+    allow: [monitoring]
   - name: changedetection
+    allow: [traefik]
   - name: cnpg-restore-test
   - name: cnpg-system
+    allow: [monitoring]
   - name: convertx
     defaultDeny: true
+    allow: [traefik]
   - name: default
     defaultDeny: true
   - name: docs
     defaultDeny: true
+    allow: [traefik]
   - name: external-dns
+    allow: [monitoring]
   - name: external-secrets
   - name: falco
     defaultDeny: true
+    allow: [monitoring]
   - name: gitea
+    allow: [traefik, cnpg-system, monitoring]
   - name: go-healthcheck
     defaultDeny: true
+    allow: [traefik]
   - name: home-assistant
+    allow: [traefik, cnpg-system, monitoring]
   - name: httpbin
     defaultDeny: true
+    allow: [traefik]
   - name: immich
+    allow: [traefik, tailscale-operator, cnpg-system, monitoring]
   - name: lastfm-scrobble-deduplicator
   - name: local-path-provisioner
   - name: loki
     defaultDeny: true
-    extraAllowFrom: [opentelemetry-collector] # otel pushes logs here
+    allow: [monitoring, opentelemetry-collector]
   - name: metallb
+    allow: [monitoring]
   - name: microbin
     defaultDeny: true
+    allow: [traefik]
   - name: monitoring
+    allow: [traefik, tailscale-operator, monitoring]
   - name: mosquitto
     defaultDeny: true
-    allowClusterIngress: true # mqtt clients configured out-of-band
+    allowClusterIngress: true
   - name: network-policies
     defaultDeny: true
   - name: niks3
+    allow: [traefik, tailscale-operator, cnpg-system, monitoring]
   - name: opencloud
+    allow: [traefik]
   - name: opentelemetry-collector
     defaultDeny: true
+    allow: [tailscale-operator, monitoring]
   - name: paperless-ngx
+    allow: [traefik, cnpg-system, monitoring]
   - name: pocket-id
     defaultDeny: true
+    allow: [traefik, cnpg-system, monitoring]
   - name: registry
-    extraAllowFrom: [workbench] # ci jobs use in-cluster registry svc
+    allow: [traefik, tailscale-operator, workbench]
   - name: reloader
     defaultDeny: true
+    allow: [monitoring]
   - name: sablier
     defaultDeny: true
   - name: slackmoji
+    allow: [traefik]
   - name: tailscale-operator
   - name: telegram-hub
+    allow: [traefik, tailscale-operator]
   - name: traefik
+    allow: [monitoring]
   - name: trivy-system
+    allow: [monitoring]
   - name: vaultwarden
     defaultDeny: true
+    allow: [traefik, cnpg-system, monitoring]
   - name: velero
+    allow: [monitoring]
   - name: versity-gw
     defaultDeny: true
-    allowClusterIngress: true # cnpg barman sidecars + velero backups
+    allowClusterIngress: true
+    allow: [traefik, tailscale-operator]
   - name: workbench
     defaultDeny: true
   - name: zigbee2mqtt
+    allow: [traefik]
