@@ -1,4 +1,5 @@
 {{- range $ns := .Values.namespaces }}
+{{- if $ns.defaultDeny }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -26,7 +27,6 @@ spec:
         - ipBlock:
             cidr: {{ $.Values.podCIDR }}
 {{- end }}
-{{- if $ns.defaultDeny }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
