@@ -405,7 +405,7 @@ app-template:
         rangemusique:
           image:
             repository: registry.terence.cloud/rangemusique
-            tag: "12"
+            tag: "13"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
