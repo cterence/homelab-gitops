@@ -53,6 +53,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [catbox](./scripts/../k8s-apps/catbox) | Async file-transfer hub over tailcat |
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes |
 | [changedetection](./scripts/../k8s-apps/changedetection) | Website change detection, web page monitoring, and website change alerts |
+| [cilium](./scripts/../k8s-apps/cilium) | Cilium CNI with Hubble flow visibility |
 | [cloudnative-pg](./scripts/../k8s-apps/cloudnative-pg) | CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance |
 | [cnpg-restore-test](./scripts/../k8s-apps/cnpg-restore-test) | Daily CNPG backup restore verification |
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter |
