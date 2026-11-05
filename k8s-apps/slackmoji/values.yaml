@@ -15,7 +15,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/slackmoji
-            tag: "1"
+            tag: "2"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
