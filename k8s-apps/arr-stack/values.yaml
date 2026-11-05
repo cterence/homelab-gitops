@@ -527,6 +527,7 @@ app-template:
             VPN_INTERFACE: wg0
             WIREGUARD_ADDRESSES: 192.168.2.2/32
             FIREWALL_VPN_INPUT_PORTS: "51413"
+            FIREWALL_OUTBOUND_SUBNETS: "192.168.1.0/24,10.244.0.0/16"
           restartPolicy: Always
           envFrom:
             - secretRef:
