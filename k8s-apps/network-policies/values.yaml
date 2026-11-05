@@ -9,7 +9,7 @@ namespaces:
     allow: [traefik, monitoring, tailscale-operator]
   - name: opentelemetry-operator
     nodeProbes: true
-    allow: [monitoring]
+    allow: [kube-system, monitoring]
   - name: arr-stack
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: audiobookshelf
