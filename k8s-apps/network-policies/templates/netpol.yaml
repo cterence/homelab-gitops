@@ -1,5 +1,5 @@
 {{- range $ns := .Values.namespaces }}
-{{- if $ns.defaultDeny }}
+{{- if or $ns.defaultDeny $ns.nodeProbes }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -18,10 +18,13 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ $caller }}
 {{- end }}
+        - ipBlock:
+            cidr: {{ $.Values.nodeCIDR }}
 {{- if $ns.allowClusterIngress }}
         - ipBlock:
             cidr: {{ $.Values.podCIDR }}
 {{- end }}
+{{- if $ns.defaultDeny }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -32,5 +35,6 @@ spec:
   podSelector: {}
   policyTypes:
     - Ingress
+{{- end }}
 {{- end }}
 {{- end }}
