@@ -1,5 +1,5 @@
 {{- range $ns := .Values.namespaces }}
-{{- if $ns.defaultDeny }}
+{{- if or $ns.defaultDeny $ns.nodeProbes }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -13,20 +13,19 @@ spec:
   ingress:
     - from:
         - podSelector: {}
-{{- range $caller := $.Values.allowFrom }}
+{{- range $caller := $ns.allow | default list }}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ $caller }}
 {{- end }}
-{{- range $caller := $ns.extraAllowFrom | default list }}
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: {{ $caller }}
-{{- end }}
-{{- if $ns.allowClusterIngress }}
         - ipBlock:
-            cidr: {{ $.Values.podCIDR }}
+            cidr: {{ $.Values.nodeCIDR }}
+{{- if $ns.allowClusterIngress }}
+        # all pods cluster-wide; ipBlock never matches pod traffic under cilium
+        - podSelector: {}
+          namespaceSelector: {}
 {{- end }}
+{{- if $ns.defaultDeny }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -37,5 +36,6 @@ spec:
   podSelector: {}
   policyTypes:
     - Ingress
+{{- end }}
 {{- end }}
 {{- end }}
