@@ -11,7 +11,7 @@ namespaces:
     nodeProbes: true
     allow: [monitoring]
   - name: arr-stack
-    allow: [traefik, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: audiobookshelf
     defaultDeny: true
     allow: [traefik]
@@ -39,17 +39,17 @@ namespaces:
     defaultDeny: true
     allow: [monitoring]
   - name: gitea
-    allow: [traefik, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: go-healthcheck
     defaultDeny: true
     allow: [traefik]
   - name: home-assistant
-    allow: [traefik, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: httpbin
     defaultDeny: true
     allow: [traefik]
   - name: immich
-    allow: [traefik, tailscale-operator, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: lastfm-scrobble-deduplicator
   - name: local-path-provisioner
   - name: loki
@@ -68,17 +68,17 @@ namespaces:
   - name: network-policies
     defaultDeny: true
   - name: niks3
-    allow: [traefik, tailscale-operator, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: opencloud
     allow: [traefik]
   - name: opentelemetry-collector
     defaultDeny: true
     allow: [tailscale-operator, monitoring]
   - name: paperless-ngx
-    allow: [traefik, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: pocket-id
     defaultDeny: true
-    allow: [traefik, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: registry
     allow: [traefik, tailscale-operator, workbench]
   - name: reloader
@@ -97,7 +97,7 @@ namespaces:
     allow: [monitoring]
   - name: vaultwarden
     defaultDeny: true
-    allow: [traefik, cnpg-system, monitoring]
+    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: velero
     allow: [monitoring]
   - name: versity-gw
