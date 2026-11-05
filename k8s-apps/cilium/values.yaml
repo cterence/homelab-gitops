@@ -1,4 +1,6 @@
 cilium:
+  routingMode: "native"
+  autoDirectNodeRoutes: true
   ipam:
     mode: cluster-pool
     operator:
