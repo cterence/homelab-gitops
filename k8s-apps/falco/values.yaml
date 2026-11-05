@@ -86,7 +86,8 @@ falco:
                or fd.name startswith "/var/lib/rancher/k3s/agent/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots"
                or fd.name startswith "/var/lib/containerd/tmpmounts/"
                or fd.name startswith "/var/lib/rancher/k3s/agent/containerd/tmpmounts/"
-               or fd.name startswith "/var/lib/k0s/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/"))
+               or fd.name startswith "/var/lib/k0s/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/"
+               or fd.name startswith "/var/lib/k0s/containerd/tmpmounts/"))
   grafana:
     dashboards:
       enabled: true
