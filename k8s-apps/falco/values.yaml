@@ -77,7 +77,7 @@ falco:
           (container_id = "host"
            and proc.exepath startswith "/nix/store/"
            and proc.cmdline contains "update-users-groups.pl"
-           and ".switch-to-conf" in (proc.aname))
+           and proc.gparent = ".switch-to-conf")
     k0s-containerd-activities.yaml: |-
       - macro: containerd_activities
         condition: >
