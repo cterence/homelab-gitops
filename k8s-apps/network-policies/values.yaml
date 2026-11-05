@@ -1,12 +1,8 @@
 podCIDR: 10.244.0.0/16
 nodeCIDR: 192.168.1.0/24
 
-# Per-namespace ingress allow-list, derived from what each namespace actually
-# exposes: traefik (has Ingress), tailscale-operator (tailscale-exposed svc),
-# cnpg-system (has a cnpg Cluster), monitoring (has scrape targets),
-# plus explicit extras (otel->loki, workbench->registry).
-# Same-namespace is always allowed. allowClusterIngress admits podCIDR.
-# Policies render only where defaultDeny is set.
+# allow lists are per namespace; same-namespace is always allowed.
+# Policies render only where defaultDeny or nodeProbes is set.
 namespaces:
   - name: argocd
     nodeProbes: true # chart netpols block kubelet probes under cilium

@@ -21,8 +21,9 @@ spec:
         - ipBlock:
             cidr: {{ $.Values.nodeCIDR }}
 {{- if $ns.allowClusterIngress }}
-        - ipBlock:
-            cidr: {{ $.Values.podCIDR }}
+        # all pods cluster-wide; ipBlock never matches pod traffic under cilium
+        - podSelector: {}
+          namespaceSelector: {}
 {{- end }}
 {{- if $ns.defaultDeny }}
 ---
