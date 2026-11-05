@@ -23,6 +23,7 @@ type dashboard struct {
 
 var dashboards = []dashboard{
 	{uid: "catbox", filename: "catbox.json", build: catbox},
+	{uid: "cilium", filename: "cilium.json", build: cilium},
 	{uid: "disk-usage", filename: "disk-usage.json", build: diskUsage},
 	{uid: "smartctl", filename: "smartctl.json", build: smartctl},
 	{uid: "trivy", filename: "trivy.json", build: trivy},

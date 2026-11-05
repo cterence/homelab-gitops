@@ -440,6 +440,22 @@ kube-prometheus-stack:
                   Namespace {{ $labels.namespace }} has no default-deny-ingress policy.
                   Set defaultDeny: true in k8s-apps/network-policies/values.yaml.
 
+    cilium:
+      groups:
+        - name: cilium
+          rules:
+            - alert: CiliumPolicyDeniedDrops
+              expr: sum by (node) (increase(hubble_drop_total{reason="POLICY_DENIED"}[15m])) > 25
+              for: 10m
+              labels:
+                severity: warning
+              annotations:
+                summary: "Policy-denied drops on {{ $labels.node }}"
+                description: >-
+                  {{ $value | printf "%.0f" }} packets dropped by network policy on
+                  {{ $labels.node }} in the last 15 minutes. Investigate with
+                  `hubble observe --verdict DROPPED --protocol tcp`.
+
   kubeEtcd:
     enabled: false
 
