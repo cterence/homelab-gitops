@@ -162,6 +162,11 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 - Workbench app images reference the in-cluster registry: `registry.terence.cloud/<app>` with a `tag` matching `build.yaml`.
 - Third-party images are pinned by digest (`tag@sha256:...`).
 
+## Falco (k8s-apps/falco/)
+
+- In Falco, a macro redefined in a later rules file overrides the earlier definition (unlike lists, which append). Never define the same macro name in more than one `customRules` entry — merge all branches into a single `condition` with `or`. A duplicate silently kills the earlier whitelist (this caused the kaniko "Read sensitive file untrusted" alert spam; see PR #1272).
+- Validate changes with `scripts/validate-falco-rules.sh` (needs docker + yq).
+
 ## Comments
 
 Do not write comments unless there is a sensible justification for one.
