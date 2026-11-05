@@ -70,6 +70,14 @@ falco:
         condition: >
           (k8smeta.ns.name = "workbench"
            and k8smeta.pod.name startswith "build-")
+    nixos-activation-activities.yaml: |-
+      # NixOS activation runs update-users-groups.pl via .switch-to-conf as root
+      - macro: user_known_read_sensitive_files_activities
+        condition: >
+          (container_id = "host"
+           and proc.exepath startswith "/nix/store/"
+           and proc.cmdline contains "update-users-groups.pl"
+           and ".switch-to-conf" in (proc.aname))
     k0s-containerd-activities.yaml: |-
       - macro: containerd_activities
         condition: >
