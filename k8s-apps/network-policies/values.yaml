@@ -80,7 +80,8 @@ namespaces:
     defaultDeny: true
     allow: [traefik]
   - name: monitoring
-    allow: [traefik, tailscale-operator, monitoring]
+    defaultDeny: true
+    allow: [kube-system, traefik, tailscale-operator, monitoring]
   - name: mosquitto
     defaultDeny: true
     allowClusterIngress: true
@@ -113,10 +114,15 @@ namespaces:
     defaultDeny: true
     allow: [traefik]
   - name: tailscale-operator
+    defaultDeny: true
+    allowWorldIngress: true
+    allow: [monitoring]
   - name: telegram-hub
     defaultDeny: true
     allow: [traefik, tailscale-operator]
   - name: traefik
+    defaultDeny: true
+    allowWorldIngress: true
     allow: [monitoring]
   - name: trivy-system
     defaultDeny: true
