@@ -149,6 +149,7 @@ app-template:
             - gitea
             - go-healthcheck
             - lastfm-scrobble-deduplicator
+            - hubble-exporter
             - slackmoji
             - telegram-hub
             - versity-gw

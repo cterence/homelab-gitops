@@ -1,6 +1,6 @@
 apiVersion: v2
 name: hubble-exporter
-description: Streams hubble flows from the relay to stdout for the otel loki pipeline
+description: Exports novel flow pairs from the hubble relay for egress netpol authoring
 type: application
 version: 0.1.0
 dependencies:
