@@ -52,10 +52,10 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "max by (version) (cilium_version)",
-                        "instant": false,
+                        "expr": "count by (version) (cilium_version)",
+                        "instant": true,
                         "legendFormat": "{{version}}",
-                        "range": true
+                        "range": false
                       }
                     },
                     "refId": "A",
@@ -76,7 +76,7 @@
                 "graphMode": "none",
                 "colorMode": "value",
                 "justifyMode": "auto",
-                "textMode": "auto",
+                "textMode": "value_and_name",
                 "wideLayout": true,
                 "showPercentChange": false,
                 "reduceOptions": {
@@ -89,7 +89,7 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "",
+                  "unit": "none",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -1176,9 +1176,9 @@
               "layout": {
                 "kind": "AutoGridLayout",
                 "spec": {
-                  "maxColumnCount": 3,
+                  "maxColumnCount": 6,
                   "columnWidthMode": "standard",
-                  "rowHeightMode": "standard",
+                  "rowHeightMode": "short",
                   "fillScreen": false,
                   "items": [
                     {
