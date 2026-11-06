@@ -63,8 +63,8 @@ namespaces:
   - name: httpbin
     defaultDeny: true
     allow: [traefik]
-  - name: hubble-exporter
-    # stdout-only streamer to the relay; no inbound callers
+  - name: hubble-registry
+    # registry-only streamer to the relay; no inbound callers
     defaultDeny: true
   - name: immich
     defaultDeny: true
@@ -75,7 +75,7 @@ namespaces:
     # policies do not apply to them. monitoring scrapes coredns metrics on
     # 9153; node-masqueraded pods need the remote-node CNP for plain DNS.
     defaultDeny: true
-    allow: [hubble-exporter]
+    allow: [hubble-registry]
     allowClusterIngressPorts:
       - {port: 53, protocol: UDP}
       - {port: 53, protocol: TCP}

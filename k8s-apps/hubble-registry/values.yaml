@@ -1,0 +1,37 @@
+app-template:
+  defaultPodOptions:
+    imagePullSecrets:
+      - name: registry-pull-secret
+    automountServiceAccountToken: false
+
+  controllers:
+    main:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        main:
+          image:
+            repository: registry.terence.cloud/hubble-registry
+            tag: "1"
+            pullPolicy: IfNotPresent
+          args:
+            - --state
+            - /data/registry.json
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 100Mi
