@@ -69,9 +69,17 @@ namespaces:
   - name: kube-system
     # coredns serves the whole cluster; apiserver reaches metrics-server via
     # konnectivity-agent (same ns). cilium-agent/kube-proxy are hostNetwork,
-    # policies do not apply to them.
+    # policies do not apply to them. monitoring scrapes coredns metrics on
+    # 9153; node-masqueraded pods need the remote-node CNP for plain DNS.
     defaultDeny: true
-    allowClusterIngress: true
+    allowClusterIngressPorts:
+      - {port: 53, protocol: UDP}
+      - {port: 53, protocol: TCP}
+      - {port: 9153, protocol: TCP}
+    allowRemoteNode: true
+    remoteNodePorts:
+      - {port: 53, protocol: UDP}
+      - {port: 53, protocol: TCP}
   - name: lastfm-scrobble-deduplicator
     defaultDeny: true
   - name: local-path-provisioner
@@ -90,7 +98,7 @@ namespaces:
     allow: [kube-system, traefik, tailscale-operator, monitoring]
   - name: mosquitto
     defaultDeny: true
-    allowClusterIngress: true
+    allow: [home-assistant, zigbee2mqtt]
   - name: network-policies
     defaultDeny: true
   - name: niks3
