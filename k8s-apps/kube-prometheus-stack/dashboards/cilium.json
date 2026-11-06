@@ -928,7 +928,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "sum by (reason) (rate(hubble_drop_total[5m]))",
+                        "expr": "sum by (reason) (rate(hubble_drop_total{reason!=\"UNSUPPORTED_L3_PROTOCOL\"}[5m]))",
                         "instant": false,
                         "legendFormat": "{{reason}}",
                         "range": true
@@ -1098,7 +1098,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "topk(10, sum by (reason, protocol) (increase(hubble_drop_total[24h])))",
+                        "expr": "topk(10, sum by (reason, protocol) (increase(hubble_drop_total{reason!=\"UNSUPPORTED_L3_PROTOCOL\"}[24h])))",
                         "instant": true,
                         "legendFormat": "{{reason}} {{protocol}}",
                         "range": false

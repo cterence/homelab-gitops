@@ -38,7 +38,7 @@ func TestCiliumPanelQueries(t *testing.T) {
 	}{
 		{"panel-1", "Cilium version", `count by (version) (cilium_version)`},
 		{"panel-3", "Unreachable nodes", `max(cilium_unreachable_nodes)`},
-		{"panel-7", "Drop rate by reason", `sum by (reason) (rate(hubble_drop_total[5m]))`},
+		{"panel-7", "Drop rate by reason", `sum by (reason) (rate(hubble_drop_total{reason!="UNSUPPORTED_L3_PROTOCOL"}[5m]))`},
 		{"panel-8", "Policy-denied drops by node", `sum by (node) (rate(hubble_drop_total{reason="POLICY_DENIED"}[5m]))`},
 		{"panel-10", "Flows by verdict", `sum by (verdict) (rate(hubble_flows_processed_total[5m]))`},
 		{"panel-13", "Pod CIDR pool usage", `sum(cilium_ip_addresses{family="ipv4"}) / sum(cilium_ipam_capacity)`},
