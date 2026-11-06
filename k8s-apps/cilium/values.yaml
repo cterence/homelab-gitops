@@ -21,6 +21,8 @@ cilium:
       enabled: true
     ui:
       enabled: true
+    eventBuffer:
+      size: 65535
     metrics:
       enabled:
         - drop

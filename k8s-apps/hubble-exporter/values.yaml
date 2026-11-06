@@ -1,0 +1,30 @@
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+
+  controllers:
+    main:
+      type: deployment
+      annotations:
+        reloader.stakater.com/auto: "true"
+
+      containers:
+        main:
+          image:
+            repository: quay.io/cilium/cilium
+            tag: v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+            pullPolicy: IfNotPresent
+          command: ["hubble"]
+          args:
+            - observe
+            - --server
+            - hubble-relay.kube-system.svc.cluster.local:80
+            - --follow
+            - -o
+            - jsonpb
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi

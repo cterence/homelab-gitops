@@ -1,0 +1,9 @@
+apiVersion: v2
+name: hubble-exporter
+description: Streams hubble flows from the relay to stdout for the otel loki pipeline
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.3.0
