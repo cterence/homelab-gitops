@@ -66,6 +66,12 @@ namespaces:
   - name: immich
     defaultDeny: true
     allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
+  - name: kube-system
+    # coredns serves the whole cluster; apiserver reaches metrics-server via
+    # konnectivity-agent (same ns). cilium-agent/kube-proxy are hostNetwork,
+    # policies do not apply to them.
+    defaultDeny: true
+    allowClusterIngress: true
   - name: lastfm-scrobble-deduplicator
     defaultDeny: true
   - name: local-path-provisioner
