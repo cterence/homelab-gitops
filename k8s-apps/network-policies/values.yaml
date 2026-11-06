@@ -149,10 +149,10 @@ namespaces:
     defaultDeny: true
     allow: [monitoring]
   - name: versity-gw
-    # cnpg barman backups and velero push to versity; niks3 and the public
-    # health check reach it via the traefik hostname, tailnet via ts proxies.
+    # cnpg barman backups and velero push to versity; the public health check
+    # reaches it via the traefik hostname, tailnet via ts proxies.
     defaultDeny: true
-    allow: [traefik, tailscale-operator, arr-stack, gitea, home-assistant, immich, paperless-ngx, pocket-id, vaultwarden, velero]
+    allow: [traefik, tailscale-operator, arr-stack, gitea, home-assistant, immich, niks3, paperless-ngx, pocket-id, vaultwarden, velero]
   - name: workbench
     defaultDeny: true
   - name: zigbee2mqtt
