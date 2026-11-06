@@ -11,6 +11,7 @@ namespaces:
     nodeProbes: true
     allow: [kube-system, monitoring]
   - name: arr-stack
+    defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: audiobookshelf
     defaultDeny: true
@@ -46,16 +47,19 @@ namespaces:
     defaultDeny: true
     allow: [monitoring]
   - name: gitea
+    defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: go-healthcheck
     defaultDeny: true
     allow: [traefik]
   - name: home-assistant
+    defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: httpbin
     defaultDeny: true
     allow: [traefik]
   - name: immich
+    defaultDeny: true
     allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: lastfm-scrobble-deduplicator
     defaultDeny: true
@@ -77,6 +81,7 @@ namespaces:
   - name: network-policies
     defaultDeny: true
   - name: niks3
+    defaultDeny: true
     allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: opencloud
     defaultDeny: true
@@ -85,11 +90,13 @@ namespaces:
     defaultDeny: true
     allow: [tailscale-operator, monitoring]
   - name: paperless-ngx
+    defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: pocket-id
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: registry
+    defaultDeny: true
     allow: [traefik, tailscale-operator, workbench]
   - name: reloader
     defaultDeny: true
@@ -101,6 +108,7 @@ namespaces:
     allow: [traefik]
   - name: tailscale-operator
   - name: telegram-hub
+    defaultDeny: true
     allow: [traefik, tailscale-operator]
   - name: traefik
     allow: [monitoring]
