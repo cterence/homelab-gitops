@@ -1,0 +1,24 @@
+{{- range $ns := .Values.namespaces }}
+{{- if $ns.observeDns }}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: observe-dns
+  namespace: {{ $ns.name }}
+  annotations:
+    # observation only: the dns proxy is engaged for qname visibility but
+    # the policy is never enforced
+    cilium.io/audit-mode: "true"
+spec:
+  endpointSelector: {}
+  egress:
+    - toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+{{- end }}
+{{- end }}
