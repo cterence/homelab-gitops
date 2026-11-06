@@ -65,7 +65,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/go-healthcheck
-            tag: "13"
+            tag: "14"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
