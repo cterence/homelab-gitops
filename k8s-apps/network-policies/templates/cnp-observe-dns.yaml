@@ -6,13 +6,12 @@ kind: CiliumNetworkPolicy
 metadata:
   name: observe-dns
   namespace: {{ $ns.name }}
-  annotations:
-    # observation only: the dns proxy is engaged for qname visibility but
-    # the policy is never enforced
-    cilium.io/audit-mode: "true"
 spec:
   endpointSelector: {}
   egress:
+    # the dns rule selects the endpoint for egress policy, so everything
+    # else must be explicitly permitted: observation must never restrict
+    - toEntities: [all]
     - toPorts:
         - ports:
             - port: "53"
