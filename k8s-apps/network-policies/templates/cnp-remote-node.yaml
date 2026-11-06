@@ -1,0 +1,15 @@
+{{- range $ns := .Values.namespaces }}
+{{- if $ns.allowRemoteNode }}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-remote-node-ingress
+  namespace: {{ $ns.name }}
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEntities:
+        - remote-node
+{{- end }}
+{{- end }}
