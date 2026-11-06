@@ -11,5 +11,13 @@ spec:
   ingress:
     - fromEntities:
         - remote-node
+{{- if $ns.remoteNodePorts }}
+      toPorts:
+{{- range $p := $ns.remoteNodePorts }}
+        - ports:
+            - port: "{{ $p.port }}"
+              protocol: {{ $p.protocol }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
