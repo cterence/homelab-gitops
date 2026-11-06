@@ -24,17 +24,6 @@ spec:
         # all pods cluster-wide; ipBlock never matches pod traffic under cilium
         - podSelector: {}
           namespaceSelector: {}
-{{- else if $ns.allowClusterIngressPorts }}
-        # pods cluster-wide, port-scoped
-        - podSelector: {}
-          namespaceSelector: {}
-          ports:
-{{- range $p := $ns.allowClusterIngressPorts }}
-            - port: {{ $p.port }}
-{{- if $p.protocol }}
-              protocol: {{ $p.protocol }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- if $ns.allowWorldIngress }}
         # world/LAN ingress (traefik frontdoor, tailscale wireguard); ipBlock
@@ -43,6 +32,19 @@ spec:
             cidr: 0.0.0.0/0
             except:
               - {{ $.Values.podCIDR }}
+{{- end }}
+{{- if $ns.allowClusterIngressPorts }}
+    # pods cluster-wide, port-scoped
+    - from:
+        - podSelector: {}
+          namespaceSelector: {}
+      ports:
+{{- range $p := $ns.allowClusterIngressPorts }}
+        - port: {{ $p.port }}
+{{- if $p.protocol }}
+          protocol: {{ $p.protocol }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- if $ns.defaultDeny }}
 ---

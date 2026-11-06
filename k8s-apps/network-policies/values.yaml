@@ -121,7 +121,11 @@ namespaces:
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: registry
+    # any pod can query the auth-protected v2 api; image-wait hooks run in
+    # each workbench app's namespace
     defaultDeny: true
+    allowClusterIngressPorts:
+      - {port: 5000, protocol: TCP}
     allow: [traefik, tailscale-operator, workbench]
   - name: reloader
     defaultDeny: true
