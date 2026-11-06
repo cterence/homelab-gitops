@@ -19,6 +19,8 @@ app-template:
             - observe
             - --server
             - hubble-relay.kube-system.svc.cluster.local:80
+            - --from-ip
+            - 10.244.0.0/16
             - --follow
             - -o
             - jsonpb
