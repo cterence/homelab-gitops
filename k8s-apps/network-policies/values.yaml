@@ -5,9 +5,11 @@ nodeCIDR: 192.168.1.0/24
 # Policies render only where defaultDeny or nodeProbes is set.
 namespaces:
   - name: argocd
+    defaultDeny: true
     nodeProbes: true # chart netpols block kubelet probes under cilium
     allow: [traefik, monitoring, tailscale-operator]
   - name: opentelemetry-operator
+    defaultDeny: true
     nodeProbes: true
     allow: [kube-system, monitoring]
   - name: arr-stack
@@ -30,7 +32,8 @@ namespaces:
   - name: cnpg-restore-test
     defaultDeny: true
   - name: cnpg-system
-    allow: [monitoring]
+    defaultDeny: true
+    allow: [kube-system, monitoring]
   - name: convertx
     defaultDeny: true
     allow: [traefik]
@@ -43,6 +46,8 @@ namespaces:
     defaultDeny: true
     allow: [monitoring]
   - name: external-secrets
+    defaultDeny: true
+    allow: [kube-system, monitoring]
   - name: falco
     defaultDeny: true
     allow: [monitoring]
@@ -64,6 +69,7 @@ namespaces:
   - name: lastfm-scrobble-deduplicator
     defaultDeny: true
   - name: local-path-provisioner
+    defaultDeny: true
   - name: loki
     defaultDeny: true
     allow: [monitoring, opentelemetry-collector]
