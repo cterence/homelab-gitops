@@ -116,6 +116,7 @@ namespaces:
   - name: tailscale-operator
     defaultDeny: true
     allowWorldIngress: true
+    allowRemoteNode: true
     allow: [monitoring]
   - name: telegram-hub
     defaultDeny: true
