@@ -18,7 +18,7 @@ done
 docker run --rm -v "$tmp/plugins:/dst" --entrypoint sh "$falco_image" \
   -c 'cp /usr/share/falco/plugins/libcontainer.so /dst/'
 docker run --rm --user root -v "$tmp/plugins:/usr/share/falco/plugins" \
-  --entrypoint falcoctl "$falcoctl_image" artifact install k8smeta >/dev/null
+  --entrypoint falcoctl "$falcoctl_image" artifact install k8smeta
 
 cat > "$tmp/falco-test.yaml" <<'EOF'
 plugins:
