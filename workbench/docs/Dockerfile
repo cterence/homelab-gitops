@@ -2,7 +2,7 @@
 # by the hextra theme), then render the site. The theme is fetched as a Hugo
 # module through the Go module proxy, so nothing is vendored in this repo. The
 # Hugo module loader shells out to git to resolve versions.
-FROM mirror.gcr.io/library/golang:1.27-alpine@sha256:dbaa054703263d06c8b49576667418473b6231f8c0fa69dee103207fdb8e3654 AS build
+FROM mirror.gcr.io/library/golang:1.27-alpine@sha256:fa3d596898d9f126af7c01d14ee7597bab3f39cccf392ef36b69fe77cd681f18 AS build
 RUN apk add --no-cache build-base libsass-dev git
 RUN CGO_ENABLED=1 go install --tags extended github.com/gohugoio/hugo@v0.169.0
 WORKDIR /src
