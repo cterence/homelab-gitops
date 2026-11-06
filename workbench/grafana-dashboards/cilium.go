@@ -126,11 +126,11 @@ func cilium() *dashboardv2.DashboardBuilder {
 		Panel("panel-5", health[4]).
 		Panel("panel-6", health[5]).
 		Panel("panel-7", ratePanel(7, "Drop rate by reason",
-			promTarget("A", "sum by (reason) (rate(hubble_drop_total[5m]))", "{{reason}}", false))).
+			promTarget("A", `sum by (reason) (rate(hubble_drop_total{reason!="UNSUPPORTED_L3_PROTOCOL"}[5m]))`, "{{reason}}", false))).
 		Panel("panel-8", ratePanel(8, "Policy-denied drops by node",
 			promTarget("A", `sum by (node) (rate(hubble_drop_total{reason="POLICY_DENIED"}[5m]))`, "{{node}}", false))).
 		Panel("panel-9", gaugePanel(9, "Drops last 24h by reason and protocol",
-			`topk(10, sum by (reason, protocol) (increase(hubble_drop_total[24h])))`, "{{reason}} {{protocol}}", "none", 0,
+			`topk(10, sum by (reason, protocol) (increase(hubble_drop_total{reason!="UNSUPPORTED_L3_PROTOCOL"}[24h])))`, "{{reason}} {{protocol}}", "none", 0,
 			[]dashboardv2.Threshold{thresholdStep("green", 0)})).
 		Panel("panel-10", ratePanel(10, "Flows by verdict",
 			promTarget("A", "sum by (verdict) (rate(hubble_flows_processed_total[5m]))", "{{verdict}}", false))).
