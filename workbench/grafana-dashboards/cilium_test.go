@@ -36,7 +36,7 @@ func TestCiliumPanelQueries(t *testing.T) {
 		title string
 		expr  string
 	}{
-		{"panel-1", "Cilium version", `max by (version) (cilium_version)`},
+		{"panel-1", "Cilium version", `count by (version) (cilium_version)`},
 		{"panel-3", "Unreachable nodes", `max(cilium_unreachable_nodes)`},
 		{"panel-7", "Drop rate by reason", `sum by (reason) (rate(hubble_drop_total[5m]))`},
 		{"panel-8", "Policy-denied drops by node", `sum by (node) (rate(hubble_drop_total{reason="POLICY_DENIED"}[5m]))`},

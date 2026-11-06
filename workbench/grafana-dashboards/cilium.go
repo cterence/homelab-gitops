@@ -5,8 +5,46 @@ import (
 	"github.com/grafana/grafana-foundation-sdk/go/cog"
 	"github.com/grafana/grafana-foundation-sdk/go/common"
 	dashboardv2 "github.com/grafana/grafana-foundation-sdk/go/dashboardv2"
+	"github.com/grafana/grafana-foundation-sdk/go/stat"
 	"github.com/grafana/grafana-foundation-sdk/go/timeseries"
 )
+
+// statGrid lays out small stat panels: 6 columns at short height so the
+// number tiles stay compact instead of full-size panels.
+func statGrid(panelNames ...string) *dashboardv2.AutoGridBuilder {
+	grid := dashboardv2.NewAutoGridBuilder().
+		MaxColumnCount(6).
+		ColumnWidthMode(dashboardv2.AutoGridLayoutSpecColumnWidthModeStandard).
+		RowHeightMode(dashboardv2.AutoGridLayoutSpecRowHeightModeShort)
+	for _, name := range panelNames {
+		grid = grid.WithItem(name)
+	}
+
+	return grid
+}
+
+// versionPanel shows the version label as the name and the agent count as
+// the value; default stat text mode hides the name, so the version would
+// not display.
+func versionPanel() *dashboardv2.PanelBuilder {
+	return dashboardv2.NewPanelBuilder().
+		Id(1).
+		Title("Cilium version").
+		Data(dashboardv2.NewQueryGroupBuilder().
+			Target(promTarget("A", "count by (version) (cilium_version)", "{{version}}", true))).
+		Visualization(stat.NewVisualizationV2Builder().
+			Unit("none").
+			ColorScheme(dashboardv2.NewFieldColorBuilder().
+				Mode(dashboardv2.FieldColorModeIdThresholds).
+				FixedColor("#ad46ff")).
+			Thresholds(thresholds(thresholdStep("green", 0))).
+			ColorMode(common.BigValueColorModeValue).
+			TextMode(common.BigValueTextModeValueAndName).
+			GraphMode(common.BigValueGraphModeNone).
+			Orientation(common.VizOrientationAuto).
+			ReduceOptions(lastNotNull()).
+			WideLayout(true))
+}
 
 func ratePanel(id float64, title string, targets ...*dashboardv2.TargetBuilder) *dashboardv2.PanelBuilder {
 	group := dashboardv2.NewQueryGroupBuilder()
@@ -65,7 +103,7 @@ func okThreshold() []dashboardv2.Threshold {
 
 func ciliumHealthPanels() []*dashboardv2.PanelBuilder {
 	return []*dashboardv2.PanelBuilder{
-		statPanel(1, "Cilium version", `max by (version) (cilium_version)`, "{{version}}", "", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)}),
+		versionPanel(),
 		statPanel(2, "Endpoints managed", `sum by (node) (cilium_endpoint)`, "{{node}}", "none", common.BigValueGraphModeNone, []dashboardv2.Threshold{thresholdStep("green", 0)}),
 		statPanel(3, "Unreachable nodes", "max(cilium_unreachable_nodes)", "nodes", "none", common.BigValueGraphModeNone, okThreshold()),
 		statPanel(4, "Failing controllers", "max(cilium_controllers_failing)", "controllers", "none", common.BigValueGraphModeNone, okThreshold()),
@@ -108,7 +146,7 @@ func cilium() *dashboardv2.DashboardBuilder {
 			Row(dashboardv2.NewRowBuilder().
 				Title("Health").
 				Collapse(false).
-				AutoGridLayout(autoGrid("panel-1", "panel-2", "panel-3", "panel-4", "panel-5", "panel-6"))).
+				AutoGridLayout(statGrid("panel-1", "panel-2", "panel-3", "panel-4", "panel-5", "panel-6"))).
 			Row(dashboardv2.NewRowBuilder().
 				Title("Drops").
 				Collapse(false).
