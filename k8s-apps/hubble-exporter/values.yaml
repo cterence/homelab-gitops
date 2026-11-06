@@ -11,8 +11,8 @@ app-template:
       containers:
         main:
           image:
-            repository: quay.io/cilium/hubble
-            tag: v1.16.4@sha256:349969284c427d4754fa4b683438571f4678c569f176b076a662027268a3559c
+            repository: quay.io/cilium/cilium
+            tag: v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
             pullPolicy: IfNotPresent
           command: ["hubble"]
           args:
