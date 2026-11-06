@@ -15,7 +15,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/docs
-            tag: "5"
+            tag: "6"
             pullPolicy: IfNotPresent
           ports:
             - name: http
