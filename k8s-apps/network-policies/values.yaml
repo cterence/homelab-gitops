@@ -20,7 +20,7 @@ namespaces:
     allow: [monitoring]
   - name: cert-manager
     defaultDeny: true
-    allow: [monitoring]
+    allow: [kube-system, monitoring]
   - name: changedetection
     defaultDeny: true
     allow: [traefik]
@@ -65,7 +65,7 @@ namespaces:
     allow: [monitoring, opentelemetry-collector]
   - name: metallb
     defaultDeny: true
-    allow: [monitoring]
+    allow: [kube-system, monitoring]
   - name: microbin
     defaultDeny: true
     allow: [traefik]
