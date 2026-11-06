@@ -16,12 +16,18 @@ namespaces:
     defaultDeny: true
     allow: [traefik]
   - name: catbox
+    defaultDeny: true
     allow: [monitoring]
   - name: cert-manager
+    defaultDeny: true
     allow: [monitoring]
   - name: changedetection
+    defaultDeny: true
     allow: [traefik]
+  - name: cilium-secrets
+    defaultDeny: true
   - name: cnpg-restore-test
+    defaultDeny: true
   - name: cnpg-system
     allow: [monitoring]
   - name: convertx
@@ -33,6 +39,7 @@ namespaces:
     defaultDeny: true
     allow: [traefik]
   - name: external-dns
+    defaultDeny: true
     allow: [monitoring]
   - name: external-secrets
   - name: falco
@@ -51,11 +58,13 @@ namespaces:
   - name: immich
     allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: lastfm-scrobble-deduplicator
+    defaultDeny: true
   - name: local-path-provisioner
   - name: loki
     defaultDeny: true
     allow: [monitoring, opentelemetry-collector]
   - name: metallb
+    defaultDeny: true
     allow: [monitoring]
   - name: microbin
     defaultDeny: true
@@ -70,6 +79,7 @@ namespaces:
   - name: niks3
     allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: opencloud
+    defaultDeny: true
     allow: [traefik]
   - name: opentelemetry-collector
     defaultDeny: true
@@ -87,6 +97,7 @@ namespaces:
   - name: sablier
     defaultDeny: true
   - name: slackmoji
+    defaultDeny: true
     allow: [traefik]
   - name: tailscale-operator
   - name: telegram-hub
@@ -94,11 +105,13 @@ namespaces:
   - name: traefik
     allow: [monitoring]
   - name: trivy-system
+    defaultDeny: true
     allow: [monitoring]
   - name: vaultwarden
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: velero
+    defaultDeny: true
     allow: [monitoring]
   - name: versity-gw
     defaultDeny: true
@@ -107,4 +120,5 @@ namespaces:
   - name: workbench
     defaultDeny: true
   - name: zigbee2mqtt
+    defaultDeny: true
     allow: [traefik]
