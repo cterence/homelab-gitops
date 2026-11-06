@@ -21,6 +21,9 @@ cilium:
       enabled: true
     ui:
       enabled: true
+    eventBuffer:
+      # default 4095 (~20s) makes --since near-useless for incident analysis
+      size: 65535
     metrics:
       enabled:
         - drop
