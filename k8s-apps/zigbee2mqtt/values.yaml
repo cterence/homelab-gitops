@@ -114,14 +114,13 @@ zigbee2mqtt:
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
         traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
       ingressClassName: "traefik"
+      targetSelector:
+        main: main
       hosts:
         - host: &host z2m.terence.cloud
           paths:
             - path: /
               pathType: Prefix
-              service:
-                identifier: main
-                port: http
       tls:
         - secretName: z2m-tls
           hosts:
