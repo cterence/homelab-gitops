@@ -262,6 +262,7 @@ velero:
           - arr-stack
           - audiobookshelf
           - changedetection
+          - garage
           - gitea
           - home-assistant
           - immich

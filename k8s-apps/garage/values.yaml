@@ -5,6 +5,9 @@ garage:
       api:
         region: us-east-1
     existingRpcSecret: garage-rpc-secret
+    # consistent LMDB copies in /mnt/meta/snapshots (2 kept), so velero kopia
+    # backup of the meta PVC has a non-torn copy to restore
+    metadataAutoSnapshotInterval: "2h"
 
   image:
     repository: dxflrs/amd64_garage
