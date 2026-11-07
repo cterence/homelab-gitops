@@ -37,8 +37,10 @@ Environment variables map to flags: `LASTFM_USERNAME`, `LASTFM_PASSWORD`,
 
 The tool needs a Chrome/Chromium instance, either a local one (headless by
 default, `--browser-headful` for visible) or a remote one via `--browser-url`
-(e.g. a browserless chromium endpoint: `ws://chromium:3000?token=local`).
-The in-cluster deployment uses a browserless chromium sidecar.
+pointing at a plain CDP endpoint (e.g. `http://localhost:9222`; chromedp
+resolves the browser websocket via `/json/version`). The in-cluster
+deployment runs a headful Chromium sidecar under Xvfb — last.fm's Fastly
+bot mitigation blocks headless browsers.
 
 ## Development
 

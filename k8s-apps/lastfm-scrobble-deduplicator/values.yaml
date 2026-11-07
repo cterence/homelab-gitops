@@ -9,7 +9,7 @@ app-template:
       data:
         TZ: Europe/Paris
         CACHE_TYPE: file
-        BROWSER_URL: ws://localhost:3000?token=local
+        BROWSER_URL: http://localhost:9222
         LOG_LEVEL: info
         DELETE: "true"
 
@@ -49,14 +49,32 @@ app-template:
           image:
             repository: ghcr.io/browserless/chromium
             tag: latest@sha256:bcad9a1c271ddb9d95f7de5981c68cb2fcc9fd1f07e8da07c4e5c9d1ef4fc099
+          # Headful chromium under Xvfb: last.fm's Fastly bot mitigation
+          # blocks every headless browser tested.
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              CHROME=$(ls /usr/local/bin/playwright-browsers/chromium-*/chrome-linux64/chrome | head -n 1)
+              # shortcut: no exec — chrome dies instantly when pid 1 is the xvfb-run script
+              xvfb-run -a "$CHROME" \
+                --remote-debugging-address=0.0.0.0 \
+                --remote-debugging-port=9222 \
+                --user-data-dir=/tmp/chrome-profile \
+                --no-sandbox \
+                --no-first-run \
+                --disable-crash-reporter \
+                --disable-dev-shm-usage \
+                --disable-blink-features=AutomationControlled \
+                --window-size=1280,1024 \
+                about:blank
           ports:
             - name: http
-              containerPort: 3000
+              containerPort: 9222
           env:
             TZ: Europe/Paris
-            TOKEN: local
-            DEBUG: -*
-            TIMEOUT: 600000
+            HOME: /tmp
           restartPolicy: Always
           probes:
             startup:
@@ -65,7 +83,7 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /active?token=local
+                  path: /json/version
                 failureThreshold: 30
                 periodSeconds: 2
             liveness:
@@ -74,14 +92,14 @@ app-template:
               spec:
                 httpGet:
                   port: http
-                  path: /active?token=local
+                  path: /json/version
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
                   port: http
-                  path: /active?token=local
+                  path: /json/version
 
   persistence:
     data:
