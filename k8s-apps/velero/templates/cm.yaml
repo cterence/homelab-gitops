@@ -35,10 +35,3 @@ data:
             app.kubernetes.io/managed-by: cloudnative-pg
         action:
           type: skip
-      - conditions:
-          # garage data PVC is velero's own S3 backup target; storageClass skip
-          # because the garage chart can't label its volumeClaimTemplates
-          storageClass:
-            - local-path-storage-pool
-        action:
-          type: skip
