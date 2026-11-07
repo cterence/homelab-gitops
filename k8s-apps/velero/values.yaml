@@ -108,7 +108,7 @@ velero:
         bucket: velero
         caCert:
         prefix: v1
-        default: true
+        default: false
         validationFrequency: 24h
         accessMode: ReadWrite
         credential:
@@ -118,6 +118,22 @@ velero:
           region: us-east-1
           s3ForcePathStyle: true
           s3Url: http://versity-gw-storage-pool.versity-gw:7070
+          checksumAlgorithm: ""
+      - name: garage
+        provider: aws
+        bucket: velero
+        caCert:
+        prefix: v1
+        default: true
+        validationFrequency: 24h
+        accessMode: ReadWrite
+        credential:
+          name: garage-credentials
+          key: config
+        config:
+          region: us-east-1
+          s3ForcePathStyle: true
+          s3Url: http://garage.garage:3900
           checksumAlgorithm: ""
     volumeSnapshotLocation:
       # name is the name of the volume snapshot location where snapshots are being taken. Required.
@@ -288,7 +304,7 @@ velero:
       disabled: false
       schedule: "0 */8 * * *"
       useOwnerReferencesInBackup: false
-      paused: false
+      paused: true
       template:
         storageLocation: versity-gw-storage-pool
         includedNamespaces:
@@ -304,6 +320,38 @@ velero:
           - pocket-id
           - vaultwarden
           - versity-gw
+          - zigbee2mqtt
+        includedResources:
+          - po
+          - pv
+          - pvc
+          - cm
+          - sa
+          - secret
+        ttl: 168h
+        resourcePolicy:
+          apiGroup: ""
+          kind: ConfigMap
+          name: volume-policy
+    garage:
+      disabled: false
+      schedule: "0 */8 * * *"
+      useOwnerReferencesInBackup: false
+      paused: false
+      template:
+        storageLocation: garage
+        includedNamespaces:
+          - arr-stack
+          - audiobookshelf
+          - changedetection
+          - gitea
+          - home-assistant
+          - immich
+          - mosquitto
+          - opencloud
+          - paperless-ngx
+          - pocket-id
+          - vaultwarden
           - zigbee2mqtt
         includedResources:
           - po
