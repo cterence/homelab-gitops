@@ -14,7 +14,7 @@ app-template:
         main:
           image:
             repository: registry.terence.cloud/hubble-exporter
-            tag: "1"
+            tag: "2"
             pullPolicy: IfNotPresent
           args:
             - --state
