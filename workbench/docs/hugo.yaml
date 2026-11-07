@@ -6,7 +6,7 @@ defaultContentLanguage: fr
 deployment:
   targets:
     - name: garage
-      URL: s3://docs.terence.cloud?endpoint=https://grg.terence.cloud&region=us-east-1&s3ForcePathStyle=true
+      URL: s3://docs.terence.cloud?endpoint=http://garage.snow-delta.ts.net:3900&region=us-east-1&s3ForcePathStyle=true
 
 languages:
   fr:
