@@ -20,6 +20,12 @@ garage:
       storageClass: local-path-storage-pool
       size: 1000Gi
 
+  service:
+    type: ClusterIP
+    annotations:
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: garage
+
   ingress:
     s3:
       api:
