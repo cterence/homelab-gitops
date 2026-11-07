@@ -11,7 +11,9 @@ concurrency:
   group: docs-deploy
   cancel-in-progress: false
 
-permissions: {}
+permissions:
+  id-token: write # tailscale/github-action OIDC login
+  contents: read
 
 jobs:
   deploy:
