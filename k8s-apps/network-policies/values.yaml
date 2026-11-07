@@ -115,12 +115,13 @@ namespaces:
     defaultDeny: true
     allow:
       [
-        kube-system,
-        traefik,
-        tailscale-operator,
-        monitoring,
         cnpg-restore-test,
+        garage,
+        kube-system,
         loki,
+        monitoring,
+        tailscale-operator,
+        traefik,
       ]
   - name: mosquitto
     defaultDeny: true
