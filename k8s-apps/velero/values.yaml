@@ -87,11 +87,11 @@ velero:
 
   configuration:
     backupStorageLocation:
-      - name: v2
+      - name: backblaze
         provider: aws
         bucket: velero-backup-tch
         caCert:
-        prefix: v2
+        prefix: v1
         default: false
         validationFrequency: 24h
         accessMode: ReadWrite
@@ -102,22 +102,6 @@ velero:
           region: eu-central-003
           s3ForcePathStyle: true
           s3Url: https://s3.eu-central-003.backblazeb2.com
-          checksumAlgorithm: ""
-      - name: versity-gw-storage-pool
-        provider: aws
-        bucket: velero
-        caCert:
-        prefix: v1
-        default: false
-        validationFrequency: 24h
-        accessMode: ReadWrite
-        credential:
-          name: versity-gw-credentials
-          key: config
-        config:
-          region: us-east-1
-          s3ForcePathStyle: true
-          s3Url: http://versity-gw-storage-pool.versity-gw:7070
           checksumAlgorithm: ""
       - name: garage
         provider: aws
@@ -267,13 +251,13 @@ velero:
       runAsUser: 0
 
   schedules:
-    v2:
+    backblaze:
       disabled: false
       schedule: "0 2 * * *"
       useOwnerReferencesInBackup: false
       paused: false
       template:
-        storageLocation: v2
+        storageLocation: backblaze
         includedNamespaces:
           - arr-stack
           - audiobookshelf
@@ -286,7 +270,6 @@ velero:
           - paperless-ngx
           - pocket-id
           - vaultwarden
-          - versity-gw
           - zigbee2mqtt
         includedResources:
           - po
@@ -296,39 +279,6 @@ velero:
           - sa
           - secret
         ttl: 720h
-        resourcePolicy:
-          apiGroup: ""
-          kind: ConfigMap
-          name: volume-policy
-    versity-gw-storage-pool:
-      disabled: false
-      schedule: "0 */8 * * *"
-      useOwnerReferencesInBackup: false
-      paused: true
-      template:
-        storageLocation: versity-gw-storage-pool
-        includedNamespaces:
-          - arr-stack
-          - audiobookshelf
-          - changedetection
-          - gitea
-          - home-assistant
-          - immich
-          - mosquitto
-          - opencloud
-          - paperless-ngx
-          - pocket-id
-          - vaultwarden
-          - versity-gw
-          - zigbee2mqtt
-        includedResources:
-          - po
-          - pv
-          - pvc
-          - cm
-          - sa
-          - secret
-        ttl: 168h
         resourcePolicy:
           apiGroup: ""
           kind: ConfigMap
