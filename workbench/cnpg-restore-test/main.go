@@ -238,7 +238,7 @@ func runRestore(ctx context.Context, cfg Config, concurrencyStr string) error {
 
 	runDuration := time.Since(runStart)
 	if err := pushMetrics(context.Background(), cfg, verifyResults, runDuration, false); err != nil {
-		slog.Error("failed to push metrics", "error", err)
+		return fmt.Errorf("pushing metrics: %w", err)
 	}
 
 	if failed > 0 && passed == 0 {
