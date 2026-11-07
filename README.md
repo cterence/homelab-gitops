@@ -91,7 +91,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [traefik](./scripts/../k8s-apps/traefik) | A Traefik based Kubernetes ingress controller |
 | [vaultwarden](./scripts/../k8s-apps/vaultwarden) | Unofficial Bitwarden compatible server written in Rust |
 | [velero](./scripts/../k8s-apps/velero) | Backup and migrate Kubernetes applications and their persistent volumes |
-| [versity-gw](./scripts/../k8s-apps/versity-gw) | High-performance S3 translation service |
 | [workbench](./scripts/../k8s-apps/workbench) | ApplicationSet that builds images from workbench/* subdirs |
 | [zigbee2mqtt](./scripts/../k8s-apps/zigbee2mqtt) | Zigbee to MQTT bridge |
 <!-- END deployed-apps -->
