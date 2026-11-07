@@ -22,6 +22,25 @@ app-template:
         START_ADDITIONAL_SERVICES: "auth-app"
         PROXY_ENABLE_APP_AUTH: "true"
         FRONTEND_ARCHIVER_MAX_SIZE: "50000000000"
+        DECOMPOSEDS3_ENDPOINT: "http://garage.garage:3900"
+        DECOMPOSEDS3_REGION: us-east-1
+        DECOMPOSEDS3_BUCKET: opencloud
+
+    config-ds3:
+      data:
+        TZ: Europe/Paris
+        OC_INSECURE: "false" # SSL termination at tailscale operator
+        PROXY_TLS: "false"
+        PROXY_HTTP_ADDR: 0.0.0.0:9200
+        OC_URL: https://oc-ds3.terence.cloud
+        START_ADDITIONAL_SERVICES: "auth-app"
+        PROXY_ENABLE_APP_AUTH: "true"
+        FRONTEND_ARCHIVER_MAX_SIZE: "50000000000"
+        STORAGE_SYSTEM_DRIVER: decomposed
+        STORAGE_USERS_DRIVER: decomposeds3
+        STORAGE_USERS_DECOMPOSEDS3_ENDPOINT: "http://garage.garage:3900"
+        STORAGE_USERS_DECOMPOSEDS3_REGION: us-east-1
+        STORAGE_USERS_DECOMPOSEDS3_BUCKET: opencloud
 
   controllers:
     main:
@@ -68,9 +87,62 @@ app-template:
                   port: http
                   path: /status
 
+    main-ds3:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      initContainers:
+        init:
+          image:
+            repository: opencloudeu/opencloud-rolling
+            tag: 9.0.0@sha256:bd57f039d0dd3df510fb25f178beefdf0b1f049097285feead607824460e6506
+          command: "/bin/bash"
+          args:
+            - -c
+            - "opencloud init || true"
+          envFrom:
+            - configMapRef:
+                identifier: config-ds3
+      containers:
+        main:
+          image:
+            repository: opencloudeu/opencloud-rolling
+            tag: 9.0.0@sha256:bd57f039d0dd3df510fb25f178beefdf0b1f049097285feead607824460e6506
+          envFrom:
+            - configMapRef:
+                identifier: config-ds3
+            - secretRef:
+                name: garage-credentials
+          ports:
+            - name: http
+              containerPort: 9200
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /status
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /status
+
   service:
     main:
       controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 9200
+
+    main-ds3:
+      controller: main-ds3
       type: ClusterIP
       ports:
         http:
@@ -85,7 +157,7 @@ app-template:
         traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd
       className: "traefik"
       hosts:
-        - host: &host oc.terence.cloud
+        - host: &host1 oc.terence.cloud
           paths:
             - path: /
               pathType: Prefix
@@ -95,7 +167,27 @@ app-template:
       tls:
         - secretName: opencloud-tls
           hosts:
-            - *host
+            - *host1
+
+    main-ds3:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd
+      className: "traefik"
+      hosts:
+        - host: &host2 oc-ds3.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main-ds3
+                port: http
+      tls:
+        - secretName: opencloud-ds3-tls
+          hosts:
+            - *host2
 
     # Data plane without modsecurity: the plugin buffers whole bodies in the
     # traefik pod (16GB spike during bulk uploads); engine is already off for these paths
@@ -108,7 +200,7 @@ app-template:
         traefik.ingress.kubernetes.io/router.priority: "100"
       className: "traefik"
       hosts:
-        - host: *host
+        - host: *host1
           paths:
             - path: /dav/
               pathType: Prefix
@@ -128,7 +220,7 @@ app-template:
       tls:
         - secretName: opencloud-tls
           hosts:
-            - *host
+            - *host1
 
   persistence:
     config:
@@ -139,8 +231,27 @@ app-template:
         argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 100Mi
-      globalMounts:
-        - path: /etc/opencloud
+      advancedMounts:
+        main:
+          main:
+            - path: /etc/opencloud
+          init:
+            - path: /etc/opencloud
+
+    config-ds3:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        main-ds3:
+          main:
+            - path: /etc/opencloud
+          init:
+            - path: /etc/opencloud
 
     data:
       enabled: true
@@ -150,5 +261,9 @@ app-template:
         argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 200Gi
-      globalMounts:
-        - path: /var/lib/opencloud
+      advancedMounts:
+        main:
+          main:
+            - path: /var/lib/opencloud
+          init:
+            - path: /var/lib/opencloud

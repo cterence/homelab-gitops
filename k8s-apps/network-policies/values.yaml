@@ -60,6 +60,7 @@ namespaces:
         immich,
         monitoring,
         niks3,
+        opencloud,
         paperless-ngx,
         pocket-id,
         tailscale-operator,
@@ -135,7 +136,7 @@ namespaces:
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: opencloud
     defaultDeny: true
-    allow: [traefik]
+    allow: [traefik, tailscale-operator]
   - name: opentelemetry-collector
     defaultDeny: true
     allow: [tailscale-operator, monitoring, cnpg-restore-test, pocket-id]
@@ -164,7 +165,7 @@ namespaces:
     defaultDeny: true
     allowWorldIngress: true
     allowRemoteNode: true
-    allow: [monitoring]
+    allow: [monitoring, kube-system, opencloud]
   - name: telegram-hub
     defaultDeny: true
     allow: [traefik, tailscale-operator]
