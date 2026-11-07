@@ -152,7 +152,6 @@ namespaces:
     allow: [monitoring]
   - name: vaultwarden
     defaultDeny: true
-    observeDns: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: velero
     defaultDeny: true
