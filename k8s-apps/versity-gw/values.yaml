@@ -122,6 +122,8 @@ app-template:
             repository: ghcr.io/versity/versitygw
             tag: v1.10.0@sha256:89cad13cc981986ee284cbafea4613f9533ce6fd5f37a2c96c4c4fb8adb3a316
           args:
+            - --iam-dir
+            - /iam-data
             - posix
             - /buckets
             - --chuid
@@ -248,6 +250,19 @@ app-template:
         storage-pool:
           main:
             - path: /buckets
+
+    iam-data:
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      storageClass: local-path-storage-pool
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        storage-pool:
+          main:
+            - path: /iam-data
 
   rawResources:
     sablier:
