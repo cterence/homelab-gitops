@@ -178,23 +178,6 @@ namespaces:
   - name: velero
     defaultDeny: true
     allow: [monitoring]
-  - name: versity-gw
-    defaultDeny: true
-    allow:
-      [
-        traefik,
-        tailscale-operator,
-        arr-stack,
-        gitea,
-        home-assistant,
-        immich,
-        niks3,
-        paperless-ngx,
-        pocket-id,
-        vaultwarden,
-        velero,
-        cnpg-restore-test,
-      ]
   - name: workbench
     defaultDeny: true
   - name: zigbee2mqtt

@@ -5,6 +5,7 @@ urls:
   - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
   - https://cd.terence.cloud/
+  - https://docs.terence.cloud
   - https://ha.terence.cloud
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
@@ -22,7 +23,6 @@ urls:
   - https://registry:REGISTRY_PASSWORD@registry.terence.cloud/v2/
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
-  - https://versity.terence.cloud/health
   - https://z2m.terence.cloud
 
 cnpgClusters:

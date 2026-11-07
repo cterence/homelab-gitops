@@ -151,7 +151,6 @@ app-template:
             - hubble-exporter
             - slackmoji
             - telegram-hub
-            - versity-gw
             - workbench
           externalSecretSpec:
             refreshInterval: 1h
@@ -170,7 +169,6 @@ app-template:
             dataFrom:
               - extract:
                   key: registry-auth
-
 
   service:
     main:

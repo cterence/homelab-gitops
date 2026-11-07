@@ -10,7 +10,8 @@ Every rotation is five steps:
 
 1. Create the new value at the provider (per entry below).
 2. Update the key(s): `sops edit secrets.yaml`
-3. `terraform apply` (from this directory; backend uses the `versitygw` aws profile).
+3. `terraform apply` (from this directory; S3 backend, bucket
+   `terraform-states` — local aws profile/endpoint per your shell setup).
 4. Reveal to consumers — the rollout command per secret.
 5. Validate, then revoke the old value at the provider.
 
@@ -316,10 +317,11 @@ public key trusted until the cache is rebuilt — old artifacts stay signed with
 kubectl -n niks3 rollout restart deploy/niks3
 ```
 
-### versity-credentials (`access-key`, `secret-key`)
+### s3-credentials (`access-key`, `secret-key`)
 
-New pair issued on the main gateway (`versitygw admin`, see versity-gw
-section — nix-cache users live on deploy/versity-gw-main):
+The niks3 backing store key (bucket `nix-cache` on garage). Rotate via
+`/garage key create nix-cache` + `bucket allow` (garage section), sops +
+terraform apply; niks3 re-reads the secret (Reloader restarts it):
 
 ```sh
 kubectl -n niks3 rollout restart deploy/niks3
@@ -511,12 +513,14 @@ temporarily applied to the secret (sops/apply, restore, flip forward). Their
 TTL expiry ALSO needs repo access — it will fail silently after the rotation,
 so once the retention window passes, purge manually: `velero backup delete` +
 delete the old prefix objects via rclone. Repositories on decommissioned
-storage (versity) become unrestorable when that storage goes away.
+storage become unrestorable when that storage goes away.
 
-### versity-gw-credentials (`config`)
+### garage-credentials (`config`)
 
-ini file (format as above) for velero's versity storage pool user; rotate at
-the storage-pool gateway (`versitygw admin`, see versity-gw section):
+ini file (format as above) for velero's garage BSL (`s3://velero/<prefix>`,
+endpoint `http://garage.garage.svc:3900`). Rotate via
+`/garage key create velero` + `bucket allow` (garage section), sops +
+terraform apply, then:
 
 ```sh
 kubectl -n velero rollout restart deploy/velero ds/node-agent
@@ -590,80 +594,6 @@ argocd app sync <app>
 A drift symptom of having missed this: WAL archives fail with barman
 `exit status 4` while the ObjectStore still shows the old `spec.configuration.endpointURL`.
 
-## versity-gw
-
-### versity-gw-credentials (`ROOT_ACCESS_KEY`, `ROOT_SECRET_KEY`)
-
-One root pair, shared envFrom by BOTH gateways, and also the terraform S3
-backend identity (`profile versitygw`, terraform-states bucket). Best course:
-de-scope first — after the cnpg-backup, velero and nix-cache IAM users own
-their buckets, root's only remaining consumers are the terraform backend and
-admin operations (via the container env fallback in the versity-gw section).
-Then rotate (both gateways read the same k8s Secret; Reloader restarts them
-on change), minding the ordering:
-
-1. sops + `terraform apply` with the OLD root still in `~/.aws/credentials`
-   (the gateway is still running the old root, so the backend works).
-2. Reloader restarts both gateway pods (`kubectl -n versity-gw rollout
-   restart deploy/versity-gw-main deploy/versity-gw-storage-pool` if manual)
-   — the old root dies here.
-3. Update `~/.aws/credentials` (profile `versitygw`) — future `terraform
-   apply` and the kopia runbook in `k8s-apps/loki` now use the new root.
-
-### Issuing/rotating gateway keys (`versitygw admin` CLI)
-
-Users of a gateway live in that gateway's own IAM store — two gateways, two
-user DBs:
-
-- `deploy/versity-gw-storage-pool` owns cnpg-backups (all namespaces) and
-  velero bucket users
-- `deploy/versity-gw-main` owns nix-cache (niks3) and terraform-states
-
-Prerequisites and semantics (from the versitygw Multi-Tenant wiki):
-
-- A gateway in single-root-user mode (no `--iam-dir`) refuses `create-user`/
-  `update-user` with `XAdminMethodNotSupported`, because the only account is
-  root. Internal IAM = `--iam-dir /iam-data`, a GLOBAL flag — it must come
-  BEFORE the `posix` subcommand in args or Go flag parsing never sees it and
-  the gateway silently stays in single-account mode (check the startup log
-  for "No IAM service configured"). Mount it OUTSIDE
-  the backend root (a directory inside /buckets becomes a readable S3 bucket;
-  the IAM store is plaintext JSON protected only by file permissions).
-  Internal IAM allows a single gateway replica — fine, both run 1 replica.
-- Enabling IAM does NOT invalidate the root account (it is declared via
-  `--access`/`--secret`, outside the IAM store): existing root-authenticated
-  traffic and bucket ownership are untouched until sops entries are rotated.
-- Roles: root/admin manage users and see all buckets; role `user` sees ONLY
-  buckets it owns. Existing buckets belong to root — hand each over with
-  `change-bucket-owner` (this resets the bucket ACL/policy to default).
-- The admin CLI falls back to the in-container `ROOT_ACCESS_KEY`/
-  `ROOT_SECRET_KEY` env (explicit `ADMIN_*` flags take precedence) — so no
-  credentials ever appear on the command line.
-
-Design: one user per bucket, all nine cnpg namespaces share the pair
-(per-namespace users would need per-namespace buckets). Since `--chuid`/
-`--chgid` chown new files to the account uid/gid and the existing tree is
-1000:1000, create users with `--user-id 1000 --group-id 1000`.
-
-```sh
-# no credential flags: ROOT_* env is picked up automatically
-kubectl -n versity-gw exec deploy/versity-gw-storage-pool -c main -- \
-  versitygw admin --endpoint-url http://localhost:7070 list-users
-
-kubectl -n versity-gw exec deploy/versity-gw-storage-pool -c main -- \
-  versitygw admin --endpoint-url http://localhost:7070 create-user \
-  --access "<new-ak>" --secret "<new-secret>" --role user \
-  --user-id 1000 --group-id 1000
-
-kubectl -n versity-gw exec deploy/versity-gw-storage-pool -c main -- \
-  versitygw admin --endpoint-url http://localhost:7070 change-bucket-owner \
-  --bucket cnpg-backups --owner "<new-ak>"
-# same for the velero bucket + its own user
-```
-
-The IAM cache is 120s (`--iam-cache-ttl`) — allow up to two minutes for the
-new secret to take effect and the old one to die.
-
 ## telegram-hub
 
 ### credentials (`ALLOWED_USERS`, `MISTRAL_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`)
@@ -712,9 +642,8 @@ reads the ObjectStore and secret live. Verify with the pg_stat_archiver query
 
 ### cnpg-backup-s3-creds (`ACCESS_KEY_ID`, `ACCESS_SECRET_KEY`)
 
-Versity-issued pair for the restore-test bucket historically; the restore test
-now uses the shared garage `cnpg-backups` pair — rotate it together with the
-other nine. No live workload — the next restore test picks the new pair up.
+Restore-test credentials use the shared garage `cnpg-backups` pair — rotate
+it together with the other nine. No live workload — the next restore test picks the new pair up.
 The first post-migration restore test against garage is the end-to-end proof
 of the whole cutover.
 
