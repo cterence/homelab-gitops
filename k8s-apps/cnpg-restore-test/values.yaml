@@ -17,6 +17,7 @@ app-template:
         schedule: "0 4 * * *"
         successfulJobsHistory: 1
         failedJobsHistory: 1
+        backoffLimit: 1
         concurrencyPolicy: Forbid
         timeZone: UTC
       annotations:
