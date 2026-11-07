@@ -76,7 +76,7 @@ func pushMetrics(ctx context.Context, cfg Config, verifyResults []VerifyResult, 
 	defer flushCancel()
 
 	if err := provider.ForceFlush(flushCtx); err != nil {
-		slog.Warn("force flush failed", "error", err)
+		return fmt.Errorf("flushing metrics to collector: %w", err)
 	}
 
 	if err := provider.Shutdown(flushCtx); err != nil {

@@ -114,7 +114,7 @@ namespaces:
     allow: [traefik]
   - name: opentelemetry-collector
     defaultDeny: true
-    allow: [tailscale-operator, monitoring]
+    allow: [tailscale-operator, monitoring, cnpg-restore-test, pocket-id]
   - name: paperless-ngx
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
