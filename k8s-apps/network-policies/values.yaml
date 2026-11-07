@@ -52,6 +52,23 @@ namespaces:
   - name: falco
     defaultDeny: true
     allow: [monitoring]
+  - name: garage
+    defaultDeny: true
+    allow:
+      [
+        arr-stack,
+        cnpg-restore-test,
+        gitea,
+        home-assistant,
+        immich,
+        niks3,
+        paperless-ngx,
+        pocket-id,
+        tailscale-operator,
+        traefik,
+        vaultwarden,
+        velero,
+      ]
   - name: gitea
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
