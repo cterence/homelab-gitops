@@ -401,6 +401,9 @@ app-template:
         schedule: "4/5 * * * *"
         successfulJobsHistory: 1
         failedJobsHistory: 1
+      pod:
+        labels:
+          velero.io/exclude-from-backup: "true"
       containers:
         rangemusique:
           image:
