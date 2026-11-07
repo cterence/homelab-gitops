@@ -13,6 +13,7 @@ namespaces:
   - name: arr-stack
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: audiobookshelf
     defaultDeny: true
     allow: [traefik]
@@ -30,6 +31,7 @@ namespaces:
   - name: cnpg-restore-test
     defaultDeny: true
     allow: [cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: cnpg-system
     defaultDeny: true
     allow: [kube-system, monitoring]
@@ -53,12 +55,14 @@ namespaces:
   - name: gitea
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: go-healthcheck
     defaultDeny: true
     allow: [traefik]
   - name: home-assistant
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: httpbin
     defaultDeny: true
     allow: [traefik]
@@ -68,6 +72,7 @@ namespaces:
     defaultDeny: true
     allow:
       [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: kube-system
     defaultDeny: true
     allow: [hubble-exporter]
@@ -105,6 +110,7 @@ namespaces:
     defaultDeny: true
     allow:
       [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: opencloud
     defaultDeny: true
     allow: [traefik]
@@ -114,9 +120,11 @@ namespaces:
   - name: paperless-ngx
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: pocket-id
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: registry
     defaultDeny: true
     allowClusterIngressPorts:
@@ -145,6 +153,7 @@ namespaces:
   - name: vaultwarden
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: velero
     defaultDeny: true
     allow: [monitoring]

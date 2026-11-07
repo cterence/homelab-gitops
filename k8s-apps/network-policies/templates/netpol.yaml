@@ -46,6 +46,18 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+{{- range $r := $ns.allowFromPorts | default list }}
+    # namespace-scoped, port-scoped (e.g. apiserver pod proxy via konnectivity-agent)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $r.from }}
+      ports:
+        - port: {{ $r.port }}
+{{- if $r.protocol }}
+          protocol: {{ $r.protocol }}
+{{- end }}
+{{- end }}
 {{- if $ns.defaultDeny }}
 ---
 apiVersion: networking.k8s.io/v1
