@@ -199,30 +199,9 @@ immich:
 
 cnpg-cluster-blue:
   type: postgresql
-  mode: recovery
+  mode: standalone
   version:
     postgresql: "18"
-  recovery:
-    method: import
-    import:
-      type: microservice
-      databases: ["immich"]
-      source:
-        host: immich-cnpg-cluster-vectorchord-rw
-        username: immich
-        database: immich
-        passwordSecret:
-          name: immich-cnpg-cluster-vectorchord-app
-          key: password
-        sslKeySecret:
-          name: immich-cnpg-cluster-vectorchord-replication
-          key: tls.key
-        sslCertSecret:
-          name: immich-cnpg-cluster-vectorchord-replication
-          key: tls.crt
-        sslRootCertSecret:
-          name: immich-cnpg-cluster-vectorchord-ca
-          key: ca.crt
   cluster:
     instances: 1
     imageCatalogRef:
