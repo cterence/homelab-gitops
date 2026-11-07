@@ -1,9 +1,5 @@
-data "sops_file" "secrets" {
-  source_file = "secrets.yaml"
-}
-
 locals {
-  revision = 6
+  revision = 31
 
   # sops keys are "<namespace>.<secret-name>.<key>"
   regex_pattern = "^([^.]+)\\.([^.]+)\\.(.+)$"
@@ -35,6 +31,10 @@ locals {
   }
 
   data_wo_revision = local.revision
+}
+
+data "sops_file" "secrets" {
+  source_file = "secrets.yaml"
 }
 
 resource "kubernetes_secret_v1" "secrets" {
