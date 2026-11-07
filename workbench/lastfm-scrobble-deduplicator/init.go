@@ -47,7 +47,7 @@ func initApp(ctx context.Context, c *Config) error {
 		allocCancel context.CancelFunc
 	)
 	if c.BrowserURL != "" {
-		allocCtx, allocCancel = remote.NewAllocator(ctx, c.BrowserURL, remote.NoModifyURL)
+		allocCtx, allocCancel = remote.NewAllocator(ctx, c.BrowserURL)
 	} else {
 		opts := chromedp.DefaultExecAllocatorOptions[:]
 		if c.BrowserHeadful {
