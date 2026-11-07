@@ -145,7 +145,6 @@ app-template:
             - audiobookshelf
             - catbox
             - cnpg-restore-test
-            - docs
             - gitea
             - go-healthcheck
             - lastfm-scrobble-deduplicator

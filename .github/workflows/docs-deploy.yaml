@@ -1,0 +1,41 @@
+name: Docs deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - workbench/docs/**
+      - .github/workflows/docs-deploy.yaml
+
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: Build and sync docs to garage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: workbench/docs/go.mod
+          cache-dependency-path: workbench/docs/go.sum
+      - name: Install hugo extended
+        run: |
+          curl -fsSL -o hugo.tgz https://github.com/gohugoio/hugo/releases/download/v0.169.0/hugo_extended_0.169.0_linux-amd64.tar.gz
+          echo "c41672a0725d307758a132bc94a962e59760eb33f9ba08c991b81f9881d6fa7d  hugo.tgz" | sha256sum -c -
+          tar -xzf hugo.tgz hugo && sudo install -m 755 hugo /usr/local/bin/hugo
+      - name: Build
+        run: hugo --minify
+        working-directory: workbench/docs
+      - name: Deploy to garage
+        run: hugo deploy
+        working-directory: workbench/docs
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_GARAGE_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_GARAGE_SECRET_KEY }}

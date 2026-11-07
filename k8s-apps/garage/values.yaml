@@ -44,6 +44,23 @@ garage:
           - secretName: garage-tls
             hosts:
               - grg.terence.cloud
+      web:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt
+          external-dns.kubernetes.io/target: home.terence.cloud
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
+        hosts:
+          # FQDN buckets: host must match an enabled-website bucket name
+          - host: &docs docs.terence.cloud
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: docs-web-tls
+            hosts:
+              - *docs
 
   resources:
     requests:
