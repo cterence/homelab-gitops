@@ -1,12 +1,10 @@
 podCIDR: 10.244.0.0/16
 nodeCIDR: 192.168.1.0/24
 
-# allow lists are per namespace; same-namespace is always allowed.
-# Policies render only where defaultDeny or nodeProbes is set.
 namespaces:
   - name: argocd
     defaultDeny: true
-    nodeProbes: true # chart netpols block kubelet probes under cilium
+    nodeProbes: true
     allow: [traefik, monitoring, tailscale-operator]
   - name: opentelemetry-operator
     defaultDeny: true
@@ -65,26 +63,22 @@ namespaces:
     defaultDeny: true
     allow: [traefik]
   - name: hubble-exporter
-    # stdout-only streamer to the relay; no inbound callers
     defaultDeny: true
   - name: immich
     defaultDeny: true
-    allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
+    allow:
+      [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: kube-system
-    # coredns serves the whole cluster; apiserver reaches metrics-server via
-    # konnectivity-agent (same ns). cilium-agent/kube-proxy are hostNetwork,
-    # policies do not apply to them. monitoring scrapes coredns metrics on
-    # 9153; node-masqueraded pods need the remote-node CNP for plain DNS.
     defaultDeny: true
     allow: [hubble-exporter]
     allowClusterIngressPorts:
-      - {port: 53, protocol: UDP}
-      - {port: 53, protocol: TCP}
-      - {port: 9153, protocol: TCP}
+      - { port: 53, protocol: UDP }
+      - { port: 53, protocol: TCP }
+      - { port: 9153, protocol: TCP }
     allowRemoteNode: true
     remoteNodePorts:
-      - {port: 53, protocol: UDP}
-      - {port: 53, protocol: TCP}
+      - { port: 53, protocol: UDP }
+      - { port: 53, protocol: TCP }
   - name: lastfm-scrobble-deduplicator
     defaultDeny: true
   - name: local-path-provisioner
@@ -100,7 +94,8 @@ namespaces:
     allow: [traefik]
   - name: monitoring
     defaultDeny: true
-    allow: [kube-system, traefik, tailscale-operator, monitoring, cnpg-restore-test]
+    allow:
+      [kube-system, traefik, tailscale-operator, monitoring, cnpg-restore-test]
   - name: mosquitto
     defaultDeny: true
     allow: [home-assistant, zigbee2mqtt]
@@ -108,7 +103,8 @@ namespaces:
     defaultDeny: true
   - name: niks3
     defaultDeny: true
-    allow: [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
+    allow:
+      [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
   - name: opencloud
     defaultDeny: true
     allow: [traefik]
@@ -122,11 +118,9 @@ namespaces:
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
   - name: registry
-    # any pod can query the auth-protected v2 api; image-wait hooks run in
-    # each workbench app's namespace
     defaultDeny: true
     allowClusterIngressPorts:
-      - {port: 5000, protocol: TCP}
+      - { port: 5000, protocol: TCP }
     allow: [traefik, tailscale-operator, workbench]
   - name: reloader
     defaultDeny: true
@@ -148,9 +142,6 @@ namespaces:
     defaultDeny: true
     allowWorldIngress: true
     allow: [monitoring]
-  - name: trivy-system
-    defaultDeny: true
-    allow: [monitoring]
   - name: vaultwarden
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]
@@ -158,10 +149,22 @@ namespaces:
     defaultDeny: true
     allow: [monitoring]
   - name: versity-gw
-    # cnpg barman backups and velero push to versity; the public health check
-    # reaches it via the traefik hostname, tailnet via ts proxies.
     defaultDeny: true
-    allow: [traefik, tailscale-operator, arr-stack, gitea, home-assistant, immich, niks3, paperless-ngx, pocket-id, vaultwarden, velero, cnpg-restore-test]
+    allow:
+      [
+        traefik,
+        tailscale-operator,
+        arr-stack,
+        gitea,
+        home-assistant,
+        immich,
+        niks3,
+        paperless-ngx,
+        pocket-id,
+        vaultwarden,
+        velero,
+        cnpg-restore-test,
+      ]
   - name: workbench
     defaultDeny: true
   - name: zigbee2mqtt
