@@ -3,6 +3,11 @@ title: Documentation
 baseURL: https://docs.terence.cloud/
 defaultContentLanguage: fr
 
+deployment:
+  targets:
+    - name: garage
+      URL: s3://docs.terence.cloud?endpoint=grg.terence.cloud&region=us-east-1&s3ForcePathStyle=true
+
 languages:
   fr:
     label: Français

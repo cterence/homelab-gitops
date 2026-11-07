@@ -40,9 +40,6 @@ namespaces:
     allow: [traefik]
   - name: default
     defaultDeny: true
-  - name: docs
-    defaultDeny: true
-    allow: [traefik]
   - name: external-dns
     defaultDeny: true
     allow: [monitoring]
