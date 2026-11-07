@@ -58,8 +58,8 @@ app-template:
               set -e
               CHROME=$(ls /usr/local/bin/playwright-browsers/chromium-*/chrome-linux64/chrome | head -n 1)
               # shortcut: no exec — chrome dies instantly when pid 1 is the xvfb-run script
+              # chrome binds CDP to 127.0.0.1 only, so probes must run in-container
               xvfb-run -a "$CHROME" \
-                --remote-debugging-address=0.0.0.0 \
                 --remote-debugging-port=9222 \
                 --user-data-dir=/tmp/chrome-profile \
                 --no-sandbox \
@@ -81,25 +81,34 @@ app-template:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /json/version
+                exec:
+                  command:
+                    - node
+                    - -e
+                    - fetch('http://127.0.0.1:9222/json/version').then(() => process.exit(0)).catch(() => process.exit(1))
+                timeoutSeconds: 3
                 failureThreshold: 30
                 periodSeconds: 2
             liveness:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /json/version
+                exec:
+                  command:
+                    - node
+                    - -e
+                    - fetch('http://127.0.0.1:9222/json/version').then(() => process.exit(0)).catch(() => process.exit(1))
+                timeoutSeconds: 3
             readiness:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /json/version
+                exec:
+                  command:
+                    - node
+                    - -e
+                    - fetch('http://127.0.0.1:9222/json/version').then(() => process.exit(0)).catch(() => process.exit(1))
+                timeoutSeconds: 3
 
   persistence:
     data:
