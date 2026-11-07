@@ -10,7 +10,9 @@ daemonless peers, everything end-to-end encrypted.
 - **stash** (`catbox serve`): one tailcat listener in the cluster.
   Holds sealed files for offline targets (spool, 30-day TTL, 100G cap),
   keeps the member roster, and hands out pending files on pull.
-  Sealed files are opaque to it.
+  Sealed files are opaque to it. When a deposit would exceed the cap,
+  stale deposit partials (no sender still writing them) are evicted
+  oldest-first to make room; parked items are never touched.
 - **peers**: one-shot commands, no resident process. `catbox recv`
   pulls parked files; `catbox listen` receives direct sends
   while online (it never pulls); senders try the listener first and

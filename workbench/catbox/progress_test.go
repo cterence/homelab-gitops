@@ -178,8 +178,8 @@ func TestProgressReaderRewritesOnTerminal(t *testing.T) {
 	readN(t, r, 100) // emit, redrawn
 
 	got := out.String()
-	if !strings.Contains(got, "\r  sending [") {
-		t.Fatalf("terminal mode must draw the bar:\n%q", got)
+	if !strings.Contains(got, "\r\x1b[2K  sending [") {
+		t.Fatalf("terminal mode must clear, then draw the bar:\n%q", got)
 	}
 
 	if !strings.Contains(got, "] 200 B / 500 B (40%), 100 B/s") {
@@ -202,6 +202,34 @@ func TestProgressReaderRewritesOnTerminal(t *testing.T) {
 
 	if !strings.HasSuffix(out.String(), "\r\x1b[2K") {
 		t.Fatalf("EOF must erase the progress line:\n%q", out.String())
+	}
+}
+
+func TestProgressRewriteClearsShorterLine(t *testing.T) {
+	r, out, clock := newProgress(t, 500, strings.NewReader(strings.Repeat("a", 500)))
+	r.rewrite = true
+
+	path := "DERP relay (region 1) plus a long stale tail"
+	r.path = func() string { return path }
+
+	readN(t, r, 100) // counters start
+
+	clock.advance(time.Second)
+	readN(t, r, 100) // draws the long line
+
+	path = "direct 192.168.1.141:42911"
+
+	clock.advance(time.Second)
+	readN(t, r, 100) // redraws the shorter line
+
+	got := out.String()
+
+	if n := strings.Count(got, "\r\x1b[2K"); n != 2 {
+		t.Fatalf("every redraw must clear first, found %d clears:\n%q", n, got)
+	}
+
+	if !strings.Contains(got, "path: direct 192.168.1.141:42911") {
+		t.Fatalf("second redraw missing the direct path:\n%q", got)
 	}
 }
 

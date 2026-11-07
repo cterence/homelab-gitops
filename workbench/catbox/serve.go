@@ -591,6 +591,26 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 	// missing bytes count against the cap. Admitted-unfinished bytes
 	// count too, so concurrent deposits each see the shared budget
 	// instead of the whole remaining space.
+
+	// Before refusing: evict stale deposit partials, oldest first —
+	// never a partial being written or this deposit's own resume point.
+	keep := ""
+	if m.SHA != "" {
+		keep = spoolPartialPath(st.spool.dir, me.Name, m.SHA, m.Size)
+	}
+
+	if over := usage + st.admitted + m.Size - have - st.max; over > 0 {
+		if reclaimed := st.spool.evictPartials(over, keep); reclaimed >= over {
+			st.log.Info("evicted stale deposit partials", "bytes", reclaimed)
+
+			if usage, err = st.spool.usage(); err != nil {
+				_ = writeMsg(rwc, msg{Op: opReady, Err: "spool unavailable"})
+
+				return
+			}
+		}
+	}
+
 	st.mu.Lock()
 
 	if usage+st.admitted+m.Size-have > st.max {

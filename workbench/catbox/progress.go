@@ -104,7 +104,8 @@ func (p *progressReader) emit(n, rate int64) {
 	}
 
 	if rewrite {
-		_, _ = fmt.Fprintf(w, "\r  %s", progressLine(p.label, n, p.total, rate, path, true))
+		// Clear first: a shorter line must not leave the previous one's tail.
+		_, _ = fmt.Fprintf(w, "\r\x1b[2K  %s", progressLine(p.label, n, p.total, rate, path, true))
 		p.printed = true
 	} else {
 		_, _ = fmt.Fprintf(w, "  %s\n", progressLine(p.label, n, p.total, rate, path, false))

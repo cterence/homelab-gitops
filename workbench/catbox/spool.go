@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -67,6 +68,68 @@ func (s *spool) release(from, shaHex string, plain int64, c io.Closer) {
 
 // errSpoolFull marks deposits that exceed the spool's remaining byte budget.
 var errSpoolFull = errors.New("deposit exceeds the spool's remaining capacity")
+
+// evictPartials removes stale deposit partials — abandoned by their
+// sender, no active writer — oldest first, until need bytes are
+// reclaimed. The incoming deposit's own resume point (keep) and
+// partials being written are never touched; parked items and bodies
+// are not eviction material. Returns the bytes reclaimed.
+func (s *spool) evictPartials(need int64, keep string) int64 {
+	if need <= 0 {
+		return 0
+	}
+
+	des, err := os.ReadDir(s.dir)
+	if err != nil {
+		return 0
+	}
+
+	type stale struct {
+		path string
+		size int64
+		mod  time.Time
+	}
+
+	var cand []stale
+
+	for _, de := range des {
+		if !strings.HasPrefix(de.Name(), ".part-b-") {
+			continue
+		}
+
+		p := filepath.Join(s.dir, de.Name())
+		if p == keep {
+			continue
+		}
+
+		if _, writing := s.active.Load(p); writing {
+			continue
+		}
+
+		fi, err := de.Info()
+		if err != nil {
+			continue
+		}
+
+		cand = append(cand, stale{p, fi.Size(), fi.ModTime()})
+	}
+
+	slices.SortFunc(cand, func(a, b stale) int { return a.mod.Compare(b.mod) })
+
+	var reclaimed int64
+
+	for _, c := range cand {
+		if reclaimed >= need {
+			break
+		}
+
+		if err := os.Remove(c.path); err == nil {
+			reclaimed += c.size
+		}
+	}
+
+	return reclaimed
+}
 
 // budgetWriter counts bytes written and refuses writes past max, so a
 // sender streaming more than it claimed cannot fill the disk.
