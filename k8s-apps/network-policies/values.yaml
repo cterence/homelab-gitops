@@ -58,6 +58,7 @@ namespaces:
         gitea,
         home-assistant,
         immich,
+        monitoring,
         niks3,
         paperless-ngx,
         pocket-id,
@@ -119,7 +120,6 @@ namespaces:
         garage,
         kube-system,
         loki,
-        monitoring,
         tailscale-operator,
         traefik,
       ]
