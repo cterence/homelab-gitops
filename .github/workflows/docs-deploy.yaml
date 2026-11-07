@@ -25,10 +25,10 @@ jobs:
         with:
           go-version-file: workbench/docs/go.mod
           cache-dependency-path: workbench/docs/go.sum
-      - name: Install hugo extended
+      - name: Install hugo extended withdeploy
         run: |
-          curl -fsSL -o hugo.tgz https://github.com/gohugoio/hugo/releases/download/v0.169.0/hugo_extended_0.169.0_linux-amd64.tar.gz
-          echo "c41672a0725d307758a132bc94a962e59760eb33f9ba08c991b81f9881d6fa7d  hugo.tgz" | sha256sum -c -
+          curl -fsSL -o hugo.tgz https://github.com/gohugoio/hugo/releases/download/v0.169.0/hugo_extended_withdeploy_0.169.0_linux-amd64.tar.gz
+          echo "ece4008f9ebeea1568b479f981ea275bd9fdfa165f30e9f2d95623cf7d345e8b  hugo.tgz" | sha256sum -c -
           tar -xzf hugo.tgz hugo && sudo install -m 755 hugo /usr/local/bin/hugo
       - name: Build
         run: hugo --minify
