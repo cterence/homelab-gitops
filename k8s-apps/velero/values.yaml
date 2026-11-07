@@ -119,6 +119,22 @@ velero:
           s3ForcePathStyle: true
           s3Url: http://garage.garage:3900
           checksumAlgorithm: ""
+      - name: garage-backup
+        provider: aws
+        bucket: velero
+        caCert:
+        prefix: v1
+        default: true
+        validationFrequency: 24h
+        accessMode: ReadWrite
+        credential:
+          name: garage-credentials
+          key: config
+        config:
+          region: us-east-1
+          s3ForcePathStyle: true
+          s3Url: http://garage-backup.garage-backup:3900
+          checksumAlgorithm: ""
     volumeSnapshotLocation:
       # name is the name of the volume snapshot location where snapshots are being taken. Required.
       - name:
@@ -295,6 +311,39 @@ velero:
           - arr-stack
           - audiobookshelf
           - changedetection
+          - gitea
+          - home-assistant
+          - immich
+          - mosquitto
+          - opencloud
+          - paperless-ngx
+          - pocket-id
+          - vaultwarden
+          - zigbee2mqtt
+        includedResources:
+          - po
+          - pv
+          - pvc
+          - cm
+          - sa
+          - secret
+        ttl: 168h
+        resourcePolicy:
+          apiGroup: ""
+          kind: ConfigMap
+          name: volume-policy
+    garage-backup:
+      disabled: false
+      schedule: "0 */8 * * *"
+      useOwnerReferencesInBackup: false
+      paused: false
+      template:
+        storageLocation: garage-backup
+        includedNamespaces:
+          - arr-stack
+          - audiobookshelf
+          - changedetection
+          - garage
           - gitea
           - home-assistant
           - immich
