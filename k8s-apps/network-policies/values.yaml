@@ -31,6 +31,7 @@ namespaces:
     defaultDeny: true
   - name: cnpg-restore-test
     defaultDeny: true
+    allow: [cnpg-system, monitoring]
   - name: cnpg-system
     defaultDeny: true
     allow: [kube-system, monitoring]
