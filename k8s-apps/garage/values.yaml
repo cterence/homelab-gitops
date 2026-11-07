@@ -1,0 +1,62 @@
+garage:
+  garage:
+    singleNode: true
+    s3:
+      api:
+        region: us-east-1
+    existingRpcSecret: garage-rpc-secret
+
+  image:
+    repository: dxflrs/amd64_garage
+    tag: v2.5.0@sha256:23b16d34e0348d9aca9b960a7429a7e6d494974b5288bfb8f6c3ab856895f71e
+
+  initImage:
+    repository: busybox
+    tag: stable@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+
+  persistence:
+    enabled: true
+    data:
+      storageClass: local-path-storage-pool
+      size: 1000Gi
+
+  ingress:
+    s3:
+      api:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt
+          external-dns.kubernetes.io/target: home.terence.cloud
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
+        hosts:
+          - host: grg.terence.cloud
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: garage-tls
+            hosts:
+              - grg.terence.cloud
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 3903
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 3903
+    periodSeconds: 15
+
+  monitoring:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
