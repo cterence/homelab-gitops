@@ -100,7 +100,14 @@ namespaces:
   - name: monitoring
     defaultDeny: true
     allow:
-      [kube-system, traefik, tailscale-operator, monitoring, cnpg-restore-test]
+      [
+        kube-system,
+        traefik,
+        tailscale-operator,
+        monitoring,
+        cnpg-restore-test,
+        loki,
+      ]
   - name: mosquitto
     defaultDeny: true
     allow: [home-assistant, zigbee2mqtt]
