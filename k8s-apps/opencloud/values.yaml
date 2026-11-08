@@ -182,7 +182,7 @@ app-template:
             - *host
 
   persistence:
-    config-ds3:
+    config:
       enabled: true
       type: persistentVolumeClaim
       annotations:
@@ -197,7 +197,7 @@ app-template:
           init:
             - path: /etc/opencloud
 
-    data-ds3:
+    data:
       enabled: true
       type: persistentVolumeClaim
       annotations:
