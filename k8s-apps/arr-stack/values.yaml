@@ -111,9 +111,13 @@ app-template:
           ports:
             - name: http
               containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: jellystat-jf-api-key
           env:
             TZ: Europe/Paris
             MINIMUM_SECONDS_TO_INCLUDE_PLAYBACK: "120"
+            JF_HOST: http://arr-stack-jellyfin:8096
             POSTGRES_IP:
               valueFrom:
                 secretKeyRef:
