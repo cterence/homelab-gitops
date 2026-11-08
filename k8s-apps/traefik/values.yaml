@@ -445,6 +445,9 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/System/Configuration/branding" \
             "id:1000037,phase:1,pass,nolog,ctl:ruleRemoveById=941100,ctl:ruleRemoveById=941160"
+
+          SecRule REQUEST_URI "@rx ^/api/oidc/clients" \
+            "id:1000038,phase:1,pass,nolog,ctl:ruleRemoveById=931100,ctl:ruleRemoveById=934110"
     ok-server-script:
       data:
         index.ts: |
