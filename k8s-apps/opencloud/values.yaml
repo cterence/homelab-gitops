@@ -15,16 +15,13 @@ app-template:
         OC_INSECURE: "false" # SSL termination at ingress controller
         PROXY_TLS: "false"
         PROXY_HTTP_ADDR: 0.0.0.0:9200
-        OC_URL: https://oc.terence.cloud
+        OC_URL: https://oc-ds3.terence.cloud
         STORAGE_USERS_DRIVER: posix
         STORAGE_SYSTEM_DRIVER: decomposed
         STORAGE_USERS_ID_CACHE_STORE: "nats-js-kv"
         START_ADDITIONAL_SERVICES: "auth-app"
         PROXY_ENABLE_APP_AUTH: "true"
         FRONTEND_ARCHIVER_MAX_SIZE: "50000000000"
-        DECOMPOSEDS3_ENDPOINT: "http://garage.garage:3900"
-        DECOMPOSEDS3_REGION: us-east-1
-        DECOMPOSEDS3_BUCKET: opencloud
 
     config-ds3:
       data:
@@ -33,7 +30,7 @@ app-template:
         FRONTEND_ARCHIVER_MAX_SIZE: "50000000000"
 
         OC_INSECURE: "false"
-        OC_URL: https://oc-ds3.terence.cloud
+        OC_URL: https://oc.terence.cloud
         OC_OIDC_ISSUER: https://auth.terence.cloud
         OC_EXCLUDE_RUN_SERVICES: idp
 
@@ -185,7 +182,7 @@ app-template:
         traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd
       className: "traefik"
       hosts:
-        - host: &host1 oc.terence.cloud
+        - host: &host1 oc-ds3.terence.cloud
           paths:
             - path: /
               pathType: Prefix
@@ -205,7 +202,7 @@ app-template:
         traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd,traefik-modsecurity@kubernetescrd
       className: "traefik"
       hosts:
-        - host: &host2 oc-ds3.terence.cloud
+        - host: &host2 oc.terence.cloud
           paths:
             - path: /
               pathType: Prefix
@@ -332,6 +329,21 @@ app-template:
       size: 200Gi
       advancedMounts:
         main:
+          main:
+            - path: /var/lib/opencloud
+          init:
+            - path: /var/lib/opencloud
+
+    data-ds3:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 100Gi
+      advancedMounts:
+        main-ds3:
           main:
             - path: /var/lib/opencloud
           init:
