@@ -28,6 +28,7 @@ garage:
     annotations:
       tailscale.com/expose: "true"
       tailscale.com/hostname: garage
+      tailscale.com/tags: "tag:k8s,tag:garage"
 
   ingress:
     s3:
