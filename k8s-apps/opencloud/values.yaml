@@ -245,10 +245,51 @@ app-template:
               service:
                 identifier: main
                 port: http
+            - path: /remote.php/webdav/
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
       tls:
         - secretName: opencloud-tls
           hosts:
             - *host1
+
+    data-ds3:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
+        traefik.ingress.kubernetes.io/router.priority: "100"
+      className: "traefik"
+      hosts:
+        - host: *host2
+          paths:
+            - path: /dav/
+              pathType: Prefix
+              service:
+                identifier: main-ds3
+                port: http
+            - path: /data/
+              pathType: Prefix
+              service:
+                identifier: main-ds3
+                port: http
+            - path: /remote.php/dav/
+              pathType: Prefix
+              service:
+                identifier: main-ds3
+                port: http
+            - path: /remote.php/webdav/
+              pathType: Prefix
+              service:
+                identifier: main-ds3
+                port: http
+      tls:
+        - secretName: opencloud-ds3-tls
+          hosts:
+            - *host2
 
   persistence:
     config:
