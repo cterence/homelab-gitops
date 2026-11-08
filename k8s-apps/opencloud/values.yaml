@@ -29,18 +29,46 @@ app-template:
     config-ds3:
       data:
         TZ: Europe/Paris
-        OC_INSECURE: "false" # SSL termination at tailscale operator
-        PROXY_TLS: "false"
-        PROXY_HTTP_ADDR: 0.0.0.0:9200
-        OC_URL: https://oc-ds3.terence.cloud
         START_ADDITIONAL_SERVICES: "auth-app"
-        PROXY_ENABLE_APP_AUTH: "true"
         FRONTEND_ARCHIVER_MAX_SIZE: "50000000000"
+
+        OC_INSECURE: "false"
+        OC_URL: https://oc-ds3.terence.cloud
+        OC_OIDC_ISSUER: https://auth.terence.cloud
+        OC_EXCLUDE_RUN_SERVICES: idp
+
         STORAGE_SYSTEM_DRIVER: decomposed
         STORAGE_USERS_DRIVER: decomposeds3
         STORAGE_USERS_DECOMPOSEDS3_ENDPOINT: "http://garage.garage:3900"
         STORAGE_USERS_DECOMPOSEDS3_REGION: us-east-1
         STORAGE_USERS_DECOMPOSEDS3_BUCKET: opencloud
+
+        IDP_DOMAIN: auth.terence.cloud
+        IDP_ISSUER_URL: https://auth.terence.cloud
+
+        PROXY_TLS: "false"
+        PROXY_HTTP_ADDR: 0.0.0.0:9200
+        PROXY_ENABLE_APP_AUTH: "true"
+        PROXY_OIDC_CLIENT_ID: cf0733c2-3f6e-4e3a-a47f-4b403e8b76f1
+        PROXY_OIDC_REWRITE_WELLKNOWN: "true"
+        PROXY_OIDC_ACCESS_TOKEN_VERIFY_METHOD: none
+        PROXY_USER_OIDC_CLAIM: preferred_username
+        PROXY_USER_CS3_CLAIM: username
+        PROXY_AUTOPROVISION_ACCOUNTS: "true"
+        PROXY_AUTOPROVISION_CLAIM_USERNAME: preferred_username
+        PROXY_AUTOPROVISION_CLAIM_EMAIL: email
+        PROXY_AUTOPROVISION_CLAIM_DISPLAYNAME: name
+        PROXY_AUTOPROVISION_CLAIM_GROUPS: groups
+        PROXY_ROLE_ASSIGNMENT_DRIVER: oidc
+        PROXY_ROLE_ASSIGNMENT_OIDC_CLAIM: opencloud_role
+
+        WEB_OIDC_CLIENT_ID: cf0733c2-3f6e-4e3a-a47f-4b403e8b76f1
+        WEB_OIDC_METADATA_URL: https://auth.terence.cloud/.well-known/openid-configuration
+        WEB_OIDC_RESPONSE_TYPE: code
+        WEB_OIDC_SCOPE: openid profile email groups
+
+        GRAPH_ASSIGN_DEFAULT_USER_ROLE: "false"
+        GRAPH_USERNAME_MATCH: none
 
   controllers:
     main:
