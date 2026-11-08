@@ -33,7 +33,6 @@ app-template:
         OC_URL: https://oc.terence.cloud
         OC_OIDC_ISSUER: https://auth.terence.cloud
         OC_EXCLUDE_RUN_SERVICES: idp
-        OC_ASYNC_UPLOADS: "false"
 
         STORAGE_SYSTEM_DRIVER: decomposed
         STORAGE_USERS_DRIVER: decomposeds3
@@ -118,6 +117,8 @@ app-template:
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
+      pod:
+        terminationGracePeriodSeconds: 360
       initContainers:
         init:
           image:
@@ -158,6 +159,20 @@ app-template:
                 httpGet:
                   port: http
                   path: /status
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    i=0
+                    while [ $i -lt 30 ]; do
+                      n=$(opencloud storage-users uploads sessions --processing --json 2>/dev/null | grep -c '"status":"processing"')
+                      [ "$n" -eq 0 ] && break
+                      sleep 10
+                      i=$((i+1))
+                    done
 
   service:
     main:
