@@ -10,7 +10,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/telegra
 
 # The runtime needs ffmpeg to remux generated audio, so the final image is
 # alpine with the ffmpeg package instead of distroless.
-FROM mirror.gcr.io/library/alpine:3.24@sha256:3f4d6b32e26703c6082839234f43769d5046b3ac7c910033911d1e71d8cd630a
+FROM mirror.gcr.io/library/alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf
 RUN apk add --no-cache ffmpeg
 # The generated/ cache directory is a PVC mounted at /app/generated.
 WORKDIR /app
