@@ -161,6 +161,7 @@ namespaces:
     allow: [monitoring]
   - name: sablier
     defaultDeny: true
+    allow: [traefik]
   - name: slackmoji
     defaultDeny: true
     allow: [traefik]
