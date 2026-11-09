@@ -12,7 +12,8 @@ namespaces:
     allow: [kube-system, monitoring]
   - name: arr-stack
     defaultDeny: true
-    allow: [traefik, go-healthcheck, cnpg-system, monitoring]
+    allow:
+      [traefik, go-healthcheck, cnpg-system, monitoring, tailscale-operator]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: audiobookshelf
     defaultDeny: true
