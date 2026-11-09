@@ -680,6 +680,7 @@ app-template:
           env:
             TZ: Europe/Paris
             DARK_MODE: "1"
+            ENABLE_CJK_FONT: "1"
           ports:
             - name: http
               containerPort: 5800
