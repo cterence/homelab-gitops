@@ -1118,6 +1118,21 @@ app-template:
           hosts:
             - *host
 
+    picard:
+      className: "tailscale"
+      hosts:
+        - host: &host picard.snow-delta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: picard
+                port: http
+      tls:
+        - secretName: picard-tls
+          hosts:
+            - *host
+
   persistence:
     data:
       enabled: true
