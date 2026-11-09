@@ -55,6 +55,10 @@ falco:
           (k8smeta.ns.name = "arr-stack"
            and k8smeta.pod.name startswith "arr-stack-flaresolverr"
            and proc.exe = "/app/chromedriver")
+          or (k8smeta.ns.name = "arr-stack"
+           and k8smeta.pod.name startswith "arr-stack-picard"
+           and proc.name = mkfontscale
+           and proc.aname[2] = apk)
           or (k8smeta.ns.name = "workbench"
            and k8smeta.pod.name startswith "build-")
     cnpg-restore-shell.yaml: |-
