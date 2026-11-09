@@ -651,6 +651,49 @@ app-template:
                   port: http
                   path: /health
 
+    picard:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
+      containers:
+        main:
+          image:
+            repository: jlesage/musicbrainz-picard
+            tag: v26.11.1
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 5800
+          probes:
+            liveness:
+              enabled: false
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: false
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
     slskd:
       type: deployment
       strategy: Recreate
@@ -725,28 +768,6 @@ app-template:
             runAsUser: 0
             runAsGroup: 0
             privileged: true
-
-    soularr:
-      type: cronjob
-      pod:
-        annotations:
-          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
-      cronjob:
-        schedule: "*/5 * * * *"
-        successfulJobsHistory: 1
-        failedJobsHistory: 1
-        concurrencyPolicy: Forbid
-      annotations:
-        reloader.stakater.com/auto: "true"
-      containers:
-        soularr:
-          image:
-            repository: mrusse08/soularr
-            tag: latest@sha256:44b857d0bd76964be8af4a625e674b4d20066fbfe26293cb3ae0ee0ed4a168d6
-          env:
-            TZ: Europe/Paris
-          command: /bin/bash
-          args: ["/run-soularr.sh"]
 
   service:
     jellyfin:
@@ -823,6 +844,12 @@ app-template:
       ports:
         http:
           port: 8080
+    picard:
+      controller: picard
+      type: ClusterIP
+      ports:
+        http:
+          port: 5800
     slskd:
       controller: slskd
       type: ClusterIP
@@ -1126,10 +1153,6 @@ app-template:
           slskd:
             - path: /download
               subPath: download/slskd
-        soularr:
-          soularr:
-            - path: /downloads
-              subPath: download/slskd/complete
         rangemusique:
           rangemusique:
             - path: /in
@@ -1185,9 +1208,6 @@ app-template:
         jellyfin:
           jellyfin:
             - path: /data/media/music
-        soularr:
-          soularr:
-            - path: /data
         rangemusique:
           rangemusique:
             - path: /out
@@ -1422,25 +1442,6 @@ app-template:
           gluetun:
             - path: /dev/net/tun
 
-    soularr-config:
-      type: secret
-      name: soularr-config
-      advancedMounts:
-        soularr:
-          soularr:
-            - path: /data/config.ini
-              subPath: config.ini
-
-    soularr-script:
-      type: configMap
-      identifier: soularr-script
-      defaultMode: 0664
-      advancedMounts:
-        soularr:
-          soularr:
-            - path: /run-soularr.sh
-              subPath: run-soularr.sh
-
   configMaps:
     tunnel-monitor-config:
       includeChecksumInControllers:
@@ -1581,21 +1582,6 @@ app-template:
                 admin: true
                 share: true
                 realtime: true
-
-    soularr-script:
-      includeChecksumInControllers:
-        - soularr
-      data:
-        run-soularr.sh: |
-          #!/bin/bash
-
-          FILE=/data/.soularr.lock
-          touch $FILE
-          echo "created lockfile at $FILE"
-          python -u /app/soularr.py
-          echo "soularr done"
-          rm $FILE
-          echo "removed lockfile at $FILE"
 
   rawResources:
     storage-pool-pv:
