@@ -657,6 +657,9 @@ app-template:
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
         annotations:
           backup.velero.io/backup-volumes-excludes: data,data-storage-pool
         affinity:
@@ -670,12 +673,13 @@ app-template:
                         - "{{ .Release.Name }}"
                 topologyKey: kubernetes.io/hostname
       containers:
-        main:
+        picard:
           image:
             repository: jlesage/musicbrainz-picard
             tag: v26.11.1
           env:
             TZ: Europe/Paris
+            DARK_MODE: "1"
           ports:
             - name: http
               containerPort: 5800
@@ -1211,6 +1215,9 @@ app-template:
         rangemusique:
           rangemusique:
             - path: /out
+        picard:
+          picard:
+            - path: /storage
 
     jellyfin-config:
       enabled: true
@@ -1334,6 +1341,19 @@ app-template:
       advancedMounts:
         prowlarr:
           prowlarr:
+            - path: /config
+
+    picard-config:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      advancedMounts:
+        picard:
+          picard:
             - path: /config
 
     bazarr-config:
