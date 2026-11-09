@@ -463,7 +463,7 @@ modsecurity:
         modsecurity:
           image:
             repository: docker.io/owasp/modsecurity-crs
-            tag: 4.30-apache-alpine-202610180210@sha256:25a940f9730d6da2ad8d2e161a6676f0b094f2633c1a5a1f94a764d28b2eb8c4
+            tag: 4.30.0-apache-202611090911@sha256:085246dd9bea795b750bac05692adf001cc2c4119767c1639a7c462106a54164
           env:
             TZ: Europe/Paris
             BACKEND: http://localhost:8082
