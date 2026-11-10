@@ -33,7 +33,7 @@ app-template:
         app:
           image:
             repository: registry.terence.cloud/lastfm-scrobble-deduplicator
-            tag: "23"
+            tag: "24"
             pullPolicy: IfNotPresent
           args:
             - --from
