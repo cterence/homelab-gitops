@@ -192,8 +192,10 @@ app-template:
       advancedMounts:
         slskd:
           slskd:
-            - path: /download
-              subPath: slskd
+            - path: /download/incomplete
+              subPath: slskd/incomplete
+            - path: /download/complete
+              subPath: slskd/complete
             - path: /music
               subPath: library
         beets:
