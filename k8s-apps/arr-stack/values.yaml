@@ -1315,8 +1315,8 @@ app-template:
               subPath: config.yaml
 
     slskd-config:
-      type: secret
-      name: slskd-config
+      type: configMap
+      identifier: slskd-config
       advancedMounts:
         slskd:
           slskd:
@@ -1456,7 +1456,22 @@ app-template:
                       score: -10000
                     - name: "[French MULTi.VO] HD Remux (1080p)"
                       score: -10000
-
+    slskd-config:
+      data:
+        slskd.yml: |
+          remote_file_management: true
+          debug: false
+          directories:
+              incomplete: /download/incomplete
+              downloads: /download/complete
+          shares:
+              directories:
+              - /music
+          soulseek:
+              listen_port: 39332
+          web:
+              authentication:
+                  disabled: true
     filebrowser-quantum-config:
       includeChecksumInControllers:
         - filebrowser-quantum
