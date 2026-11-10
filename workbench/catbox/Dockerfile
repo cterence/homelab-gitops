@@ -2,7 +2,7 @@
 # Dockerfile, so the source tree is available. We compile the Go binary with
 # CGO disabled for a static distroless-friendly binary.
 ARG VERSION=dev
-FROM mirror.gcr.io/library/golang:1.27-alpine@sha256:fa3d596898d9f126af7c01d14ee7597bab3f39cccf392ef36b69fe77cd681f18 AS build
+FROM mirror.gcr.io/library/golang:1.27-alpine@sha256:eb61c3873c97416fff0116553fff65d67a3549f72e11d9758849a689cdd8b523 AS build
 ARG VERSION
 WORKDIR /src
 COPY . .
