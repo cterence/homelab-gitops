@@ -1569,7 +1569,7 @@ app-template:
         - beets
       data:
         config.yaml: |
-          plugins: fetchart embedart convert scrub replaygain lastgenre chroma web
+          plugins: musicbrainz fetchart embedart convert scrub replaygain lastgenre chroma web
           directory: /music
           library: /config/musiclibrary.blb
           art_filename: albumart
