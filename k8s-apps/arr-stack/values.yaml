@@ -672,35 +672,58 @@ app-template:
                   path: /health
             readiness:
               enabled: true
+              custom: true
               spec:
                 httpGet:
                   port: http
                   path: /health
-
-        gluetun:
-          enabled: false
-          dependsOn: slskd
+    beets:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
+        affinity:
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - "{{ .Release.Name }}"
+                topologyKey: kubernetes.io/hostname
+      containers:
+        beets:
           image:
-            repository: ghcr.io/qdm12/gluetun
-            tag: v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+            repository: lscr.io/linuxserver/beets
+            tag: 2.14.1-ls359
           env:
             TZ: Europe/Paris
-            VPN_SERVICE_PROVIDER: custom
-            VPN_TYPE: wireguard
-            VPN_INTERFACE: wg2
-            WIREGUARD_ADDRESSES: 192.168.3.2/32
-            FIREWALL_VPN_INPUT_PORTS: "51413"
-            DNS_ADDRESS: 1.1.1.1
-          envFrom:
-            - secretRef:
-                name: gluetun-wg-slskd-vm-keys
-          securityContext:
-            capabilities:
-              add:
-                - NET_ADMIN
-            runAsUser: 0
-            runAsGroup: 0
-            privileged: true
+            PUID: 1000
+            PGID: 1000
+          ports:
+            - name: http
+              containerPort: 8337
+          probes:
+            liveness:
+              enabled: false
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: false
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
 
   service:
     jellyfin:
@@ -783,6 +806,12 @@ app-template:
       ports:
         http:
           port: 5030
+    beets:
+      controller: beets
+      type: ClusterIP
+      ports:
+        http:
+          port: 8337
 
   ingress:
     jellyfin:
@@ -1035,6 +1064,21 @@ app-template:
           hosts:
             - *host
 
+    beets:
+      className: "tailscale"
+      hosts:
+        - host: &host beets.snow-delta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: beets
+                port: http
+      tls:
+        - secretName: beets-tls
+          hosts:
+            - *host
+
   persistence:
     data:
       enabled: true
@@ -1071,6 +1115,10 @@ app-template:
           slskd:
             - path: /download
               subPath: download/slskd
+        beets:
+          beets:
+            - path: /downloads
+              subPath: download/slskd/complete
 
     data-storage-pool:
       enabled: true
@@ -1107,6 +1155,9 @@ app-template:
             - path: /music
         slskd:
           slskd:
+            - path: /music
+        beets:
+          beets:
             - path: /music
         jellyfin:
           jellyfin:
@@ -1150,6 +1201,19 @@ app-template:
         jellyseerr:
           jellyseerr:
             - path: /app/config
+
+    beets-config:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      advancedMounts:
+        beets:
+          beets:
+            - path: /config
 
     jellystat-backup-data:
       enabled: true
@@ -1334,16 +1398,6 @@ app-template:
         slskd:
           slskd:
             - path: /app
-
-    gluetun-slskd-device:
-      enabled: true
-      type: hostPath
-      hostPath: /dev/net/tun
-      hostPathType: "CharDevice"
-      advancedMounts:
-        slskd:
-          gluetun:
-            - path: /dev/net/tun
 
   configMaps:
     tunnel-monitor-config:
