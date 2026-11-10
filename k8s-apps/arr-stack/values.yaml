@@ -601,7 +601,7 @@ app-template:
         picard:
           image:
             repository: jlesage/musicbrainz-picard
-            tag: v26.11.1
+            tag: v26.11.1@sha256:80f082c3631e68e9163b1ed658d2612e8ec8396bfed51090ed3967cad08e2964
           env:
             TZ: Europe/Paris
             DARK_MODE: "1"
