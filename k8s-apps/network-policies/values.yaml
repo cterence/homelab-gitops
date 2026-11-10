@@ -131,6 +131,9 @@ namespaces:
   - name: mosquitto
     defaultDeny: true
     allow: [home-assistant, zigbee2mqtt]
+  - name: music
+    defaultDeny: true
+    allow: [traefik, tailscale-operator]
   - name: network-policies
     defaultDeny: true
   - name: niks3

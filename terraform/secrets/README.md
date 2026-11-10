@@ -24,7 +24,7 @@ Notes:
   (pick up on next run, no action).
 - Reloader auto-restarts controllers annotated `reloader.stakater.com/auto:
   "true"` when their Secret changes (verified: argocd-mcp-server,
-  arr-stack-qbittorrent, arr-stack-slskd, grafana-mcp-server, paperless-ngx,
+  arr-stack-qbittorrent, slskd (music), grafana-mcp-server, paperless-ngx,
   telegram-hub, niks3, registry-main). The manual commands below apply to
   everything else — and work as a fallback for Reloader-covered pods too.
 - Check a rotated secret landed:
@@ -87,9 +87,8 @@ kubectl -n argocd rollout restart deploy/argocd-mcp-server
 ### configarr-secrets (`secrets.yml`)
 
 Arr API keys (all *arr apps), collected in one file. The keys rotate in each
-app UI (Settings → General → API Key). **Fanout**: rotating any *arr key means
-updating `rangemusique-api-keys` and `soularr-config` in the same sitting.
-Consumer is a CronJob — next run picks the file up. Trigger immediately:
+app UI (Settings → General → API Key). Consumer is a CronJob — next run picks
+the file up. Trigger immediately:
 
 ```sh
 kubectl -n arr-stack create job --from=cronjob/arr-stack-configarr configarr-manual
@@ -130,46 +129,6 @@ the new private key. During the gap, the `WireguardTunnelDown` alert fires
    # latest handshake + probe_success{service="arr-stack-qbittorrent"} == 1
    ```
 5. Clean up: `rm client.key client.pub`
-
-The disabled slskd gluetun sidecar (wg2, 192.168.3.2/32) uses the separate
-`gluetun-wg-slskd-vm-keys` secret — not part of this rotation while
-`enabled: false`.
-
-### rangemusique-api-keys (`JELLYFIN_API_KEY`, `LIDARR_API_KEY`)
-
-Rotate in Jellyfin (Dashboard → API Keys) and Lidarr (Settings → General → API
-Key). Part of the *arr fanout — see `configarr-secrets`. Consumer is a CronJob:
-
-```sh
-kubectl -n arr-stack create job --from=cronjob/arr-stack-rangemusique rangemusique-manual
-```
-
-### slskd-config (`slskd.yml`)
-
-Soulseek has no password change/reset — the account is the username+password
-pair registered on first login. "Rotating" means a new account: put a new
-username+password in the `soulseek:` section (connecting registers it);
-privileges and peer trust do not transfer. Same username requires the account
-to lapse 30 days (no privileges) or admin help on the slsknet forums.
-
-Careful with `sops edit`: the same file holds the slskd web/API key that
-`soularr-config`'s `[Slskd] api_key` must match — don't touch that line unless
-updating both.
-
-```sh
-sops edit secrets.yaml    # arr-stack.slskd-config.slskd.yml, soulseek section only
-terraform apply           # Reloader restarts arr-stack-slskd automatically
-kubectl -n arr-stack logs deploy/arr-stack-slskd   # no invalid-credentials loop
-```
-
-### soularr-config (`config.ini`)
-
-Contains *arr API keys — part of the fanout, see `configarr-secrets`. Consumer
-is a CronJob:
-
-```sh
-kubectl -n arr-stack create job --from=cronjob/arr-stack-soularr soularr-manual
-```
 
 ### cnpg-backup-s3-creds (`ACCESS_KEY_ID`, `ACCESS_SECRET_KEY`)
 
@@ -287,6 +246,22 @@ reads it from mounted `*_file` paths:
 
 ```sh
 kubectl -n monitoring rollout restart sts/alertmanager-kube-prometheus-stack-alertmanager
+```
+
+## music
+
+### slskd-credentials (`SLSKD_SLSK_USERNAME`, `SLSKD_SLSK_PASSWORD`)
+
+Soulseek has no password change/reset — the account is the username+password
+pair registered on first login. "Rotating" means a new account: put a new
+username+password in the sops keys (connecting registers it); privileges and
+peer trust do not transfer. Same username requires the account to lapse 30
+days (no privileges) or admin help on the slsknet forums.
+
+```sh
+sops edit secrets.yaml    # music.slskd-credentials.SLSKD_SLSK_USERNAME/PASSWORD
+terraform apply           # Reloader restarts the slskd deployment automatically
+kubectl -n music logs deploy/slskd   # no invalid-credentials loop
 ```
 
 ## niks3

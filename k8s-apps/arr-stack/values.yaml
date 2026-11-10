@@ -576,155 +576,6 @@ app-template:
                   port: http
                   path: /health
 
-    picard:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      pod:
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-        annotations:
-          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
-        affinity:
-          podAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - "{{ .Release.Name }}"
-                topologyKey: kubernetes.io/hostname
-      containers:
-        picard:
-          image:
-            repository: jlesage/musicbrainz-picard
-            tag: v26.11.1@sha256:80f082c3631e68e9163b1ed658d2612e8ec8396bfed51090ed3967cad08e2964
-          env:
-            TZ: Europe/Paris
-            DARK_MODE: "1"
-            ENABLE_CJK_FONT: "1"
-          ports:
-            - name: http
-              containerPort: 5800
-          probes:
-            liveness:
-              enabled: false
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-            readiness:
-              enabled: false
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-
-    slskd:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      pod:
-        annotations:
-          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
-        affinity:
-          podAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - "{{ .Release.Name }}"
-                topologyKey: kubernetes.io/hostname
-      containers:
-        slskd:
-          image:
-            repository: slskd/slskd
-            tag: 0.26.2@sha256:d0963a3e5b16facd295bf4f2156dad0182f246b1b21a032cae12f5494c694843
-          env:
-            TZ: Europe/Paris
-            SLSKD_CONFIG: /config/slskd.yml
-          envFrom:
-            - secretRef:
-                name: slskd-credentials
-          args:
-            - ./slskd
-            - --upload-speed-limit=20480
-            - --download-speed-limit=20480
-          ports:
-            - name: http
-              containerPort: 5030
-            - name: slskd
-              containerPort: 51413
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-    beets:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      pod:
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-        annotations:
-          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
-        affinity:
-          podAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - "{{ .Release.Name }}"
-                topologyKey: kubernetes.io/hostname
-      containers:
-        beets:
-          image:
-            repository: lscr.io/linuxserver/beets
-            tag: 2.14.1-ls359
-          env:
-            TZ: Europe/Paris
-            PUID: 1000
-            PGID: 1000
-          ports:
-            - name: http
-              containerPort: 8337
-          probes:
-            liveness:
-              enabled: false
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-            readiness:
-              enabled: false
-              spec:
-                httpGet:
-                  port: http
-                  path: /health
-
   service:
     jellyfin:
       controller: jellyfin
@@ -794,24 +645,6 @@ app-template:
       ports:
         http:
           port: 8080
-    picard:
-      controller: picard
-      type: ClusterIP
-      ports:
-        http:
-          port: 5800
-    slskd:
-      controller: slskd
-      type: ClusterIP
-      ports:
-        http:
-          port: 5030
-    beets:
-      controller: beets
-      type: ClusterIP
-      ports:
-        http:
-          port: 8337
 
   ingress:
     jellyfin:
@@ -1028,57 +861,6 @@ app-template:
           hosts:
             - *host
 
-    slskd:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        external-dns.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-      className: "traefik"
-      hosts:
-        - host: &host slskd.terence.cloud
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: slskd
-                port: http
-      tls:
-        - secretName: slskd-tls
-          hosts:
-            - *host
-
-    picard:
-      className: "tailscale"
-      hosts:
-        - host: &host picard.snow-delta.ts.net
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: picard
-                port: http
-      tls:
-        - secretName: picard-tls
-          hosts:
-            - *host
-
-    beets:
-      className: "tailscale"
-      hosts:
-        - host: &host beets.snow-delta.ts.net
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: beets
-                port: http
-      tls:
-        - secretName: beets-tls
-          hosts:
-            - *host
-
   persistence:
     data:
       enabled: true
@@ -1111,14 +893,6 @@ app-template:
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /data
-        slskd:
-          slskd:
-            - path: /download
-              subPath: download/slskd
-        beets:
-          beets:
-            - path: /downloads
-              subPath: download/slskd/complete
 
     data-storage-pool:
       enabled: true
@@ -1153,18 +927,9 @@ app-template:
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /music
-        slskd:
-          slskd:
-            - path: /music
-        beets:
-          beets:
-            - path: /music
         jellyfin:
           jellyfin:
             - path: /data/media/music
-        picard:
-          picard:
-            - path: /storage
 
     jellyfin-config:
       enabled: true
@@ -1201,28 +966,6 @@ app-template:
         jellyseerr:
           jellyseerr:
             - path: /app/config
-
-    beets-config:
-      enabled: true
-      type: persistentVolumeClaim
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 1Gi
-      advancedMounts:
-        beets:
-          beets:
-            - path: /config
-
-    beets-configmap:
-      type: configMap
-      identifier: beets-configmap
-      advancedMounts:
-        beets:
-          beets:
-            - path: /config/config.yaml
-              subPath: config.yaml
 
     jellystat-backup-data:
       enabled: true
@@ -1299,19 +1042,6 @@ app-template:
           prowlarr:
             - path: /config
 
-    picard-config:
-      enabled: true
-      type: persistentVolumeClaim
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 100Mi
-      advancedMounts:
-        picard:
-          picard:
-            - path: /config
-
     bazarr-config:
       enabled: true
       type: persistentVolumeClaim
@@ -1386,27 +1116,6 @@ app-template:
           filebrowser-quantum:
             - path: /home/filebrowser/data/config.yaml
               subPath: config.yaml
-
-    slskd-config:
-      type: configMap
-      identifier: slskd-config
-      advancedMounts:
-        slskd:
-          slskd:
-            - path: /config
-              readOnly: true
-
-    slskd-data:
-      type: persistentVolumeClaim
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 500Mi
-      advancedMounts:
-        slskd:
-          slskd:
-            - path: /app
 
   configMaps:
     tunnel-monitor-config:
@@ -1519,22 +1228,6 @@ app-template:
                       score: -10000
                     - name: "[French MULTi.VO] HD Remux (1080p)"
                       score: -10000
-    slskd-config:
-      data:
-        slskd.yml: |
-          remote_file_management: true
-          debug: false
-          directories:
-              incomplete: /download/incomplete
-              downloads: /download/complete
-          shares:
-              directories:
-              - /music
-          soulseek:
-              listen_port: 39332
-          web:
-              authentication:
-                  disabled: true
     filebrowser-quantum-config:
       includeChecksumInControllers:
         - filebrowser-quantum
@@ -1563,75 +1256,6 @@ app-template:
                 admin: true
                 share: true
                 realtime: true
-
-    beets-configmap:
-      includeChecksumInControllers:
-        - beets
-      data:
-        config.yaml: |
-          plugins: musicbrainz fetchart embedart convert scrub replaygain lastgenre chroma web
-          directory: /music
-          library: /config/musiclibrary.blb
-          art_filename: albumart
-          threaded: yes
-          original_date: no
-          per_disc_numbering: no
-
-          convert:
-              auto: no
-              ffmpeg: /usr/bin/ffmpeg
-              opts: -ab 320k -ac 2 -ar 48000
-              max_bitrate: 320
-              threads: 1
-
-          paths:
-              default: $albumartist/$album%if{$year, ($year)}/$track $title
-              singleton: Non-Album/$artist - $title
-              comp: Compilations/$album%aunique{}/$track $title
-              albumtype_soundtrack: Soundtracks/$album/$track $title
-
-          import:
-              write: yes
-              copy: yes
-              move: no
-              resume: ask
-              incremental: yes
-              quiet_fallback: skip
-              timid: no
-              log: /config/beet.log
-
-          lastgenre:
-              auto: yes
-              source: album
-
-          embedart:
-              auto: yes
-
-          fetchart:
-              auto: yes
-
-          replaygain:
-              auto: no
-              command: mp3gain
-
-          scrub:
-              auto: yes
-
-          replace:
-              '^\.': _
-              '[\x00-\x1f]': _
-              '[<>:"\?\*\|]': _
-              '[\xE8-\xEB]': e
-              '[\xEC-\xEF]': i
-              '[\xE2-\xE6]': a
-              '[\xF2-\xF6]': o
-              '[\xF8]': o
-              '\.$': _
-              '\s+$': ''
-
-          web:
-              host: 0.0.0.0
-              port: 8337
 
   rawResources:
     storage-pool-pv:

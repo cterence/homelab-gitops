@@ -267,6 +267,7 @@ velero:
           - home-assistant
           - immich
           - mosquitto
+          - music
           - opencloud
           - paperless-ngx
           - pocket-id
@@ -300,6 +301,7 @@ velero:
           - home-assistant
           - immich
           - mosquitto
+          - music
           - opencloud
           - paperless-ngx
           - pocket-id
