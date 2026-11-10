@@ -650,6 +650,9 @@ app-template:
           env:
             TZ: Europe/Paris
             SLSKD_CONFIG: /config/slskd.yml
+          envFrom:
+            - secretRef:
+                name: slskd-credentials
           args:
             - ./slskd
             - --upload-speed-limit=20480
