@@ -18,7 +18,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool,music
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -538,7 +538,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: data,data-storage-pool
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool,music
         affinity:
           podAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
@@ -916,20 +916,17 @@ app-template:
             - path: /data-pool
               subPath: arr-stack
     music:
-      enabled: true
       type: persistentVolumeClaim
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 100Gi
+      existingClaim: music-shared
       advancedMounts:
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /music
+              subPath: library
         jellyfin:
           jellyfin:
             - path: /data/media/music
+              subPath: library
 
     jellyfin-config:
       enabled: true
@@ -1306,6 +1303,57 @@ app-template:
               storage: 8Ti
           storageClassName: nfs
           volumeName: storage-pool
+    music-shared-pv:
+      enabled: true
+      forceRename: music-shared
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 100Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: music-shared
+            namespace: arr-stack
+          local:
+            path: /opt/local-path-provisioner/pvc-08a2cbb6-e7ab-4ba4-b8d4-fc906f0e4931_music_music
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    music-shared-pvc:
+      enabled: true
+      forceRename: music-shared
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Gi
+          storageClassName: shared-local
+          volumeName: music-shared
     jellystat-jwt-secret:
       enabled: true
       forceRename: jellystat-jwt-secret
