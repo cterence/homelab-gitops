@@ -82,6 +82,7 @@ app-template:
             - beet
           args:
             - import
+            - -q
             - /downloads
           env:
             TZ: Europe/Paris
@@ -315,13 +316,16 @@ app-template:
 
           import:
               write: yes
-              copy: yes
-              move: no
+              copy: no
+              move: yes
               resume: ask
               incremental: yes
               quiet_fallback: skip
               timid: no
               log: /config/beet.log
+
+          match:
+              strong_rec_thresh: 0.15
 
           lastgenre:
               auto: yes
