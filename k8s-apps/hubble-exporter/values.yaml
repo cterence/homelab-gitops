@@ -11,7 +11,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/hubble-exporter
+            repository: registry.snow-delta.ts.net/hubble-exporter
             tag: "4"
             pullPolicy: IfNotPresent
           args:
