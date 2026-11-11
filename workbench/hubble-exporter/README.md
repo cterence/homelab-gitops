@@ -23,12 +23,16 @@ Two structured log events on stdout (picked up by the otel loki pipeline):
 - `pair`: novel source->destination tuple — `src_ns`, `src_pod`, `dst_kind`
   (`pod`/`node`/`world`/`host`/`remote-node`), `dst_ns`, `dst_pod`, `dst_ip`,
   `proto`, `dst_port`, `verdict`
+- `drop`: novel dropped-flow tuple — `src_ns`, `src_pod`, `src_kind`
+  (`pod`/`node`/`world`/`host`/`remote-node`, set when the source carries no
+  pod identity, e.g. kube-proxy SNAT to the node IP), `dst_ns`, `dst_pod`,
+  `dst_kind`, `dst_ip`, `proto`, `dst_port`, `reason` (hubble drop reason)
 - `dns`: novel (source namespace, query name) with the answer `ips` — the
   FQDN inventory for toFQDN egress policies
 
-The stream is filtered relay-side to pod-sourced flows and reconnected with a
-backoff on errors; state is saved every 5 minutes and on shutdown, so a
-restart re-emits nothing that was already recorded.
+The stream is filtered relay-side to pod- and node-sourced flows and
+reconnected with a backoff on errors; state is saved every 5 minutes and on
+shutdown, so a restart re-emits nothing that was already recorded.
 
 ## Caveats
 

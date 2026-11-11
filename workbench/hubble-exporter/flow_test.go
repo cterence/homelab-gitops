@@ -113,6 +113,92 @@ func TestFlowPairIsUniquePerTuple(t *testing.T) {
 	}
 }
 
+func TestDropRecord(t *testing.T) {
+	const podCIDR, nodeCIDR = "10.244.0.0/16", "192.168.1.0/24"
+
+	remoteNodeDrop := flow("", "", "10.244.0.160",
+		withDst(&flowpb.Endpoint{Namespace: "arr-stack", PodName: "arr-stack-jellyfin-abc"}),
+		withTCP(8096),
+		func(f *flowpb.Flow) {
+			f.IP.Source = "192.168.1.141"
+			f.Source = &flowpb.Endpoint{Labels: []string{"reserved:remote-node"}}
+			f.Verdict = flowpb.Verdict_DROPPED
+			f.DropReason = uint32(flowpb.DropReason_POLICY_DENIED)
+		})
+
+	tests := []struct {
+		name string
+		fl   *flowpb.Flow
+		want Drop
+		ok   bool
+	}{
+		{
+			"remote node source",
+			remoteNodeDrop,
+			Drop{SrcKind: "remote-node", DstNS: "arr-stack", DstPod: "arr-stack-jellyfin-abc", DstKind: "pod", DstIP: "10.244.0.160", Proto: "TCP", DstPort: 8096, Reason: "POLICY_DENIED"},
+			true,
+		},
+		{
+			"pod source",
+			flow("jellystat", "jellystat-1", "10.244.0.160",
+				withDst(&flowpb.Endpoint{Namespace: "arr-stack", PodName: "arr-stack-jellyfin-abc"}),
+				withTCP(8096),
+				func(f *flowpb.Flow) {
+					f.Verdict = flowpb.Verdict_DROPPED
+					f.DropReason = uint32(flowpb.DropReason_POLICY_DENIED)
+				}),
+			Drop{SrcNS: "jellystat", SrcPod: "jellystat-1", DstNS: "arr-stack", DstPod: "arr-stack-jellyfin-abc", DstKind: "pod", DstIP: "10.244.0.160", Proto: "TCP", DstPort: 8096, Reason: "POLICY_DENIED"},
+			true,
+		},
+		{
+			"node source without reserved label",
+			flow("", "", "10.244.0.160",
+				withDst(&flowpb.Endpoint{Namespace: "arr-stack", PodName: "arr-stack-jellyfin-abc"}),
+				withTCP(8096),
+				func(f *flowpb.Flow) {
+					f.IP.Source = "192.168.1.141"
+					f.Verdict = flowpb.Verdict_DROPPED
+					f.DropReason = uint32(flowpb.DropReason_POLICY_DENIED)
+				}),
+			Drop{SrcKind: "node", DstNS: "arr-stack", DstPod: "arr-stack-jellyfin-abc", DstKind: "pod", DstIP: "10.244.0.160", Proto: "TCP", DstPort: 8096, Reason: "POLICY_DENIED"},
+			true,
+		},
+		{
+			"forwarded flow",
+			flow("jellystat", "jellystat-1", "10.244.0.160", withTCP(8096)),
+			Drop{},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := DropRecord(tt.fl, podCIDR, nodeCIDR)
+			if ok != tt.ok {
+				t.Fatalf("ok = %v, want %v", ok, tt.ok)
+			}
+
+			if got != tt.want {
+				t.Errorf("drop = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDropKeyIsUniquePerTuple(t *testing.T) {
+	a := Drop{SrcKind: "remote-node", DstNS: "arr-stack", DstKind: "pod", DstIP: "10.244.0.160", Proto: "TCP", DstPort: 8096, Reason: "POLICY_DENIED"}
+	b := a
+	b.Reason = "INVALID_SOURCE"
+
+	if a.key() == b.key() {
+		t.Error("different reasons must produce different keys")
+	}
+
+	if _, ok := DropRecord(flow("jellystat", "jellystat-1", "10.244.0.160", withTCP(8096)), "10.244.0.0/16", "192.168.1.0/24"); ok {
+		t.Error("forwarded flow must not yield a drop record")
+	}
+}
+
 func TestDNSRecord(t *testing.T) {
 	fl := flow("niks3", "niks3-1", "10.244.1.2")
 	fl.L7 = &flowpb.Layer7{Record: &flowpb.Layer7_Dns{Dns: &flowpb.DNS{

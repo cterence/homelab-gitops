@@ -72,8 +72,11 @@ func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error
 			// follow from now; a fresh stream on reconnect re-emits pairs the
 			// seen state drops as already recorded
 			stream, err := client.GetFlows(ctx, &observerpb.GetFlowsRequest{
-				Follow:    true,
-				Whitelist: []*flowpb.FlowFilter{{SourceIp: []string{podCIDR}}},
+				Follow: true,
+				// node sources matter for drops: kube-proxy SNATs cross-node
+				// service traffic to the node IP, so dropped flows can carry no
+				// pod identity at all
+				Whitelist: []*flowpb.FlowFilter{{SourceIp: []string{podCIDR, nodeCIDR}}},
 			})
 			if err != nil {
 				errs <- fmt.Errorf("opening flow stream: %w", err)
@@ -128,7 +131,9 @@ func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error
 			}
 
 			fl := resp.GetFlow()
-			if p, ok := FlowPair(fl, podCIDR, nodeCIDR); ok && seen.Add(p.key(), fl.GetTime().AsTime()) {
+			if d, ok := DropRecord(fl, podCIDR, nodeCIDR); ok && seen.Add(d.key(), fl.GetTime().AsTime()) {
+				logger.Info("drop", d.LogAttrs()...)
+			} else if p, ok := FlowPair(fl, podCIDR, nodeCIDR); ok && seen.Add(p.key(), fl.GetTime().AsTime()) {
 				logger.Info("pair", p.LogAttrs()...)
 			}
 

@@ -135,6 +135,19 @@ func hasReservedLabel(ep *flowpb.Endpoint, label string) bool {
 	return slices.Contains(ep.GetLabels(), label)
 }
 
+func endpointKind(ep *flowpb.Endpoint, ip, podCIDR, nodeCIDR string) string {
+	switch {
+	case hasReservedLabel(ep, "reserved:world"):
+		return "world"
+	case hasReservedLabel(ep, "reserved:host"):
+		return "host"
+	case hasReservedLabel(ep, "reserved:remote-node"):
+		return "remote-node"
+	}
+
+	return inCIDR(ip, podCIDR, nodeCIDR)
+}
+
 // FlowPair classifies a flow into a Pair. ok is false when the flow has no
 // source pod identity (e.g. host or world chatter).
 func FlowPair(fl *flowpb.Flow, podCIDR, nodeCIDR string) (Pair, bool) {
@@ -143,21 +156,10 @@ func FlowPair(fl *flowpb.Flow, podCIDR, nodeCIDR string) (Pair, bool) {
 		return Pair{}, false
 	}
 
-	dstKind := "pod"
 	dst := fl.GetDestination()
-	dstNs := dst.GetNamespace()
-
-	dstPod := dst.GetPodName()
-	switch {
-	case dstNs != "":
-	case hasReservedLabel(dst, "reserved:world"):
-		dstKind = "world"
-	case hasReservedLabel(dst, "reserved:host"):
-		dstKind = "host"
-	case hasReservedLabel(dst, "reserved:remote-node"):
-		dstKind = "remote-node"
-	default:
-		dstKind = inCIDR(fl.GetIP().GetDestination(), podCIDR, nodeCIDR)
+	dstKind := "pod"
+	if dst.GetNamespace() == "" {
+		dstKind = endpointKind(dst, fl.GetIP().GetDestination(), podCIDR, nodeCIDR)
 	}
 
 	proto, port := l4(fl)
@@ -166,13 +168,82 @@ func FlowPair(fl *flowpb.Flow, podCIDR, nodeCIDR string) (Pair, bool) {
 		SrcNS:   src.GetNamespace(),
 		SrcPod:  src.GetPodName(),
 		DstKind: dstKind,
-		DstNS:   dstNs,
-		DstPod:  dstPod,
+		DstNS:   dst.GetNamespace(),
+		DstPod:  dst.GetPodName(),
 		DstIP:   fl.GetIP().GetDestination(),
 		Proto:   proto,
 		DstPort: servicePort(port),
 		Verdict: fl.GetVerdict().String(),
 	}, true
+}
+
+// Drop is one observed dropped flow tuple at the granularity netpols are
+// authored. Sources without pod identity (e.g. kube-proxy SNAT to the node)
+// are classified by kind instead.
+type Drop struct {
+	SrcNS   string
+	SrcPod  string
+	SrcKind string
+	DstNS   string
+	DstPod  string
+	DstKind string
+	DstIP   string
+	Proto   string
+	DstPort uint32
+	Reason  string
+}
+
+func (d Drop) key() string {
+	return fmt.Sprintf("drop\x00%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00%d\x00%s",
+		d.SrcNS, d.SrcPod, d.SrcKind, d.DstNS, d.DstPod, d.DstKind, d.DstIP, d.Proto, d.DstPort, d.Reason)
+}
+
+func (d Drop) LogAttrs() []any {
+	return []any{
+		"src_ns", d.SrcNS,
+		"src_pod", d.SrcPod,
+		"src_kind", d.SrcKind,
+		"dst_ns", d.DstNS,
+		"dst_pod", d.DstPod,
+		"dst_kind", d.DstKind,
+		"dst_ip", d.DstIP,
+		"proto", d.Proto,
+		"dst_port", d.DstPort,
+		"reason", d.Reason,
+	}
+}
+
+func DropRecord(fl *flowpb.Flow, podCIDR, nodeCIDR string) (Drop, bool) {
+	if fl.GetVerdict() != flowpb.Verdict_DROPPED {
+		return Drop{}, false
+	}
+
+	src := fl.GetSource()
+	dst := fl.GetDestination()
+	proto, port := l4(fl)
+
+	d := Drop{
+		SrcNS:   src.GetNamespace(),
+		SrcPod:  src.GetPodName(),
+		DstNS:   dst.GetNamespace(),
+		DstPod:  dst.GetPodName(),
+		DstIP:   fl.GetIP().GetDestination(),
+		Proto:   proto,
+		DstPort: servicePort(port),
+		Reason:  flowpb.DropReason(fl.GetDropReason()).String(),
+	}
+
+	if d.SrcNS == "" {
+		d.SrcKind = endpointKind(src, fl.GetIP().GetSource(), podCIDR, nodeCIDR)
+	}
+
+	if d.DstNS == "" {
+		d.DstKind = endpointKind(dst, d.DstIP, podCIDR, nodeCIDR)
+	} else {
+		d.DstKind = "pod"
+	}
+
+	return d, true
 }
 
 // DNSRecord returns the source namespace, query name and answer IPs of a
