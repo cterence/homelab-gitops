@@ -172,9 +172,6 @@ app-template:
 
   service:
     main:
-      annotations:
-        tailscale.com/expose: "true"
-        tailscale.com/hostname: registry
       controller: main
       type: ClusterIP
       ports:
@@ -198,6 +195,21 @@ app-template:
                 port: http
       tls:
         - secretName: registry-tls
+          hosts:
+            - *host
+
+    tailscale:
+      className: "tailscale"
+      hosts:
+        - host: &host registry.snow-delta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: registry-tailscale-tls
           hosts:
             - *host
 

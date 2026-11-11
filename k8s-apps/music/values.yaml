@@ -19,7 +19,6 @@ app-template:
 
   controllers:
     slskd:
-      replicas: 0
       forceRename: slskd
       type: deployment
       strategy: Recreate
@@ -90,7 +89,6 @@ app-template:
             PGID: 1000
 
     picard:
-      replicas: 0
       forceRename: picard
       type: deployment
       strategy: Recreate
