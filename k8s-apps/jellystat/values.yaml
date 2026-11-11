@@ -112,7 +112,12 @@ app-template:
   persistence:
     backup-data:
       enabled: true
-      type: emptyDir
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 1Gi
       advancedMounts:
         main:
           main:
