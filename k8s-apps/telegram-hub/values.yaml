@@ -21,7 +21,7 @@ app-template:
             - /usr/local/bin/telegram-hub
             - serve
           image:
-            repository: registry.terence.cloud/telegram-hub
+            repository: registry.snow-delta.ts.net/telegram-hub
             tag: "19"
             pullPolicy: IfNotPresent
           env:
