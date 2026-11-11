@@ -621,26 +621,3 @@ Restore-test credentials use the shared garage `cnpg-backups` pair — rotate
 it together with the other nine. No live workload — the next restore test picks the new pair up.
 The first post-migration restore test against garage is the end-to-end proof
 of the whole cutover.
-
-## registry
-
-### registry-auth (`password`, `htpasswd`)
-
-Password + matching bcrypt htpasswd, regenerate both together (registry reads
-the htpasswd file; username is `registry`):
-
-```sh
-pw=$(openssl rand -base64 24); echo "same value as password key: $pw"
-htpasswd -Bbn registry "$pw"    # output line goes into the htpasswd key
-kubectl -n registry rollout restart deploy/registry-main
-```
-
-The pull secret fans out via the `registry-pull-secret` ClusterExternalSecret
-(`refreshTime: 1h`) to every namespace listed in `k8s-apps/registry/values.yaml`.
-New pulls use the new password once the ExternalSecrets refresh; Kaniko jobs
-(`k8s-apps/workbench/templates/job.yaml`) read `registry-auth` directly and
-pick it up on the next build:
-
-```sh
-kubectl get clusterexternalsecret registry-pull-secret -o jsonpath='{.status}'
-```
