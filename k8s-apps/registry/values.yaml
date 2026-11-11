@@ -102,25 +102,6 @@ app-template:
 
   ingress:
     main:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
-      className: "traefik"
-      hosts:
-        - host: &host registry.snow-delta.ts.net
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: main
-                port: http
-      tls:
-        - secretName: registry-tls
-          hosts:
-            - *host
-
-    tailscale:
       className: "tailscale"
       hosts:
         - host: &host registry.snow-delta.ts.net
