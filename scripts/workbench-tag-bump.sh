@@ -3,7 +3,7 @@
 # every k8s-apps values file that references the app's image — when a merge to
 # main modifies an app without bumping its tag. References are found by scanning
 # k8s-apps/*/values.yaml for the app's repository line, either as
-# "repository: registry.terence.cloud/<app>" (app-template) or as a bare
+# "repository: registry.snow-delta.ts.net/<app>" (app-template) or as a bare
 # "repository: <app>" with a separate registry key (e.g. gitea mirrorSync),
 # so images consumed as sidecars by other apps are updated too.
 # Idempotent per merge window: the check is a diff against the pre-merge tip,

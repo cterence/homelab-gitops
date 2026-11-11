@@ -47,7 +47,7 @@ Delete the built binary afterwards.
 ## Deployment
 
 Consumed by `k8s-apps/go-healthcheck` as a Deployment behind the
-`health.terence.cloud` ingress, image `registry.terence.cloud/go-healthcheck:<tag>`
+`health.terence.cloud` ingress, image `registry.snow-delta.ts.net/go-healthcheck:<tag>`
 matching `build.yaml`. Bump both tags together on code changes. The chart
 generates `config.yaml` from the `urls` and `cnpgClusters` values and mounts
 it at `/app/config.yaml`.

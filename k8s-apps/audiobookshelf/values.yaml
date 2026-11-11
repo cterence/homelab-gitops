@@ -1,8 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 app-template:
   defaultPodOptions:
-    imagePullSecrets:
-      - name: registry-pull-secret
     automountServiceAccountToken: false
     securityContext:
       runAsUser: 568
@@ -124,7 +122,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/apachewebdav
+            repository: registry.snow-delta.ts.net/apachewebdav
             tag: "4"
             pullPolicy: IfNotPresent
           env:

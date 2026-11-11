@@ -54,5 +54,5 @@ Delete the built binary afterwards.
 ## Deployment
 
 Consumed by `k8s-apps/lastfm-scrobble-deduplicator` as a daily CronJob,
-image `registry.terence.cloud/lastfm-scrobble-deduplicator:<tag>` matching
+image `registry.snow-delta.ts.net/lastfm-scrobble-deduplicator:<tag>` matching
 `build.yaml`. Bump both tags together on code changes.

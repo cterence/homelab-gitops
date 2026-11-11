@@ -1,12 +1,12 @@
 {{/* PreSync hooks: hold the app sync until each workbench image
-     (registry.terence.cloud/*) exists in the in-cluster registry, so rollouts
+     (registry.snow-delta.ts.net/*) exists in the in-cluster registry, so rollouts
      never start before the Kaniko build has pushed the tag. The ApplicationSet
      renders this chart against each consuming app's own values.yaml. */}}
 {{- $at := index .Values "app-template" | default dict }}
 {{- range $ctrl, $c := dig "controllers" (dict) $at }}
 {{- range $name, $ctr := dig "containers" (dict) $c }}
 {{- $repo := dig "image" "repository" "" $ctr }}
-{{- if hasPrefix "registry.terence.cloud/" $repo }}
+{{- if hasPrefix "registry.snow-delta.ts.net/" $repo }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -28,18 +28,13 @@ spec:
           command: ["/bin/sh", "-c"]
           env:
             - name: REPO
-              value: {{ trimPrefix "registry.terence.cloud/" $repo | quote }}
+              value: {{ trimPrefix "registry.snow-delta.ts.net/" $repo | quote }}
             - name: TAG
               value: {{ dig "image" "tag" "" $ctr | quote }}
-            - name: REGISTRY_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: registry-pull-secret
-                  key: password
           args:
             - |
               i=0
-              until curl -sf -u "registry:${REGISTRY_PASSWORD}" "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
+              until curl -sf "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
                 i=$((i+1))
                 [ "$i" -ge 180 ] && { echo "timeout waiting for ${REPO}:${TAG}"; exit 1; }
                 sleep 10
@@ -73,15 +68,10 @@ spec:
               value: {{ dig "image" "repository" "" $ms | quote }}
             - name: TAG
               value: {{ dig "image" "tag" "" $ms | quote }}
-            - name: REGISTRY_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: registry-pull-secret
-                  key: password
           args:
             - |
               i=0
-              until curl -sf -u "registry:${REGISTRY_PASSWORD}" "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
+              until curl -sf "http://registry.registry:5000/v2/${REPO}/tags/list" | grep -q "\"${TAG}\""; do
                 i=$((i+1))
                 [ "$i" -ge 180 ] && { echo "timeout waiting for ${REPO}:${TAG}"; exit 1; }
                 sleep 10

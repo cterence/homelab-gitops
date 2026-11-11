@@ -18,7 +18,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/agent-relay
+            repository: registry.snow-delta.ts.net/agent-relay
             tag: "7"
             pullPolicy: IfNotPresent
           env:

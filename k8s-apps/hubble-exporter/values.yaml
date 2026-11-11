@@ -1,7 +1,5 @@
 app-template:
   defaultPodOptions:
-    imagePullSecrets:
-      - name: registry-pull-secret
     automountServiceAccountToken: false
 
   controllers:

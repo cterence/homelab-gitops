@@ -18,7 +18,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/mcp-telegram
+            repository: registry.snow-delta.ts.net/mcp-telegram
             tag: "8"
             pullPolicy: IfNotPresent
           env:

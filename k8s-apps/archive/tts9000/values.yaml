@@ -21,7 +21,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/tts9000
+            repository: registry.snow-delta.ts.net/tts9000
             tag: "9"
             pullPolicy: IfNotPresent
           env:

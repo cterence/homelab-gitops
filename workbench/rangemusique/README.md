@@ -44,5 +44,5 @@ Delete the built binary afterwards.
 ## Deployment
 
 Consumed by `k8s-apps/arr-stack` (rangemusique CronJob), image
-`registry.terence.cloud/rangemusique:<tag>` matching `build.yaml`. Bump both
+`registry.snow-delta.ts.net/rangemusique:<tag>` matching `build.yaml`. Bump both
 tags together on code changes.

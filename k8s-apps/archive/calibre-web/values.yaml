@@ -147,7 +147,7 @@ app-template:
       containers:
         webdav:
           image:
-            repository: registry.terence.cloud/apachewebdav
+            repository: registry.snow-delta.ts.net/apachewebdav
             tag: v3
             pullPolicy: IfNotPresent
           env:

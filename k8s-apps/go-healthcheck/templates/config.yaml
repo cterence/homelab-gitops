@@ -43,11 +43,7 @@ spec:
           targets:
             http:
               {{- range .Values.urls }}
-              {{- if contains "REGISTRY_PASSWORD" . }}
-              - {{ replace "REGISTRY_PASSWORD" `{{ .registry_password | urlquery | replace "+" "%20" }}` . }}
-              {{- else }}
               - {{ . }}
-              {{- end }}
               {{- end }}
 
             postgresql:
@@ -61,7 +57,3 @@ spec:
         key: {{ .name }}-uri
         property: uri
     {{- end }}
-    - secretKey: registry_password
-      remoteRef:
-        key: registry-pull-secret
-        property: password

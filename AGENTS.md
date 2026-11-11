@@ -58,7 +58,7 @@ ApplicationSet git generator matches `k8s-apps/*/appset.yaml`). That file also
 carries per-app flags: `namespace`, `serverSideApply`, `serverSideDiff`,
 `scaleToZero`. Undeployed charts live in `k8s-apps/archive/`.
 
-New apps pulling from `registry.terence.cloud` need two things, both easy to
+New apps pulling from `registry.snow-delta.ts.net` need two things, both easy to
 forget (missing either leaves the app in ImagePullBackOff): their namespace in
 the `registry-pull-secret` ClusterExternalSecret's `spec.namespaces` in
 `k8s-apps/registry/values.yaml` — the registry app distributes its own pull
@@ -91,7 +91,7 @@ Never bump image tags in PRs. Tags are bumped by CI on main after merge:
    consumers (rangemusique, apachewebdav, gitea-mirror-sync) are updated in
    the consuming app's values.yaml — the bump script finds all references.
 3. The bump commit makes the `build-<app>` ArgoCD application run a Kaniko
-   build in-cluster, pushing `registry.terence.cloud/<app>:<tag>` to the
+   build in-cluster, pushing `registry.snow-delta.ts.net/<app>:<tag>` to the
    in-cluster registry.
 4. ArgoCD syncs `k8s-apps/<app>` to the new tag and rolls the Deployment.
 
@@ -159,7 +159,7 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 - Each app directory is an umbrella chart: `Chart.yaml` + `values.yaml`.
 - `Chart.yaml`: `apiVersion: v2`, `version: 0.1.0` (never bumped), dependencies on upstream charts.
 - Most common dependency: `app-template` (bjw-s-labs).
-- Workbench app images reference the in-cluster registry: `registry.terence.cloud/<app>` with a `tag` matching `build.yaml`.
+- Workbench app images reference the in-cluster registry: `registry.snow-delta.ts.net/<app>` with a `tag` matching `build.yaml`.
 - Third-party images are pinned by digest (`tag@sha256:...`).
 
 ## Falco (k8s-apps/falco/)

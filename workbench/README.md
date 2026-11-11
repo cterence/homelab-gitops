@@ -24,15 +24,15 @@ rebuild.
 
 ## Consuming an image
 
-The registry is exposed externally at `registry.terence.cloud` (TLS via
+The registry is exposed externally at `registry.snow-delta.ts.net` (TLS via
 cert-manager/Letsencrypt, routed through traefik). Reference any built image
 from any app or node:
 
 ```
-registry.terence.cloud/<image>:<tag>
+registry.snow-delta.ts.net/<image>:<tag>
 ```
 
-Nodes resolve `registry.terence.cloud` via public DNS and trust the
+Nodes resolve `registry.snow-delta.ts.net` via public DNS and trust the
 Letsencrypt certificate, so no insecure-registry containerd config is needed.
 Kaniko pushes in-cluster via `registry.registry:5000` (the service DNS
 resolves from within the cluster); pulls go through the external TLS ingress.
@@ -48,7 +48,7 @@ Kaniko Job.
 
 The registry service is plain HTTP. Kaniko pushes with `--insecure` to the
 in-cluster service `registry.registry:5000`. Pulls go through the external
-TLS ingress (`registry.terence.cloud`), so nodes do not need any insecure
+TLS ingress (`registry.snow-delta.ts.net`), so nodes do not need any insecure
 registry configuration.
 
 ## Managing tags
@@ -57,10 +57,10 @@ List and delete tags with `skopeo` (no Docker daemon required):
 
 ```bash
 # List all tags for a repo
-skopeo list-tags docker://registry.terence.cloud/<image>
+skopeo list-tags docker://registry.snow-delta.ts.net/<image>
 
 # Delete a tag
-skopeo delete docker://registry.terence.cloud/<image>:<tag>
+skopeo delete docker://registry.snow-delta.ts.net/<image>:<tag>
 ```
 
 After deleting tags, run garbage collection to reclaim orphaned blobs. The GC

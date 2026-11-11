@@ -35,7 +35,7 @@ spec:
       ### Repository conventions
 
       - `k8s-apps/<name>/` — one umbrella chart per app: `Chart.yaml` + `values.yaml`. An app is deployed if and only if `k8s-apps/<name>/appset.yaml` exists; that file also carries per-app flags (`namespace`, `serverSideApply`, `serverSideDiff`, `scaleToZero`).
-      - `workbench/<app>/` — Go source + Dockerfile + `build.yaml` for self-built images (built in-cluster by Kaniko as `registry.terence.cloud/<app>:<tag>`). Changing workbench code requires bumping `build.yaml` tag and the image tag in the consuming app's values in the same commit; tags are never reused.
+      - `workbench/<app>/` — Go source + Dockerfile + `build.yaml` for self-built images (built in-cluster by Kaniko as `registry.snow-delta.ts.net/<app>:<tag>`). Changing workbench code requires bumping `build.yaml` tag and the image tag in the consuming app's values in the same commit; tags are never reused.
       - `terraform/secrets/` — the OpenBao source of truth for all secrets, synced into namespaces by external-secrets. Secrets are never committed; apps reference them via `ExternalSecret` templates.
       - CNPG Postgres clusters are defined as `cluster` chart dependencies inside the app's umbrella chart; backups go to versity-gw S3 via the barman-cloud plugin.
       - Commit message format: `<app-name>: <description>` — lowercase, short, imperative.

@@ -200,7 +200,7 @@ irreplaceable file is `identity.json`), health on `:8081` at
 `catbox_spool_cap_bytes`, `catbox_members`. A PodMonitor
 (`podMonitor.main` in the chart's values) scrapes them. Image
 built in-cluster by Kaniko as
-`registry.terence.cloud/catbox:<tag>`; bump `build.yaml` and the
+`registry.snow-delta.ts.net/catbox:<tag>`; bump `build.yaml` and the
 chart's image tag together, never reusing a tag.
 
 ## Android

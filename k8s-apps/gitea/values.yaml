@@ -633,7 +633,7 @@ mirrorSync:
   schedule: "0 */6 * * *"
   prune: "true"
   image:
-    registry: registry.terence.cloud
+    registry: registry.snow-delta.ts.net
     repository: gitea-mirror-sync
     tag: "16"
   defaultOwner: terence

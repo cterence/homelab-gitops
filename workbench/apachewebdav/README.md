@@ -32,6 +32,6 @@ WebDAV content lives in `/var/lib/dav/data`; the lock database is
 ## Deployment
 
 Consumed by `k8s-apps/audiobookshelf` and `k8s-apps/calibre-web` (webdav
-sidecar containers), image `registry.terence.cloud/apachewebdav:<tag>`
+sidecar containers), image `registry.snow-delta.ts.net/apachewebdav:<tag>`
 matching `build.yaml`. Bump both tags together on changes. When the httpd
 base version changes, update the FROM image and bump the tags.

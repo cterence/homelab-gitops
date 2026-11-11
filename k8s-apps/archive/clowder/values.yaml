@@ -20,7 +20,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/clowder
+            repository: registry.snow-delta.ts.net/clowder
             tag: "0.11"
             pullPolicy: IfNotPresent
           env:
