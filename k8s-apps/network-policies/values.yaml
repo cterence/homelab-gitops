@@ -12,6 +12,7 @@ namespaces:
     allow: [kube-system, monitoring]
   - name: arr-stack
     defaultDeny: true
+    allowRemoteNode: true
     allow:
       [
         traefik,
@@ -106,6 +107,7 @@ namespaces:
     allow: [traefik, go-healthcheck, monitoring, jellystat, seerr]
   - name: jellystat
     defaultDeny: true
+    allowRemoteNode: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring, jellyfin]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: kube-system
