@@ -63,7 +63,7 @@ jobs:
           sudo networksetup -setdnsservers Ethernet Empty
           sudo networksetup -setsearchdomains Ethernet Empty
       - name: Setup niks3 cache
-        uses: Mic92/niks3-action@6c79855e3e7d8e62ca74234519438a858003abe1 # v1.7.0
+        uses: Mic92/niks3-action@347a156f2b7d8120fee9609272c0961ce555f7f9 # v1.8.0
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
@@ -121,7 +121,7 @@ jobs:
           tags: tag:github-actions
       - name: Setup niks3 cache
         if: steps.catbox.outputs.changed == 'true'
-        uses: Mic92/niks3-action@6c79855e3e7d8e62ca74234519438a858003abe1 # v1.7.0
+        uses: Mic92/niks3-action@347a156f2b7d8120fee9609272c0961ce555f7f9 # v1.8.0
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
