@@ -201,6 +201,21 @@ app-template:
           hosts:
             - *host
 
+    tailscale:
+      className: "tailscale"
+      hosts:
+        - host: &host registry.snow-delta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: registry-tailscale-tls
+          hosts:
+            - *host
+
   persistence:
     # terraform-managed secret (htpasswd + password keys); on rotation
     # regenerate the bcrypt htpasswd alongside the password
