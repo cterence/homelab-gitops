@@ -204,7 +204,7 @@
             pname = "catbox";
             version = "unstable";
             src = ./workbench/catbox;
-            vendorHash = "sha256-gATb9AZZjhcEwObWBSiTNc0Cl7C9npM90Oscr2sSOZs=";
+            vendorHash = "sha256-gc8Lt6bc4gAVlcrsiamiRAlpTy5pZ12MuIUDl/h7z5w=";
             ldflags = [
               "-s"
               "-w"
@@ -233,7 +233,7 @@
                 # git-filtered self.outPath would exclude untracked
                 # new files and break the cross-build.
                 src = ./workbench/catbox;
-                vendorHash = "sha256-gATb9AZZjhcEwObWBSiTNc0Cl7C9npM90Oscr2sSOZs=";
+                vendorHash = "sha256-gc8Lt6bc4gAVlcrsiamiRAlpTy5pZ12MuIUDl/h7z5w=";
               };
             in
             {
