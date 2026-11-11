@@ -48,7 +48,7 @@ app-template:
         chromium:
           image:
             repository: ghcr.io/browserless/chromium
-            tag: latest@sha256:3f2893a6b4fe4e54c76c79b317d51f7b0e20c2247e9dc0cce3d5e43c4b649754
+            tag: latest@sha256:6602ca4b404e4b1c4cf357e85b3683f705dc79d09041312a865f0465e641b61c
           # Headful chromium under Xvfb: last.fm's Fastly bot mitigation
           # blocks every headless browser tested.
           command:
