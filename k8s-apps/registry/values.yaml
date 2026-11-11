@@ -105,7 +105,6 @@ app-template:
       className: "tailscale"
       annotations:
         tailscale.com/experimental-forward-cluster-traffic-via-ingress: ""
-        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &host registry.snow-delta.ts.net
           paths:
