@@ -77,7 +77,7 @@ app-template:
         beets:
           image:
             repository: lscr.io/linuxserver/beets
-            tag: 2.14.1-ls359
+            tag: 2.14.1-ls359@sha256:01e4d6177968a8312843f0b1b19d766ee2f07eb08b327ef2ae9422a5dcd2364a
           command:
             - beet
           args:
