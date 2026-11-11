@@ -92,75 +92,6 @@ app-template:
                   port: http
                   path: /api/v1/status
 
-    jellystat:
-      type: deployment
-      strategy: Recreate
-      annotations:
-        reloader.stakater.com/auto: "true"
-      pod:
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-      containers:
-        jellystat:
-          image:
-            repository: cyfershepard/jellystat
-            tag: 1.1.12@sha256:e61c759ec706da378bc8374e797da1dfd298ab30f804cefd82d192c301a888c7
-          ports:
-            - name: http
-              containerPort: 3000
-          envFrom:
-            - secretRef:
-                name: jellystat-jf-api-key
-          env:
-            TZ: Europe/Paris
-            MINIMUM_SECONDS_TO_INCLUDE_PLAYBACK: "120"
-            JF_HOST: http://arr-stack-jellyfin:8096
-            POSTGRES_IP:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-jellystat-app"
-                  key: host
-            POSTGRES_USER:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-jellystat-app"
-                  key: user
-            POSTGRES_PORT:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-jellystat-app"
-                  key: port
-            POSTGRES_PASSWORD:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-jellystat-app"
-                  key: password
-            POSTGRES_DB:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-jellystat-app"
-                  key: dbname
-            JWT_SECRET:
-              valueFrom:
-                secretKeyRef:
-                  name: "jellystat-jwt-secret"
-                  key: password
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /auth/isconfigured
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  port: http
-                  path: /auth/isconfigured
     sonarr:
       type: deployment
       strategy: Recreate
@@ -587,12 +518,6 @@ app-template:
       ports:
         http:
           port: 5055
-    jellystat:
-      controller: jellystat
-      type: ClusterIP
-      ports:
-        http:
-          port: 3000
     sonarr:
       controller: sonarr
       type: ClusterIP
@@ -709,27 +634,6 @@ app-template:
                 port: http
       tls:
         - secretName: jellyseerr-tls
-          hosts:
-            - *host
-
-    jellystat:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        external-dns.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-      className: "traefik"
-      hosts:
-        - host: &host jstat.terence.cloud
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: jellystat
-                port: http
-      tls:
-        - secretName: jellystat-tls
           hosts:
             - *host
 
@@ -961,19 +865,6 @@ app-template:
         jellyseerr:
           jellyseerr:
             - path: /app/config
-
-    jellystat-backup-data:
-      enabled: true
-      type: persistentVolumeClaim
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      accessMode: ReadWriteOnce
-      size: 1Gi
-      advancedMounts:
-        jellystat:
-          jellystat:
-            - path: /app/backend/backup-data
 
     sonarr-config:
       enabled: true
@@ -1352,26 +1243,6 @@ app-template:
               storage: 100Gi
           storageClassName: shared-local
           volumeName: music-shared
-    jellystat-jwt-secret:
-      enabled: true
-      forceRename: jellystat-jwt-secret
-      manifest:
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        metadata:
-          annotations:
-            argocd.argoproj.io/sync-options: ServerSideApply=true
-        spec:
-          refreshInterval: "0"
-          target:
-            name: jellystat-jwt-secret
-            creationPolicy: Owner
-          dataFrom:
-            - sourceRef:
-                generatorRef:
-                  apiVersion: generators.external-secrets.io/v1alpha1
-                  kind: ClusterGenerator
-                  name: password
     sablier-js:
       enabled: true
       forceRename: sablier-js
@@ -1469,72 +1340,3 @@ app-template:
                       No probe_success metric from the qbittorrent tunnel monitor for
                       over 10 minutes. The sidecar or ServiceMonitor may be broken.
 
-cnpg-cluster-jellystat:
-  type: postgresql
-  mode: standalone
-  version:
-    postgresql: "18"
-  cluster:
-    instances: 1
-    imageCatalogRef:
-      kind: ClusterImageCatalog
-      name: postgresql
-    storage:
-      size: 5Gi
-    roles:
-      - name: jellystat
-        connectionLimit: -1
-        ensure: present
-        createdb: true
-        inherit: true
-        login: true
-    resources: {}
-    primaryUpdateMethod: switchover
-    primaryUpdateStrategy: unsupervised
-    logLevel: "info"
-    monitoring:
-      enabled: true
-      podMonitor:
-        enabled: true
-      prometheusRule:
-        excludeRules:
-          - CNPGClusterLogicalReplicationErrorsCritical
-          - CNPGClusterLogicalReplicationErrors
-          - CNPGClusterLogicalReplicationStoppedCritical
-          - CNPGClusterLogicalReplicationStopped
-          - CNPGClusterHACritical
-          - CNPGClusterHAWarning
-    postgresql: {}
-    initdb:
-      database: jellystat
-  backups:
-    enabled: true
-    method: plugin
-    pluginConfiguration:
-      name: barman-cloud.cloudnative-pg.io
-    endpointURL: http://garage.garage:3900
-    destinationPath: s3://cnpg-backups/jellystat
-    provider: s3
-    s3:
-      region: us-east-1
-      bucket: cnpg-backups
-      path: /jellystat
-    secret:
-      create: false
-      name: cnpg-backup-s3-creds
-    wal:
-      compression: gzip
-      encryption: ""
-      maxParallel: 1
-    data:
-      compression: gzip
-      encryption: ""
-      jobs: 2
-    scheduledBackups:
-      - name: daily-backup
-        schedule: "0 0 1 * * *"
-        backupOwnerReference: self
-        method: plugin
-        pluginConfiguration:
-          name: barman-cloud.cloudnative-pg.io
-    retentionPolicy: "7d"
