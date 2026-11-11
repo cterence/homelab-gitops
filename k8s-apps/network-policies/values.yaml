@@ -13,7 +13,15 @@ namespaces:
   - name: arr-stack
     defaultDeny: true
     allow:
-      [traefik, go-healthcheck, cnpg-system, monitoring, tailscale-operator]
+      [
+        traefik,
+        go-healthcheck,
+        cnpg-system,
+        monitoring,
+        seer,
+        tailscale-operator,
+        jellystat,
+      ]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: audiobookshelf
     defaultDeny: true
@@ -171,6 +179,9 @@ namespaces:
   - name: sablier
     defaultDeny: true
     allow: [traefik]
+  - name: seer
+    defaultDeny: true
+    allow: [traefik, arr-stack, sablier]
   - name: slackmoji
     defaultDeny: true
     allow: [traefik]
