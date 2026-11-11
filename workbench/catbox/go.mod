@@ -6,7 +6,7 @@ require (
 	github.com/tailscale/tailcat v0.7.1-0.20261007201807-52fbad323e9d
 	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/crypto v0.58.0
-	tailscale.com v1.104.4
+	tailscale.com v1.104.6
 )
 
 require (
@@ -40,7 +40,7 @@ require (
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/tailscale/peercred v0.0.0-20250107143737-35a0c7bd7edc // indirect
 	github.com/tailscale/web-client-prebuilt v0.0.0-20260917222731-e0ed2d0d0fea // indirect
-	github.com/tailscale/wireguard-go v0.0.0-20260928213032-417aef361226 // indirect
+	github.com/tailscale/wireguard-go v0.0.0-20261106233718-9e0ab45c16ca // indirect
 	github.com/u-root/u-root v0.16.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
