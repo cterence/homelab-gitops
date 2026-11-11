@@ -19,7 +19,7 @@ urls:
   - https://prow.terence.cloud/ping
   - https://qb.terence.cloud
   - https://rad.terence.cloud/ping
-  - https://registry.snow-delta.ts.net/v2/
+  - https://registry.snow-delta.ts.net
   - https://slskd.terence.cloud/health
   - https://son.terence.cloud/ping
   - https://z2m.terence.cloud
