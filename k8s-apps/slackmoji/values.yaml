@@ -14,7 +14,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.terence.cloud/slackmoji
+            repository: registry.snow-delta.ts.net/slackmoji
             tag: "5"
             pullPolicy: IfNotPresent
           env:

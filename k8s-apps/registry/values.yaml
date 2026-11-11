@@ -16,9 +16,6 @@ app-template:
             REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
             REGISTRY_LOG_LEVEL: "info"
             REGISTRY_STORAGE_DELETE_ENABLED: "true"
-            REGISTRY_AUTH: htpasswd
-            REGISTRY_AUTH_HTPASSWD_REALM: basic-realm
-            REGISTRY_AUTH_HTPASSWD_PATH: /etc/docker/registry/auth/htpasswd
           resources:
             requests:
               cpu: 50m
