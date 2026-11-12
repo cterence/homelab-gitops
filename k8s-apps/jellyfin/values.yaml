@@ -9,15 +9,14 @@ app-template:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
-          - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                  - homelab2
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - homelab2
 
   controllers:
     main:
-      replicas: 0
       type: deployment
       strategy: Recreate
       annotations:
