@@ -56,7 +56,7 @@ app-template:
               custom: true
               spec:
                 httpGet:
-                  path: /healthz
+                  path: /health
                   port: http
                 periodSeconds: 5
                 failureThreshold: 12
