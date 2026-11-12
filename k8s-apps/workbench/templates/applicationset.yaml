@@ -24,13 +24,10 @@ spec:
           path: k8s-apps/workbench
           helm:
             valueFiles:
-              - "$values/{{ `{{ .path.path }}` }}/build.yaml"
+              - "/{{ `{{ .path.path }}` }}/build.yaml"
             parameters:
               - name: subPath
                 value: "{{ `{{ .path.path }}` }}"
-        - repoURL: git@github.com:cterence/homelab-gitops.git
-          targetRevision: HEAD
-          ref: values
       destination:
         name: in-cluster
         namespace: workbench

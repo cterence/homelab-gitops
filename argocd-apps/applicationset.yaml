@@ -34,10 +34,7 @@ spec:
           path: charts/image-wait
           helm:
             valueFiles:
-              - "$values/{{ .path.path }}/values.yaml"
-        - repoURL: git@github.com:cterence/homelab-gitops.git
-          targetRevision: HEAD
-          ref: values
+              - "/{{ .path.path }}/values.yaml"
       destination:
         name: in-cluster
         namespace: '{{ default .path.basename (dig "namespace" "" .) }}'
