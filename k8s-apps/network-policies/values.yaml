@@ -108,6 +108,7 @@ namespaces:
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: kube-system
     defaultDeny: true
+    allowRemoteNode: true
     allow: [hubble-exporter]
     allowClusterIngressPorts:
       - { port: 53, protocol: UDP }
