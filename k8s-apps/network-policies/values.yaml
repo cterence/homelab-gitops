@@ -187,6 +187,7 @@ namespaces:
   - name: tailscale-operator
     defaultDeny: true
     allowWorldIngress: true
+    allowRemoteNode: true
     allow: [go-healthcheck, monitoring, kube-system, opencloud]
   - name: telegram-hub
     defaultDeny: true
