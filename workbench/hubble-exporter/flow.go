@@ -157,6 +157,7 @@ func FlowPair(fl *flowpb.Flow, podCIDR, nodeCIDR string) (Pair, bool) {
 	}
 
 	dst := fl.GetDestination()
+
 	dstKind := "pod"
 	if dst.GetNamespace() == "" {
 		dstKind = endpointKind(dst, fl.GetIP().GetDestination(), podCIDR, nodeCIDR)
@@ -230,7 +231,7 @@ func DropRecord(fl *flowpb.Flow, podCIDR, nodeCIDR string) (Drop, bool) {
 		DstIP:   fl.GetIP().GetDestination(),
 		Proto:   proto,
 		DstPort: servicePort(port),
-		Reason:  flowpb.DropReason(fl.GetDropReason()).String(),
+		Reason:  fl.GetDropReasonDesc().String(),
 	}
 
 	if d.SrcNS == "" {

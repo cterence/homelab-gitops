@@ -123,7 +123,7 @@ func TestDropRecord(t *testing.T) {
 			f.IP.Source = "192.168.1.141"
 			f.Source = &flowpb.Endpoint{Labels: []string{"reserved:remote-node"}}
 			f.Verdict = flowpb.Verdict_DROPPED
-			f.DropReason = uint32(flowpb.DropReason_POLICY_DENIED)
+			f.DropReasonDesc = flowpb.DropReason_POLICY_DENIED
 		})
 
 	tests := []struct {
@@ -145,7 +145,7 @@ func TestDropRecord(t *testing.T) {
 				withTCP(8096),
 				func(f *flowpb.Flow) {
 					f.Verdict = flowpb.Verdict_DROPPED
-					f.DropReason = uint32(flowpb.DropReason_POLICY_DENIED)
+					f.DropReasonDesc = flowpb.DropReason_POLICY_DENIED
 				}),
 			Drop{SrcNS: "jellystat", SrcPod: "jellystat-1", DstNS: "arr-stack", DstPod: "arr-stack-jellyfin-abc", DstKind: "pod", DstIP: "10.244.0.160", Proto: "TCP", DstPort: 8096, Reason: "POLICY_DENIED"},
 			true,
@@ -158,7 +158,7 @@ func TestDropRecord(t *testing.T) {
 				func(f *flowpb.Flow) {
 					f.IP.Source = "192.168.1.141"
 					f.Verdict = flowpb.Verdict_DROPPED
-					f.DropReason = uint32(flowpb.DropReason_POLICY_DENIED)
+					f.DropReasonDesc = flowpb.DropReason_POLICY_DENIED
 				}),
 			Drop{SrcKind: "node", DstNS: "arr-stack", DstPod: "arr-stack-jellyfin-abc", DstKind: "pod", DstIP: "10.244.0.160", Proto: "TCP", DstPort: 8096, Reason: "POLICY_DENIED"},
 			true,

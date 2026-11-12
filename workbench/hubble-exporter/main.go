@@ -131,10 +131,8 @@ func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error
 			}
 
 			fl := resp.GetFlow()
-			if d, ok := DropRecord(fl, podCIDR, nodeCIDR); ok && seen.Add(d.key(), fl.GetTime().AsTime()) {
-				logger.Info("drop", d.LogAttrs()...)
-			} else if p, ok := FlowPair(fl, podCIDR, nodeCIDR); ok && seen.Add(p.key(), fl.GetTime().AsTime()) {
-				logger.Info("pair", p.LogAttrs()...)
+			if event, attrs := recordEvent(fl, seen, podCIDR, nodeCIDR); event != "" {
+				logger.Info(event, attrs...)
 			}
 
 			if ns, qname, ips, ok := DNSRecord(fl); ok {
@@ -144,6 +142,24 @@ func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error
 			}
 		}
 	}
+}
+
+// recordEvent returns the log event name and attributes for one flow, or an
+// empty event once its tuple has been seen. Dropped flows never yield pairs.
+func recordEvent(fl *flowpb.Flow, seen *Seen, podCIDR, nodeCIDR string) (string, []any) {
+	if d, ok := DropRecord(fl, podCIDR, nodeCIDR); ok {
+		if !seen.Add(d.key(), fl.GetTime().AsTime()) {
+			return "", nil
+		}
+
+		return "drop", d.LogAttrs()
+	}
+
+	if p, ok := FlowPair(fl, podCIDR, nodeCIDR); ok && seen.Add(p.key(), fl.GetTime().AsTime()) {
+		return "pair", p.LogAttrs()
+	}
+
+	return "", nil
 }
 
 func save(seen *Seen, logger *slog.Logger) error {
