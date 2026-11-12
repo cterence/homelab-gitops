@@ -10,7 +10,6 @@ app-template:
 
   controllers:
     main:
-      replicas: 0
       type: deployment
       strategy: Recreate
       annotations:
