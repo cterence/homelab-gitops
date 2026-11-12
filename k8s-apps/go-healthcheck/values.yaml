@@ -25,14 +25,14 @@ urls:
   - https://z2m.terence.cloud
 
 cnpgClusters:
-  - name: arr-stack-cnpg-cluster-jellystat
-    namespace: arr-stack
   - name: gitea-cnpg-cluster
     namespace: gitea
   - name: home-assistant-cnpg-cluster
     namespace: home-assistant
   - name: immich-cnpg-cluster-blue
     namespace: immich
+  - name: jellystat-cnpg-cluster
+    namespace: jellystat
   - name: niks3-cnpg-cluster
     namespace: niks3
   - name: paperless-ngx-cnpg-cluster
