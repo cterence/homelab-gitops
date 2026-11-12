@@ -14,6 +14,8 @@ app-template:
             repository: registry.snow-delta.ts.net/hubble-exporter
             tag: "4"
             pullPolicy: IfNotPresent
+          env:
+            TZ: Europe/Paris
           args:
             - --state
             - /data/seen.json
