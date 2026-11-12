@@ -60,11 +60,6 @@ kube-prometheus-stack:
         #   key: objstore.yml
         #   name: thanos-objstore-secret
 
-    service:
-      annotations:
-        tailscale.com/expose: "true"
-        tailscale.com/hostname: "prometheus"
-
     ingress:
       enabled: true
       ingressClassName: traefik
@@ -524,9 +519,6 @@ grafana-mcp-server:
       ports:
         http:
           port: 8000
-      annotations:
-        tailscale.com/expose: "true"
-        tailscale.com/hostname: grafana-mcp
 
   ingress:
     main:

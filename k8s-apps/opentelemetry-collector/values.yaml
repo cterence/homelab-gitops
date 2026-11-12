@@ -3,11 +3,6 @@ opentelemetry-collector:
     repository: otel/opentelemetry-collector-contrib
     tag: 0.165.0@sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea
   mode: daemonset
-  service:
-    enabled: true
-    annotations:
-      tailscale.com/expose: "true"
-      tailscale.com/hostname: "opentelemetry-collector"
   presets:
     logsCollection:
       enabled: true

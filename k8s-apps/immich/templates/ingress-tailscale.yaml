@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich-tailscale
+spec:
+  ingressClassName: tailscale
+  rules:
+    - host: &host immich.snow-delta.ts.net
+      http:
+        paths:
+          - backend:
+              service:
+                name: immich-server
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - secretName: immich-tailscale-tls
+      hosts:
+        - *host

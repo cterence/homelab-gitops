@@ -21,16 +21,20 @@ garage:
       storageClass: local-path-storage-pool
       size: 1000Gi
 
-  service:
-    type: ClusterIP
-    annotations:
-      tailscale.com/expose: "true"
-      tailscale.com/hostname: garage-backup
-
   ingress:
     s3:
       api:
-        enabled: false
+        enabled: true
+        className: tailscale
+        hosts:
+          - host: garage-backup.now-delta.ts.net
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: garage-backup-tls
+            hosts:
+              - garage-backup.now-delta.ts.net
       web:
         enabled: false
 

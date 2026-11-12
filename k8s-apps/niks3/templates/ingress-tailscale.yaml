@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: niks3-tailscale
+spec:
+  ingressClassName: tailscale
+  rules:
+    - host: &host niks3.snow-delta.ts.net
+      http:
+        paths:
+          - backend:
+              service:
+                name: niks3
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - secretName: niks3-tailscale-tls
+      hosts:
+        - *host

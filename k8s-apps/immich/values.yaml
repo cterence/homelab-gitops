@@ -136,11 +136,6 @@ immich:
                 mountPath: /config
               - name: templated-config
                 mountPath: /templated-config
-    service:
-      main:
-        annotations:
-          tailscale.com/expose: "true"
-          tailscale.com/hostname: immich
 
     ingress:
       main:

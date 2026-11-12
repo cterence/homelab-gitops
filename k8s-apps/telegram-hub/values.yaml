@@ -90,9 +90,6 @@ app-template:
       ports:
         http:
           port: 8000
-      annotations:
-        tailscale.com/expose: "true"
-        tailscale.com/hostname: telegram-hub
 
   ingress:
     main:
