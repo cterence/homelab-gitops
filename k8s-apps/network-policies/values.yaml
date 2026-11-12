@@ -12,7 +12,6 @@ namespaces:
     allow: [kube-system, monitoring]
   - name: arr-stack
     defaultDeny: true
-    allowRemoteNode: true
     allow:
       [
         traefik,
@@ -105,7 +104,6 @@ namespaces:
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: jellystat
     defaultDeny: true
-    allowRemoteNode: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring, jellyfin]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: kube-system
@@ -115,7 +113,6 @@ namespaces:
       - { port: 53, protocol: UDP }
       - { port: 53, protocol: TCP }
       - { port: 9153, protocol: TCP }
-    allowRemoteNode: true
     remoteNodePorts:
       - { port: 53, protocol: UDP }
       - { port: 53, protocol: TCP }
@@ -190,7 +187,6 @@ namespaces:
   - name: tailscale-operator
     defaultDeny: true
     allowWorldIngress: true
-    allowRemoteNode: true
     allow: [go-healthcheck, monitoring, kube-system, opencloud]
   - name: telegram-hub
     defaultDeny: true
