@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-tailscale
+spec:
+  ingressClassName: tailscale
+  rules:
+    - host: &host argocd.snow-delta.ts.net
+      http:
+        paths:
+          - backend:
+              service:
+                name: argocd-server
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - secretName: argocd-tailscale-tls
+      hosts:
+        - *host
