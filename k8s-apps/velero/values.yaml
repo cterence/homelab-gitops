@@ -264,6 +264,7 @@ velero:
           - changedetection
           - garage
           - gitea
+          - jellyfin
           - home-assistant
           - immich
           - mosquitto
@@ -271,6 +272,7 @@ velero:
           - opencloud
           - paperless-ngx
           - pocket-id
+          - seerr
           - vaultwarden
           - zigbee2mqtt
         includedResources:
@@ -298,6 +300,7 @@ velero:
           - changedetection
           - garage
           - gitea
+          - jellyfin
           - home-assistant
           - immich
           - mosquitto
@@ -305,6 +308,7 @@ velero:
           - opencloud
           - paperless-ngx
           - pocket-id
+          - seerr
           - vaultwarden
           - zigbee2mqtt
         includedResources:

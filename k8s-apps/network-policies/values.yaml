@@ -20,7 +20,6 @@ namespaces:
         monitoring,
         seerr,
         tailscale-operator,
-        jellystat,
       ]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: audiobookshelf
@@ -102,6 +101,9 @@ namespaces:
     allow:
       [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
+  - name: jellyfin
+    defaultDeny: true
+    allow: [traefik, go-healthcheck, monitoring, jellystat, seerr]
   - name: jellystat
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring, jellyfin]

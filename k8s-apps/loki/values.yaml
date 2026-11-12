@@ -102,7 +102,7 @@ loki:
               rules:
                 - alert: JellyfinSocketSpam
                   expr: |
-                    sum by (service) (count_over_time({k8s_namespace_name="traefik", k8s_container_name="traefik"} |= "GET /socket" |= " 500 " | regexp "websecure-(?P<service>arr-stack-arr-stack-jellyfin-[0-9]+@kubernetes)" [10m])) > 50
+                    sum by (service) (count_over_time({k8s_namespace_name="traefik", k8s_container_name="traefik"} |= "GET /socket" |= " 500 " | regexp "websecure-(?P<service>jellyfin-jellyfin-main-[0-9]+@kubernetes)" [10m])) > 50
                   for: 2m
                   labels:
                     severity: info
