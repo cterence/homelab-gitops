@@ -6,7 +6,7 @@ require (
 	github.com/cenkalti/backoff/v7 v7.0.3
 	github.com/chromedp/cdproto v0.159.0
 	github.com/chromedp/chromedp v0.23.0
-	github.com/go-telegram/bot v1.27.0
+	github.com/go-telegram/bot v1.28.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/michiwend/gomusicbrainz v0.0.0-20181012083520-6c07e13dd396
 	github.com/urfave/cli/v3 v3.14.0
