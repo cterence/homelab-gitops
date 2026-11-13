@@ -22,6 +22,11 @@ mosquitto:
       podSpec:
         containers:
           main:
+            # chart's default command targets the TC image's /etc/mosquitto paths
+            command:
+              - /usr/sbin/mosquitto
+              - -c
+              - /mosquitto/config/mosquitto.conf
             probes:
               liveness:
                 enabled: true
