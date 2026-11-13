@@ -6,7 +6,7 @@ spec:
   replicas: 1
   staticEndpoints:
     - 109.0.228.97:41641
+  tags: tag:peer-relay
   service:
     annotations:
       metallb.io/loadBalancerIPs: 192.168.1.242
-      tailscale.com/tags: tag:peer-relay
