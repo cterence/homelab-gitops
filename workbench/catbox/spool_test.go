@@ -68,7 +68,7 @@ func TestEvictPartials(t *testing.T) {
 				"keep": writePartial(t, s, "carol", 5, 500, base),
 			}
 
-			s.claim("bob", evictSHA, 4, io.NopCloser(nil))
+			s.claim("bob", evictSHA, 4, 1, io.NopCloser(nil))
 
 			// A parked body is never eviction material.
 			body := spoolBodyPath(s.dir, "dave", evictSHA, 6)

@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/tailscale/tailcat"
@@ -37,7 +38,8 @@ type stash struct {
 	roster    []member
 	rosterMod time.Time // roster.json mtime at last load: external edits reload
 	invites   []invite
-	admitted  int64 // deposit bytes admitted but unfinished: concurrent deposits share the cap
+	admitted  int64         // deposit bytes admitted but unfinished: concurrent deposits share the cap
+	depSeq    atomic.Uint64 // deposit arrival order: claim eviction follows it, not scheduling
 	spool     *spool
 }
 
@@ -546,6 +548,8 @@ func (st *stash) opInvite(rwc io.ReadWriteCloser, me member) {
 }
 
 func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
+	seq := st.depSeq.Add(1)
+
 	if !validSHA(m.SHA) {
 		_ = writeMsg(rwc, msg{Op: opReady, Err: "sha must be empty or 64 lowercase hex chars"})
 
@@ -696,9 +700,9 @@ func (st *stash) opSend(rwc io.ReadWriteCloser, me member, m msg) {
 
 	// The claimed size admitted the deposit; the transfer itself is bounded
 	// by the remaining budget, so a lying sender cannot fill the disk.
-	// Newest deposit wins: a retry evicts a stalled attempt's conn
-	// instead of waiting out idleTimeout behind its partial lock.
-	st.spool.claim(me.Name, m.SHA, m.Size, rwc)
+	// Newest deposit wins by arrival, not claim order: a retry evicts
+	// a stalled attempt's conn, an abandoned attempt evicts nothing.
+	st.spool.claim(me.Name, m.SHA, m.Size, seq, rwc)
 	meta, err = st.spool.put(src, meta, budget, have)
 	st.spool.release(me.Name, m.SHA, m.Size, rwc)
 	src.close() // sealed streams self-terminate: no EOF reaches the reader

@@ -39,20 +39,46 @@ type spool struct {
 	dir    string
 	log    *slog.Logger
 	putMu  sync.Map // partial path → *sync.Mutex: same-content deposits serialize
-	active sync.Map // partial path → io.Closer: the deposit writing it; the next one evicts
+	active sync.Map // partial path → *depositClaim: the deposit writing it; the newest evicts
+}
+
+// depositClaim registers one deposit on a partial: seq is arrival
+// order, so a claim running late cannot evict a newer deposit.
+type depositClaim struct {
+	seq uint64
+	c   io.Closer
 }
 
 // claim marks c as the deposit writing this content's partial; the
 // next deposit of the same content closes it instead of waiting out
-// the partial lock behind a dead stream.
-func (s *spool) claim(from, shaHex string, plain int64, c io.Closer) {
+// the partial lock behind a dead stream. seq is arrival order: a
+// claim running late never evicts a newer deposit's conn.
+func (s *spool) claim(from, shaHex string, plain int64, seq uint64, c io.Closer) {
 	if shaHex == "" {
 		return
 	}
 
-	if prev, loaded := s.active.Swap(spoolPartialPath(s.dir, from, shaHex, plain), c); loaded {
-		if old, ok := prev.(io.Closer); ok {
-			_ = old.Close()
+	p := spoolPartialPath(s.dir, from, shaHex, plain)
+
+	for {
+		prev, ok := s.active.Load(p)
+		if !ok {
+			if _, loaded := s.active.LoadOrStore(p, &depositClaim{seq: seq, c: c}); !loaded {
+				return
+			}
+
+			continue
+		}
+
+		e, ok := prev.(*depositClaim)
+		if !ok || e.seq >= seq {
+			return // arrived earlier: the newest deposit keeps the partial
+		}
+
+		if s.active.CompareAndSwap(p, e, &depositClaim{seq: seq, c: c}) {
+			_ = e.c.Close()
+
+			return
 		}
 	}
 }
@@ -63,7 +89,13 @@ func (s *spool) release(from, shaHex string, plain int64, c io.Closer) {
 		return
 	}
 
-	s.active.CompareAndDelete(spoolPartialPath(s.dir, from, shaHex, plain), c)
+	p := spoolPartialPath(s.dir, from, shaHex, plain)
+
+	if prev, ok := s.active.Load(p); ok {
+		if e, ok := prev.(*depositClaim); ok && e.c == c {
+			s.active.CompareAndDelete(p, prev)
+		}
+	}
 }
 
 // errSpoolFull marks deposits that exceed the spool's remaining byte budget.
