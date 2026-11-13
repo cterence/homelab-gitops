@@ -1,12 +1,12 @@
 module github.com/cterence/homelab-gitops/workbench/catbox
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/tailscale/tailcat v0.7.1-0.20261105151022-e00cdde6ff78
 	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/crypto v0.58.0
-	tailscale.com v1.105.0-pre.0.20261013225543-fb79793d99f5
+	tailscale.com v1.105.0-pre.0.20261113020038-59064619a0f4
 )
 
 require (
@@ -26,7 +26,7 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
-	github.com/klauspost/compress v1.20.0 // indirect
+	github.com/klauspost/compress v1.20.2 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/mdlayher/netlink v1.11.2 // indirect
 	github.com/mdlayher/socket v0.7.0 // indirect
@@ -40,13 +40,13 @@ require (
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/tailscale/peercred v0.0.0-20250107143737-35a0c7bd7edc // indirect
 	github.com/tailscale/web-client-prebuilt v0.0.0-20260917222731-e0ed2d0d0fea // indirect
-	github.com/tailscale/wireguard-go v0.0.0-20260928213353-e61b6b78110b // indirect
+	github.com/tailscale/wireguard-go v0.0.0-20261110220948-9e10ef9af415 // indirect
 	github.com/u-root/u-root v0.16.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb // indirect
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
-	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
