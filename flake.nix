@@ -33,7 +33,7 @@
       buildTime = toString (self.lastModified or 0);
 
       # Single occurrence: nix-update-hash refuses hashes that appear twice.
-      vendorHash = "sha256-gc8Lt6bc4gAVlcrsiamiRAlpTy5pZ12MuIUDl/h7z5w=";
+      vendorHash = "sha256-SKO7Q7mxnC2cqMlrAaAi9egLO7ntDz5yET/ONn2O59c=";
 
       supportedSystems = [
         "x86_64-linux"
