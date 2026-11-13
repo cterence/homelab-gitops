@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -353,7 +354,7 @@ func TestSpoolNewestDepositorWins(t *testing.T) {
 	first := make(chan error, 1)
 
 	go func() {
-		sp.claim("laptop", sha, plain, stalled)
+		sp.claim("laptop", sha, plain, 1, stalled)
 		defer sp.release("laptop", sha, plain, stalled)
 
 		_, err := sp.put(stalled, spoolMeta{FileName: "f.bin", From: "laptop", SHA: sha, Plain: plain}, 1<<20, 0)
@@ -380,7 +381,7 @@ func TestSpoolNewestDepositorWins(t *testing.T) {
 	retry := make(chan error, 1)
 
 	go func() {
-		sp.claim("laptop", sha, plain, closer)
+		sp.claim("laptop", sha, plain, 2, closer)
 		defer sp.release("laptop", sha, plain, closer)
 
 		_, err := sp.put(fresh, spoolMeta{FileName: "f.bin", From: "laptop", SHA: sha, Plain: plain}, 1<<20, 0)
@@ -402,6 +403,58 @@ func TestSpoolNewestDepositorWins(t *testing.T) {
 
 	if items, _ := sp.items(); len(items) != 1 {
 		t.Fatalf("items = %+v, want the retried deposit only", items)
+	}
+}
+
+// claimTracker is a conn stand-in that only records its Close.
+type claimTracker struct {
+	closed atomic.Bool
+}
+
+func (c *claimTracker) Close() error {
+	c.closed.Store(true)
+
+	return nil
+}
+
+// TestStaleClaimKeepsNewestDeposit pins the scheduling race: an
+// abandoned attempt's handler can run its claim after a newer retry
+// already claimed — it must evict nothing, the newest deposit keeps
+// its conn, and newest-wins itself stays intact.
+func TestStaleClaimKeepsNewestDeposit(t *testing.T) {
+	sp, err := openSpool(t.TempDir(), testLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sha := shaHexOf([]byte("payload"))
+	plain := int64(10)
+
+	stale := &claimTracker{}
+	fresh := &claimTracker{}
+
+	// The newer deposit claimed first; the stale handler runs late.
+	sp.claim("laptop", sha, plain, 2, fresh)
+	sp.claim("laptop", sha, plain, 1, stale)
+
+	if fresh.closed.Load() {
+		t.Fatal("a stale claim must not close the newest deposit's conn")
+	}
+
+	if stale.closed.Load() {
+		t.Fatal("a stale claim must not close itself either")
+	}
+
+	sp.release("laptop", sha, plain, fresh)
+
+	// Newest-wins still holds: a newer claim evicts the stalled one.
+	sp.claim("laptop", sha, plain, 3, stale)
+
+	latest := &claimTracker{}
+	sp.claim("laptop", sha, plain, 4, latest)
+
+	if !stale.closed.Load() {
+		t.Fatal("a newer deposit must evict the stalled claim")
 	}
 }
 
