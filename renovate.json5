@@ -10,6 +10,9 @@
     ':automergeDigest',
   ],
   platformAutomerge: true,
+  // The workbench-bump app repairs nix hashes on renovate PR branches;
+  // without this Renovate would treat the branch as modified and rebase.
+  gitIgnoredAuthors: ['4999573+homelab-workbench-bump[bot]@users.noreply.github.com'],
   minimumReleaseAge: '2 days',
   gomod: {
     postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],

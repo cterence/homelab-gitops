@@ -32,6 +32,9 @@
       # Baked via -X main.buildTime: the commit's unix timestamp.
       buildTime = toString (self.lastModified or 0);
 
+      # Single occurrence: nix-update-hash refuses hashes that appear twice.
+      vendorHash = "sha256-gc8Lt6bc4gAVlcrsiamiRAlpTy5pZ12MuIUDl/h7z5w=";
+
       supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -204,7 +207,7 @@
             pname = "catbox";
             version = "unstable";
             src = ./workbench/catbox;
-            vendorHash = "sha256-gc8Lt6bc4gAVlcrsiamiRAlpTy5pZ12MuIUDl/h7z5w=";
+            inherit vendorHash;
             ldflags = [
               "-s"
               "-w"
@@ -233,7 +236,7 @@
                 # git-filtered self.outPath would exclude untracked
                 # new files and break the cross-build.
                 src = ./workbench/catbox;
-                vendorHash = "sha256-gc8Lt6bc4gAVlcrsiamiRAlpTy5pZ12MuIUDl/h7z5w=";
+                inherit vendorHash;
               };
             in
             {
