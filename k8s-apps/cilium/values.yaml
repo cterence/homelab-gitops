@@ -10,6 +10,9 @@ cilium:
   cni:
     customConf: false
   kubeProxyReplacement: "true"
+  # https://tailscale.com/docs/kubernetes-operator/reference/compatibility#cilium-kube-proxy-replacement-mode
+  socketLB:
+    hostNamespaceOnly: true
   k8sServiceHost: "192.168.1.54"
   k8sServicePort: "6443"
   policyEnforcementMode: default
