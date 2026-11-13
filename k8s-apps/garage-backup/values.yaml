@@ -27,14 +27,14 @@ garage:
         enabled: true
         className: tailscale
         hosts:
-          - host: garage-backup.now-delta.ts.net
+          - host: garage-backup.snow-delta.ts.net
             paths:
               - path: /
                 pathType: Prefix
         tls:
           - secretName: garage-backup-tls
             hosts:
-              - garage-backup.now-delta.ts.net
+              - garage-backup.snow-delta.ts.net
       web:
         enabled: false
 

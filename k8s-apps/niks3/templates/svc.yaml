@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: niks3
+  labels: {{- include "niks3.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+  name: niks3-ts
+spec:
+  type: {{ .Values.niks3.service.type }}
+  ports:
+    - port: {{ .Values.niks3.service.port }}
+      targetPort: http
+      {{- with .Values.niks3.service.nodePort }}
+      nodePort: {{ . }}
+      {{- end }}
+      protocol: TCP
+      name: http
+  selector: {{- include "niks3.serverSelectorLabels" . | nindent 4 }}
