@@ -2,5 +2,4 @@
 # matches k8s-apps/*/appset.yaml). Leave it empty for defaults, or set any of:
 #   namespace: <destination namespace override>
 #   serverSideApply: false    (server-side apply is on by default)
-#   serverSideDiff: true
 #   scaleToZero: true

@@ -55,7 +55,7 @@ land in terraform state). Rules:
 
 An app is deployed if and only if `k8s-apps/<name>/appset.yaml` exists (the
 ApplicationSet git generator matches `k8s-apps/*/appset.yaml`). That file also
-carries per-app flags: `namespace`, `serverSideApply`, `serverSideDiff`,
+carries per-app flags: `namespace`, `serverSideApply`,
 `scaleToZero`. Undeployed charts live in `k8s-apps/archive/`.
 
 New apps pulling from `registry.snow-delta.ts.net` need two things, both easy to
