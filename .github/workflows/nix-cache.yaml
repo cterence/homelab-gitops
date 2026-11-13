@@ -143,7 +143,8 @@ jobs:
         # A renovate gomod bump cannot update the flake's pinned hashes; fix
         # them on the PR branch so the re-run passes and automerge proceeds.
         if: failure() && steps.catbox.outputs.changed == 'true' && (github.actor == 'renovate[bot]' || github.actor == 'homelab-workbench-bump[bot]')
-        uses: nixos-contrib/nix-update-hash@66a6de7828436a397a377a83f1f85f463b0432b9 # v1.0.1
+        uses: nixos-contrib/nix-update-hash@v1.0.1 # 66a6de7828436a397a377a83a1f85f463b0432b9
+        # runner cannot resolve this repo by sha; tag pin, commit in comment
         with:
           update-lock: false
           repair-hashes: true
