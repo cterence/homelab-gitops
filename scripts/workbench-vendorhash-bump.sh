@@ -16,17 +16,11 @@ APPS=$(git diff --name-only "$MERGE_BASE" HEAD -- workbench/ | cut -d/ -f2 | sor
 for app in $APPS; do
   [ -f "workbench/$app/go.mod" ] || continue
 
-  old=$(awk -v app="./workbench/$app" '
-    /buildGo[0-9]+Module/ { inblock = 1 }
-    inblock && /src = / { matched = ($0 ~ app) }
-    inblock && /vendorHash = "/ {
-      line = $0
-      start = index(line, "\"") + 1
-      end = index(substr(line, start), "\"") - 1
-      if (matched) print substr(line, start, end)
-      inblock = 0; matched = 0
-    }
-  ' flake.nix)
+  # Only apps with their own buildGoModule package can have a stale hash.
+  grep -q "src = \./workbench/$app;" flake.nix || continue
+
+  # The flake pins vendorHash once, for catbox.
+  old=$(grep -oE 'vendorHash = "sha256-[^"]+"' flake.nix | grep -oE 'sha256-[^"]+')
 
   [ -n "$old" ] || continue
 
