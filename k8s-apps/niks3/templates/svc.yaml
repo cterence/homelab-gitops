@@ -4,6 +4,7 @@ metadata:
   annotations:
     tailscale.com/expose: "true"
     tailscale.com/hostname: niks3
+    tailscale.com/tags: tag:niks3
   labels: {{- include "niks3.labels" . | nindent 4 }}
     app.kubernetes.io/component: server
   name: niks3-ts

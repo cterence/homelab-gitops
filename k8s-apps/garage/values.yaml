@@ -9,6 +9,12 @@ garage:
     # backup of the meta PVC has a non-torn copy to restore
     metadataAutoSnapshotInterval: "2h"
 
+  service:
+    annotations:
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: garage
+      tailscale.com/tags: "tag:garage"
+
   image:
     repository: dxflrs/amd64_garage
     tag: v2.5.0@sha256:23b16d34e0348d9aca9b960a7429a7e6d494974b5288bfb8f6c3ab856895f71e
