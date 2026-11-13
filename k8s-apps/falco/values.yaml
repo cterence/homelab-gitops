@@ -59,25 +59,26 @@ falco:
            and k8smeta.pod.name startswith "picard-"
            and proc.name = mkfontscale
            and proc.aname[2] = apk)
-          or (k8smeta.ns.name = "workbench"
-           and k8smeta.pod.name startswith "build-")
+          or proc.aname in (executor)
     cnpg-restore-shell.yaml: |-
       # CNPG restore jobs run as postgres and spawn "sh -c false" probes
       - list: user_known_shell_spawn_binaries
         items: [postgres]
     kaniko-build-activities.yaml: |-
+      # Match kaniko by binary, not k8smeta fields: they go stale on a node
+      # if the k8smeta stream to the metacollector dies.
       - macro: user_known_read_sensitive_files_activities
         condition: >
-          (k8smeta.ns.name = "workbench"
-           and k8smeta.pod.name startswith "build-")
+          (proc.exepath = "/kaniko/executor"
+           or proc.aname in (executor))
           or (container.id = "host"
            and proc.exepath startswith "/nix/store/"
            and proc.cmdline contains "update-users-groups.pl"
            and proc.aname[2] = ".switch-to-conf")
       - macro: allowed_clear_log_files
         condition: >
-          (k8smeta.ns.name = "workbench"
-           and k8smeta.pod.name startswith "build-")
+          (proc.exepath = "/kaniko/executor"
+           or proc.aname in (executor))
     k0s-containerd-activities.yaml: |-
       - macro: containerd_activities
         condition: >
