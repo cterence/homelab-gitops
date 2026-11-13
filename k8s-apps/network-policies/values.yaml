@@ -80,6 +80,9 @@ namespaces:
   - name: garage-backup
     defaultDeny: true
     allow: [monitoring, tailscale-operator, velero]
+  - name: garage-ssd
+    defaultDeny: true
+    allow: [monitoring, niks3, tailscale-operator, velero]
   - name: gitea
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]

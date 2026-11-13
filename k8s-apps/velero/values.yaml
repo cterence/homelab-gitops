@@ -261,6 +261,7 @@ velero:
           - audiobookshelf
           - changedetection
           - garage
+          - garage-ssd
           - gitea
           - jellyfin
           - home-assistant
@@ -297,6 +298,7 @@ velero:
           - audiobookshelf
           - changedetection
           - garage
+          - garage-ssd
           - gitea
           - jellyfin
           - home-assistant

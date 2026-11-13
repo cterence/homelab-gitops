@@ -7,6 +7,11 @@ garage:
     existingRpcSecret: garage-rpc-secret
     metadataAutoSnapshotInterval: "2h"
 
+  service:
+    annotations:
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: garage-backup
+
   image:
     repository: dxflrs/amd64_garage
     tag: v2.5.0@sha256:23b16d34e0348d9aca9b960a7429a7e6d494974b5288bfb8f6c3ab856895f71e
@@ -24,17 +29,7 @@ garage:
   ingress:
     s3:
       api:
-        enabled: true
-        className: tailscale
-        hosts:
-          - host: garage-backup.snow-delta.ts.net
-            paths:
-              - path: /
-                pathType: Prefix
-        tls:
-          - secretName: garage-backup-tls
-            hosts:
-              - garage-backup.snow-delta.ts.net
+        enabled: false
       web:
         enabled: false
 
