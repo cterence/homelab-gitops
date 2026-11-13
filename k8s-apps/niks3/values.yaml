@@ -1,7 +1,7 @@
 niks3:
   image:
     repository: ghcr.io/mic92/niks3
-    tag: v1.17.0@sha256:74967d78435ee4cf5883c65a88676365501ec6a2cbe85f9dd16bfca32fd78f6b
+    tag: v1.17.1@sha256:8c78347d3ed0abab966ebb295769b954caa36f75037ef88c07752d6936c42425
   deploymentAnnotations:
     reloader.stakater.com/auto: "true"
   extraEnv:
