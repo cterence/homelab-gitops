@@ -1,5 +1,5 @@
 locals {
-  revision = 35
+  revision = 36
 
   # sops keys are "<namespace>.<secret-name>.<key>"
   regex_pattern = "^([^.]+)\\.([^.]+)\\.(.+)$"

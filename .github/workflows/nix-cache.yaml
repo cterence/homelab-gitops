@@ -56,7 +56,7 @@ jobs:
           # Presigned NAR uploads go to the tailscale-exposed garage gateway.
           vsip=$(tailscale status --json | jq -r '.Peer[] | select(.DNSName | startswith("garage.")) | .TailscaleIPs[0]')
           if [ -n "$vsip" ]; then
-            echo "$vsip garage.snow-delta.ts.net" | sudo tee -a /etc/hosts
+            echo "$vsip garage-ssd.snow-delta.ts.net" | sudo tee -a /etc/hosts
           else
             echo "::warning::garage tailscale peer not found; s3 cache uploads will fail"
           fi
@@ -148,9 +148,9 @@ jobs:
         with:
           update-lock: false
           repair-hashes: true
-          installables: '.#catbox .#catbox-android-bin .#catbox-android'
+          installables: ".#catbox .#catbox-android-bin .#catbox-android"
           delivery: push
-          commit-msg: 'catbox: update nix hashes'
+          commit-msg: "catbox: update nix hashes"
           git-author-name: homelab-workbench-bump[bot]
           git-author-email: 4999573+homelab-workbench-bump[bot]@users.noreply.github.com
           token: ${{ steps.app-token.outputs.token }}

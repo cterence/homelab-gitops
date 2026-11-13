@@ -13,11 +13,11 @@ niks3:
     secretKey: fqdn-uri
 
   s3:
-    endpoint: grg.terence.cloud
-    publicURL: http://garage.snow-delta.ts.net:3900
-    bucket: nix-cache
+    endpoint: garage-ssd.garage-ssd:3900
+    publicURL: http://garage-ssd.snow-delta.ts.net:3900
+    bucket: niks3
     region: us-east-1
-    useSSL: true
+    useSSL: false
     existingSecret: s3-credentials
 
   auth:

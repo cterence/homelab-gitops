@@ -32,21 +32,7 @@ garage:
   ingress:
     s3:
       api:
-        enabled: true
-        className: traefik
-        annotations:
-          cert-manager.io/cluster-issuer: letsencrypt
-          external-dns.kubernetes.io/target: home.terence.cloud
-          external-dns.kubernetes.io/cloudflare-proxied: "false"
-        hosts:
-          - host: grg.terence.cloud
-            paths:
-              - path: /
-                pathType: Prefix
-        tls:
-          - secretName: garage-tls
-            hosts:
-              - grg.terence.cloud
+        enabled: false
       web:
         enabled: true
         className: traefik
