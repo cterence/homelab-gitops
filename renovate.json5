@@ -10,6 +10,7 @@
     ':automergeDigest',
   ],
   platformAutomerge: true,
+  minimumReleaseAge: '2 days',
   gomod: {
     postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],
   },
