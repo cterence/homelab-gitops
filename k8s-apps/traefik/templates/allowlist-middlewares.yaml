@@ -10,3 +10,15 @@ spec:
       {{- range .Values.allowListIPs }}
       - {{ . }}
       {{- end }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: mcp-ip-allowlist
+  namespace: traefik
+spec:
+  ipAllowList:
+    sourceRange:
+      {{- range .Values.mcpAllowListIPs }}
+      - {{ . }}
+      {{- end }}

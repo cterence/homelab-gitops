@@ -93,6 +93,10 @@ spec:
             mode: allow
       allowlist:
         ip:
-          {{- range .Values.allowListIPs }}
+          {{- range $key, $ips := .Values }}
+          {{- if and $ips (hasSuffix "allowlistips" (lower $key)) }}
+          {{- range $ips }}
           - {{ . }}
+          {{- end }}
+          {{- end }}
           {{- end }}

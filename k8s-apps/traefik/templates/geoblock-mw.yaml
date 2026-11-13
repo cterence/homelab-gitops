@@ -21,8 +21,10 @@ spec:
       countries:
         - FR
       allowedIPAddresses:
-        {{- range .Files.Lines "geoblock-ips.txt" }}
-        {{- if and . (not (hasPrefix "#" .)) }}
+        {{- range $key, $ips := .Values }}
+        {{- if and $ips (hasSuffix "allowlistips" (lower $key)) }}
+        {{- range $ips }}
         - {{ . }}
+        {{- end }}
         {{- end }}
         {{- end }}

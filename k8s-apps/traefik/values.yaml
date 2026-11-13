@@ -1,11 +1,27 @@
+# Any values key ending in AllowListIPs feeds the geoblock and fail2ban allowlists
 # Shared IP allowlist used by both the ip-allowlist middleware and the fail2ban plugin
 allowListIPs:
   - 10.0.0.0/8
   - 192.168.1.0/24
-  - 109.0.228.97
-  - 212.234.168.153
-  - 141.145.194.126
-  - 88.138.234.37
+  - 109.0.228.97 # home
+  - 212.234.168.153 # mo
+  - 141.145.194.126 # oracle gatus
+  - 88.138.234.37 # ag
+  - 81.65.149.146 # dc
+
+mcpAllowListIPs:
+  - 20.240.139.18/32
+  - 4.223.142.177/32
+  - 4.225.216.254/32
+
+githubWebhookAllowListIPs:
+  - 192.30.252.0/22
+  - 185.199.108.0/22
+  - 140.82.112.0/20
+  - 143.55.64.0/20
+  - 9.234.106.48/28
+  - 9.234.98.160/28
+  - 9.234.98.176/28
 
 traefik:
   deployment:
