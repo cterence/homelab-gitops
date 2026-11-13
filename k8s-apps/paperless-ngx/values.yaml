@@ -175,9 +175,9 @@ app-template:
 
 valkey:
   deploymentStrategy: Recreate
-  dataStorage:
+  persistence:
     enabled: true
-    requestedSize: "1Gi"
+    size: "1Gi"
     labels:
       velero.io/exclude-from-backup: "true"
     annotations:
