@@ -64,7 +64,7 @@
     },
     {
       matchPackageNames: [
-        '/^registry\\.terence\\.cloud\\//',
+        '/^registry\\.snow-delta\\.ts\\.net\\//',
       ],
       enabled: false,
     },
