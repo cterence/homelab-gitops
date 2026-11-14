@@ -106,7 +106,7 @@ app-template:
                 tcpSocket:
                   port: http
 
-    sftp:
+    webdav:
       type: deployment
       strategy: Recreate
       annotations:
@@ -119,35 +119,38 @@ app-template:
       containers:
         main:
           image:
-            repository: atmoz/sftp
-            tag: latest@sha256:0960390462a4441dbb63698d7c185b76a41ffcee7b78ff4adf275f3e66f9c475
+            repository: registry.snow-delta.ts.net/apachewebdav
+            tag: "4"
+            pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
-            SFTP_PASSWORD:
+            PUID: "1000"
+            PGID: "1000"
+            USERNAME: kindle
+            NO_CHOWN_DATA: "true"
+            PASSWORD:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-sftp-password"
+                  name: "{{ .Release.Name }}-webdav-password"
                   key: password
-          command:
-            - /bin/sh
-            - -c
-            - 'exec /entrypoint "kindle:$SFTP_PASSWORD:568:568"'
           ports:
-            - name: sftp
-              containerPort: 22
+            - name: http
+              containerPort: 80
           probes:
             liveness:
               enabled: true
               custom: true
               spec:
-                tcpSocket:
-                  port: sftp
+                httpGet:
+                  port: http
+                  path: /health
             readiness:
               enabled: true
               custom: true
               spec:
-                tcpSocket:
-                  port: sftp
+                httpGet:
+                  port: http
+                  path: /health
 
   service:
     main:
@@ -162,16 +165,16 @@ app-template:
       ports:
         http:
           port: 8084
-    sftp:
-      controller: sftp
+    webdav:
+      controller: webdav
       type: ClusterIP
       annotations:
         tailscale.com/expose: "true"
-        tailscale.com/hostname: abs-books
+        tailscale.com/hostname: abs-dav
       ports:
-        sftp:
-          port: 22
-          targetPort: sftp
+        http:
+          port: 80
+          targetPort: http
 
   ingress:
     main:
@@ -279,9 +282,9 @@ app-template:
         shelfmark:
           main:
             - path: /ebooks
-        sftp:
+        webdav:
           main:
-            - path: /home/kindle/ebooks
+            - path: /var/lib/dav/data/ebooks
               readOnly: true
     mangas:
       enabled: true
@@ -298,9 +301,9 @@ app-template:
         shelfmark:
           main:
             - path: /mangas
-        sftp:
+        webdav:
           main:
-            - path: /home/kindle/mangas
+            - path: /var/lib/dav/data/mangas
               readOnly: true
     podcasts:
       enabled: true
@@ -316,9 +319,9 @@ app-template:
             - path: /podcasts
 
   rawResources:
-    sftp-password:
+    webdav-password:
       enabled: true
-      forceRename: "{{ .Release.Name }}-sftp-password"
+      forceRename: "{{ .Release.Name }}-webdav-password"
       manifest:
         apiVersion: external-secrets.io/v1
         kind: ExternalSecret
@@ -328,7 +331,7 @@ app-template:
         spec:
           refreshInterval: "0"
           target:
-            name: "{{ .Release.Name }}-sftp-password"
+            name: "{{ .Release.Name }}-webdav-password"
             creationPolicy: Owner
           dataFrom:
             - sourceRef:
