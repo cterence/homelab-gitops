@@ -643,6 +643,10 @@ app-template:
           radarr:
             - path: /data-pool
               subPath: arr-stack
+        bazarr:
+          bazarr:
+            - path: /data-pool
+              subPath: arr-stack
         filebrowser-quantum:
           filebrowser-quantum:
             - path: /data-pool
