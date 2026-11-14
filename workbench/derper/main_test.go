@@ -25,6 +25,7 @@ func TestLoadOrCreateKeyStable(t *testing.T) {
 	if err := round.UnmarshalText(b); err != nil {
 		t.Fatalf("key file does not parse: %v", err)
 	}
+
 	if round.Public() != k1.Public() {
 		t.Fatal("key file does not round-trip")
 	}
