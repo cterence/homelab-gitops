@@ -36,10 +36,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
-        with:
-          determinate: false
+      - uses: NixOS/nix-installer-action@v1
+      - uses: Mic92/hestia@v3
       - name: Tailscale
         uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4
         with:
@@ -109,11 +107,8 @@ jobs:
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Install Nix
-        if: steps.catbox.outputs.changed == 'true'
-        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
-        with:
-          determinate: false
+      - uses: NixOS/nix-installer-action@v1
+      - uses: Mic92/hestia@v3
       - name: Tailscale
         uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4
         if: steps.catbox.outputs.changed == 'true'

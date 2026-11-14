@@ -1,0 +1,65 @@
+# Garbage collection for the hestia binary cache.
+#
+# GC must run on the default branch: a PR job's cache scope is read-only
+# towards the default branch and dies with the PR, but the default-branch
+# scope grows forever without GC.
+#
+# This workflow doubles as the reference for other repositories using
+# hestia: copy it, replace the "Build hestia" step with the action's
+# version input (see action/README.md), and keep the permissions.
+name: Cache GC
+
+# GC handles concurrent pushes, but not a concurrent GC: a second run's
+# repack reads race the first run's post-commit pack deletes. Queue manual
+# runs behind the nightly one instead of overlapping it.
+concurrency:
+  group: hestia-gc
+  cancel-in-progress: false
+
+on:
+  schedule:
+    # Daily, off-peak (UTC).
+    - cron: "23 3 * * *"
+  # Manual runs for debugging and one-off cleanups.
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Plan only; do not repack, touch, or delete anything.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  gc:
+    runs-on: ubuntu-latest
+    permissions:
+      # REST cache deletes need actions:write.
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: NixOS/nix-installer-action@v1
+      # With HESTIA_DOGFOOD set, run GC with the latest released binary:
+      # no nix build, the nightly job takes seconds. Without it, build
+      # from source and use the action in token-capture-only mode (GC
+      # needs the cache API tokens, not the daemon).
+      - name: Install hestia (released binary)
+        if: vars.HESTIA_DOGFOOD == 'true'
+        uses: ./
+      - name: Build hestia
+        if: vars.HESTIA_DOGFOOD != 'true'
+        run: nix build .# -o hestia-bin
+      - uses: ./
+        if: vars.HESTIA_DOGFOOD != 'true'
+        with:
+          # Explicitly empty: token-capture-only mode (version defaults to
+          # "latest" when omitted, which would start an unwanted daemon).
+          version: ""
+      - name: Run garbage collection
+        run: |
+          "${HESTIA_BIN:-./hestia-bin/bin/hestia}" gc \
+            ${{ inputs.dry-run && '--dry-run' || '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
