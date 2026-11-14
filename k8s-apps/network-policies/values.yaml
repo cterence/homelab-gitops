@@ -24,7 +24,7 @@ namespaces:
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: audiobookshelf
     defaultDeny: true
-    allow: [traefik]
+    allow: [traefik, tailscale-operator]
   - name: catbox
     defaultDeny: true
     allow: [monitoring]

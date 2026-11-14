@@ -106,12 +106,9 @@ app-template:
                 tcpSocket:
                   port: http
 
-    webdav:
+    sftp:
       type: deployment
       strategy: Recreate
-      labels:
-        sablier.enable: "true"
-        sablier.group: "{{ .Release.Name }}-main"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -122,38 +119,35 @@ app-template:
       containers:
         main:
           image:
-            repository: registry.snow-delta.ts.net/apachewebdav
-            tag: "4"
-            pullPolicy: IfNotPresent
+            repository: atmoz/sftp
+            tag: latest@sha256:0960390462a4441dbb63698d7c185b76a41ffcee7b78ff4adf275f3e66f9c475
           env:
             TZ: Europe/Paris
-            PUID: "1000"
-            PGID: "1000"
-            USERNAME: kindle
-            NO_CHOWN_DATA: "true"
-            PASSWORD:
+            SFTP_PASSWORD:
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-webdav-password"
+                  name: "{{ .Release.Name }}-sftp-password"
                   key: password
+          command:
+            - /bin/sh
+            - -c
+            - 'exec /entrypoint "kindle:$SFTP_PASSWORD:568:568"'
           ports:
-            - name: http
-              containerPort: 80
+            - name: sftp
+              containerPort: 22
           probes:
             liveness:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /health
+                tcpSocket:
+                  port: sftp
             readiness:
               enabled: true
               custom: true
               spec:
-                httpGet:
-                  port: http
-                  path: /health
+                tcpSocket:
+                  port: sftp
 
   service:
     main:
@@ -168,12 +162,16 @@ app-template:
       ports:
         http:
           port: 8084
-    webdav:
-      controller: webdav
+    sftp:
+      controller: sftp
       type: ClusterIP
+      annotations:
+        tailscale.com/expose: "true"
+        tailscale.com/hostname: abs-books
       ports:
-        http:
-          port: 80
+        sftp:
+          port: 22
+          targetPort: sftp
 
   ingress:
     main:
@@ -181,8 +179,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.kubernetes.io/target: home.terence.cloud
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-main@kubernetescrd,traefik-modsecurity@kubernetescrd,audiobookshelf-strip-dav-prefix@kubernetescrd"
-        # external-dns.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-main@kubernetescrd,traefik-modsecurity@kubernetescrd"
       className: "traefik"
       hosts:
         - host: &host1 abs.terence.cloud
@@ -191,11 +188,6 @@ app-template:
               pathType: Prefix
               service:
                 identifier: main
-                port: http
-            - path: /dav
-              pathType: Prefix
-              service:
-                identifier: webdav
                 port: http
       tls:
         - secretName: abs-tls
@@ -287,9 +279,9 @@ app-template:
         shelfmark:
           main:
             - path: /ebooks
-        webdav:
+        sftp:
           main:
-            - path: /var/lib/dav/data/ebooks
+            - path: /home/kindle/ebooks
               readOnly: true
     mangas:
       enabled: true
@@ -306,9 +298,9 @@ app-template:
         shelfmark:
           main:
             - path: /mangas
-        webdav:
+        sftp:
           main:
-            - path: /var/lib/dav/data/mangas
+            - path: /home/kindle/mangas
               readOnly: true
     podcasts:
       enabled: true
@@ -324,9 +316,9 @@ app-template:
             - path: /podcasts
 
   rawResources:
-    webdav-password:
+    sftp-password:
       enabled: true
-      forceRename: "{{ .Release.Name }}-webdav-password"
+      forceRename: "{{ .Release.Name }}-sftp-password"
       manifest:
         apiVersion: external-secrets.io/v1
         kind: ExternalSecret
@@ -336,7 +328,7 @@ app-template:
         spec:
           refreshInterval: "0"
           target:
-            name: "{{ .Release.Name }}-webdav-password"
+            name: "{{ .Release.Name }}-sftp-password"
             creationPolicy: Owner
           dataFrom:
             - sourceRef:
@@ -344,16 +336,6 @@ app-template:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: short-password
-    strip-prefix:
-      enabled: true
-      forceRename: "strip-dav-prefix"
-      manifest:
-        apiVersion: traefik.io/v1alpha1
-        kind: Middleware
-        spec:
-          stripPrefix:
-            prefixes:
-              - "/dav"
 
     sablier-main:
       enabled: true
