@@ -2407,6 +2407,7 @@ func TestAdmitDERPClient(t *testing.T) {
 			if err := json.Unmarshal(rec.Body.Bytes(), &res); err != nil {
 				t.Fatalf("decoding response: %v", err)
 			}
+
 			if res.Allow != tc.allow {
 				t.Fatalf("allow = %v, want %v", res.Allow, tc.allow)
 			}
@@ -2415,6 +2416,7 @@ func TestAdmitDERPClient(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 	st.admitDERPClient(rec, httptest.NewRequest(http.MethodPost, "/derp/admit", strings.NewReader("not json")))
+
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("bad body: code = %d, want 400", rec.Code)
 	}

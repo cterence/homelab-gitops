@@ -142,6 +142,7 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 	} else {
 		st.srv.RegionID = id.Public.RegionID
 	}
+
 	if err := st.srv.Start(); err != nil {
 		return fmt.Errorf("starting tailcat: %w", err)
 	}
