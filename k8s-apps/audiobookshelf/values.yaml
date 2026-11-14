@@ -54,6 +54,7 @@ app-template:
             INGEST_DIR: /ebooks
             UID: "0"
             GID: "0"
+            UMASK: "002"
             APP_ENV: prod
           ports:
             - name: http
