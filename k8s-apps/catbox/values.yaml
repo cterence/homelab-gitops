@@ -27,18 +27,16 @@ app-template:
           env:
             TZ: Europe/Paris
             CATBOX_DATA: /data
-            # Advertised direct endpoint (TS_DEBUG_PRETENDPOINT): keep in
-            # sync with service.main.loadBalancerIP and the wireguard port.
-            TS_DEBUG_PRETENDPOINT: 192.168.1.243:41641
+            # The self-hosted relay (k8s-apps/derper): pinned in-process,
+            # embedded in the stash address, never fetched from a public map.
+            CATBOX_DERP_HOST: derp.terence.cloud
           args:
             - serve
             - --health=:38081
+            - --region=900
           ports:
             - name: http
               containerPort: 38081
-            - name: wireguard
-              containerPort: 41641
-              protocol: UDP
           probes:
             startup:
               enabled: true
@@ -64,58 +62,6 @@ app-template:
                   path: /healthz
                   port: http
 
-        # tailcat binds magicsock to a random UDP port per start; this
-        # redirects the LB's fixed 41641 onto it so the advertised
-        # TS_DEBUG_PRETENDPOINT endpoint actually answers.
-        wg-redirect:
-          image:
-            repository: alpine
-            tag: 3.22.2@sha256:85f2b723e106c34644cd5851d7e81ee87da98ac54672b29947c052a45d31dc2f
-            pullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: false
-            runAsUser: 0
-            capabilities:
-              add: ["NET_ADMIN"]
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              apk add --no-cache iptables-legacy >/dev/null
-              ipt() { iptables-legacy -w "$@"; }
-              ipt -t nat -N catbox-wg 2>/dev/null
-              ipt -t nat -C PREROUTING -j catbox-wg 2>/dev/null || ipt -t nat -A PREROUTING -j catbox-wg
-              installed=""
-              while :; do
-                port=""
-                while read -r sl local rem st rest; do
-                  case $sl in ""|sl*) continue ;; esac
-                  [ "$st" = "07" ] || continue
-                  p=$(printf "%d" "0x${local#*:}" 2>/dev/null)
-                  case $p in ""|*[!0-9]*) continue ;; esac
-                  port=$p
-                done < /proc/net/udp
-                if [ -n "$port" ] && [ "$port" != "$installed" ]; then
-                  ipt -t nat -F catbox-wg
-                  ipt -t nat -A catbox-wg -p udp --dport 41641 -j REDIRECT --to-ports "$port"
-                  installed=$port
-                  echo "catbox wg: udp/41641 -> $port"
-                fi
-                sleep 2
-              done
-
-  service:
-    main:
-      controller: main
-      type: LoadBalancer
-      loadBalancerIP: "192.168.1.243"
-      externalTrafficPolicy: Local
-      ports:
-        wireguard:
-          enabled: true
-          port: 41641
-          targetPort: wireguard
-          protocol: UDP
-
   persistence:
     data:
       enabled: true
@@ -125,12 +71,8 @@ app-template:
         argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 110Gi
-      # scoped to the main container: the wg-redirect sidecar has no
-      # business holding the stash's data.
-      advancedMounts:
-        main:
-          main:
-            - path: /data
+      globalMounts:
+        - path: /data
 
   # Scrape the stash's /metrics gauges on the health port.
   podMonitor:

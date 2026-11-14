@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"github.com/tailscale/tailcat"
+	"tailscale.com/tailcfg"
 	"tailscale.com/types/key"
 )
 
@@ -41,6 +43,8 @@ type stash struct {
 	admitted  int64         // deposit bytes admitted but unfinished: concurrent deposits share the cap
 	depSeq    atomic.Uint64 // deposit arrival order: claim eviction follows it, not scheduling
 	spool     *spool
+
+	srvKey key.NodePublic // the stash's own DERP client key, always admitted
 }
 
 // bootRoster loads the stash's roster at serve boot: a corrupt file
@@ -112,14 +116,31 @@ func runServe(ctx context.Context, log *slog.Logger, dataDir string, region int6
 		roster:  roster,
 		invites: invites,
 		spool:   sp,
+		srvKey:  id.Public.ServerPublic.NodePublic,
 	}
 
 	st.srv = &tailcat.Server{
 		Key:          id.Private,
 		PresharedKey: id.Public.PresharedKey,
-		RegionID:     id.Public.RegionID,
 		Logf:         func(format string, args ...any) { log.Debug(fmt.Sprintf(format, args...)) },
 		OnTCP:        st.onTCP,
+	}
+	if host := os.Getenv("CATBOX_DERP_HOST"); host != "" {
+		// Self-hosted relay: the region is pinned in-process and the
+		// resolved stash address embeds it, so neither the stash nor
+		// any peer ever fetches a public DERP map.
+		st.srv.Region = &tailcfg.DERPRegion{
+			RegionID:   id.Public.RegionID,
+			RegionCode: "catbox",
+			Nodes: []*tailcfg.DERPNode{{
+				Name:     "1a",
+				RegionID: id.Public.RegionID,
+				HostName: host,
+				STUNPort: -1,
+			}},
+		}
+	} else {
+		st.srv.RegionID = id.Public.RegionID
 	}
 	if err := st.srv.Start(); err != nil {
 		return fmt.Errorf("starting tailcat: %w", err)
@@ -1046,9 +1067,32 @@ func (st *stash) metrics() ([]byte, error) {
 	return []byte(b.String()), nil
 }
 
+// admitDERPClient is the derper's admission controller: only keys in
+// the current roster (plus the stash itself) may relay through the
+// self-hosted DERP server. The roster is read live, so a removed
+// member is denied on the derper's next admission check.
+func (st *stash) admitDERPClient(w http.ResponseWriter, r *http.Request) {
+	req := new(tailcfg.DERPAdmitClientRequest)
+	if err := json.NewDecoder(io.LimitReader(r.Body, 4<<10)).Decode(req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	allow := req.NodePublic == st.srvKey
+	if !allow {
+		st.mu.Lock()
+		_, allow = memberByDialKey(st.roster, req.NodePublic)
+		st.mu.Unlock()
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(tailcfg.DERPAdmitClientResponse{Allow: allow})
+}
+
 // startHealth serves /healthz for probes and /metrics for Prometheus.
 func startHealth(log *slog.Logger, addr string, st *stash) *http.Server {
 	mux := http.NewServeMux()
+	mux.HandleFunc("POST /derp/admit", st.admitDERPClient)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))

@@ -27,9 +27,12 @@ namespaces:
     allow: [traefik]
   - name: catbox
     defaultDeny: true
-    # wireguard LB udp: direct tailcat peers dial the LB from anywhere
-    allowWorldIngress: true
-    allow: [monitoring]
+    # derper: relay admission checks against the stash's live roster
+    allow: [monitoring, derper]
+  - name: derper
+    defaultDeny: true
+    # traefik frontdoor (DERP over TLS), monitoring for probes
+    allow: [traefik, monitoring]
   - name: cert-manager
     defaultDeny: true
     allow: [kube-system, monitoring]

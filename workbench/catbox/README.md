@@ -33,6 +33,15 @@ daemonless peers, everything end-to-end encrypted.
   Admins can also remove other members over the wire; the stash
   address alone is no longer a membership capability.
 
+- The stash normally relays through Tailscale's public DERP network.
+  Setting `CATBOX_DERP_HOST` pins a self-hosted relay instead: the
+  region given to `serve --region` is built in-process and embedded in
+  the stash address, so neither the stash nor any peer ever fetches a
+  public DERP map. The deploy pairs this with a derper whose
+  admission controller is the stash's own `POST /derp/admit`: only
+  node keys in the live roster (plus the stash itself) may relay
+  there, so the relay is usable by catbox members only.
+
 ## Commands
 
 ```
