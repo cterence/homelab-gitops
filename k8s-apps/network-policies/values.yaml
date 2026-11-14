@@ -27,6 +27,8 @@ namespaces:
     allow: [traefik]
   - name: catbox
     defaultDeny: true
+    # wireguard LB udp: direct tailcat peers dial the LB from anywhere
+    allowWorldIngress: true
     allow: [monitoring]
   - name: cert-manager
     defaultDeny: true

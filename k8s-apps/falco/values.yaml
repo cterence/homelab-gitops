@@ -59,6 +59,9 @@ falco:
            and k8smeta.pod.name startswith "picard-"
            and proc.name = mkfontscale
            and proc.aname[2] = apk)
+          or (k8smeta.ns.name = "catbox"
+           and k8smeta.pod.name startswith "catbox"
+           and proc.exepath = "/usr/sbin/xtables-legacy-multi")
           or proc.aname in (executor)
     cnpg-restore-shell.yaml: |-
       # CNPG restore jobs run as postgres and spawn "sh -c false" probes
