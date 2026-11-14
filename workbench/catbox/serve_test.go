@@ -11,6 +11,8 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,6 +20,7 @@ import (
 	"time"
 
 	"github.com/tailscale/tailcat"
+	"tailscale.com/tailcfg"
 	"tailscale.com/types/key"
 )
 
@@ -2367,5 +2370,54 @@ func TestMetrics(t *testing.T) {
 		if !strings.Contains(out, fmt.Sprintf("catbox_spool_bytes %d", used)) {
 			t.Errorf("bytes gauge does not match usage():\n%s", out)
 		}
+	}
+}
+
+func TestAdmitDERPClient(t *testing.T) {
+	stashKey := key.NewNode()
+	dialKey := key.NewNode()
+	stranger := key.NewNode()
+
+	st := &stash{
+		log:    slog.Default(),
+		srvKey: stashKey.Public(),
+		roster: []member{{Name: "alice", DialKey: dialKey.Public()}},
+	}
+
+	for _, tc := range []struct {
+		name  string
+		key   key.NodePublic
+		allow bool
+	}{
+		{"stash itself", stashKey.Public(), true},
+		{"roster dial key", dialKey.Public(), true},
+		{"stranger", stranger.Public(), false},
+		{"zero key", key.NodePublic{}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body, err := json.Marshal(tailcfg.DERPAdmitClientRequest{NodePublic: tc.key})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rec := httptest.NewRecorder()
+			st.admitDERPClient(rec, httptest.NewRequest(http.MethodPost, "/derp/admit", bytes.NewReader(body)))
+
+			var res tailcfg.DERPAdmitClientResponse
+			if err := json.Unmarshal(rec.Body.Bytes(), &res); err != nil {
+				t.Fatalf("decoding response: %v", err)
+			}
+
+			if res.Allow != tc.allow {
+				t.Fatalf("allow = %v, want %v", res.Allow, tc.allow)
+			}
+		})
+	}
+
+	rec := httptest.NewRecorder()
+	st.admitDERPClient(rec, httptest.NewRequest(http.MethodPost, "/derp/admit", strings.NewReader("not json")))
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("bad body: code = %d, want 400", rec.Code)
 	}
 }

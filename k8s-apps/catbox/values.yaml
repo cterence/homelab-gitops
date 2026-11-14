@@ -2,7 +2,6 @@
 app-template:
   defaultPodOptions:
     automountServiceAccountToken: false
-    hostNetwork: true
     securityContext:
       runAsUser: 100
       runAsGroup: 101
@@ -28,9 +27,13 @@ app-template:
           env:
             TZ: Europe/Paris
             CATBOX_DATA: /data
+            # The self-hosted relay (k8s-apps/derper): pinned in-process,
+            # embedded in the stash address, never fetched from a public map.
+            CATBOX_DERP_HOST: derp.terence.cloud
           args:
             - serve
             - --health=:38081
+            - --region=900
           ports:
             - name: http
               containerPort: 38081
