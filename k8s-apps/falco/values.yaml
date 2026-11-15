@@ -75,6 +75,9 @@ falco:
            and proc.exepath startswith "/nix/store/"
            and proc.cmdline contains "update-users-groups.pl"
            and proc.aname[2] = ".switch-to-conf")
+          or (container.id = "host"
+           and proc.pname = systemd
+           and proc.exepath endswith "/lib/systemd/systemd-executor")
       - macro: allowed_clear_log_files
         condition: >
           (proc.exepath = "/kaniko/executor"
