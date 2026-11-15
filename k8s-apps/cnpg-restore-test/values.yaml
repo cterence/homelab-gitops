@@ -24,7 +24,7 @@ app-template:
         main:
           image:
             repository: registry.snow-delta.ts.net/cnpg-restore-test
-            tag: "21"
+            tag: "22"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris

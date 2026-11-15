@@ -57,7 +57,7 @@ for app in $APPS; do
   while IFS= read -r values; do
     awk -v app="$app" -v old="$old" -v new="$new" '
       /^[[:space:]]*repository:/ {
-        inblock = ($0 ~ ("^[[:space:]]*repository: (registry\\.terence\\.cloud/)?" app "[[:space:]]*$"))
+        inblock = ($0 ~ ("^[[:space:]]*repository: (registry\\.[[:alnum:].-]+/)?" app "[[:space:]]*$"))
         print
         next
       }
@@ -72,7 +72,7 @@ for app in $APPS; do
       add_files+=("$values")
       echo "  tag updated in $values"
     fi
-  done < <(grep -lE "^[[:space:]]*repository: (registry\.terence\.cloud/)?$app[[:space:]]*$" k8s-apps/*/values.yaml 2>/dev/null || true)
+  done < <(grep -lE "^[[:space:]]*repository: (registry\.[[:alnum:].-]+/)?$app[[:space:]]*$" k8s-apps/*/values.yaml 2>/dev/null || true)
 
   if [ "$DRY_RUN" != "--dry-run" ]; then
     git add "${add_files[@]}"
