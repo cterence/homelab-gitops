@@ -16,10 +16,6 @@ app-template:
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
-          args:
-            - --state
-            - /data/seen.json
-            - --migrate
           resources:
             requests:
               cpu: 20m
