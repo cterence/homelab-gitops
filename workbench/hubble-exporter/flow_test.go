@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -99,20 +97,6 @@ func TestFlowPair(t *testing.T) {
 	}
 }
 
-func TestFlowPairIsUniquePerTuple(t *testing.T) {
-	a := Pair{SrcNS: "a", SrcPod: "p1", DstKind: "world", DstIP: "1.1.1.1", Proto: "TCP", DstPort: 443, Verdict: "FORWARDED"}
-	b := a
-	b.DstPort = 8443
-
-	if a.key() == b.key() {
-		t.Error("different ports must produce different keys")
-	}
-
-	if a.key() != (Pair{SrcNS: "a", SrcPod: "p1", DstKind: "world", DstIP: "1.1.1.1", Proto: "TCP", DstPort: 443, Verdict: "FORWARDED"}).key() {
-		t.Error("identical tuples must produce identical keys")
-	}
-}
-
 func TestDNSRecord(t *testing.T) {
 	fl := flow("niks3", "niks3-1", "10.244.1.2")
 	fl.L7 = &flowpb.Layer7{Record: &flowpb.Layer7_Dns{Dns: &flowpb.DNS{
@@ -127,49 +111,5 @@ func TestDNSRecord(t *testing.T) {
 
 	if _, _, _, ok := DNSRecord(flow("niks3", "niks3-1", "10.244.1.2")); ok {
 		t.Error("non-DNS flow must not yield a record")
-	}
-}
-
-func TestSeenRoundTrip(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "seen.json")
-
-	reg, err := LoadSeen(path)
-	if err != nil {
-		t.Fatalf("load: %v", err)
-	}
-
-	now := time.Now()
-	if !reg.Add("k1", now) {
-		t.Fatal("first insert must be novel")
-	}
-
-	if reg.Add("k1", now) {
-		t.Fatal("second insert must not be novel")
-	}
-
-	if err := reg.Save(); err != nil {
-		t.Fatalf("save: %v", err)
-	}
-
-	reg2, err := LoadSeen(path)
-	if err != nil {
-		t.Fatalf("reload: %v", err)
-	}
-
-	if reg2.Add("k1", now) {
-		t.Error("reloaded seen state must remember persisted keys")
-	}
-
-	if !reg2.Add("k2", now) {
-		t.Error("new key after reload must be novel")
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("read: %v", err)
-	}
-
-	if len(data) == 0 {
-		t.Error("seen state file must not be empty after save")
 	}
 }

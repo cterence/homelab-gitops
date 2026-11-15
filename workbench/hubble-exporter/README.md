@@ -12,9 +12,10 @@ line the first time it is observed.
 | flag | default | description |
 |---|---|---|
 | `--server` | `hubble-relay.kube-system.svc.cluster.local:80` | hubble relay address |
+| `--valkey` | `hubble-exporter-valkey:6379` | valkey instance holding the seen-record set |
 | `--pod-cidr` | `10.244.0.0/16` | pod CIDR, used as the relay-side source filter and to classify destinations |
 | `--node-cidr` | `192.168.1.0/24` | node LAN CIDR, used to classify destinations |
-| `--state` | `/data/seen.json` | persisted seen-keys state |
+| `--state` | `/data/seen.json` | legacy JSON seen-state to migrate into valkey once on startup |
 
 ## Output
 
@@ -27,11 +28,20 @@ Two structured log events on stdout (picked up by the otel loki pipeline):
   FQDN inventory for toFQDN egress policies
 
 The stream is filtered relay-side to pod-sourced flows and reconnected with a
-backoff on errors; state is saved every 5 minutes and on shutdown, so a
-restart re-emits nothing that was already recorded.
+backoff on errors. Novelty is tracked in the valkey deployment that ships with
+this app (`<release>-valkey`, mirroring the gitea/paperless-ngx pattern): each
+record is a key holding the pair tuple, valued with the first-seen unix
+seconds and set with SETNX — a restart dedupes against the full history. A
+pre-valkey `seen.json` on the `--state` path is uploaded into valkey on first
+boot and renamed to `seen.json.migrated`; the exporter itself is stateless.
 
 ## Caveats
 
 - The `--pod-cidr` flag must match the cluster's actual pod CIDR.
 - DNS records only appear once cilium's DNS proxy selects the source pods
   (observation CNP applied to the measured namespaces).
+- If valkey is unavailable, records are treated as novel and logged anyway —
+  the catalog never silently drops pairs, at the cost of duplicate log lines
+  during outages.
+- The valkey PVC is excluded from velero backups (same as gitea/paperless);
+  losing it re-emits every known pair once, after which dedupe rebuilds.

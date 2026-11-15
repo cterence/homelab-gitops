@@ -22,11 +22,6 @@ type Pair struct {
 	Verdict string
 }
 
-func (p Pair) key() string {
-	return fmt.Sprintf("%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00%d\x00%s",
-		p.SrcNS, p.SrcPod, p.DstKind, p.DstNS, p.DstPod, p.DstIP, p.Proto, p.DstPort, p.Verdict)
-}
-
 func (p Pair) LogAttrs() []any {
 	return []any{
 		"src_ns", p.SrcNS,

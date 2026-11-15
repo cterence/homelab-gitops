@@ -35,3 +35,14 @@ app-template:
         argocd.argoproj.io/sync-options: Delete=false
       accessMode: ReadWriteOnce
       size: 100Mi
+
+valkey:
+  deploymentStrategy: Recreate
+  persistence:
+    enabled: true
+    size: "1Gi"
+    labels:
+      velero.io/exclude-from-backup: "true"
+    annotations:
+      helm.sh/resource-policy: keep
+      argocd.argoproj.io/sync-options: Delete=false
