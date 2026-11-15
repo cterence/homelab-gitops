@@ -401,6 +401,25 @@ kube-prometheus-stack:
                   No smartctl metrics scraped from homelab3 for 10 minutes.
                   The exporter or the host may be down.
 
+    container-oom:
+      groups:
+        - name: container-oom
+          rules:
+            - alert: KubePodOOMKilled
+              expr: >-
+                increase(kube_pod_container_status_restarts_total[15m]) > 0
+                and on(namespace, pod, container)
+                kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "OOMKilled {{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }}"
+                description: >-
+                  Container {{ $labels.container }} was OOMKilled within
+                  the last 15 minutes: it exceeds its memory limit. Check
+                  the working-set trend and fix the leak or raise the limit.
+
     pv-hygiene:
       groups:
         - name: pv-hygiene
