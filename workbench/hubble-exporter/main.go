@@ -25,12 +25,14 @@ func main() {
 		Usage: "record novel flow pairs from a hubble relay",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "server", Value: "hubble-relay.kube-system.svc.cluster.local:80", Usage: "hubble relay address"},
+			&cli.StringFlag{Name: "valkey", Value: "hubble-exporter-valkey:6379", Usage: "valkey address holding the seen-record set"},
 			&cli.StringFlag{Name: "pod-cidr", Value: "10.244.0.0/16", Usage: "cluster pod CIDR, used to classify destinations"},
 			&cli.StringFlag{Name: "node-cidr", Value: "192.168.1.0/24", Usage: "node LAN CIDR, used to classify destinations"},
-			&cli.StringFlag{Name: "state", Value: "/data/seen.json", Usage: "path of the persisted seen-pairs state"},
+			&cli.StringFlag{Name: "state", Value: "/data/seen.json", Usage: "legacy seen.json to migrate into valkey when --migrate is set"},
+			&cli.BoolFlag{Name: "migrate", Usage: "upload the legacy state file into valkey once, then rename it"},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			return run(ctx, c.String("server"), c.String("pod-cidr"), c.String("node-cidr"), c.String("state"))
+			return run(ctx, c.String("server"), c.String("valkey"), c.String("pod-cidr"), c.String("node-cidr"), c.String("state"), c.Bool("migrate"))
 		},
 	}
 
@@ -40,15 +42,38 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error {
+func run(ctx context.Context, server, valkeyAddr, podCIDR, nodeCIDR, statePath string, migrate bool) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	seen, err := LoadSeen(statePath)
-	if err != nil {
-		return err
+	store := NewStore(valkeyAddr)
+	defer func() {
+		if err := store.Close(); err != nil {
+			logger.Warn("closing valkey connection", "err", err)
+		}
+	}()
+
+	if err := store.Wait(ctx, logger); err != nil {
+		return fmt.Errorf("waiting for valkey: %w", err)
 	}
 
-	logger.Info("seen state loaded", "pairs", len(seen.seen), "path", statePath)
+	if migrate {
+		n, err := store.Migrate(ctx, statePath)
+		if err != nil {
+			return err
+		}
+
+		if n > 0 {
+			logger.Info("legacy state migrated", "records", n, "path", statePath)
+		} else {
+			logger.Warn("migration requested but no legacy state found", "path", statePath)
+		}
+	}
+
+	if size, err := store.Size(ctx); err != nil {
+		logger.Warn("reading valkey size", "err", err)
+	} else {
+		logger.Info("valkey ready", "records", size)
+	}
 
 	conn, err := grpc.NewClient(server, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -69,8 +94,8 @@ func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error
 		defer close(events)
 
 		for {
-			// follow from now; a fresh stream on reconnect re-emits pairs the
-			// seen state drops as already recorded
+			// follow from now; a fresh stream on reconnect re-emits pairs
+			// valkey drops as already recorded
 			stream, err := client.GetFlows(ctx, &observerpb.GetFlowsRequest{
 				Follow:    true,
 				Whitelist: []*flowpb.FlowFilter{{SourceIp: []string{podCIDR}}},
@@ -109,45 +134,47 @@ func run(ctx context.Context, server, podCIDR, nodeCIDR, statePath string) error
 		}
 	}()
 
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
+	broke := false
 
 	for {
 		select {
 		case <-ctx.Done():
-			return save(seen, logger)
+			return nil
 		case err := <-errs:
 			logger.Warn("stream error, reconnecting", "err", err)
-		case <-ticker.C:
-			if err := seen.Save(); err != nil {
-				logger.Error("saving seen state", "err", err)
-			}
 		case resp, ok := <-events:
 			if !ok {
-				return save(seen, logger)
+				return nil
 			}
 
 			fl := resp.GetFlow()
-			if p, ok := FlowPair(fl, podCIDR, nodeCIDR); ok && seen.Add(p.key(), fl.GetTime().AsTime()) {
+			at := fl.GetTime().AsTime()
+
+			if p, ok := FlowPair(fl, podCIDR, nodeCIDR); ok && store.novelOrWarn(ctx, logger, pairKey(p), at, &broke) {
 				logger.Info("pair", p.LogAttrs()...)
 			}
 
-			if ns, qname, ips, ok := DNSRecord(fl); ok {
-				if seen.Add("dns\x00"+ns+"\x00"+qname, fl.GetTime().AsTime()) {
-					logger.Info("dns", "src_ns", ns, "qname", qname, "ips", ips)
-				}
+			if ns, qname, ips, ok := DNSRecord(fl); ok && store.novelOrWarn(ctx, logger, dnsKey(ns, qname), at, &broke) {
+				logger.Info("dns", "src_ns", ns, "qname", qname, "ips", ips)
 			}
 		}
 	}
 }
 
-func save(seen *Seen, logger *slog.Logger) error {
-	if err := seen.Save(); err != nil {
-		logger.Error("saving seen state on shutdown", "err", err)
-		return err
+// novelOrWarn reports novelty, treating store failures as novel so pairs
+// are never silently dropped, and logs one line per outage.
+func (s *Store) novelOrWarn(ctx context.Context, logger *slog.Logger, key string, at time.Time, broke *bool) bool {
+	novel, err := s.Novel(ctx, key, at)
+	if err == nil {
+		*broke = false
+		return novel
 	}
 
-	logger.Info("seen state saved", "pairs", len(seen.seen))
+	if !*broke {
+		logger.Warn("valkey error, treating records as novel until it recovers", "err", err)
 
-	return nil
+		*broke = true
+	}
+
+	return true
 }
