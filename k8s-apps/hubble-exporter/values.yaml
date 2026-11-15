@@ -19,6 +19,7 @@ app-template:
           args:
             - --state
             - /data/seen.json
+            - --migrate
           resources:
             requests:
               cpu: 20m

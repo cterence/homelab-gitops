@@ -15,7 +15,8 @@ line the first time it is observed.
 | `--valkey` | `hubble-exporter-valkey:6379` | valkey instance holding the seen-record set |
 | `--pod-cidr` | `10.244.0.0/16` | pod CIDR, used as the relay-side source filter and to classify destinations |
 | `--node-cidr` | `192.168.1.0/24` | node LAN CIDR, used to classify destinations |
-| `--state` | `/data/seen.json` | legacy JSON seen-state to migrate into valkey once on startup |
+| `--state` | `/data/seen.json` | legacy JSON seen-state uploaded into valkey when `--migrate` is set |
+| `--migrate` | `false` | run the one-time legacy state upload, then rename the file |
 
 ## Output
 
@@ -32,8 +33,9 @@ backoff on errors. Novelty is tracked in the valkey deployment that ships with
 this app (`<release>-valkey`, mirroring the gitea/paperless-ngx pattern): each
 record is a key holding the pair tuple, valued with the first-seen unix
 seconds and set with SETNX — a restart dedupes against the full history. A
-pre-valkey `seen.json` on the `--state` path is uploaded into valkey on first
-boot and renamed to `seen.json.migrated`; the exporter itself is stateless.
+pre-valkey `seen.json` on the `--state` path is uploaded into valkey once when
+started with `--migrate` (then renamed to `seen.json.migrated`; the flag can be
+dropped afterwards); the exporter itself is stateless.
 
 ## Caveats
 

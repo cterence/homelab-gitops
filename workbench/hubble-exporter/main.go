@@ -28,10 +28,11 @@ func main() {
 			&cli.StringFlag{Name: "valkey", Value: "hubble-exporter-valkey:6379", Usage: "valkey address holding the seen-record set"},
 			&cli.StringFlag{Name: "pod-cidr", Value: "10.244.0.0/16", Usage: "cluster pod CIDR, used to classify destinations"},
 			&cli.StringFlag{Name: "node-cidr", Value: "192.168.1.0/24", Usage: "node LAN CIDR, used to classify destinations"},
-			&cli.StringFlag{Name: "state", Value: "/data/seen.json", Usage: "legacy seen.json to migrate into valkey on startup"},
+			&cli.StringFlag{Name: "state", Value: "/data/seen.json", Usage: "legacy seen.json to migrate into valkey when --migrate is set"},
+			&cli.BoolFlag{Name: "migrate", Usage: "upload the legacy state file into valkey once, then rename it"},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			return run(ctx, c.String("server"), c.String("valkey"), c.String("pod-cidr"), c.String("node-cidr"), c.String("state"))
+			return run(ctx, c.String("server"), c.String("valkey"), c.String("pod-cidr"), c.String("node-cidr"), c.String("state"), c.Bool("migrate"))
 		},
 	}
 
@@ -41,7 +42,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, server, valkeyAddr, podCIDR, nodeCIDR, statePath string) error {
+func run(ctx context.Context, server, valkeyAddr, podCIDR, nodeCIDR, statePath string, migrate bool) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	store := NewStore(valkeyAddr)
@@ -55,10 +56,17 @@ func run(ctx context.Context, server, valkeyAddr, podCIDR, nodeCIDR, statePath s
 		return fmt.Errorf("waiting for valkey: %w", err)
 	}
 
-	if n, err := store.Migrate(ctx, statePath); err != nil {
-		return err
-	} else if n > 0 {
-		logger.Info("legacy state migrated", "records", n, "path", statePath)
+	if migrate {
+		n, err := store.Migrate(ctx, statePath)
+		if err != nil {
+			return err
+		}
+
+		if n > 0 {
+			logger.Info("legacy state migrated", "records", n, "path", statePath)
+		} else {
+			logger.Warn("migration requested but no legacy state found", "path", statePath)
+		}
 	}
 
 	if size, err := store.Size(ctx); err != nil {
