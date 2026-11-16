@@ -72,6 +72,8 @@ app-template:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+        labels:
+          velero.io/exclude-from-backup: "true"
       containers:
         beets:
           image:
