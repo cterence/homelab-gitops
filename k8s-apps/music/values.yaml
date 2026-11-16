@@ -320,7 +320,7 @@ app-template:
               move: yes
               resume: ask
               incremental: yes
-              incremental_skip_later: yes
+              incremental_skip_later: no
               quiet_fallback: skip
               timid: no
               log: /config/beet.log
