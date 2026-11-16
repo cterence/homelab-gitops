@@ -10,18 +10,25 @@
     ':automergeDigest',
   ],
   platformAutomerge: true,
-  // The workbench-bump app repairs nix hashes on renovate PR branches;
-  // without this Renovate would treat the branch as modified and rebase.
-  gitIgnoredAuthors: ['4999573+homelab-workbench-bump[bot]@users.noreply.github.com'],
+  gitIgnoredAuthors: [
+    '4999573+homelab-workbench-bump[bot]@users.noreply.github.com',
+  ],
   minimumReleaseAge: '2 days',
   gomod: {
-    postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],
+    postUpdateOptions: [
+      'gomodTidy',
+      'gomodUpdateImportPaths',
+    ],
   },
-  dependencyDashboardTitle: '🤖 Renovate Dashboard',
+  dependencyDashboard: {
+    title: '🤖 Renovate Dashboard',
+  },
   commitMessageTopic: '{{depName}}',
   commitMessageExtra: 'to {{newVersion}}',
   commitMessageSuffix: '',
-  ignorePaths: ['k8s-apps/archive/**'],
+  ignorePaths: [
+    'k8s-apps/archive/**',
+  ],
   customManagers: [
     {
       customType: 'regex',
@@ -36,19 +43,21 @@
   ],
   packageRules: [
     {
-      // Go majors change the module path, so imports must be rewritten
-      // (gomodUpdateImportPaths) and API breakage fixed by hand: require
-      // explicit approval on the dashboard before a PR is opened.
-      matchManagers: ['gomod'],
-      matchUpdateTypes: ['major'],
+      matchManagers: [
+        'gomod',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
       dependencyDashboardApproval: true,
     },
     {
-      // Temporary: cdproto's new v0.157.x tags are API-incompatible with
-      // chromedp v0.16.0 (which needs a newer master snapshot). Hold until
-      // chromedp releases against the tagged line, then delete this rule.
-      matchPackageNames: ['github.com/chromedp/cdproto'],
-      matchManagers: ['gomod'],
+      matchPackageNames: [
+        'github.com/chromedp/cdproto',
+      ],
+      matchManagers: [
+        'gomod',
+      ],
       dependencyDashboardApproval: true,
     },
     {
@@ -62,7 +71,7 @@
     },
     {
       matchPackageNames: [
-        'velero/velero-plugin-for-aws', // FIXME: https://github.com/velero-io/velero/issues/9951
+        'velero/velero-plugin-for-aws',
       ],
       enabled: false,
     },
