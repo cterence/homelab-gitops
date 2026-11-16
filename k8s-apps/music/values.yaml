@@ -318,9 +318,9 @@ app-template:
               write: yes
               copy: no
               move: yes
-              resume: ask
+              resume: no
               incremental: yes
-              incremental_skip_later: no
+              incremental_skip_later: yes
               quiet_fallback: skip
               timid: no
               log: /config/beet.log
