@@ -18,7 +18,7 @@ app-template:
         main:
           image:
             repository: registry.snow-delta.ts.net/device-plugin
-            tag: "1"
+            tag: "2"
             pullPolicy: IfNotPresent
           resources:
             requests:
