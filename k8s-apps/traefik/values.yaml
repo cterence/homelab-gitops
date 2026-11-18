@@ -464,6 +464,10 @@ modsecurity:
 
           SecRule REQUEST_URI "@rx ^/(api/oidc/(clients|token)|authorize)" \
             "id:1000038,phase:1,pass,nolog,ctl:ruleRemoveById=931100,ctl:ruleRemoveById=934110"
+
+          # Binary image bodies trip the engine multipart boundary check (200004)
+          SecRule REQUEST_URI "@rx ^/convert$" \
+            "id:1000039,phase:1,pass,nolog,ctl:ruleRemoveById=200004"
     ok-server-script:
       data:
         index.ts: |
