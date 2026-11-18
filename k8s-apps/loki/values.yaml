@@ -81,21 +81,6 @@ loki:
         labels:
           loki_rule: ""
       data:
-        traefik-fail2ban.yaml: |
-          groups:
-            - name: traefik-fail2ban
-              rules:
-                - alert: TraefikFail2BanBlocked
-                  expr: |
-                    sum by (ip, reason) (count_over_time({k8s_container_name="traefik"} | json | msg="Plugin: FailToBan: IP blocked" [5m])) > 0
-                  for: 0m
-                  labels:
-                    severity: info
-                    context: traefik
-                  annotations:
-                    summary: "IP {{ "{{ $labels.ip }}" }} blocked by traefik fail2ban ({{ "{{ $labels.reason }}" }})"
-                    description: "IP {{ "{{ $labels.ip }}" }} was blocked by the traefik fail2ban plugin. Reason: {{ "{{ $labels.reason }}" }}."
-
         jellyfin.yaml: |
           groups:
             - name: jellyfin
