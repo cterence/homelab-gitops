@@ -18,14 +18,14 @@ pay for it.
    - `square`: stretched to fill the square when converting.
    Input already within the limits is returned byte-for-byte in either
    mode.
-4. **Budget search** — degradation is interleaved: colors
+4. **Budget search** — frames outrank resolution: colors
    binary-searched from 255 down to a 16-color floor (dithered; below
-   16 a GIF posterizes, so nothing goes lower) at 128 px with every
-   frame, then at 128 px with half the frames, then 96 px with both
-   frame counts, then 64 px, then 48 px. A size step is never traded
-   for more than one frame halving: 64 px at half fps beats 48 px at
-   full fps. After the sizes are exhausted, frames keep halving at
-   48 px. Median cut picks one shared palette built from the pixels
+   16 a GIF posterizes, so nothing goes lower). The default walks the
+   full frame count down the size ladder first - 128 px, 96 px, 64 px,
+   48 px, all with every frame - so the output keeps all frames at the
+   largest size that holds them. Only when no size fits the full set
+   does the frame count degrade, still at the largest size that can
+   hold it. Median cut picks one shared palette built from the pixels
    that change between frames; frames after the first store only
    their changed pixels, and delays merge so total duration is
    preserved. Frame disposal methods are honored when compositing.
