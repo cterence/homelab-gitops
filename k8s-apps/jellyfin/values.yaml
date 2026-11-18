@@ -34,6 +34,8 @@ app-template:
           resources:
             requests:
               homelab.io/render: 1
+            limits:
+              homelab.io/render: 1
           env:
             TZ: Europe/Paris
             PUID: 1000

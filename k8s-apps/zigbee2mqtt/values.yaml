@@ -30,6 +30,8 @@ zigbee2mqtt:
   resources:
     requests:
       "homelab.io/conbee": 1
+    limits:
+      "homelab.io/conbee": 1
   workload:
     main:
       podSpec:
