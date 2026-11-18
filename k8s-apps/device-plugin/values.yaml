@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    # Root is required to create the plugin socket in the kubelet device
+    # plugin directory; the binary touches nothing else.
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+
+  controllers:
+    main:
+      type: daemonset
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: registry.snow-delta.ts.net/device-plugin
+            tag: "1"
+            pullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+
+  configMaps:
+    config:
+      enabled: true
+      forceRename: device-plugin-config
+      data:
+        config.yaml: |
+          devices:
+            - resource: homelab.io/render
+              path: /dev/dri/renderD128
+            - resource: homelab.io/conbee
+              path: /dev/ttyACM0
+
+  persistence:
+    kubelet-device-plugins:
+      enabled: true
+      type: hostPath
+      hostPath: /var/lib/kubelet/device-plugins
+      hostPathType: Directory
+      advancedMounts:
+        main:
+          main:
+            - path: /var/lib/kubelet/device-plugins
+    dev:
+      enabled: true
+      type: hostPath
+      hostPath: /dev
+      hostPathType: Directory
+      advancedMounts:
+        main:
+          main:
+            - path: /dev
+              readOnly: true
+    config:
+      type: configMap
+      name: device-plugin-config
+      advancedMounts:
+        main:
+          main:
+            - path: /app/config.yaml
+              readOnly: true
+              subPath: config.yaml
