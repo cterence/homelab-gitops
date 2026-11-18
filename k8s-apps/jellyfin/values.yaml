@@ -28,13 +28,12 @@ app-template:
           backup.velero.io/backup-volumes-excludes: data,data-storage-pool,music
       containers:
         main:
-          # Privileged is required to open /dev/dri/renderD128: the devices
-          # cgroup blocks hostPath char devices for unprivileged pods.
-          securityContext:
-            privileged: true
           image:
             repository: lscr.io/linuxserver/jellyfin
             tag: 12.4ubu2604-ls59@sha256:2f708001387aa9853e744a4a4d572d9970927c479c56d6c9e199f789c5173535
+          resources:
+            requests:
+              homelab.io/render: 1
           env:
             TZ: Europe/Paris
             PUID: 1000
@@ -137,16 +136,6 @@ app-template:
         main:
           main:
             - path: /config
-
-    hwa:
-      enabled: true
-      type: hostPath
-      hostPath: /dev/dri/renderD128
-      hostPathType: "CharDevice"
-      advancedMounts:
-        main:
-          main:
-            - path: /dev/dri/renderD128
 
     data:
       enabled: true

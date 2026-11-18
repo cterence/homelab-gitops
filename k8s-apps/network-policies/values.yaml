@@ -43,6 +43,9 @@ namespaces:
   - name: cnpg-system
     defaultDeny: true
     allow: [kube-system, monitoring]
+  - name: device-plugin
+    defaultDeny: true
+    allow: [monitoring]
   - name: convertx
     defaultDeny: true
     allow: [traefik]
