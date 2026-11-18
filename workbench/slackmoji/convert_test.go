@@ -148,7 +148,7 @@ func TestConvertPassthrough(t *testing.T) {
 	}
 }
 
-func TestConvertInterleavesSizeAndFrames(t *testing.T) {
+func TestConvertDefaultKeepsAllFramesOverSize(t *testing.T) {
 	input := noiseGIF(t, 256, 256, 20, 3)
 
 	out, report, err := Convert(t.Context(), input, Options{Mode: ModeRatio})
@@ -164,14 +164,14 @@ func TestConvertInterleavesSizeAndFrames(t *testing.T) {
 		t.Errorf("colors = %d, want at least the %d-color floor", report.Colors, colorFloor)
 	}
 
-	// the interleaved ladder searches the frame count between half and
-	// full at each size instead of jumping straight to one half
-	if report.FramesOut <= report.FramesIn/2 || report.FramesOut > report.FramesIn {
-		t.Errorf("frames = %d, want the searched maximum above %d", report.FramesOut, report.FramesIn/2)
+	// 128 px cannot hold the full set: the ladder walks every size at
+	// the full frame count before dropping any frame
+	if report.FramesOut != report.FramesIn {
+		t.Errorf("frames = %d of %d, want all kept", report.FramesOut, report.FramesIn)
 	}
 
-	if report.Width != 128 {
-		t.Errorf("width = %d, want 128 (first size that fits after searching)", report.Width)
+	if report.Width != 96 {
+		t.Errorf("width = %d, want 96, the largest size that holds every frame", report.Width)
 	}
 }
 

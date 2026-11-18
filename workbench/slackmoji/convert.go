@@ -141,9 +141,10 @@ func checkInput(w, h, frames int) error {
 }
 
 // Convert adapts data (gif, png, jpeg or webp) to Slack emoji limits:
-// at most 128KB and 128x128px. All frames are kept by default; palette
-// quality is reduced first and frames are thinned only as a last resort,
-// or earlier when Options pins them. Input that already fits (and no pin
+// at most 128KB and 128x128px. The default keeps every frame: the size
+// walks its whole ladder down before a single frame is dropped, and
+// palette quality is reduced first throughout. Frames are thinned only
+// when no size step holds them all, or earlier when Options pins them. Input that already fits (and no pin
 // would change it) is returned byte-for-byte. The context bounds the
 // conversion: it stops at the next frame or encode boundary when done.
 // normalizePins clears pins that ask for what the input already is, so
@@ -441,24 +442,25 @@ func ladder(
 
 	half := startKeep / 2
 
-	// the ladder as data: per size, the full frame request, then the
-	// largest count between half and the full request - the count is
-	// searched, not halved, so a 75% request never silently becomes 37%.
-	// After the sizes are exhausted, the smallest size keeps as many
-	// frames as it can hold.
+	// the ladder as data: every size at the full frame count first -
+	// frames hold while resolution degrades - then, unpinned, each size
+	// at the largest count between half and the full request (the count
+	// is searched, not halved, so a 75% request never silently becomes
+	// 37%), and finally the smallest size keeping as many frames as it
+	// can hold.
 	type probe struct{ size, lo, hi int }
 
 	probes := make([]probe, 0, 2*candidates+1)
 
 	for i := range candidates {
 		probes = append(probes, probe{i, startKeep, startKeep})
-
-		if !pinnedKeep && half >= 1 {
-			probes = append(probes, probe{i, half, startKeep})
-		}
 	}
 
 	if !pinnedKeep && half >= 1 {
+		for i := range candidates {
+			probes = append(probes, probe{i, half, startKeep})
+		}
+
 		probes = append(probes, probe{candidates - 1, 1, half})
 	}
 
