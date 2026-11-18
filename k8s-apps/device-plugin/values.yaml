@@ -9,61 +9,107 @@ app-template:
       runAsGroup: 0
 
   controllers:
-    main:
+    # Fleet-wide: the iGPU render node exists on every node.
+    render:
       type: daemonset
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
       containers:
         main:
-          image:
+          image: &image
             repository: registry.snow-delta.ts.net/device-plugin
-            tag: "2"
+            tag: "1"
             pullPolicy: IfNotPresent
-          resources:
+          resources: &resources
             requests:
               cpu: 10m
               memory: 32Mi
             limits:
               memory: 64Mi
 
+    # The ConBee stick is USB: a CharDevice mount only exists on homelab2,
+    # so this DaemonSet is pinned there.
+    conbee:
+      type: daemonset
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        nodeSelector:
+          kubernetes.io/hostname: homelab2
+      containers:
+        main:
+          image: *image
+          resources: *resources
+
   configMaps:
-    config:
+    config-render:
       enabled: true
-      forceRename: device-plugin-config
+      forceRename: device-plugin-config-render
       data:
         config.yaml: |
           devices:
             - resource: homelab.io/render
               path: /dev/dri/renderD128
+    config-conbee:
+      enabled: true
+      forceRename: device-plugin-config-conbee
+      data:
+        config.yaml: |
+          devices:
             - resource: homelab.io/conbee
               path: /dev/ttyACM0
 
   persistence:
+    # Exact device nodes, bind-mounted read-only for the health stat. Never
+    # mount the parent /dev read-only: it shadows runc's own /dev.
+    dev-render:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/dri/renderD128
+      hostPathType: CharDevice
+      advancedMounts:
+        render:
+          main:
+            - path: /dev/dri/renderD128
+              readOnly: true
+    dev-conbee:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/ttyACM0
+      hostPathType: CharDevice
+      advancedMounts:
+        conbee:
+          main:
+            - path: /dev/ttyACM0
+              readOnly: true
     kubelet-device-plugins:
       enabled: true
       type: hostPath
       hostPath: /var/lib/kubelet/device-plugins
       hostPathType: Directory
       advancedMounts:
-        main:
+        render:
           main:
             - path: /var/lib/kubelet/device-plugins
-    dev:
-      enabled: true
-      type: hostPath
-      hostPath: /dev
-      hostPathType: Directory
-      advancedMounts:
-        main:
+        conbee:
           main:
-            - path: /dev
-              readOnly: true
-    config:
+            - path: /var/lib/kubelet/device-plugins
+    config-render:
       type: configMap
-      name: device-plugin-config
+      name: device-plugin-config-render
       advancedMounts:
-        main:
+        render:
+          main:
+            - path: /app/config.yaml
+              readOnly: true
+              subPath: config.yaml
+    config-conbee:
+      type: configMap
+      name: device-plugin-config-conbee
+      advancedMounts:
+        conbee:
           main:
             - path: /app/config.yaml
               readOnly: true
