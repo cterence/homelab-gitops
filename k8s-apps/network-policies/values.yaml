@@ -216,4 +216,4 @@ namespaces:
     defaultDeny: true
   - name: zigbee2mqtt
     defaultDeny: true
-    allow: [traefik]
+    allow: [tailscale-operator]
