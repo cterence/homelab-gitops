@@ -90,18 +90,30 @@ func serveDevice(ctx context.Context, device Device) error {
 		server.Stop()
 	}()
 
+	// Serve first: kubelet dials the plugin socket as part of handling the
+	// Register RPC, so the gRPC server must accept before registration.
+	serveErr := make(chan error, 1)
+
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			serveErr <- err
+		}
+	}()
+
 	if err := registerWithKubelet(ctx, device); err != nil {
-		_ = listener.Close()
+		server.Stop()
 		return err
 	}
 
 	slog.Info("device plugin registered", "resource", device.Resource, "path", device.Path)
 
-	if err := server.Serve(listener); err != nil {
+	select {
+	case <-ctx.Done():
+		server.Stop()
+		return nil
+	case err := <-serveErr:
 		return fmt.Errorf("serving %s: %w", device.Resource, err)
 	}
-
-	return nil
 }
 
 func registerWithKubelet(ctx context.Context, device Device) error {
