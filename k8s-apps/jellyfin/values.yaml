@@ -3,9 +3,10 @@ app-template:
   defaultPodOptions:
     automountServiceAccountToken: false
     securityContext:
-      runAsNonRoot: true
-      runAsUser: 1000
-      runAsGroup: 1000
+      # lsio base has no non-root branch (unlike sonarr): init must start as
+      # root for s6-setuidgid; the app itself drops to PUID 1000.
+      runAsUser: 0
+      runAsGroup: 0
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
