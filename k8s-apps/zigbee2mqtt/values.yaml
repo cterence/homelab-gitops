@@ -113,6 +113,10 @@ zigbee2mqtt:
           paths:
             - path: /
               pathType: Prefix
+      tls:
+        - secretName: z2m-tls
+          hosts:
+            - *host
       integrations:
         traefik:
           enabled: false
