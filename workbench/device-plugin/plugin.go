@@ -54,8 +54,18 @@ func (p *rawPlugin) Allocate(ctx context.Context, req *v1beta1.AllocateRequest) 
 			ContainerPath: p.device.Path,
 			ReadOnly:      false,
 		}
+		// Devices (not Mounts) is what kubelet turns into the devices-cgroup
+		// allowlist on containerd; Mounts alone only bind-mount the node.
+		devSpec := &v1beta1.DeviceSpec{
+			HostPath:      p.device.Path,
+			ContainerPath: p.device.Path,
+			Permissions:   "rwm",
+		}
 		resp.ContainerResponses = append(resp.ContainerResponses,
-			&v1beta1.ContainerAllocateResponse{Mounts: []*v1beta1.Mount{mount}})
+			&v1beta1.ContainerAllocateResponse{
+				Mounts:  []*v1beta1.Mount{mount},
+				Devices: []*v1beta1.DeviceSpec{devSpec},
+			})
 	}
 
 	return resp, nil
