@@ -1,5 +1,13 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
   controllers:
     main:
       type: deployment
@@ -59,10 +67,6 @@ app-template:
       pod:
         restartPolicy: Never
         automountServiceAccountToken: false
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-          fsGroupChangePolicy: OnRootMismatch
       containers:
         gc:
           image:
