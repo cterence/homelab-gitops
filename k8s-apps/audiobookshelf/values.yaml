@@ -115,7 +115,7 @@ app-template:
         main:
           image:
             repository: registry.snow-delta.ts.net/apachewebdav
-            tag: "5"
+            tag: "6"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
