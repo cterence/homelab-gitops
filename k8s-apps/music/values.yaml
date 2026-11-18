@@ -69,9 +69,6 @@ app-template:
         successfulJobsHistory: 1
         failedJobsHistory: 3
       pod:
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
         labels:
           velero.io/exclude-from-backup: "true"
       containers:
@@ -181,6 +178,15 @@ app-template:
             - *host
 
   persistence:
+    # Ephemeral beets state: container /config is root-owned in the image and
+    # unwritable as uid 1000; beets re-scans /downloads each run anyway.
+    beets-config:
+      enabled: true
+      type: emptyDir
+      advancedMounts:
+        beets:
+          beets:
+            - path: /config
     # Shared music volume: library/ for the collection, slskd/ for
     # download staging (slskd writes, beets consumes slskd/complete).
     music:

@@ -44,9 +44,14 @@ RUN set -ex; \
     mkdir -p "conf/conf-enabled"; \
     mkdir -p "conf/sites-enabled"; \
     ln -s ../conf-available/dav.conf "conf/conf-enabled"; \
-    ln -s ../sites-available/default.conf "conf/sites-enabled";
+    ln -s ../sites-available/default.conf "conf/sites-enabled"; \
+    \
+    # Listen on an unprivileged port and hand conf/dav dirs to the runtime user.
+    sed -i -e "s/^Listen 80$/Listen 8080/" "conf/httpd.conf"; \
+    chown -R 1000:1000 "/usr/local/apache2/conf" "/usr/local/apache2/logs" "/var/lib/dav";
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-EXPOSE 80/tcp 443/tcp
+USER 1000:1000
+EXPOSE 8080/tcp
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 CMD [ "httpd-foreground" ]

@@ -54,17 +54,17 @@ if [ "x$AUTH_TYPE" != "x" ]; then
 fi
 
 # Add password hash, unless "user.passwd" already exists (ie, bind mounted).
-if [ ! -e "/user.passwd" ]; then
-    touch "/user.passwd"
+if [ ! -e "/var/lib/dav/user.passwd" ]; then
+    touch "/var/lib/dav/user.passwd"
     # Only generate a password hash if both username and password given.
     if [ "x$USERNAME" != "x" ] && [ "x$PASSWORD" != "x" ]; then
         if [ "$AUTH_TYPE" = "Digest" ]; then
             # Can't run `htdigest` non-interactively, so use other tools.
             HASH="`printf '%s' "$USERNAME:$REALM:$PASSWORD" | md5sum | awk '{print $1}'`"
-            printf '%s\n' "$USERNAME:$REALM:$HASH" > /user.passwd
+            printf '%s\n' "$USERNAME:$REALM:$HASH" > /var/lib/dav/user.passwd
         else
             # Read the password from stdin so it does not appear in the process list.
-            printf '%s\n' "$PASSWORD" | htpasswd -B -i -c "/user.passwd" "$USERNAME"
+            printf '%s\n' "$PASSWORD" | htpasswd -B -i -c "/var/lib/dav/user.passwd" "$USERNAME"
         fi
     fi
 fi
@@ -106,7 +106,8 @@ fi
 
 # add PUID:PGID, ignore error
 groupadd -g "$PGID" user-group 2>/dev/null || true
-useradd -u "$PUID" -g "$PGID" -M -d /nonexistent -s /usr/sbin/nologin user || true
+useradd -u "$PUID" -g "$PGID" -M -d /nonexistent -s /usr/sbin/nologin user 2>/dev/null \
+    || true
 
 # Run httpd as PUID:PGID
 sed -i -e "s|^User .*|User #$PUID|" "$HTTPD_PREFIX/conf/httpd.conf";

@@ -33,6 +33,9 @@ zigbee2mqtt:
       readOnlyRootFilesystem: false
       runAsUser: 0
       runAsGroup: 0
+      # Required: containerd's device cgroup blocks hostPath char devices
+      # (/dev/ttyACM0) for unprivileged pods; verified empirically.
+      privileged: true
   workload:
     main:
       podSpec:
@@ -106,24 +109,14 @@ zigbee2mqtt:
   ingress:
     main:
       enabled: true
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        external-dns.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
-      ingressClassName: "traefik"
+      ingressClassName: "tailscale"
       targetSelector:
         main: main
       hosts:
-        - host: &host z2m.terence.cloud
+        - host: &host z2m.snow-delta.ts.net
           paths:
             - path: /
               pathType: Prefix
-      tls:
-        - secretName: z2m-tls
-          hosts:
-            - *host
       integrations:
         traefik:
           enabled: false

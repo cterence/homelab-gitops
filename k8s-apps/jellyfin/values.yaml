@@ -3,8 +3,9 @@ app-template:
   defaultPodOptions:
     automountServiceAccountToken: false
     securityContext:
-      runAsUser: 0
-      runAsGroup: 0
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -26,13 +27,17 @@ app-template:
           backup.velero.io/backup-volumes-excludes: data,data-storage-pool,music
       containers:
         main:
+          # Privileged is required to open /dev/dri/renderD128: the devices
+          # cgroup blocks hostPath char devices for unprivileged pods.
+          securityContext:
+            privileged: true
           image:
             repository: lscr.io/linuxserver/jellyfin
             tag: 12.4ubu2604-ls59@sha256:2f708001387aa9853e744a4a4d572d9970927c479c56d6c9e199f789c5173535
           env:
             TZ: Europe/Paris
-            PUID: 0
-            PGID: 0
+            PUID: 1000
+            PGID: 1000
           ports:
             - name: http
               containerPort: 8096
