@@ -4,7 +4,7 @@ go 1.27.1
 
 require (
 	github.com/urfave/cli/v3 v3.14.0
-	golang.org/x/sync v0.23.0
+	golang.org/x/sync v0.25.0
 	google.golang.org/grpc v1.85.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/kubelet v0.37.2
