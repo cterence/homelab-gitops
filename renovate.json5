@@ -17,7 +17,9 @@
   gomod: {
     postUpdateOptions: ['gomodTidy', 'gomodUpdateImportPaths'],
   },
-  dependencyDashboardTitle: '🤖 Renovate Dashboard',
+  dependencyDashboard: {
+    title: '🤖 Renovate Dashboard',
+  },
   commitMessageTopic: '{{depName}}',
   commitMessageExtra: 'to {{newVersion}}',
   commitMessageSuffix: '',
