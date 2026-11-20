@@ -32,25 +32,45 @@ const busyRefusal = "partial busy"
 
 // lockPartial takes an exclusive advisory lock on a transfer's
 // partial: one receiver per content at a time, across processes (the
-// listener and a pull are separate children). The lock dies with its
-// holder; the lock file sweeps with the partials by TTL.
+// listener and a pull are separate children). Release unlinks the
+// lock file while still holding the lock; the TTL sweep only catches
+// crash leftovers.
 func lockPartial(dir, shaHex string, size int64) (release func(), err error) {
 	if shaHex == "" {
 		return func() {}, nil // plain temps are private by name
 	}
 
-	f, err := os.OpenFile(partialPath(dir, shaHex, size)+".lock", os.O_CREATE|os.O_RDWR, 0o600)
-	if err != nil {
-		return func() {}, nil // no lock possible: proceed unlocked
+	path := partialPath(dir, shaHex, size) + ".lock"
+
+	for {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+		if err != nil {
+			return func() {}, nil // no lock possible: proceed unlocked
+		}
+
+		if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+			_ = f.Close()
+
+			return nil, errPartialBusy
+		}
+
+		// Unlinking on release means a fresh file can appear at the
+		// path: only trust the lock if it is still the file the path
+		// points to, else retry on the new inode.
+		held, herr := f.Stat()
+		at, aerr := os.Stat(path)
+
+		if herr != nil || aerr != nil || !os.SameFile(held, at) {
+			_ = f.Close()
+
+			continue
+		}
+
+		return func() {
+			_ = os.Remove(path)
+			_ = f.Close()
+		}, nil
 	}
-
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		_ = f.Close()
-
-		return nil, errPartialBusy
-	}
-
-	return func() { _ = f.Close() }, nil
 }
 
 // partialTTL bounds how long a partial waits for its sender: the

@@ -59,6 +59,29 @@ func TestPartialLockExclusive(t *testing.T) {
 	release()
 }
 
+// Release unlinks the lock file: a finished receive leaves no 0-byte
+// .lock in the inbox. The TTL sweep only catches crash leftovers.
+func TestPartialLockRemovesLockFile(t *testing.T) {
+	dir := t.TempDir()
+	shaHex := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	lock := partialPath(dir, shaHex, 4096) + ".lock"
+
+	release, err := lockPartial(dir, shaHex, 4096)
+	if err != nil {
+		t.Fatalf("lock: %v", err)
+	}
+
+	if _, err := os.Stat(lock); err != nil {
+		t.Fatalf("lock file missing while held: %v", err)
+	}
+
+	release()
+
+	if _, err := os.Stat(lock); !os.IsNotExist(err) {
+		t.Fatalf("lock file survived release: %v", err)
+	}
+}
+
 func TestPartialFor(t *testing.T) {
 	dir := t.TempDir()
 	shaHex := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
