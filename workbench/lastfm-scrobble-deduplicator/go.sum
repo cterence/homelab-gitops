@@ -2,8 +2,8 @@ github.com/cenkalti/backoff/v7 v7.0.3 h1:oJlXCmDgfNcGYViwioz1cZ1kHebejP4OLfJ/gqM
 github.com/cenkalti/backoff/v7 v7.0.3/go.mod h1:qcKBGwsu4hpxHtQ8tWYsQ+ifzx2+sS+Xx/3jfe30lI8=
 github.com/chromedp/cdproto v0.160.1 h1:70dLyj3MfhJG6CzwUSdbSszo0QdXpr5bYM/q+w78KBc=
 github.com/chromedp/cdproto v0.160.1/go.mod h1:h68JaIuFr9o3yiayxEYhBdvaxgYO3shDrPSYhNlyfu0=
-github.com/chromedp/chromedp v0.23.1 h1:CbK1Knbhe9H/m/KT3qfmuSG1c6ErR8ZjmmpHb4Fadz8=
-github.com/chromedp/chromedp v0.23.1/go.mod h1:cz9BPo2oR1YBCu7e+KTdO+7uMvTTuEYh11fErlxdCuQ=
+github.com/chromedp/chromedp v0.24.0 h1:bARawUSS5gshTOsNbFz2YFJyjaQCt7IHcW6E2mqDABQ=
+github.com/chromedp/chromedp v0.24.0/go.mod h1:cz9BPo2oR1YBCu7e+KTdO+7uMvTTuEYh11fErlxdCuQ=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/go-json-experiment/json v0.0.0-20260213210345-44df1a37e875 h1:XGPtjxqp0FS8jj1Z7QGcSOSgyq1fUPjNyJXvi3KfI4A=
 github.com/go-json-experiment/json v0.0.0-20260213210345-44df1a37e875/go.mod h1:uNVvRXArCGbZ508SxYYTC5v1JWoz2voff5pm25jU1Ok=
