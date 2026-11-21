@@ -45,7 +45,7 @@ jobs:
           tags: tag:github-actions
 
       - name: Setup niks3 cache
-        uses: Mic92/niks3-action@01820a2b97ac01531ad9fb859db94af63ffcbd83 # v1.10.0
+        uses: Mic92/niks3-action@60d69b85ac324085ac911f361e66114e8ff30cde # v1.11.0
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
