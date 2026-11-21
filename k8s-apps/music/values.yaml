@@ -146,7 +146,7 @@ app-template:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.kubernetes.io/target: home.terence.cloud
         external-dns.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       className: "traefik"
       hosts:

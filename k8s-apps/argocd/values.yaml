@@ -206,7 +206,7 @@ argo-cd:
         external-dns.kubernetes.io/cloudflare-proxied: "false" # 403 on the github actions runner
         cert-manager.io/issue-temporary-certificate: "true"
         external-dns.kubernetes.io/target: home.terence.cloud
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
       pathType: ImplementationSpecific
       # paths:
