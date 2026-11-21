@@ -143,7 +143,7 @@ immich:
           external-dns.kubernetes.io/cloudflare-proxied: "false"
           cert-manager.io/cluster-issuer: letsencrypt
           traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-modsecurity@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
         className: traefik
         hosts:
           - host: immich.terence.cloud
