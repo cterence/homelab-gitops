@@ -73,6 +73,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution |
 | [jellyfin](./scripts/../k8s-apps/jellyfin) | Media server |
 | [jellystat](./scripts/../k8s-apps/jellystat) | Jellyfin stats |
+| [koito](./scripts/../k8s-apps/koito) | Self-hosted ListenBrainz-compatible music scrobbler |
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator |
 | [lastfm-scrobble-deduplicator](./scripts/../k8s-apps/lastfm-scrobble-deduplicator) | Periodically delete duplicate Last.fm scrobbles |
 | [local-path-provisioner](./scripts/../k8s-apps/local-path-provisioner) | Utilize the local storage in each node |
