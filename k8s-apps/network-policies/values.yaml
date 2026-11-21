@@ -109,11 +109,14 @@ namespaces:
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: jellyfin
     defaultDeny: true
-    allow: [traefik, go-healthcheck, monitoring, jellystat, seerr]
+    allow: [traefik, go-healthcheck, monitoring, jellystat, seerr, koito]
   - name: jellystat
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring, jellyfin]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
+  - name: koito
+    defaultDeny: true
+    allow: [traefik, monitoring, jellyfin]
   - name: kube-system
     defaultDeny: true
     allowRemoteNode: true
