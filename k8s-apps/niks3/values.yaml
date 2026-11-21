@@ -81,7 +81,7 @@ cnpg-cluster:
   type: postgresql
   mode: standalone
   version:
-    postgresql: "18"
+    postgresql: "19"
   cluster:
     instances: 1
     imageCatalogRef:

@@ -162,7 +162,7 @@ cnpg-cluster:
       create: false
       name: cnpg-backup-s3-creds
   version:
-    postgresql: "18"
+    postgresql: "19"
   cluster:
     instances: 1
     imageCatalogRef:
