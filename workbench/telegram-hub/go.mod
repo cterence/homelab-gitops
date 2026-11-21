@@ -8,7 +8,7 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/urfave/cli/v3 v3.14.0
-	golang.org/x/net v0.62.0
+	golang.org/x/net v0.63.0
 )
 
 require (
@@ -18,7 +18,7 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/validator.v2 v2.0.1 // indirect
 )
