@@ -11,4 +11,4 @@ spec:
     - major: 18
       image: ghcr.io/cloudnative-pg/postgresql:18.3
     - major: 19
-      image: ghcr.io/cloudnative-pg/postgresql:19.0-standard-bullseye
+      image: ghcr.io/cloudnative-pg/postgresql:19.0-standard-trixie
