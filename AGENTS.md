@@ -27,7 +27,6 @@ k8s-apps/      One Helm umbrella chart per app (<app>/Chart.yaml + values.yaml)
 charts/        Shared Helm charts rendered as extra Application sources
 workbench/     Go source code + Dockerfiles for self-built images
 scripts/       Helper scripts (deployed-apps table, pv-diff)
-docs/superpowers/  Design specs and implementation plans
 docs/runbooks/   Runbooks for recurring manual interventions
 terraform/     Infrastructure provisioning (secrets, external-secrets)
 ```
@@ -75,10 +74,6 @@ file per dashboard, registered in `main.go`). Add a builder, run `go run .`
 from that directory, and commit the regenerated JSON in
 `k8s-apps/kube-prometheus-stack/dashboards/` together with the code. That
 app's README has the full workflow.
-
-## Superpowers
-
-Never git add things in docs/superpowers forcefully.
 
 ## Versioning
 
