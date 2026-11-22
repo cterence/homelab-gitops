@@ -25,6 +25,7 @@ let
       platform-tools
       build-tools-36-0-0
       platforms-android-37-0
+      platforms-android-37-1
     ]
   );
 
@@ -130,7 +131,7 @@ let
     '';
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-XCjraVtNPIZWg1INtmVbAm7GYqwvJ6PaE/kg8G8MT/I=";
+    outputHash = "sha256-ZWDK0B/IxX+nUER2Eg+oZYWPVZncMWAiEI49lnW29Bw=";
   };
 in
 {

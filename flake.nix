@@ -156,7 +156,7 @@
         }
         // (
           # The Android app shell: nix develop .#android. The SDK
-          # matches android/app/build.gradle.kts (compileSdk 37,
+          # matches android/app/build.gradle.kts (compileSdk 37.1,
           # build-tools 36.0.0, AGP 9.4.1, JDK 17) — bump them
           # together. Hosts without an android-nixpkgs SDK composition
           # (aarch64-linux) don't get the shell.
@@ -176,6 +176,7 @@
                     platform-tools
                     build-tools-36-0-0
                     platforms-android-37-0
+                    platforms-android-37-1
                     emulator
                     system-images-android-36-default-arm64-v8a
                   ]

@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "cloud.terence.catbox"
     compileSdk = 37
+    compileSdkMinor = 1
 
     defaultConfig {
         applicationId = "cloud.terence.catbox"
