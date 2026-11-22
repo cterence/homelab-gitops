@@ -1,0 +1,9 @@
+apiVersion: v2
+name: etcd-metrics
+description: TLS relay for scraping k0s etcd metrics on the controller node
+type: application
+version: 0.1.0
+dependencies:
+  - name: app-template
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.3.0

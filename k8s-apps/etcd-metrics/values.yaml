@@ -1,0 +1,84 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    hostNetwork: true
+    nodeSelector:
+      kubernetes.io/hostname: homelab2
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+    # k0s pki files are root-owned 0600; the relay must read them.
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+
+  controllers:
+    main:
+      type: daemonset
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: alpine/socat
+            tag: latest@sha256:5aa280c6fc5bee94dbd2bbdf2a58d30f50396eaa110be84b03636945b157ae68
+          # Terminating TLS relay: etcd listens on 127.0.0.1:2379 (mTLS only),
+          # this exposes plain http /metrics on the node IP :2381.
+          args:
+            - TCP-LISTEN:2381,fork,bind=0.0.0.0,reuseaddr
+            - OPENSSL-CONNECT:127.0.0.1:2379,cert=/pki/apiserver-etcd-client.crt,key=/pki/apiserver-etcd-client.key,cafile=/pki/etcd/ca.crt,verify=0
+          ports:
+            - name: metrics
+              containerPort: 2381
+          probes:
+            liveness:
+              enabled: true
+              type: TCP
+              spec:
+                tcpSocket:
+                  port: 2381
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+
+  persistence:
+    pki:
+      enabled: true
+      type: hostPath
+      hostPath: /var/lib/k0s/pki
+      hostPathType: Directory
+      globalMounts:
+        - path: /pki
+          readOnly: true
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        metrics:
+          port: 2381
+
+  rawResources:
+    servicemonitor:
+      enabled: true
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: ServiceMonitor
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: etcd-metrics
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          endpoints:
+            - port: metrics
+              path: /metrics
+              interval: 30s
