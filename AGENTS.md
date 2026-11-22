@@ -28,6 +28,7 @@ charts/        Shared Helm charts rendered as extra Application sources
 workbench/     Go source code + Dockerfiles for self-built images
 scripts/       Helper scripts (deployed-apps table, pv-diff)
 docs/superpowers/  Design specs and implementation plans
+docs/runbooks/   Runbooks for recurring manual interventions
 terraform/     Infrastructure provisioning (secrets, external-secrets)
 ```
 
