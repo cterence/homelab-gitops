@@ -35,6 +35,14 @@ app-template:
 
 valkey:
   deploymentStrategy: Recreate
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  extraConfig: |
+    maxmemory 192mb
+    maxmemory-policy allkeys-lru
   persistence:
     enabled: true
     size: "1Gi"
