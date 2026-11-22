@@ -59,6 +59,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [convertx](./scripts/../k8s-apps/convertx) | Self-hosted online file converter |
 | [device-plugin](./scripts/../k8s-apps/device-plugin) | Expose host device nodes as extended resources |
 | [disk-usage-exporter](./scripts/../k8s-apps/disk-usage-exporter) | Per-directory disk usage Prometheus exporter for local-path volumes |
+| [etcd-metrics](./scripts/../k8s-apps/etcd-metrics) | TLS relay for scraping k0s etcd metrics on the controller node |
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets |
 | [falco](./scripts/../k8s-apps/falco) | Cloud Native Runtime Security |
