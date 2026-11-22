@@ -69,8 +69,8 @@ warnings and each feature fails at call time until its credentials exist.
 - The `/mcp` route only accepts requests whose Host header matches the
   allowlist in `host.go` (DNS-rebinding protection); other hosts get
   `421 Misdirected Request`. The `/health` probe route is exempt.
-- Exposed at `https://thub.terence.cloud` behind basic auth, and on
-  Tailscale as `telegram-hub`.
+- Exposed at `https://mcp.terence.cloud/telegram/mcp` behind basic auth and IP
+  allowlisting, and on Tailscale as `telegram-hub`.
 - The runtime image is alpine-based because ffmpeg must be present.
 - The `generated` cache directory is an emptyDir mounted at
   `/app/generated` (cache is disposable; it regenerates from URLs).

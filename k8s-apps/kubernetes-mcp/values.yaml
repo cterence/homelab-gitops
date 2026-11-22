@@ -1,0 +1,152 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: true
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    main:
+      type: deployment
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image:
+            repository: ghcr.io/containers/kubernetes-mcp-server
+            tag: v0.1.3@sha256:6347155616c49c78512114500688b50d275ddde7597b6a38cefe6f40a8c42c16
+          env:
+            TZ: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: metrics
+                  path: /healthz
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: metrics
+                  path: /healthz
+
+  configMaps:
+    config:
+      enabled: true
+      forceRename: kubernetes-mcp-config
+      data:
+        config.toml: |
+          # read-only guardrails; real enforcement is the view ClusterRole
+          # (no secret access) plus denied_resources below
+          port = "8080"
+          metrics_port = "9090"
+          read_only = true
+          toolsets = ["core"]
+          cluster_auth_mode = "kubeconfig"
+
+          [[denied_resources]]
+          group = ""
+          version = "v1"
+          kind = "Secret"
+
+  persistence:
+    config:
+      type: configMap
+      name: kubernetes-mcp-config
+      advancedMounts:
+        main:
+          main:
+            - path: /etc/kubernetes-mcp-server/config.toml
+              subPath: config.toml
+              readOnly: true
+
+  service:
+    main:
+      controller: main
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
+  ingress:
+    main:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: "traefik-mcp-ip-allowlist@kubernetescrd,kubernetes-mcp-kubernetes-mcp-auth@kubernetescrd,traefik-strip-first-path@kubernetescrd"
+      className: "traefik"
+      hosts:
+        - host: &host mcp.terence.cloud
+          paths:
+            - path: /kubernetes
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - secretName: mcp-tls
+          hosts:
+            - *host
+
+  rawResources:
+    # built-in view ClusterRole: read-only, no Secret access
+    view-binding:
+      enabled: true
+      forceRename: kubernetes-mcp-view
+      manifest:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: kubernetes-mcp-view
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: view
+        subjects:
+          - kind: ServiceAccount
+            name: "{{ .Release.Name }}"
+            namespace: "{{ .Release.Namespace }}"
+    mcp-auth-middleware:
+      enabled: true
+      forceRename: kubernetes-mcp-auth
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          basicAuth:
+            secret: kubernetes-mcp-auth
+    mcp-auth-secret:
+      enabled: true
+      forceRename: kubernetes-mcp-auth
+      manifest:
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        spec:
+          refreshInterval: "0"
+          target:
+            name: kubernetes-mcp-auth
+            creationPolicy: Owner
+            template:
+              type: kubernetes.io/basic-auth
+              engineVersion: v2
+              data:
+                username: "mcp"
+                password: '{{ printf "{{ .password }}" }}'
+          dataFrom:
+            - sourceRef:
+                generatorRef:
+                  apiVersion: generators.external-secrets.io/v1alpha1
+                  kind: ClusterGenerator
+                  name: short-password

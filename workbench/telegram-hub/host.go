@@ -14,8 +14,8 @@ var allowedHostPatterns = []string{
 	"127.0.0.1",
 	"127.0.0.1:*",
 	"[::1]:*",
-	"thub.terence.cloud",
-	"thub.terence.cloud:*",
+	"mcp.terence.cloud",
+	"mcp.terence.cloud:*",
 	"telegram-hub.snow-delta.ts.net",
 	"telegram-hub.snow-delta.ts.net:*",
 }

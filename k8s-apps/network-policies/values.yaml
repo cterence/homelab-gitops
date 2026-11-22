@@ -128,6 +128,9 @@ namespaces:
     remoteNodePorts:
       - { port: 53, protocol: UDP }
       - { port: 53, protocol: TCP }
+  - name: kubernetes-mcp
+    defaultDeny: true
+    allow: [traefik, monitoring]
   - name: lastfm-scrobble-deduplicator
     defaultDeny: true
   - name: local-path-provisioner
