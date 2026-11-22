@@ -28,7 +28,7 @@ app-template:
           # this exposes plain http /metrics on the node IP :2381.
           args:
             - TCP-LISTEN:2381,fork,bind=0.0.0.0,reuseaddr
-            - OPENSSL-CONNECT:127.0.0.1:2379,cert=/pki/apiserver-etcd-client.crt,key=/pki/apiserver-etcd-client.key,cafile=/pki/etcd/ca.crt,verify=0
+            - OPENSSL-CONNECT:127.0.0.1:2379,snihost=localhost,cert=/pki/apiserver-etcd-client.crt,key=/pki/apiserver-etcd-client.key,cafile=/pki/etcd/ca.crt,verify=0
           ports:
             - name: metrics
               containerPort: 2381
