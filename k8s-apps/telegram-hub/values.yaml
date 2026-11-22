@@ -22,7 +22,7 @@ app-template:
             - serve
           image:
             repository: registry.snow-delta.ts.net/telegram-hub
-            tag: "20"
+            tag: "21"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
