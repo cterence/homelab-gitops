@@ -19,7 +19,7 @@ app-template:
         main:
           image: &image
             repository: registry.snow-delta.ts.net/device-plugin
-            tag: "6"
+            tag: "7"
             pullPolicy: IfNotPresent
           resources: &resources
             requests:
