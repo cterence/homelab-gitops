@@ -57,6 +57,8 @@ app-template:
 
   ingress:
     holyarrs:
+      annotations:
+        tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
       className: "tailscale"
       hosts:
         - host: &host holyarrs.snow-delta.ts.net
