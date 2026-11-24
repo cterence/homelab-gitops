@@ -95,8 +95,65 @@ app-template:
         holyarrs:
           holyarrs:
             - path: /data
+    data-storage-pool:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: holyarrs-storage-pool
+      advancedMounts:
+        holyarrs:
+          holyarrs:
+            - path: /data-pool
+              subPath: arr-stack
 
   rawResources:
+    holyarrs-storage-pool-pv:
+      enabled: true
+      forceRename: holyarrs-storage-pool
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 8Ti
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: nfs
+          mountOptions:
+            - hard
+            - nfsvers=4.1
+            - nosuid
+            - noexec
+            - timeo=600
+            - retrans=2
+          nfs:
+            path: /storage-pool
+            server: 192.168.1.141
+    holyarrs-storage-pool-pvc:
+      enabled: true
+      forceRename: holyarrs-storage-pool
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 8Ti
+          storageClassName: nfs
+          volumeName: holyarrs-storage-pool
     holyarrs-media-pv:
       enabled: true
       forceRename: holyarrs-media
