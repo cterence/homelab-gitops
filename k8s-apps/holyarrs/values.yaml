@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    holyarrs:
+      type: deployment
+      strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: config
+      containers:
+        holyarrs:
+          image:
+            repository: docker.io/holyarrs/holyarrs
+            tag: 1.3.1@sha256:8505468f0b50f999046b83f2a799b9484e8098b303051d5d43d931a815890e67
+          env:
+            TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
+            HOLYARRS_ALLOWED_HOSTS: holyarrs.snow-delta.ts.net
+            HOLYARRS_TRUSTED_PROXIES: 10.244.0.0/16
+          ports:
+            - name: http
+              containerPort: 6262
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /ping
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /readyz
+
+  service:
+    holyarrs:
+      controller: holyarrs
+      type: ClusterIP
+      ports:
+        http:
+          port: 6262
+
+  ingress:
+    holyarrs:
+      className: "tailscale"
+      hosts:
+        - host: &host holyarrs.snow-delta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: holyarrs
+                port: http
+      tls:
+        - secretName: holyarrs-tls
+          hosts:
+            - *host
+
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      accessMode: ReadWriteOnce
+      size: 5Gi
+      advancedMounts:
+        holyarrs:
+          holyarrs:
+            - path: /config
+
+    # Same host directory as arr-stack's data PVC (pinned to homelab2 by the
+    # raw PV below), so library and download paths match the arr apps exactly.
+    media:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: holyarrs-media
+      advancedMounts:
+        holyarrs:
+          holyarrs:
+            - path: /data
+
+  rawResources:
+    holyarrs-media-pv:
+      enabled: true
+      forceRename: holyarrs-media
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 1200Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: holyarrs-media
+            namespace: holyarrs
+          local:
+            path: /opt/local-path-provisioner/pvc-29cf47a1-5baa-49a4-9176-6d0609a3054a_arr-stack_arr-stack-data
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    holyarrs-media-pvc:
+      enabled: true
+      forceRename: holyarrs-media
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1200Gi
+          storageClassName: shared-local
+          volumeName: holyarrs-media

@@ -20,6 +20,7 @@ namespaces:
         monitoring,
         seerr,
         tailscale-operator,
+        holyarrs,
       ]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
   - name: audiobookshelf
@@ -102,6 +103,9 @@ namespaces:
     allow: [traefik]
   - name: hubble-exporter
     defaultDeny: true
+  - name: holyarrs
+    defaultDeny: true
+    allow: [tailscale-operator]
   - name: immich
     defaultDeny: true
     allow:
@@ -195,7 +199,7 @@ namespaces:
     allow: [traefik]
   - name: seerr
     defaultDeny: true
-    allow: [traefik, arr-stack, sablier]
+    allow: [traefik, arr-stack, sablier, holyarrs]
   - name: slackmoji
     defaultDeny: true
     allow: [traefik]
