@@ -16,7 +16,7 @@ app-template:
         reloader.stakater.com/auto: "true"
       pod:
         annotations:
-          backup.velero.io/backup-volumes-excludes: config
+          backup.velero.io/backup-volumes-excludes: data-storage-pool,media
       containers:
         holyarrs:
           image:

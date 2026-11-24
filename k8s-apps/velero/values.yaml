@@ -264,6 +264,7 @@ velero:
           - garage-ssd
           - gitea
           - jellyfin
+          - holyarrs
           - home-assistant
           - immich
           - mosquitto
@@ -302,6 +303,7 @@ velero:
           - gitea
           - jellyfin
           - home-assistant
+          - holyarrs
           - immich
           - mosquitto
           - music
