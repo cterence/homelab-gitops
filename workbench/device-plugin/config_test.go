@@ -20,6 +20,20 @@ func TestValidateConfig(t *testing.T) {
 			wantErr: "",
 		},
 		{
+			name: "valid count",
+			devices: []Device{
+				{Resource: "homelab.io/render", Path: "/dev/dri/renderD128", Count: 8},
+			},
+			wantErr: "",
+		},
+		{
+			name: "negative count",
+			devices: []Device{
+				{Resource: "homelab.io/render", Path: "/dev/dri/renderD128", Count: -1},
+			},
+			wantErr: `count`,
+		},
+		{
 			name:    "empty config",
 			devices: nil,
 			wantErr: "no devices configured",
@@ -94,7 +108,7 @@ func TestValidateConfig(t *testing.T) {
 func TestLoadConfig(t *testing.T) {
 	f := t.TempDir() + "/config.yaml"
 
-	content := "devices:\n  - resource: homelab.io/render\n    path: /dev/dri/renderD128\n  - resource: homelab.io/conbee\n    path: /dev/ttyACM0\n"
+	content := "devices:\n  - resource: homelab.io/render\n    path: /dev/dri/renderD128\n    count: 4\n  - resource: homelab.io/conbee\n    path: /dev/ttyACM0\n"
 	if err := os.WriteFile(f, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -108,9 +122,41 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("want 2 devices, got %d", len(devices))
 	}
 
-	want := Device{Resource: "homelab.io/render", Path: "/dev/dri/renderD128"}
+	want := Device{Resource: "homelab.io/render", Path: "/dev/dri/renderD128", Count: 4}
 	if devices[0] != want {
 		t.Fatalf("want %+v, got %+v", want, devices[0])
+	}
+
+	wantConbee := Device{Resource: "homelab.io/conbee", Path: "/dev/ttyACM0", Count: 1}
+	if devices[1] != wantConbee {
+		t.Fatalf("want %+v, got %+v", wantConbee, devices[1])
+	}
+}
+
+func TestAdvertisedDevices(t *testing.T) {
+	tests := []struct {
+		name    string
+		count   int
+		health  string
+		wantIDs []string
+	}{
+		{name: "single", count: 1, health: "Healthy", wantIDs: []string{"0"}},
+		{name: "shared", count: 4, health: "Healthy", wantIDs: []string{"0", "1", "2", "3"}},
+		{name: "unhealthy", count: 2, health: "Unhealthy", wantIDs: []string{"0", "1"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			devices := advertisedDevices(tt.count, tt.health)
+			if len(devices) != len(tt.wantIDs) {
+				t.Fatalf("want %d devices, got %d", len(tt.wantIDs), len(devices))
+			}
+
+			for i, dev := range devices {
+				if dev.ID != tt.wantIDs[i] || dev.Health != tt.health {
+					t.Fatalf("device %d: want ID %s/%s, got %s/%s", i, tt.wantIDs[i], tt.health, dev.ID, dev.Health)
+				}
+			}
+		})
 	}
 }
 

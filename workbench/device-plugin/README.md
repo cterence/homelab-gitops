@@ -18,6 +18,7 @@ cgroup — the piece plain hostPath mounts are missing on containerd.
 devices:
   - resource: homelab.io/render
     path: /dev/dri/renderD128
+    count: 16
   - resource: homelab.io/conbee
     path: /dev/ttyACM0
 ```
@@ -25,6 +26,9 @@ devices:
 - `resource`: extended resource name, must be `<domain>/<name>`.
 - `path`: absolute host path of the device node. Devices missing on a node are
   advertised as `Unhealthy`; plugins register only what the config lists.
+- `count`: number of slots advertised (default `1`, exclusive). Only use `>1`
+  for shareable device nodes such as GPU render devices; each slot is a
+  separate allocation to a pod, all mapped to the same node.
 
 Flags: `--debug` for debug logging.
 

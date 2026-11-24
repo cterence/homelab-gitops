@@ -64,6 +64,7 @@ app-template:
           devices:
             - resource: homelab.io/render
               path: /dev/dri/renderD128
+              count: 16
     config-tun:
       enabled: true
       forceRename: device-plugin-config-tun

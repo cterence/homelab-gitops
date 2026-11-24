@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
@@ -15,6 +16,15 @@ import (
 )
 
 const rescanInterval = 15 * time.Second
+
+func advertisedDevices(count int, health string) []*v1beta1.Device {
+	devices := make([]*v1beta1.Device, count)
+	for i := range devices {
+		devices[i] = &v1beta1.Device{ID: strconv.Itoa(i), Health: health}
+	}
+
+	return devices
+}
 
 type rawPlugin struct {
 	v1beta1.UnimplementedDevicePluginServer
@@ -33,8 +43,7 @@ func (p *rawPlugin) ListAndWatch(_ *v1beta1.Empty, stream v1beta1.DevicePlugin_L
 		if h != health {
 			health = h
 
-			dev := v1beta1.Device{ID: "0", Health: h}
-			if err := stream.Send(&v1beta1.ListAndWatchResponse{Devices: []*v1beta1.Device{&dev}}); err != nil {
+			if err := stream.Send(&v1beta1.ListAndWatchResponse{Devices: advertisedDevices(p.device.Count, h)}); err != nil {
 				return fmt.Errorf("sending device list: %w", err)
 			}
 

@@ -15,6 +15,7 @@ import (
 type Device struct {
 	Resource string `yaml:"resource"`
 	Path     string `yaml:"path"`
+	Count    int    `yaml:"count,omitempty"`
 }
 
 type rawConfig struct {
@@ -42,6 +43,10 @@ func (d Device) validate() error {
 
 	if !strings.HasPrefix(d.Path, "/") {
 		return fmt.Errorf("path %q must be absolute", d.Path)
+	}
+
+	if d.Count < 0 {
+		return fmt.Errorf("count %d for resource %q must not be negative", d.Count, d.Resource)
 	}
 
 	return nil
@@ -88,6 +93,12 @@ func loadConfig(path string) ([]Device, error) {
 
 	if err := validateConfig(raw.Devices); err != nil {
 		return nil, fmt.Errorf("config %s: %w", path, err)
+	}
+
+	for i := range raw.Devices {
+		if raw.Devices[i].Count == 0 {
+			raw.Devices[i].Count = 1
+		}
 	}
 
 	return raw.Devices, nil
