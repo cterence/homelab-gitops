@@ -114,6 +114,11 @@ immich:
               repository: ghcr.io/immich-app/immich-server
               pullPolicy: IfNotPresent
               tag: v3.4.1@sha256:7c489add298fc2f92cda4c777de6462aa206877e04087b815f62c7664af0b53b
+            resources:
+              requests:
+                homelab.io/render: 1
+              limits:
+                homelab.io/render: 1
         initContainers:
           envsubst:
             image:
@@ -158,11 +163,6 @@ immich:
         enabled: true
         type: emptyDir
         name: "{{ .Release.Name }}-immich-templated-config"
-      igpu:
-        enabled: true
-        type: hostPath
-        hostPath: /dev/dri/renderD128
-        hostPathType: "CharDevice"
   machine-learning:
     enabled: true
     controllers:
