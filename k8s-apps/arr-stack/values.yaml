@@ -51,6 +51,11 @@ app-template:
           envFrom:
             - secretRef:
                 name: gluetun-wg-vm-keys
+          resources:
+            requests:
+              homelab.io/tun: "1"
+            limits:
+              homelab.io/tun: "1"
           securityContext:
             capabilities:
               add:
@@ -267,16 +272,6 @@ app-template:
         qbittorrent:
           qbittorrent:
             - path: /config
-
-    gluetun-device:
-      enabled: true
-      type: hostPath
-      hostPath: /dev/net/tun
-      hostPathType: "CharDevice"
-      advancedMounts:
-        qbittorrent:
-          gluetun:
-            - path: /dev/net/tun
 
     tunnel-monitor-config:
       type: configMap

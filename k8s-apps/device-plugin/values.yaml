@@ -28,6 +28,18 @@ app-template:
             limits:
               memory: 64Mi
 
+    # /dev/net/tun exists on every node; consumed by the arr-stack gluetun
+    # sidecar.
+    tun:
+      type: daemonset
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+      containers:
+        main:
+          image: *image
+          resources: *resources
+
     # The ConBee stick is USB: a CharDevice mount only exists on homelab2,
     # so this DaemonSet is pinned there.
     conbee:
@@ -52,6 +64,14 @@ app-template:
           devices:
             - resource: homelab.io/render
               path: /dev/dri/renderD128
+    config-tun:
+      enabled: true
+      forceRename: device-plugin-config-tun
+      data:
+        config.yaml: |
+          devices:
+            - resource: homelab.io/tun
+              path: /dev/net/tun
     config-conbee:
       enabled: true
       forceRename: device-plugin-config-conbee
@@ -74,6 +94,16 @@ app-template:
           main:
             - path: /dev/dri/renderD128
               readOnly: true
+    dev-tun:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/net/tun
+      hostPathType: CharDevice
+      advancedMounts:
+        tun:
+          main:
+            - path: /dev/net/tun
+              readOnly: true
     dev-conbee:
       enabled: true
       type: hostPath
@@ -93,6 +123,9 @@ app-template:
         render:
           main:
             - path: /var/lib/kubelet/device-plugins
+        tun:
+          main:
+            - path: /var/lib/kubelet/device-plugins
         conbee:
           main:
             - path: /var/lib/kubelet/device-plugins
@@ -101,6 +134,15 @@ app-template:
       name: device-plugin-config-render
       advancedMounts:
         render:
+          main:
+            - path: /app/config.yaml
+              readOnly: true
+              subPath: config.yaml
+    config-tun:
+      type: configMap
+      name: device-plugin-config-tun
+      advancedMounts:
+        tun:
           main:
             - path: /app/config.yaml
               readOnly: true
