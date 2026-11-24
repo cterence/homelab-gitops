@@ -48,7 +48,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | App | Description |
 | --- | --- |
 | [argocd](./scripts/../k8s-apps/argocd) | Declarative, GitOps continuous delivery tool for Kubernetes |
-| [arr-stack](./scripts/../k8s-apps/arr-stack) | Arr Stack |
 | [audiobookshelf](./scripts/../k8s-apps/audiobookshelf) | Self-hosted audiobook and podcast server |
 | [catbox](./scripts/../k8s-apps/catbox) | Async file-transfer hub over tailcat |
 | [cert-manager](./scripts/../k8s-apps/cert-manager) | Automatically provision and manage TLS certificates in Kubernetes |
@@ -63,6 +62,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [external-dns](./scripts/../k8s-apps/external-dns) | Configure external DNS servers (AWS Route53, Google CloudDNS and others) for Kubernetes Ingresses and Services |
 | [external-secrets](./scripts/../k8s-apps/external-secrets) | External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets |
 | [falco](./scripts/../k8s-apps/falco) | Cloud Native Runtime Security |
+| [filebrowser-quantum](./scripts/../k8s-apps/filebrowser-quantum) | Filebrowser Quantum |
 | [garage](./scripts/../k8s-apps/garage) | S3-compatible object store for small self-hosted geo-distributed deployments |
 | [garage-backup](./scripts/../k8s-apps/garage-backup) | S3-compatible object store for small self-hosted geo-distributed deployments |
 | [garage-ssd](./scripts/../k8s-apps/garage-ssd) | S3-compatible object store for small self-hosted geo-distributed deployments |
@@ -92,6 +92,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [opentelemetry-operator](./scripts/../k8s-apps/opentelemetry-operator) | Kubernetes Operator for OpenTelemetry Collector |
 | [paperless-ngx](./scripts/../k8s-apps/paperless-ngx) | Scan, index and archive all your physical documents |
 | [pocket-id](./scripts/../k8s-apps/pocket-id) | Simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services |
+| [qbittorrent](./scripts/../k8s-apps/qbittorrent) | qBittorrent behind gluetun |
 | [registry](./scripts/../k8s-apps/registry) | In-cluster OCI image registry (CNCF distribution) |
 | [reloader](./scripts/../k8s-apps/reloader) | A Kubernetes controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig |
 | [sablier](./scripts/../k8s-apps/sablier) | A free and open-source software to start workloads on demand and stop them after a period of inactivity |
