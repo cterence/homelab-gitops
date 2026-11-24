@@ -80,15 +80,15 @@ func TestDiskUsagePanelQueries(t *testing.T) {
 	}{
 		{"panel-1", "Volume usage", "node_disk_usage_bytes"},
 		{"panel-4", "Top 10 by absolute usage", "topk(10, node_disk_usage_bytes)"},
-		{"panel-5", "Absolute capacity", `avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="arr-stack-data"})`},
-		{"panel-2", "Absolute used space", `avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim="arr-stack-data"})`},
-		{"panel-3", "Relative used space", `1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim="arr-stack-data"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="arr-stack-data"}`},
+		{"panel-5", "Absolute capacity", `avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="qbittorrent-data"})`},
+		{"panel-2", "Absolute used space", `avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim="qbittorrent-data"})`},
+		{"panel-3", "Relative used space", `1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim="qbittorrent-data"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="qbittorrent-data"}`},
 		{"panel-9", "Absolute capacity", `avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="storage-loki-0"})`},
 		{"panel-10", "Absolute used space", `avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim="storage-loki-0"})`},
 		{"panel-11", "Relative used space", `1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim="storage-loki-0"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="storage-loki-0"}`},
-		{"panel-6", "Absolute capacity", `avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="storage-pool"})`},
-		{"panel-7", "Absolute used space", `avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim="storage-pool"})`},
-		{"panel-8", "Relative used space", `1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim="storage-pool"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="storage-pool"}`},
+		{"panel-6", "Absolute capacity", `avg(kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="holyarrs-storage-pool"})`},
+		{"panel-7", "Absolute used space", `avg(kubelet_volume_stats_used_bytes{persistentvolumeclaim="holyarrs-storage-pool"})`},
+		{"panel-8", "Relative used space", `1 - kubelet_volume_stats_available_bytes{persistentvolumeclaim="holyarrs-storage-pool"}/kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="holyarrs-storage-pool"}`},
 	}
 
 	for _, tt := range tests {

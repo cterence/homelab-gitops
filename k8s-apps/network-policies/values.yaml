@@ -10,19 +10,12 @@ namespaces:
     defaultDeny: true
     nodeProbes: true
     allow: [kube-system, monitoring]
-  - name: arr-stack
+  - name: qbittorrent
     defaultDeny: true
-    allow:
-      [
-        traefik,
-        go-healthcheck,
-        cnpg-system,
-        monitoring,
-        seerr,
-        tailscale-operator,
-        holyarrs,
-      ]
-    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
+    allow: [traefik, go-healthcheck, monitoring, holyarrs]
+  - name: filebrowser-quantum
+    defaultDeny: true
+    allow: [traefik, go-healthcheck]
   - name: audiobookshelf
     defaultDeny: true
     allow: [traefik, tailscale-operator]
@@ -65,7 +58,6 @@ namespaces:
     defaultDeny: true
     allow:
       [
-        arr-stack,
         cnpg-restore-test,
         gitea,
         home-assistant,
@@ -200,7 +192,7 @@ namespaces:
     allow: [traefik]
   - name: seerr
     defaultDeny: true
-    allow: [traefik, arr-stack, sablier, holyarrs]
+    allow: [traefik, sablier, holyarrs]
   - name: slackmoji
     defaultDeny: true
     allow: [traefik]

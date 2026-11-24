@@ -1,0 +1,349 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    qbittorrent:
+      type: deployment
+      strategy: Recreate
+      replicas: 0
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        dnsPolicy: None
+        dnsConfig:
+          nameservers:
+            - 1.1.1.1
+            - 8.8.8.8
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data
+      initContainers:
+        gluetun:
+          enabled: true
+          image:
+            repository: ghcr.io/qdm12/gluetun
+            tag: v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+          env:
+            TZ: Europe/Paris
+            VPN_SERVICE_PROVIDER: custom
+            VPN_TYPE: wireguard
+            VPN_INTERFACE: wg0
+            WIREGUARD_ADDRESSES: 192.168.2.2/32
+            FIREWALL_VPN_INPUT_PORTS: "51413"
+            FIREWALL_OUTBOUND_SUBNETS: "192.168.1.0/24,10.244.0.0/16"
+            FIREWALL_INPUT_PORTS: "8080,9115"
+          restartPolicy: Always
+          envFrom:
+            - secretRef:
+                name: gluetun-wg-vm-keys
+          resources:
+            requests:
+              homelab.io/tun: "1"
+            limits:
+              homelab.io/tun: "1"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            runAsUser: 0
+            runAsGroup: 0
+      containers:
+        qbittorrent:
+          image:
+            repository: lscr.io/linuxserver/qbittorrent
+            tag: 5.3.0_v2.1.2-ls487@sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384
+          env:
+            TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
+            TORRENTING_PORT: 51413
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              type: HTTP
+            readiness:
+              enabled: true
+              type: HTTP
+
+        # Pings the wireguard peer through gluetun's netns so Prometheus can
+        # detect a dead tunnel even when the pod itself stays healthy.
+        tunnel-monitor:
+          image:
+            repository: quay.io/prometheus/blackbox-exporter
+            tag: v0.29.1@sha256:ea1c7aa3ef3f307cd03e85f34abb604478ccb90b567fc690da0cd9776da76b13
+          args:
+            - --config.file=/config/blackbox.yml
+          ports:
+            - name: probe
+              containerPort: 9115
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            capabilities:
+              add:
+                - NET_RAW
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: 9115
+                  path: /-/healthy
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: 9115
+                  path: /-/healthy
+
+  service:
+    qbittorrent:
+      controller: qbittorrent
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+        probe:
+          port: 9115
+
+  ingress:
+    qbittorrent:
+      annotations:
+        external-dns.kubernetes.io/cloudflare-proxied: "false"
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+      className: "traefik"
+      hosts:
+        - host: &host qb.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: qbittorrent
+                port: http
+      tls:
+        - secretName: qbittorrent-tls
+          hosts:
+            - *host
+
+  persistence:
+    # Same host directory as the old arr-stack data PVC; pinned to homelab2
+    # by the raw PV below.
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: qbittorrent-data
+      advancedMounts:
+        qbittorrent:
+          qbittorrent:
+            - path: /data/download
+              subPath: download
+
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: qbittorrent-config
+      advancedMounts:
+        qbittorrent:
+          qbittorrent:
+            - path: /config
+
+    tunnel-monitor-config:
+      type: configMap
+      identifier: tunnel-monitor-config
+      advancedMounts:
+        qbittorrent:
+          tunnel-monitor:
+            - path: /config/blackbox.yml
+              subPath: blackbox.yml
+
+  configMaps:
+    tunnel-monitor-config:
+      includeChecksumInControllers:
+        - qbittorrent
+      data:
+        blackbox.yml: |
+          modules:
+            icmp_tunnel:
+              prober: icmp
+              timeout: 5s
+              icmp:
+                preferred_ip_protocol: ip4
+
+  rawResources:
+    qbittorrent-config-pv:
+      enabled: true
+      forceRename: qbittorrent-config
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 1Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: qbittorrent-config
+            namespace: qbittorrent
+          local:
+            path: /opt/local-path-provisioner/pvc-a08eeaa7-4dd5-418d-bf53-c2dfe31d1a3b_arr-stack_arr-stack-qbittorrent-config
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    qbittorrent-config-pvc:
+      enabled: true
+      forceRename: qbittorrent-config
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: shared-local
+          volumeName: qbittorrent-config
+    qbittorrent-data-pv:
+      enabled: true
+      forceRename: qbittorrent-data
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 1200Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: qbittorrent-data
+            namespace: qbittorrent
+          local:
+            path: /opt/local-path-provisioner/pvc-29cf47a1-5baa-49a4-9176-6d0609a3054a_arr-stack_arr-stack-data
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    qbittorrent-data-pvc:
+      enabled: true
+      forceRename: qbittorrent-data
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1200Gi
+          storageClassName: shared-local
+          volumeName: qbittorrent-data
+    qbittorrent-tunnel-monitor:
+      enabled: true
+      forceRename: qbittorrent-tunnel
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: ServiceMonitor
+        metadata:
+          labels:
+            app.kubernetes.io/name: qbittorrent-tunnel
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+              app.kubernetes.io/service: "{{ .Release.Name }}-qbittorrent"
+          endpoints:
+            - port: probe
+              path: /probe
+              interval: 60s
+              scrapeTimeout: 10s
+              params:
+                module:
+                  - icmp_tunnel
+                target:
+                  - 192.168.2.1
+              metricRelabelings:
+                - action: replace
+                  sourceLabels: [__name__]
+                  targetLabel: tunnel
+                  replacement: qbittorrent-wg
+    qbittorrent-tunnel-rule:
+      enabled: true
+      forceRename: qbittorrent-tunnel
+      manifest:
+        apiVersion: monitoring.coreos.com/v1
+        kind: PrometheusRule
+        spec:
+          groups:
+            - name: wireguard-tunnel
+              rules:
+                - alert: WireguardTunnelDown
+                  expr: probe_success{service="{{ .Release.Name }}-qbittorrent"} == 0
+                  for: 2m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: qBittorrent wireguard tunnel down
+                    description: >-
+                      ICMP probe to the wireguard peer 192.168.2.1 through gluetun has
+                      failed for over 2 minutes. The tunnel to free-oracle-arm-1 is
+                      likely down.
+                - alert: WireguardTunnelProbeMissing
+                  expr: absent(probe_success{service="{{ .Release.Name }}-qbittorrent"})
+                  for: 10m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: qBittorrent wireguard tunnel probe missing
+                    description: >-
+                      No probe_success metric from the qbittorrent tunnel monitor for
+                      over 10 minutes. The sidecar or ServiceMonitor may be broken.

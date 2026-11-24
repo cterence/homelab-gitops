@@ -257,9 +257,9 @@ velero:
       template:
         storageLocation: backblaze
         includedNamespaces:
-          - arr-stack
           - audiobookshelf
           - changedetection
+          - filebrowser-quantum
           - garage
           - garage-ssd
           - gitea
@@ -272,6 +272,7 @@ velero:
           - opencloud
           - paperless-ngx
           - pocket-id
+          - qbittorrent
           - seerr
           - vaultwarden
           - zigbee2mqtt
@@ -295,9 +296,9 @@ velero:
       template:
         storageLocation: garage-backup
         includedNamespaces:
-          - arr-stack
           - audiobookshelf
           - changedetection
+          - filebrowser-quantum
           - garage
           - garage-ssd
           - gitea
@@ -310,6 +311,7 @@ velero:
           - opencloud
           - paperless-ngx
           - pocket-id
+          - qbittorrent
           - seerr
           - vaultwarden
           - zigbee2mqtt

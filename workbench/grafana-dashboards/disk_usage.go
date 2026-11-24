@@ -185,9 +185,9 @@ func autoGrid(panelNames ...string) *dashboardv2.AutoGridBuilder {
 }
 
 func diskUsage() *dashboardv2.DashboardBuilder {
-	homelab2 := diskStatsPanels("arr-stack-data", 5, 2, 3)
+	homelab2 := diskStatsPanels("qbittorrent-data", 5, 2, 3)
 	homelab3 := diskStatsPanels("storage-loki-0", 9, 10, 11)
-	pool := diskStatsPanels("storage-pool", 6, 7, 8)
+	pool := diskStatsPanels("holyarrs-storage-pool", 6, 7, 8)
 
 	return dashboardv2.NewDashboardBuilder("Disk usage").
 		CursorSync(dashboardv2.DashboardCursorSyncOff).

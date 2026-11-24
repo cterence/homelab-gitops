@@ -1,0 +1,381 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+app-template:
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  controllers:
+    filebrowser-quantum:
+      type: deployment
+      strategy: Recreate
+      labels:
+        sablier.enable: "true"
+        sablier.group: "fbq"
+      annotations:
+        reloader.stakater.com/auto: "true"
+      pod:
+        annotations:
+          backup.velero.io/backup-volumes-excludes: data,data-storage-pool,music
+      containers:
+        filebrowser-quantum:
+          image:
+            repository: ghcr.io/gtsteffaniak/filebrowser
+            tag: 2.0.2-stable@sha256:de2b4c4d18485ea202ab2cdada5bd25d8f0b8ed071712c8216a67194c31285ae
+          env:
+            TZ: Europe/Paris
+            PUID: 1000
+            PGID: 1000
+          ports:
+            - name: http
+              containerPort: 8080
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+            readiness:
+              enabled: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
+
+  service:
+    filebrowser-quantum:
+      controller: filebrowser-quantum
+      type: ClusterIP
+      ports:
+        http:
+          port: 8080
+
+  ingress:
+    filebrowser-quantum:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        external-dns.kubernetes.io/target: home.terence.cloud
+        external-dns.kubernetes.io/cloudflare-proxied: "false"
+        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-fbq@kubernetescrd,traefik-ip-allowlist@kubernetescrd"
+      className: "traefik"
+      hosts:
+        - host: &host fbq.terence.cloud
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: filebrowser-quantum
+                port: http
+      tls:
+        - secretName: filebrowser-quantum-tls
+          hosts:
+            - *host
+
+  persistence:
+    # Same host directory as the old arr-stack data PVC; pinned to homelab2
+    # by the raw PV below.
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: fbq-data
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /data
+
+    # Same NFS export as the old arr-stack storage-pool claim.
+    data-storage-pool:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: fbq-storage-pool
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /data-pool
+              subPath: arr-stack
+
+    # Same host directory as the old arr-stack music-shared claim.
+    music:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: fbq-music
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /music
+              subPath: library
+
+    db:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: fbq-db
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /home/filebrowser/data/database
+
+    config:
+      type: configMap
+      identifier: filebrowser-quantum-config
+      advancedMounts:
+        filebrowser-quantum:
+          filebrowser-quantum:
+            - path: /home/filebrowser/data/config.yaml
+              subPath: config.yaml
+
+  configMaps:
+    filebrowser-quantum-config:
+      includeChecksumInControllers:
+        - filebrowser-quantum
+      data:
+        config.yaml: |
+          server:
+            database:
+              path: "/home/filebrowser/data/database/filebrowser.sqlite"
+              migrateFrom: "/home/filebrowser/data/database/database.db.old"
+            sources:
+              - path: "/data"
+                config: {}
+              - path: "/data-pool"
+                config: {}
+              - path: "/music"
+                config: {}
+          http:
+            port: 8080
+          auth:
+            methods:
+              noauth: true
+          userDefaults:
+            account:
+              permissions:
+                api: true
+                admin: true
+                share: true
+                realtime: true
+
+  rawResources:
+    fbq-data-pv:
+      enabled: true
+      forceRename: fbq-data
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 1200Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: fbq-data
+            namespace: filebrowser-quantum
+          local:
+            path: /opt/local-path-provisioner/pvc-29cf47a1-5baa-49a4-9176-6d0609a3054a_arr-stack_arr-stack-data
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    fbq-data-pvc:
+      enabled: true
+      forceRename: fbq-data
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1200Gi
+          storageClassName: shared-local
+          volumeName: fbq-data
+    fbq-storage-pool-pv:
+      enabled: true
+      forceRename: fbq-storage-pool
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 8Ti
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: nfs
+          mountOptions:
+            - hard
+            - nfsvers=4.1
+            - nosuid
+            - noexec
+            - timeo=600
+            - retrans=2
+          nfs:
+            path: /storage-pool
+            server: 192.168.1.141
+    fbq-storage-pool-pvc:
+      enabled: true
+      forceRename: fbq-storage-pool
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 8Ti
+          storageClassName: nfs
+          volumeName: fbq-storage-pool
+    fbq-music-pv:
+      enabled: true
+      forceRename: fbq-music
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 100Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: fbq-music
+            namespace: filebrowser-quantum
+          local:
+            path: /opt/local-path-provisioner/pvc-08a2cbb6-e7ab-4ba4-b8d4-fc906f0e4931_music_music
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    fbq-music-pvc:
+      enabled: true
+      forceRename: fbq-music
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Gi
+          storageClassName: shared-local
+          volumeName: fbq-music
+    fbq-db-pv:
+      enabled: true
+      forceRename: fbq-db
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          capacity:
+            storage: 100Mi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: shared-local
+          claimRef:
+            name: fbq-db
+            namespace: filebrowser-quantum
+          local:
+            path: /opt/local-path-provisioner/pvc-b9f07d53-1547-4a5b-a8b6-2149b0953a69_arr-stack_arr-stack-filebrowser-quantum-db
+          nodeAffinity:
+            required:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - homelab2
+    fbq-db-pvc:
+      enabled: true
+      forceRename: fbq-db
+      manifest:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          annotations:
+            helm.sh/resource-policy: keep
+          labels:
+            velero.io/exclude-from-backup: "true"
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Mi
+          storageClassName: shared-local
+          volumeName: fbq-db
+    sablier-fbq:
+      enabled: true
+      forceRename: sablier-fbq
+      manifest:
+        apiVersion: traefik.io/v1alpha1
+        kind: Middleware
+        spec:
+          plugin:
+            sablier:
+              dynamic:
+                displayName: filebrowser
+                refreshFrequency: 5s
+                showDetails: true
+                theme: shuffle
+              sablierUrl: http://sablier-sablier.sablier:10000
+              sessionDuration: 10m
+              ignoreUserAgent: curl
+              group: fbq
