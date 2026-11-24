@@ -2,26 +2,23 @@ urls:
   - https://alertmanager.terence.cloud/-/healthy
   - https://argocd.terence.cloud/healthz?full=true
   - https://auth.terence.cloud/healthz
-  - https://baz.terence.cloud/system/ping
   - https://bw.terence.cloud/alive
   - https://cd.terence.cloud/
   - https://docs.terence.cloud
+  - https://git.terence.cloud/api/healthz
+  - https://grafana.terence.cloud/api/health
   - https://ha.terence.cloud
+  - https://holyarrs.snow-delta.ts.net/ping
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
   - https://jstat.terence.cloud/auth/isconfigured
-  - https://git.terence.cloud/api/healthz
-  - https://grafana.terence.cloud/api/health
   - https://niks3.terence.cloud/health
   - https://oc.terence.cloud/status
   - https://paperless.terence.cloud/accounts/login/?next=/
   - https://prometheus.terence.cloud/-/healthy
-  - https://prow.terence.cloud/ping
   - https://qb.terence.cloud
-  - https://rad.terence.cloud/ping
   - https://registry.snow-delta.ts.net
   - https://slskd.terence.cloud/health
-  - https://son.terence.cloud/ping
 
 cnpgClusters:
   - name: gitea-cnpg-cluster

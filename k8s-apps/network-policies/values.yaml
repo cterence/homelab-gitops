@@ -105,7 +105,7 @@ namespaces:
     defaultDeny: true
   - name: holyarrs
     defaultDeny: true
-    allow: [tailscale-operator]
+    allow: [tailscale-operator, go-healthcheck]
   - name: immich
     defaultDeny: true
     allow:
