@@ -23,7 +23,7 @@ app-template:
         main:
           image:
             repository: registry.snow-delta.ts.net/catbox
-            tag: "81"
+            tag: "82"
             pullPolicy: IfNotPresent
           env:
             TZ: Europe/Paris
