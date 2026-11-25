@@ -299,7 +299,7 @@ app-template:
           selector:
             matchLabels:
               app.kubernetes.io/instance: "{{ .Release.Name }}"
-              app.kubernetes.io/service: "{{ .Release.Name }}-qbittorrent"
+              app.kubernetes.io/service: "{{ .Release.Name }}"
           endpoints:
             - port: probe
               path: /probe
@@ -326,7 +326,7 @@ app-template:
             - name: wireguard-tunnel
               rules:
                 - alert: WireguardTunnelDown
-                  expr: probe_success{service="{{ .Release.Name }}-qbittorrent"} == 0
+                  expr: probe_success{service="{{ .Release.Name }}"} == 0
                   for: 2m
                   labels:
                     severity: critical
@@ -337,7 +337,7 @@ app-template:
                       failed for over 2 minutes. The tunnel to free-oracle-arm-1 is
                       likely down.
                 - alert: WireguardTunnelProbeMissing
-                  expr: absent(probe_success{service="{{ .Release.Name }}-qbittorrent"})
+                  expr: absent(probe_success{service="{{ .Release.Name }}"})
                   for: 10m
                   labels:
                     severity: warning
