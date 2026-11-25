@@ -22,8 +22,7 @@ import (
 // Baked at build time via -ldflags "-X main.version=…"; "dev" otherwise.
 var version = "dev"
 
-// Baked at build time via -ldflags "-X main.buildTime=…"; unix seconds,
-// "0" in dev builds.
+// Never set anymore; buildStamp() renders "unknown".
 var buildTime = "0"
 
 // buildStamp renders the baked build time; "unknown" when unset.

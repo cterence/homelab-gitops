@@ -29,8 +29,6 @@
 
       # Baked into both catbox binaries via -X main.version.
       version = self.shortRev or self.dirtyShortRev or "dev";
-      # Baked via -X main.buildTime: the commit's unix timestamp.
-      buildTime = toString (self.lastModified or 0);
 
       # Single occurrence: nix-update-hash refuses hashes that appear twice.
       vendorHash = "sha256-bbqOH7TuVf3Ceh5rzOBtgFQ60lz44eMPPBafUtK8on8=";
@@ -221,7 +219,6 @@
               "-s"
               "-w"
               "-X main.version=${version}"
-              "-X main.buildTime=${buildTime}"
             ];
           };
         }
@@ -239,7 +236,7 @@
           nixpkgs.lib.optionalAttrs (builtins.elem system androidSystems) (
             let
               catboxAndroid = import ./workbench/catbox/nix/android.nix {
-                inherit pkgs version buildTime;
+                inherit pkgs version;
                 android-sdk = android-nixpkgs.sdk.${system};
                 # A path literal, like the catbox package above: the
                 # git-filtered self.outPath would exclude untracked
