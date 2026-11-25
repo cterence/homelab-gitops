@@ -12,9 +12,6 @@ app-template:
     filebrowser-quantum:
       type: deployment
       strategy: Recreate
-      labels:
-        sablier.enable: "true"
-        sablier.group: "fbq"
       annotations:
         reloader.stakater.com/auto: "true"
       pod:
@@ -46,6 +43,12 @@ app-template:
                 httpGet:
                   port: http
                   path: /health
+            startup:
+              enabled: true
+              spec:
+                httpGet:
+                  port: http
+                  path: /health
 
   service:
     filebrowser-quantum:
@@ -62,7 +65,7 @@ app-template:
         external-dns.kubernetes.io/target: home.terence.cloud
         external-dns.kubernetes.io/cloudflare-proxied: "false"
         traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace }}-sablier-fbq@kubernetescrd,traefik-ip-allowlist@kubernetescrd"
+        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
       className: "traefik"
       hosts:
         - host: &host fbq.terence.cloud
@@ -361,21 +364,3 @@ app-template:
               storage: 100Mi
           storageClassName: shared-local
           volumeName: fbq-db
-    sablier-fbq:
-      enabled: true
-      forceRename: sablier-fbq
-      manifest:
-        apiVersion: traefik.io/v1alpha1
-        kind: Middleware
-        spec:
-          plugin:
-            sablier:
-              dynamic:
-                displayName: filebrowser
-                refreshFrequency: 5s
-                showDetails: true
-                theme: shuffle
-              sablierUrl: http://sablier-sablier.sablier:10000
-              sessionDuration: 10m
-              ignoreUserAgent: curl
-              group: fbq
