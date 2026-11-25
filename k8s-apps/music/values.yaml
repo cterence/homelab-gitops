@@ -317,7 +317,8 @@ app-template:
 
           paths:
               default: $albumartist/$album%if{$year, ($year)}/$track $title
-              singleton: Non-Album/$artist - $title
+              # Same layout as default: singletons trust their album tags.
+              singleton: $albumartist/$album%if{$year, ($year)}/$track $title
               comp: Compilations/$album%aunique{}/$track $title
               albumtype_soundtrack: Soundtracks/$album/$track $title
 
