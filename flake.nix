@@ -33,7 +33,7 @@
       buildTime = toString (self.lastModified or 0);
 
       # Single occurrence: nix-update-hash refuses hashes that appear twice.
-      vendorHash = "sha256-SKO7Q7mxnC2cqMlrAaAi9egLO7ntDz5yET/ONn2O59c=";
+      vendorHash = "sha256-bbqOH7TuVf3Ceh5rzOBtgFQ60lz44eMPPBafUtK8on8=";
 
       supportedSystems = [
         "x86_64-linux"
@@ -134,6 +134,14 @@
     in
     {
       overlays.default = final: prev: {
+        # catbox's go.mod needs go >= 1.27.4; nixpkgs' go_1_27 lags behind.
+        go_1_27 = prev.go_1_27.overrideAttrs (old: {
+          version = "1.27.4";
+          src = final.fetchurl {
+            url = "https://go.dev/dl/go1.27.4.src.tar.gz";
+            hash = "sha256-c8+4VxrsDAEXdofbhxY9Rqog6XeWcncokaoXZU2aYJk=";
+          };
+        });
         go = final."go_1_${toString goVersion}";
       };
 
