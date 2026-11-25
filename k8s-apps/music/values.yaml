@@ -77,11 +77,12 @@ app-template:
             repository: lscr.io/linuxserver/beets
             tag: 2.14.1-ls359@sha256:01e4d6177968a8312843f0b1b19d766ee2f07eb08b327ef2ae9422a5dcd2364a
           command:
-            - beet
+            - /bin/sh
+            - -c
           args:
-            - import
-            - -q
-            - /downloads
+            # Album pass moves matched albums out of /downloads, so the singleton
+            # pass only sees tracks that failed album matching.
+            - beet import -q /downloads && beet import -q -s /downloads
           env:
             TZ: Europe/Paris
             PUID: 1000
