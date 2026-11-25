@@ -82,7 +82,7 @@ app-template:
           args:
             # Album pass moves matched albums out of /downloads, so the singleton
             # pass only sees tracks that failed album matching.
-            - beet import -q /downloads && beet import -q -s /downloads
+            - beet import -q /downloads && beet import -q -s --quiet-fallback asis /downloads
           env:
             TZ: Europe/Paris
             PUID: 1000
