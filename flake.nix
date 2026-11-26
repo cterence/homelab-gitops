@@ -31,7 +31,7 @@
       version = self.shortRev or self.dirtyShortRev or "dev";
 
       # Single occurrence: nix-update-hash refuses hashes that appear twice.
-      vendorHash = "sha256-bbqOH7TuVf3Ceh5rzOBtgFQ60lz44eMPPBafUtK8on8=";
+      vendorHash = "sha256-uinhukpHb2GmCzbOQr1Msgjnyvf7nOnD+fvdyfMyxds=";
 
       supportedSystems = [
         "x86_64-linux"
