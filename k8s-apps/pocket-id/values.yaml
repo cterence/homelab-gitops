@@ -20,7 +20,7 @@ pocket-id:
 
   database:
     # -- Database provider to use. Options: "sqlite" or "postgres".
-    provider: "postgres"
+    provider: "sqlite"
 
     # -- Connection string for the database.
     #    - For sqlite: file:data/pocket-id.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate
@@ -207,8 +207,8 @@ pocket-id:
   extraEnvFrom:
     - secretRef:
         name: pocket-id-maxmind-key
-    - secretRef:
-        name: pocket-id
+    - configMapRef:
+        name: pocket-id-db
 
   # -- Secrets for pulling images.
   imagePullSecrets: []
@@ -363,3 +363,11 @@ cnpg-cluster:
         pluginConfiguration:
           name: barman-cloud.cloudnative-pg.io
     retentionPolicy: "7d"
+
+dump:
+  enabled: true
+  databases:
+    - /src/pocket-id.db
+  persistence:
+    config:
+      existingClaim: pocket-id-data-pocket-id-0
