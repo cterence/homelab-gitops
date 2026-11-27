@@ -160,6 +160,9 @@ namespaces:
     allow: [traefik, tailscale-operator]
     allowWorldIngressPorts:
       - { port: 39332, protocol: TCP }
+    allowRemoteNode: true
+    remoteNodePorts:
+      - { port: 39332, protocol: TCP }
   - name: network-policies
     defaultDeny: true
   - name: niks3
