@@ -63,6 +63,7 @@ type config struct {
 	in        string
 	out       string
 	schema    string
+	keep      []string
 	overwrite bool
 	strict    bool
 	json      bool
@@ -172,6 +173,7 @@ func run(ctx context.Context, args []string, cfg *config) error {
 			&cli.StringFlag{Name: "in", Required: true, Destination: &cfg.in, Usage: "pg_dump file, or - for stdin"},
 			&cli.StringFlag{Name: "out", Required: true, Destination: &cfg.out, Usage: "path of the SQLite database to create"},
 			&cli.StringFlag{Name: "schema", Destination: &cfg.schema, Usage: "SQLite database the app created, whose schema the output follows"},
+			&cli.StringSliceFlag{Name: "keep", Destination: &cfg.keep, Usage: "table whose rows stay as the reference database has them, repeatable"},
 			&cli.BoolFlag{Name: "overwrite", Destination: &cfg.overwrite, Usage: "replace the output database if it already exists"},
 			&cli.BoolFlag{Name: "strict", Destination: &cfg.strict, Usage: "fail instead of warning when part of the schema cannot be reproduced"},
 			&cli.BoolFlag{Name: "json", Destination: &cfg.json, Usage: "log structured JSON instead of text"},
@@ -283,7 +285,7 @@ func convertFile(ctx context.Context, cfg config) error {
 
 	defer func() { _ = db.Close() }()
 
-	result, err := convertTo(ctx, source.file, db, cfg.strict, progressReporter(cfg), ref)
+	result, err := convertTo(ctx, source.file, db, cfg.strict, progressReporter(cfg), ref, cfg.keep)
 	if err != nil {
 		return err
 	}

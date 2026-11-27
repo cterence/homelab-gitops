@@ -153,7 +153,7 @@ func TestConvertFollowsReferenceSchema(t *testing.T) {
 
 	t.Cleanup(func() { _ = db.Close() })
 
-	result, err := convertTo(ctx, dumpSource(t, refDump), db, false, nil, ref)
+	result, err := convertTo(ctx, dumpSource(t, refDump), db, false, nil, ref, nil)
 	if err != nil {
 		t.Fatalf("convert: %v", err)
 	}
@@ -252,3 +252,89 @@ func TestDateColumnsStayDateOnly(t *testing.T) {
 		t.Fatalf("got %#v, want %q", got[0], "2011-02-18")
 	}
 }
+
+func TestKeepLeavesReferenceRowsAlone(t *testing.T) {
+	ctx := context.Background()
+
+	refPath := writeRefSchema(t)
+
+	refDB, err := sql.Open("sqlite", refPath)
+	if err != nil {
+		t.Fatalf("opening reference database: %v", err)
+	}
+
+	// The reference database records its own migrations, which a backend
+	// specific history cannot be replaced with.
+	if _, err := refDB.Exec(`CREATE TABLE schema_migrations (version text NOT NULL)`); err != nil {
+		t.Fatalf("creating the kept table: %v", err)
+	}
+
+	if _, err := refDB.Exec(`INSERT INTO schema_migrations (version) VALUES ('20261011120000')`); err != nil {
+		t.Fatalf("seeding the kept table: %v", err)
+	}
+
+	if err := refDB.Close(); err != nil {
+		t.Fatalf("closing reference database: %v", err)
+	}
+
+	ref, err := loadRefSchema(refPath)
+	if err != nil {
+		t.Fatalf("loading reference schema: %v", err)
+	}
+
+	out := filepath.Join(t.TempDir(), "out.db")
+	if err := copyRefSchema(refPath, out); err != nil {
+		t.Fatalf("copying reference schema: %v", err)
+	}
+
+	db, err := sql.Open("sqlite", out)
+	if err != nil {
+		t.Fatalf("opening the copied schema: %v", err)
+	}
+
+	t.Cleanup(func() { _ = db.Close() })
+
+	_, err = convertTo(ctx, dumpSource(t, keptDump), db, false, nil, ref, []string{"schema_migrations"})
+	if err != nil {
+		t.Fatalf("convert: %v", err)
+	}
+
+	var version string
+	if err := db.QueryRow(`SELECT version FROM schema_migrations`).Scan(&version); err != nil {
+		t.Fatalf("reading the kept table: %v", err)
+	}
+
+	if version != "20261011120000" {
+		t.Fatalf("kept table holds %q, want the reference row", version)
+	}
+
+	var users int
+	if err := db.QueryRow(`SELECT count(*) FROM users`).Scan(&users); err != nil {
+		t.Fatalf("reading users: %v", err)
+	}
+
+	if users != 1 {
+		t.Fatalf("got %d users, want 1", users)
+	}
+}
+
+const keptDump = `
+CREATE TABLE public.users (
+    id text NOT NULL,
+    created_at timestamp with time zone,
+    is_admin boolean DEFAULT false NOT NULL,
+    username character varying(64) NOT NULL
+);
+
+CREATE TABLE public.schema_migrations (
+    version text NOT NULL
+);
+
+COPY public.users (id, created_at, is_admin, username) FROM stdin;
+u1	2026-10-26 20:38:28.056139+00	t	Terence
+\.
+
+COPY public.schema_migrations (version) FROM stdin;
+20180114171611
+\.
+`
