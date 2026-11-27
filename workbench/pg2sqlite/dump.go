@@ -23,6 +23,8 @@ type table struct {
 	unique  [][]string
 	checks  []string
 	indexes []string
+	ddl     string
+	absent  bool
 }
 
 type column struct {
@@ -33,6 +35,7 @@ type column struct {
 	droppedDefault string
 	notNull        bool
 	generated      bool
+	missing        bool
 }
 
 // dump is everything a plain-format pg_dump file yields.

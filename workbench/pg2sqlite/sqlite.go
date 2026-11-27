@@ -266,6 +266,14 @@ func createTableSQL(t *table, withChecks, withConstraints bool) string {
 // createTable tries progressively simpler DDL so one unsupported constraint
 // cannot lose a whole table. Every downgrade is reported.
 func createTable(ctx context.Context, tx *sql.Tx, t *table, rep *reporter) error {
+	if t.ddl != "" {
+		if _, err := tx.ExecContext(ctx, t.ddl); err != nil {
+			return fmt.Errorf("creating table %s from the reference schema: %w", t.name, err)
+		}
+
+		return nil
+	}
+
 	variants := []struct {
 		checks      bool
 		constraints bool
@@ -315,61 +323,89 @@ func quotedList(names []string) string {
 	return strings.Join(quoted, ", ")
 }
 
-// rowValues fills one row into values, converting per the target column types.
-// The buffer is reused across rows to keep bulk loads allocation-light.
-func rowValues(t *table, cols []*column, fields []string, values []any) ([]any, error) {
+// rowValues fills one row into values, converting per the target column types
+// and binding only the fields in bind. The buffer is reused across rows to keep
+// bulk loads allocation-light.
+func rowValues(t *table, cols []*column, bind []int, fields []string, values []any) ([]any, error) {
 	if len(fields) != len(cols) {
 		return nil, fmt.Errorf("table %s: row has %d fields, want %d", t.name, len(fields), len(cols))
 	}
 
-	if cap(values) < len(fields) {
-		values = make([]any, len(fields))
+	if bind == nil {
+		bind = make([]int, len(cols))
+		for i := range cols {
+			bind[i] = i
+		}
 	}
 
-	values = values[:len(fields)]
-	clear(values)
+	values = values[:0]
 
-	for i, field := range fields {
+	for _, i := range bind {
+		field := fields[i]
 		if field == `\N` {
+			values = append(values, nil)
+
 			continue
 		}
 
 		col := cols[i]
-		text := unescapeCopy(field)
 
-		switch {
-		case col.sqlType == "BLOB":
-			blob, err := decodeBytea(text)
-			if err != nil {
-				return nil, fmt.Errorf("table %s column %s: %w", t.name, col.name, err)
-			}
-
-			values[i] = blob
-		case col.sqlType == "INTEGER" && isBoolType(col.pgType):
-			switch text {
-			case "t", "true", "1":
-				values[i] = int64(1)
-			case "f", "false", "0":
-				values[i] = int64(0)
-			default:
-				return nil, fmt.Errorf("table %s column %s: %q is not a boolean", t.name, col.name, text)
-			}
-		case isTimestampTZ(col.pgType):
-			// Normalising to UTC keeps lexicographic order chronological even
-			// when the source session rendered rows in different offsets.
-			values[i] = normalizeTimestamp(text)
-		default:
-			values[i] = text
+		value, err := columnValue(col, unescapeCopy(field))
+		if err != nil {
+			return nil, fmt.Errorf("table %s column %s: %w", t.name, col.name, err)
 		}
+
+		values = append(values, value)
 	}
 
 	return values, nil
+}
+
+// columnValue converts one copy field into what the target column holds.
+func columnValue(col *column, text string) (any, error) {
+	switch {
+	case col.sqlType == "BLOB":
+		return decodeBytea(text)
+	case isIntegerDeclType(col.sqlType) && isBoolType(col.pgType),
+		isBoolDeclType(col.sqlType) && isBoolType(col.pgType):
+		return boolValue(text)
+	case isIntegerDeclType(col.sqlType) && isTimestampType(col.pgType):
+		return toEpochMillis(text), nil
+	case isIntegerDeclType(col.sqlType) && isIntervalType(col.pgType):
+		ms, ok := intervalMillis(text)
+		if !ok {
+			return nil, fmt.Errorf("%q is not an interval", text)
+		}
+
+		return ms, nil
+	case isTimeDeclType(col.sqlType) && isTimestampType(col.pgType):
+		return toSQLiteTime(text), nil
+	case isTimestampTZ(col.pgType):
+		// Normalising to UTC keeps lexicographic order chronological even
+		// when the source session rendered rows in different offsets.
+		return normalizeTimestamp(text), nil
+	default:
+		return text, nil
+	}
 }
 
 func isBoolType(pgType string) bool {
 	t := strings.ToLower(strings.TrimSpace(pgType))
 
 	return t == "boolean" || t == "bool"
+}
+
+// boolValue maps the copy format of a PostgreSQL boolean onto 0 or 1, which is
+// what every SQLite declaration of a boolean column stores.
+func boolValue(text string) (int64, error) {
+	switch text {
+	case "t", "true", "1":
+		return 1, nil
+	case "f", "false", "0":
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("%q is not a boolean", text)
+	}
 }
 
 func isTimestampTZ(pgType string) bool {
@@ -469,6 +505,12 @@ const progressEvery = 4096
 //
 // progress, when set, is called every progressEvery rows.
 func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool, progress func(rows int)) (*convertResult, error) {
+	return convertTo(ctx, source, db, strict, progress, nil)
+}
+
+// convertTo is convert with an optional reference schema, whose tables replace
+// the ones the dump describes.
+func convertTo(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool, progress func(rows int), ref *refSchema) (*convertResult, error) {
 	if _, err := source.Seek(0, io.SeekStart); err != nil {
 		return nil, fmt.Errorf("rewinding dump: %w", err)
 	}
@@ -488,7 +530,20 @@ func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool,
 	rep := &reporter{}
 	res := &convertResult{skipped: d.skipped}
 
+	var resolver *refResolver
+	if ref != nil {
+		resolver = newRefResolver(ref, rep)
+	}
+
 	for _, t := range d.tables {
+		if resolver != nil {
+			resolver.apply(t)
+		}
+
+		if t.absent {
+			continue
+		}
+
 		if err := createTable(ctx, tx, t, rep); err != nil {
 			return nil, err
 		}
@@ -518,10 +573,18 @@ func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool,
 
 	writer := newInserter(ctx, tx)
 
-	onRow := writer.row
+	onRow := func(t *table, cols []string, row []string) error {
+		if resolver != nil {
+			resolver.apply(t)
+		}
+
+		return writer.row(t, cols, row)
+	}
 
 	if progress != nil {
 		var seen int
+
+		withProgress := onRow
 
 		onRow = func(t *table, cols []string, row []string) error {
 			seen++
@@ -529,7 +592,7 @@ func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool,
 				progress(seen)
 			}
 
-			return writer.row(t, cols, row)
+			return withProgress(t, cols, row)
 		}
 	}
 
@@ -547,48 +610,72 @@ func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool,
 		return nil, fmt.Errorf("closing insert statements: %w", err)
 	}
 
-	for _, t := range d.tables {
-		for _, index := range t.indexes {
-			if _, err := tx.ExecContext(ctx, index); err != nil {
-				rep.warn("skipping index", "table", t.name,
-					"index", strings.Join(strings.Fields(index), " "), "error", err)
-
-				res.skippedIndexes++
+	if ref != nil {
+		for _, object := range ref.objects {
+			if _, err := tx.ExecContext(ctx, object.sql); err != nil {
+				rep.warn("skipping reference object", "kind", object.kind,
+					"object", strings.Join(strings.Fields(object.sql), " "), "error", err)
 
 				continue
 			}
 
-			res.indexes++
+			switch object.kind {
+			case "view":
+				res.views++
+			case "index":
+				res.indexes++
+			}
 		}
 	}
 
-	// pg_dump emits a view twice when it carries a _RETURN rule, the second
-	// time as CREATE OR REPLACE. Only the first definition is needed.
-	createdViews := map[string]bool{}
+	if ref == nil {
+		for _, t := range d.tables {
+			for _, index := range t.indexes {
+				if _, err := tx.ExecContext(ctx, index); err != nil {
+					rep.warn("skipping index", "table", t.name,
+						"index", strings.Join(strings.Fields(index), " "), "error", err)
 
-	for _, view := range d.views {
-		name := viewName(view)
-		if createdViews[name] {
-			res.skippedViews++
+					res.skippedIndexes++
 
-			continue
+					continue
+				}
+
+				res.indexes++
+			}
 		}
 
-		createdViews[name] = true
+		// pg_dump emits a view twice when it carries a _RETURN rule, the second
+		// time as CREATE OR REPLACE. Only the first definition is needed.
+		createdViews := map[string]bool{}
 
-		sqlText := translateView(view, d.schemas)
-		if _, err := tx.ExecContext(ctx, sqlText); err != nil {
-			rep.warn("skipping view", "view", sqlText, "error", err)
+		for _, view := range d.views {
+			name := viewName(view)
+			if createdViews[name] {
+				res.skippedViews++
 
-			res.skippedViews++
+				continue
+			}
 
-			continue
+			createdViews[name] = true
+
+			sqlText := translateView(view, d.schemas)
+			if _, err := tx.ExecContext(ctx, sqlText); err != nil {
+				rep.warn("skipping view", "view", sqlText, "error", err)
+
+				res.skippedViews++
+
+				continue
+			}
+
+			res.views++
 		}
-
-		res.views++
 	}
 
 	for _, t := range d.tables {
+		if t.absent {
+			continue
+		}
+
 		rows := writer.counts[t.name]
 		res.tables = append(res.tables, tableCount{table: t.name, rows: rows})
 		res.rows += rows
@@ -661,6 +748,7 @@ func (t *table) inlineIntegerPK(name string) bool {
 type insertPlan struct {
 	stmt *sql.Stmt
 	cols []*column
+	bind []int
 }
 
 // inserter writes rows as the parser hands them over. One prepared statement is
@@ -687,6 +775,12 @@ func newInserter(ctx context.Context, tx *sql.Tx) *inserter {
 }
 
 func (w *inserter) row(t *table, cols []string, fields []string) error {
+	// Tables missing from the reference schema were reported when it was
+	// applied, and have nothing to insert into.
+	if t.absent {
+		return nil
+	}
+
 	// Cancellation is honoured between rows; the statement itself is executed
 	// without a context so the driver skips its per-call interrupt goroutine.
 	if w.seen%1024 == 0 {
@@ -704,7 +798,7 @@ func (w *inserter) row(t *table, cols []string, fields []string) error {
 		return fmt.Errorf("table %s: row has %d fields, want %d", t.name, len(fields), len(plan.cols))
 	}
 
-	if w.values, err = rowValues(t, plan.cols, fields, w.values); err != nil {
+	if w.values, err = rowValues(t, plan.cols, plan.bind, fields, w.values); err != nil {
 		return err
 	}
 
@@ -732,19 +826,26 @@ func (w *inserter) plan(t *table, cols []string) (*insertPlan, error) {
 		return plan, nil
 	}
 
-	names := cols
-	if len(names) == 0 {
-		names = make([]string, len(t.cols))
-		for i, col := range t.cols {
-			names[i] = col.name
+	planCols := t.insertColumns(cols)
+
+	quoted := make([]string, 0, len(planCols))
+	bind := make([]int, 0, len(planCols))
+
+	for i, col := range planCols {
+		if col == nil || col.missing {
+			continue
 		}
+
+		quoted = append(quoted, quoteIdent(col.name))
+		bind = append(bind, i)
 	}
 
-	quoted := make([]string, len(names))
-	placeholders := make([]string, len(names))
+	if len(quoted) == 0 {
+		return nil, fmt.Errorf("preparing insert into table %s: no column to write", t.name)
+	}
 
-	for i, name := range names {
-		quoted[i] = quoteIdent(name)
+	placeholders := make([]string, len(quoted))
+	for i := range quoted {
 		placeholders[i] = "?"
 	}
 
@@ -756,7 +857,7 @@ func (w *inserter) plan(t *table, cols []string) (*insertPlan, error) {
 		return nil, fmt.Errorf("preparing insert into table %s: %w", t.name, err)
 	}
 
-	plan := &insertPlan{stmt: stmt, cols: t.insertColumns(cols)}
+	plan := &insertPlan{stmt: stmt, cols: planCols, bind: bind}
 	w.plans[key] = plan
 	w.last, w.lastKey = plan, key
 
