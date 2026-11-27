@@ -128,6 +128,7 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 - Flat `package main` layout — no subpackages, no `internal/` directory.
 - Module path: `github.com/cterence/homelab-gitops/workbench/<app>`.
 - Go version: 1.27.1 (set in `go.mod`).
+- Always use github.com/urfave/cli/v3
 - `main()` calls a `run() error` function; on error print to stderr and `os.Exit(1)`.
 - Imports grouped in three blocks separated by blank lines: stdlib, third-party, local (local not needed yet since everything is `package main`).
 - Error handling: wrap with context using `fmt.Errorf("doing X: %w", err)`. Never both log and return an error — pick one.
