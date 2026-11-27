@@ -9,7 +9,7 @@ data:
     #!/bin/sh
     set -eu
 
-    out=/dumps
+    out=/src/dumps
     mkdir -p "$out"
 
     dump() {

@@ -34,18 +34,6 @@ dump:
           dump:
             - path: /scripts
               readOnly: true
-    dumps:
-      type: persistentVolumeClaim
-      forceRename: sqlite-dump-dumps
-      accessMode: ReadWriteOnce
-      size: 20Mi
-      annotations:
-        helm.sh/resource-policy: keep
-        argocd.argoproj.io/sync-options: Delete=false
-      advancedMounts:
-        sqlite-dump:
-          dump:
-            - path: /dumps
     config:
       type: persistentVolumeClaim
       advancedMounts:
