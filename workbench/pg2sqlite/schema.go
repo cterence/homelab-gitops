@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,24 +17,18 @@ var mIntervalDays = regexp.MustCompile(`^(\d+)\s+days?\s+`)
 
 // refSchema is the schema an app creates in its own SQLite database. A Postgres
 // schema cannot express what those tables carry: column collations, STRICT and
-// WITHOUT ROWID modifiers, and timestamps an app keeps as epoch integers.
+// WITHOUT ROWID modifiers, CHECK constraints calling functions only the app
+// registers, and timestamps it keeps as epoch integers.
 type refSchema struct {
-	tables  map[string]*refTable
-	objects []refObject
+	tables map[string]*refTable
 }
 
 type refTable struct {
-	ddl   string
-	types map[string]string
+	types     map[string]string
+	generated map[string]bool
 }
 
-// refObject is an index, trigger or view belonging to the reference schema.
-type refObject struct {
-	kind string
-	sql  string
-}
-
-// loadRefSchema reads the schema of a SQLite database the target app created.
+// loadRefSchema reads the column types of a database the target app created.
 func loadRefSchema(path string) (*refSchema, error) {
 	db, err := sql.Open("sqlite", "file:"+path+"?mode=ro")
 	if err != nil {
@@ -48,19 +45,74 @@ func loadRefSchema(path string) (*refSchema, error) {
 	ref := &refSchema{tables: make(map[string]*refTable, len(names))}
 
 	for _, name := range names {
-		ddl, types, err := refTableDefinition(db, name)
+		types, generated, err := refColumnTypes(db, name)
 		if err != nil {
 			return nil, fmt.Errorf("reading schema of %s: %w", path, err)
 		}
 
-		ref.tables[name] = &refTable{ddl: ddl, types: types}
-	}
-
-	if ref.objects, err = refObjects(db); err != nil {
-		return nil, fmt.Errorf("reading schema of %s: %w", path, err)
+		ref.tables[name] = &refTable{types: types, generated: generated}
 	}
 
 	return ref, nil
+}
+
+// copyRefSchema writes the reference database to path, schema and all, so the
+// output starts as the app's own database rather than a reconstruction of it.
+// Copying the file beats re-creating the DDL, which SQLite refuses while a
+// CHECK constraint names a function only the app registers.
+func copyRefSchema(source, path string) error {
+	db, err := sql.Open("sqlite", source)
+	if err != nil {
+		return fmt.Errorf("opening reference schema %s: %w", source, err)
+	}
+
+	if _, err := db.Exec(`PRAGMA wal_checkpoint(TRUNCATE)`); err != nil {
+		_ = db.Close()
+
+		return fmt.Errorf("checkpointing reference schema %s: %w", source, err)
+	}
+
+	if err := db.Close(); err != nil {
+		return fmt.Errorf("closing reference schema %s: %w", source, err)
+	}
+
+	in, err := os.Open(source)
+	if err != nil {
+		return fmt.Errorf("reading reference schema %s: %w", source, err)
+	}
+
+	defer func() { _ = in.Close() }()
+
+	out, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+
+	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
+
+		return fmt.Errorf("copying reference schema to %s: %w", path, err)
+	}
+
+	if err := out.Close(); err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+
+	return nil
+}
+
+// flushOutput folds a write-ahead log back into the database and leaves it in
+// the journal mode a fresh SQLite file has, so the finished file stands alone.
+func flushOutput(ctx context.Context, db *sql.DB) error {
+	if _, err := db.ExecContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE)`); err != nil {
+		return fmt.Errorf("checkpointing the output database: %w", err)
+	}
+
+	if _, err := db.ExecContext(ctx, `PRAGMA journal_mode=DELETE`); err != nil {
+		return fmt.Errorf("switching the output database out of wal mode: %w", err)
+	}
+
+	return nil
 }
 
 func refTableNames(db *sql.DB) ([]string, error) {
@@ -86,62 +138,54 @@ func refTableNames(db *sql.DB) ([]string, error) {
 	return names, rows.Err()
 }
 
-func refTableDefinition(db *sql.DB, name string) (string, map[string]string, error) {
-	var ddl string
-
-	err := db.QueryRow(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?`, name).Scan(&ddl)
+func refColumnTypes(db *sql.DB, name string) (map[string]string, map[string]bool, error) {
+	rows, err := db.Query(`SELECT name, type, hidden FROM pragma_table_xinfo(` + quoteIdent(name) + `)`)
 	if err != nil {
-		return "", nil, err
-	}
-
-	rows, err := db.Query(`PRAGMA table_info(` + quoteIdent(name) + `)`)
-	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
 	defer func() { _ = rows.Close() }()
 
 	types := map[string]string{}
+	generated := map[string]bool{}
 
 	for rows.Next() {
 		var (
-			cid, notNull, pk int
 			colName, colType string
-			def              sql.NullString
+			hidden           int
 		)
 
-		if err := rows.Scan(&cid, &colName, &colType, &notNull, &def, &pk); err != nil {
-			return "", nil, err
+		if err := rows.Scan(&colName, &colType, &hidden); err != nil {
+			return nil, nil, err
 		}
 
 		types[colName] = colType
+
+		// table_info hides generated columns, which the app computes and an
+		// insert must leave alone.
+		if hidden != 0 {
+			generated[colName] = true
+		}
 	}
 
-	return ddl, types, rows.Err()
+	return types, generated, rows.Err()
 }
 
-func refObjects(db *sql.DB) ([]refObject, error) {
-	rows, err := db.Query(`SELECT type, sql FROM sqlite_master
-		WHERE type IN ('index', 'trigger', 'view') AND sql IS NOT NULL
-		ORDER BY CASE type WHEN 'index' THEN 0 WHEN 'trigger' THEN 1 ELSE 2 END, name`)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = rows.Close() }()
-
-	var objects []refObject
-
-	for rows.Next() {
-		var object refObject
-		if err := rows.Scan(&object.kind, &object.sql); err != nil {
-			return nil, err
+// clearTables empties the reference database so the dump supplies every row.
+// Its rows record the app's own migrations, which the dump also carries.
+func clearTables(ctx context.Context, tx *sql.Tx, ref *refSchema) error {
+	for name := range ref.tables {
+		if _, err := tx.ExecContext(ctx, "DELETE FROM "+quoteIdent(name)); err != nil {
+			return fmt.Errorf("emptying table %s: %w", name, err)
 		}
-
-		objects = append(objects, object)
 	}
 
-	return objects, rows.Err()
+	if _, err := tx.ExecContext(ctx, "DELETE FROM sqlite_sequence"); err != nil &&
+		!strings.Contains(err.Error(), "no such table") {
+		return fmt.Errorf("resetting sqlite_sequence: %w", err)
+	}
+
+	return nil
 }
 
 // refResolver points every table a parse pass yields at its reference
@@ -181,11 +225,15 @@ func (r *refResolver) apply(t *table) {
 		return
 	}
 
-	t.ddl = rt.ddl
-
 	var dropped []string
 
 	for i := range t.cols {
+		if rt.generated[t.cols[i].name] {
+			t.cols[i].missing = true
+
+			continue
+		}
+
 		decl, ok := rt.types[t.cols[i].name]
 		if !ok {
 			t.cols[i].missing = true
@@ -296,6 +344,15 @@ func isTimeDeclType(decl string) bool {
 	}
 }
 
+func isDateDeclType(decl string) bool {
+	return strings.EqualFold(strings.TrimSpace(decl), "date")
+}
+
+// isDateType reports whether a PostgreSQL type holds a date without a time.
+func isDateType(pgType string) bool {
+	return strings.EqualFold(strings.TrimSpace(pgType), "date")
+}
+
 func isIntegerDeclType(decl string) bool {
 	switch strings.ToUpper(strings.TrimSpace(decl)) {
 	case "INTEGER", "INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
@@ -356,4 +413,15 @@ func toEpochMillis(text string) any {
 	}
 
 	return ts.UnixMilli()
+}
+
+// toSQLiteDate renders a PostgreSQL date as the date-only string a date column
+// holds; Django's parse_date rejects anything with a time part.
+func toSQLiteDate(text string) string {
+	ts, ok := parsePGTime(text)
+	if !ok {
+		return text
+	}
+
+	return ts.Format(dateLayout)
 }

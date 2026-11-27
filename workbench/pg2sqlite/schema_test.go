@@ -133,14 +133,22 @@ func TestRowValuesFollowsReferenceTypes(t *testing.T) {
 func TestConvertFollowsReferenceSchema(t *testing.T) {
 	ctx := context.Background()
 
-	ref, err := loadRefSchema(writeRefSchema(t))
+	refPath := writeRefSchema(t)
+
+	ref, err := loadRefSchema(refPath)
 	if err != nil {
 		t.Fatalf("loading reference schema: %v", err)
 	}
 
-	db, err := sql.Open("sqlite", ":memory:")
+	out := filepath.Join(t.TempDir(), "out.db")
+
+	if err := copyRefSchema(refPath, out); err != nil {
+		t.Fatalf("copying reference schema: %v", err)
+	}
+
+	db, err := sql.Open("sqlite", out)
 	if err != nil {
-		t.Fatalf("opening in-memory sqlite: %v", err)
+		t.Fatalf("opening the copied schema: %v", err)
 	}
 
 	t.Cleanup(func() { _ = db.Close() })
@@ -230,4 +238,17 @@ func writeRefSchema(t *testing.T) string {
 	}
 
 	return path
+}
+
+func TestDateColumnsStayDateOnly(t *testing.T) {
+	tbl := &table{name: "d", cols: []column{{name: "created", pgType: "date", sqlType: "date"}}}
+
+	got, err := rowValues(tbl, []*column{&tbl.cols[0]}, nil, []string{"2011-02-18"}, nil)
+	if err != nil {
+		t.Fatalf("rowValues: %v", err)
+	}
+
+	if got[0] != "2011-02-18" {
+		t.Fatalf("got %#v, want %q", got[0], "2011-02-18")
+	}
 }

@@ -266,14 +266,6 @@ func createTableSQL(t *table, withChecks, withConstraints bool) string {
 // createTable tries progressively simpler DDL so one unsupported constraint
 // cannot lose a whole table. Every downgrade is reported.
 func createTable(ctx context.Context, tx *sql.Tx, t *table, rep *reporter) error {
-	if t.ddl != "" {
-		if _, err := tx.ExecContext(ctx, t.ddl); err != nil {
-			return fmt.Errorf("creating table %s from the reference schema: %w", t.name, err)
-		}
-
-		return nil
-	}
-
 	variants := []struct {
 		checks      bool
 		constraints bool
@@ -379,6 +371,10 @@ func columnValue(col *column, text string) (any, error) {
 
 		return ms, nil
 	case isTimeDeclType(col.sqlType) && isTimestampType(col.pgType):
+		if isDateType(col.pgType) || isDateDeclType(col.sqlType) {
+			return toSQLiteDate(text), nil
+		}
+
 		return toSQLiteTime(text), nil
 	case isTimestampTZ(col.pgType):
 		// Normalising to UTC keeps lexicographic order chronological even
@@ -533,14 +529,16 @@ func convertTo(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict boo
 	var resolver *refResolver
 	if ref != nil {
 		resolver = newRefResolver(ref, rep)
+
+		if err := clearTables(ctx, tx, ref); err != nil {
+			return nil, err
+		}
 	}
 
 	for _, t := range d.tables {
 		if resolver != nil {
 			resolver.apply(t)
-		}
 
-		if t.absent {
 			continue
 		}
 
@@ -608,24 +606,6 @@ func convertTo(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict boo
 
 	if err := writer.close(); err != nil {
 		return nil, fmt.Errorf("closing insert statements: %w", err)
-	}
-
-	if ref != nil {
-		for _, object := range ref.objects {
-			if _, err := tx.ExecContext(ctx, object.sql); err != nil {
-				rep.warn("skipping reference object", "kind", object.kind,
-					"object", strings.Join(strings.Fields(object.sql), " "), "error", err)
-
-				continue
-			}
-
-			switch object.kind {
-			case "view":
-				res.views++
-			case "index":
-				res.indexes++
-			}
-		}
 	}
 
 	if ref == nil {

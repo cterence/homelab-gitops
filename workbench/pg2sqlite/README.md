@@ -68,8 +68,10 @@ column collations, `BOOLEAN` declarations, `STRICT`/`WITHOUT ROWID` tables, and
 timestamps kept as epoch integers. Deriving the tables from `pg_dump` then
 produces a database the app cannot read.
 
-`--schema` takes a database the app itself created, and uses its tables, column
-types, indexes, triggers and views as the shape to pour the rows into:
+`--schema` takes a database the app itself created, and starts the output as a
+copy of it, so the tables, column types, collations, CHECK constraints, indexes,
+triggers and views are exactly the ones the app installed. The rows the copy
+carries are discarded and the dump supplies every row:
 
 ```bash
 # Let the app create its schema on an empty data directory, stop it, then:
@@ -77,10 +79,14 @@ go run . --in mydb.sql --out mydb.db --overwrite --schema scratch-data/app.db
 ```
 
 Rows are converted per the target column type rather than the source one: a
-`DATETIME` column gets the driver's own layout, an `integer` column gets unix
-milliseconds, an interval becomes milliseconds, and a boolean becomes `0`/`1`.
-Columns the reference does not have are dropped with a warning, and tables it
-does not have keep no rows.
+`DATETIME` column gets the driver's own layout, a `date` column stays date-only,
+an `integer` column gets unix milliseconds, an interval becomes milliseconds, and
+a boolean becomes `0`/`1`. Generated columns are left to the app, columns the
+reference does not have are dropped with a warning, and tables it does not have
+keep no rows.
+
+The output is left out of write-ahead mode, so the finished database is a single
+file.
 
 ## Exit codes
 

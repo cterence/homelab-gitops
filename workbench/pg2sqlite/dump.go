@@ -23,7 +23,6 @@ type table struct {
 	unique  [][]string
 	checks  []string
 	indexes []string
-	ddl     string
 	absent  bool
 }
 
