@@ -49,10 +49,11 @@ func repoKey(owner, name string) string {
 
 // repo is the subset of Gitea's repository response that we use.
 type repo struct {
-	Name    string `json:"name"`
-	Mirror  bool   `json:"mirror"`
-	Private bool   `json:"private"`
-	Owner   struct {
+	Name           string `json:"name"`
+	Mirror         bool   `json:"mirror"`
+	Private        bool   `json:"private"`
+	MirrorInterval string `json:"mirror_interval"`
+	Owner          struct {
 		Name string `json:"login"`
 	} `json:"owner"`
 }
@@ -200,6 +201,34 @@ func (c *client) ensureOwner(ctx context.Context, owner string) (err error) {
 	fmt.Printf("created org %s\n", owner)
 
 	return nil
+}
+
+// needsUpdate reports whether an existing mirror's settings drift from the
+// config. Patching an unchanged mirror_interval is not free: Gitea reschedules
+// the next pull from now, so a cron shorter than the interval would postpone
+// every sync instead of letting it run.
+func needsUpdate(m Mirror, r *repo) bool {
+	if m.Private != nil && *m.Private != r.Private {
+		return true
+	}
+
+	return m.MirrorInterval != "" && !sameInterval(r.MirrorInterval, m.MirrorInterval)
+}
+
+// sameInterval compares Gitea's duration form ("8h0m0s") with the config's
+// ("8h"). An unparsable pair counts as different so the patch renormalises it.
+func sameInterval(current, desired string) bool {
+	cur, err := time.ParseDuration(current)
+	if err != nil {
+		return false
+	}
+
+	des, err := time.ParseDuration(desired)
+	if err != nil {
+		return false
+	}
+
+	return cur == des
 }
 
 // updateRepo patches mirror_interval / private on an existing mirror.
@@ -495,13 +524,15 @@ func reconcile(ctx context.Context, opts options) error {
 			fmt.Printf("error: %s exists but is not a mirror; refusing to convert it\n", key)
 			continue
 		default:
-			if m.MirrorInterval != "" || (m.Private != nil && *m.Private != r.Private) {
-				fmt.Printf("update mirror %s (mirror_interval=%s private=%v)\n", key, m.MirrorInterval, m.Private)
+			if !needsUpdate(m, r) {
+				continue
+			}
 
-				if !opts.dryRun {
-					if err := c.updateRepo(ctx, m); err != nil {
-						return err
-					}
+			fmt.Printf("update mirror %s (mirror_interval=%s private=%v)\n", key, m.MirrorInterval, m.Private)
+
+			if !opts.dryRun {
+				if err := c.updateRepo(ctx, m); err != nil {
+					return err
 				}
 			}
 		}

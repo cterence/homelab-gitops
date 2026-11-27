@@ -297,3 +297,29 @@ func TestUpdateRepoPrivatePayload(t *testing.T) {
 		})
 	}
 }
+
+func TestNeedsUpdate(t *testing.T) {
+	yes, no := true, false
+
+	tests := []struct {
+		name string
+		m    Mirror
+		r    *repo
+		want bool
+	}{
+		{name: "same interval in different forms needs no patch", m: Mirror{MirrorInterval: "8h"}, r: &repo{MirrorInterval: "8h0m0s"}, want: false},
+		{name: "different interval is patched", m: Mirror{MirrorInterval: "1h"}, r: &repo{MirrorInterval: "8h0m0s"}, want: true},
+		{name: "unset interval is not enforced", m: Mirror{}, r: &repo{MirrorInterval: "8h0m0s"}, want: false},
+		{name: "private drift is patched", m: Mirror{MirrorInterval: "8h", Private: &yes}, r: &repo{MirrorInterval: "8h0m0s"}, want: true},
+		{name: "matching private needs no patch", m: Mirror{MirrorInterval: "8h", Private: &no}, r: &repo{MirrorInterval: "8h0m0s"}, want: false},
+		{name: "unparsable current interval is renormalised", m: Mirror{MirrorInterval: "8h"}, r: &repo{MirrorInterval: "unknown"}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := needsUpdate(tt.m, tt.r); got != tt.want {
+				t.Errorf("needsUpdate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
