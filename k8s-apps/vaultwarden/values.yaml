@@ -260,7 +260,7 @@ vaultwarden:
     ## @param database.type Database type, either mysql or postgresql
     ## Default is a sqlite database.
     ##
-    type: "postgresql"
+    type: "sqlite"
     ## @param database.host Database hostname or IP address
     ##
     host: ""
@@ -278,13 +278,13 @@ vaultwarden:
     dbName: ""
     ## @param database.uriOverride Manually specify the DB connection string
     ##
-    uriOverride: ""
+    uriOverride: "/data/db.sqlite3"
     ## @param database.existingSecret Name of an existing secret containing the database URI
     ##
-    existingSecret: "vaultwarden-cnpg-cluster-app"
+    existingSecret: ""
     ## @param database.existingSecretKey Key in the existing secret
     ##
-    existingSecretKey: "uri"
+    existingSecretKey: ""
     ## @param database.connectionRetries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely.
     ##
     connectionRetries: 15
@@ -767,3 +767,11 @@ cnpg-cluster:
         sslRootCertSecret:
           name: vaultwarden-cnpg-cluster-pg17-ca
           key: ca.crt
+
+dump:
+  enabled: true
+  databases:
+    - /src/db.sqlite3
+  persistence:
+    config:
+      existingClaim: vaultwarden-data-vaultwarden-0
