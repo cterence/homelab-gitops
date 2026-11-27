@@ -1,17 +1,11 @@
 # 🏠 homelab-gitops
 
-<div style="display: flex; justify-content: left; flex-direction: row; align-items: center;">
-<div><p>My Kubernetes cluster managed with ArgoCD.</p><p>
-<img alt="Health" src="https://status.terence.cloud/api/v1/endpoints/_homelab/health/badge.svg">
-<img alt="Uptime" src="https://status.terence.cloud/api/v1/endpoints/_homelab/uptimes/7d/badge.svg">
-</p></div>
-</div>
-
 ## ⚙️ Hardware
 
 | Device                    | Name     | Specs                                                                 | OS    | Role                       |
 |---------------------------|----------|-----------------------------------------------------------------------|-------|----------------------------|
 | Lenovo ThinkCentre M75q-2 | homelab2 | Ryzen 5 Pro 5650GE (6 core / 12 threads) / 24GB RAM / 256GB + 2TB SSD | NixOS | k8s controller+worker node |
+| Lenovo ThinkCentre M75q-2 | homelab3 | Ryzen 5 Pro 5650GE (6 core / 12 threads) / 24GB RAM / 256GB + 2TB SSD | NixOS | k8s worker node            |
 
 ## ✨ Features
 
