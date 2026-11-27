@@ -258,13 +258,6 @@ func convertFile(ctx context.Context, cfg config) error {
 
 	defer out.discard()
 
-	db, err := sql.Open("sqlite", out.temp)
-	if err != nil {
-		return fmt.Errorf("opening %s: %w", cfg.out, err)
-	}
-
-	defer func() { _ = db.Close() }()
-
 	started := time.Now()
 
 	var ref *refSchema
@@ -273,11 +266,34 @@ func convertFile(ctx context.Context, cfg config) error {
 		if ref, err = loadRefSchema(cfg.schema); err != nil {
 			return err
 		}
+
+		if err := os.Remove(out.temp); err != nil {
+			return fmt.Errorf("preparing %s: %w", cfg.out, err)
+		}
+
+		if err := copyRefSchema(cfg.schema, out.temp); err != nil {
+			return err
+		}
 	}
+
+	db, err := sql.Open("sqlite", out.temp)
+	if err != nil {
+		return fmt.Errorf("opening %s: %w", cfg.out, err)
+	}
+
+	defer func() { _ = db.Close() }()
 
 	result, err := convertTo(ctx, source.file, db, cfg.strict, progressReporter(cfg), ref)
 	if err != nil {
 		return err
+	}
+
+	// A copied reference schema is in wal mode, so its writes live beside the
+	// file until they are folded back in.
+	if ref != nil {
+		if err := flushOutput(ctx, db); err != nil {
+			return err
+		}
 	}
 
 	// Close before the rename so no handle points at the finished file.
