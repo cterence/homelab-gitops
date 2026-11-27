@@ -55,7 +55,7 @@ func TestConvertEndToEnd(t *testing.T) {
 
 	t.Cleanup(func() { _ = db.Close() })
 
-	result, err := convert(ctx, dumpSource(t, endToEndDump), db, false)
+	result, err := convert(ctx, dumpSource(t, endToEndDump), db, false, nil)
 	if err != nil {
 		t.Fatalf("convert: %v", err)
 	}
@@ -165,7 +165,7 @@ func TestConvertRejectsDumpWithoutTables(t *testing.T) {
 
 	// A dump that yields nothing is far more likely a mistake (wrong format,
 	// empty file) than an empty database.
-	if _, err := convert(context.Background(), dumpSource(t, "-- nothing here\n"), db, false); err == nil {
+	if _, err := convert(context.Background(), dumpSource(t, "-- nothing here\n"), db, false, nil); err == nil {
 		t.Fatal("expected an error for a dump with no tables")
 	}
 }
@@ -196,7 +196,7 @@ COPY public.custom (id, value_monetary, note) FROM stdin;
 
 	t.Cleanup(func() { _ = db.Close() })
 
-	if _, err := convert(context.Background(), dumpSource(t, dump), db, false); err != nil {
+	if _, err := convert(context.Background(), dumpSource(t, dump), db, false, nil); err != nil {
 		t.Fatalf("convert: %v", err)
 	}
 

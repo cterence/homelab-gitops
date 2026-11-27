@@ -23,6 +23,9 @@ Flags:
 | `--out`       | yes      | path of the SQLite database to create                            |
 | `--overwrite` | no       | replace an existing output file (and its `-wal`/`-shm` sidecars) |
 | `--strict`    | no       | fail instead of warning when part of the schema cannot be kept    |
+| `--json`      | no       | log structured JSON instead of readable text                     |
+| `--verbose`   | no       | log per-table and per-skipped-statement detail                   |
+| `--quiet`     | no       | log only errors                                                  |
 
 Without `--overwrite` the tool refuses to touch an existing file, because the
 output is the whole database. `--strict` is for automated runs: any warning
@@ -32,8 +35,39 @@ A custom-format archive (`pg_dump -Fc`) is accepted too and piped through
 `pg_restore`. The binary is looked up before anything is written: when it is
 missing the tool stops with instructions instead of producing an empty database.
 
-Progress is logged as JSON on stdout: one line per table with its row count,
-one per skipped statement kind, then a summary of indexes, views and warnings.
+The database is built in a temporary file beside `--out` and moved into place
+only once it is complete, so a failed or interrupted run leaves nothing behind
+and never damages the database it was replacing.
+
+Logs go to stderr, so stdout stays free for callers. A successful run is one
+line:
+
+```
+converted 877 rows into 34 tables and 36 indexes in 27ms -> mydb.db
+```
+
+Warnings (dropped defaults, constraints SQLite refused) are printed as they
+happen; `--verbose` adds a line per table and per skipped statement. `--json`
+switches every line to a structured record for `jq`:
+
+```bash
+pg2sqlite --in mydb.sql --out mydb.db --json 2>&1 >/dev/null | jq -r 'select(.msg=="converted") | .rows'
+```
+
+On a terminal, a long run reports its row count every couple of seconds; piped
+output stays silent. `pg2sqlite` with no arguments and `--help` both print on
+stdout and exit `0`. Shell completion comes from the `completion` subcommand
+(`pg2sqlite completion bash|zsh|fish|powershell`).
+
+## Exit codes
+
+`0` success, `1` conversion failure, `2` bad usage, `4` input not found, `5`
+output exists without `--overwrite`, `130`/`143` interrupted by `SIGINT`/
+`SIGTERM`. Under `--json` the failure is a record on stderr:
+
+```json
+{"error":{"code":"CONFLICT","exit_code":5,"message":"mydb.db already exists","run":"pg2sqlite --overwrite"}}
+```
 
 ## What is supported
 

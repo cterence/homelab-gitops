@@ -276,7 +276,7 @@ func FuzzConvert(f *testing.F) {
 
 		db := fuzzDB(t)
 
-		res, err := convert(ctx, bytes.NewReader([]byte(data)), db, false)
+		res, err := convert(ctx, bytes.NewReader([]byte(data)), db, false, nil)
 		if err != nil {
 			return
 		}
@@ -320,7 +320,7 @@ func FuzzConvert(f *testing.F) {
 
 		again := fuzzDB(t)
 
-		resAgain, err := convert(ctx, bytes.NewReader([]byte(data)), again, false)
+		resAgain, err := convert(ctx, bytes.NewReader([]byte(data)), again, false, nil)
 		if err != nil {
 			t.Fatalf("second convert failed: %v", err)
 		}

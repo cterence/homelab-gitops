@@ -226,7 +226,7 @@ INSERT INTO public.events (id, note) VALUES (200, 'inserted');
 
 	db := openTestDB(t)
 
-	result, err := convert(context.Background(), dumpSource(t, dump), db, false)
+	result, err := convert(context.Background(), dumpSource(t, dump), db, false, nil)
 	if err != nil {
 		t.Fatalf("convert: %v", err)
 	}
@@ -255,7 +255,7 @@ COPY public.t (id, n) FROM stdin;
 
 	db := openTestDB(t)
 
-	result, err := convert(context.Background(), dumpSource(t, dump), db, false)
+	result, err := convert(context.Background(), dumpSource(t, dump), db, false, nil)
 	if err != nil {
 		t.Fatalf("convert: %v", err)
 	}
@@ -298,7 +298,7 @@ COPY public.t (id, name) FROM stdin;
 
 	db := openTestDB(t)
 
-	result, err := convert(context.Background(), dumpSource(t, dump), db, false)
+	result, err := convert(context.Background(), dumpSource(t, dump), db, false, nil)
 	if err != nil {
 		t.Fatalf("convert: %v", err)
 	}
@@ -326,7 +326,7 @@ COPY public.t (id) FROM stdin;
 
 	db := openTestDB(t)
 
-	if _, err := convert(context.Background(), dumpSource(t, dump), db, true); err == nil {
+	if _, err := convert(context.Background(), dumpSource(t, dump), db, true, nil); err == nil {
 		t.Fatal("expected strict mode to fail on a warning")
 	}
 }
@@ -366,7 +366,7 @@ COPY public.t (id, ts) FROM stdin;
 
 	db := openTestDB(t)
 
-	if _, err := convert(context.Background(), dumpSource(t, dump), db, false); err != nil {
+	if _, err := convert(context.Background(), dumpSource(t, dump), db, false, nil); err != nil {
 		t.Fatalf("convert: %v", err)
 	}
 
@@ -407,7 +407,7 @@ COPY other.items (id, name) FROM stdin;
 
 	db := openTestDB(t)
 
-	if _, err := convert(context.Background(), dumpSource(t, dump), db, false); err != nil {
+	if _, err := convert(context.Background(), dumpSource(t, dump), db, false, nil); err != nil {
 		t.Fatalf("convert: %v", err)
 	}
 

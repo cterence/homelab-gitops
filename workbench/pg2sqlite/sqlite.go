@@ -455,14 +455,20 @@ func isOctal(c byte) bool {
 	return c >= '0' && c <= '7'
 }
 
+// progressEvery is how often a streaming run reports that it is still alive.
+const progressEvery = 4096
+
 // convert creates every table from the dump, then streams the rows into them in
 // a second pass, and finally builds indexes and views. Problems are warned about
-// so a single unsupported object cannot cost the whole conversion.
+// and skipped rather than failing the run, so a single unsupported object cannot
+// cost the whole conversion.
 //
 // Two passes are what keep memory flat: the first reads the schema only, the
 // second hands one row at a time to the writer. The source must therefore be
 // seekable, which the caller guarantees by spooling stdin to disk.
-func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool) (*convertResult, error) {
+//
+// progress, when set, is called every progressEvery rows.
+func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool, progress func(rows int)) (*convertResult, error) {
 	if _, err := source.Seek(0, io.SeekStart); err != nil {
 		return nil, fmt.Errorf("rewinding dump: %w", err)
 	}
@@ -512,7 +518,28 @@ func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool)
 
 	writer := newInserter(ctx, tx)
 
-	if _, err := parseDump(source, writer.row); err != nil {
+	onRow := writer.row
+
+	if progress != nil {
+		var seen int
+
+		onRow = func(t *table, cols []string, row []string) error {
+			seen++
+			if seen%progressEvery == 0 {
+				progress(seen)
+			}
+
+			return writer.row(t, cols, row)
+		}
+	}
+
+	if _, err := parseDump(source, onRow); err != nil {
+		// A cancelled context surfaces from database/sql as "transaction has
+		// already been committed or rolled back", which says nothing useful.
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return nil, fmt.Errorf("interrupted: %w", ctxErr)
+		}
+
 		return nil, err
 	}
 

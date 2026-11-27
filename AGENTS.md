@@ -128,20 +128,32 @@ Always run `staticcheck ./...` after linting. Fix all reported issues.
 - Flat `package main` layout — no subpackages, no `internal/` directory.
 - Module path: `github.com/cterence/homelab-gitops/workbench/<app>`.
 - Go version: 1.27.1 (set in `go.mod`).
-- Always use github.com/urfave/cli/v3
-- `main()` calls a `run() error` function; on error print to stderr and `os.Exit(1)`.
+- Always use github.com/urfave/cli/v3 and cli-style skill
+- `main()` calls a `run() error` function; on error print to stderr and exit non-zero.
+- Exit codes are part of the interface: `0` success, `1` runtime failure, `2` bad
+  usage, `4` input not found, `5` conflict/precondition, `130`/`143` interrupted
+  by `SIGINT`/`SIGTERM`. Under `--json`, report the failure as a record on
+  stderr with the code, message and fix.
 - Imports grouped in three blocks separated by blank lines: stdlib, third-party, local (local not needed yet since everything is `package main`).
 - Error handling: wrap with context using `fmt.Errorf("doing X: %w", err)`. Never both log and return an error — pick one.
-- Logging: use `log/slog` with a JSON handler (`slog.NewJSONHandler(os.Stdout, nil)`). Structured key-value pairs only.
+- Logging: `log/slog` with structured key-value pairs, always. A long-running
+  service, Job or sidecar logs JSON to stdout. A CLI a human runs interactively
+  logs readable text to stderr and switches to JSON with `--json`, so stdout
+  stays free for data (`workbench/pg2sqlite` is the reference). Older CLIs that
+  log JSON to stdout keep doing so until their next change.
 - `context.Context` as first parameter on all methods that do I/O or are long-running.
 - Concurrency: prefer `errgroup.WithContext` with `g.SetLimit()` for bounded parallelism.
-- Graceful shutdown: use `signal.NotifyContext` for signal handling.
+- Graceful shutdown: use `signal.NotifyContext` for signal handling, or catch the signal directly when the exit code must tell `SIGINT` from `SIGTERM`.
 
 ### Tests
 
 - Test files live alongside source as `<name>_test.go` in the same `package main`.
 - Table-driven tests using anonymous structs with `t.Run(tt.name, ...)`.
-- Tests cover pure functions (parsing, comparison, logic) — no integration tests.
+- The suite runs offline with `go test ./...`: no cluster, no network, no
+  external services. In-memory databases and temporary directories are fine.
+- Fuzz targets live in `fuzz_test.go` (`FuzzXxx`), seed synthetic fixtures only —
+  never real customer data — and inputs that once failed are kept in
+  `testdata/fuzz/` so they replay on every run.
 - Run tests with `go test ./...` from the app directory.
 - Use `t.Setenv` for environment-dependent tests.
 
