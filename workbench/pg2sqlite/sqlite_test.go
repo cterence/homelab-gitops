@@ -213,7 +213,7 @@ func TestRowValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := rowValues(cols, cols.insertColumns(nil), tt.fields, nil)
+			got, err := rowValues(cols, cols.insertColumns(nil), nil, tt.fields, nil)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected an error, got %v", got)

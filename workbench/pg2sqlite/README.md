@@ -21,6 +21,7 @@ Flags:
 |---------------|----------|------------------------------------------------------------------|
 | `--in`        | yes      | `pg_dump` file, or `-` to read stdin                             |
 | `--out`       | yes      | path of the SQLite database to create                            |
+| `--schema`    | no       | SQLite database the app created, whose schema the output follows |
 | `--overwrite` | no       | replace an existing output file (and its `-wal`/`-shm` sidecars) |
 | `--strict`    | no       | fail instead of warning when part of the schema cannot be kept    |
 | `--json`      | no       | log structured JSON instead of readable text                     |
@@ -58,6 +59,28 @@ On a terminal, a long run reports its row count every couple of seconds; piped
 output stays silent. `pg2sqlite` with no arguments and `--help` both print on
 stdout and exit `0`. Shell completion comes from the `completion` subcommand
 (`pg2sqlite completion bash|zsh|fish|powershell`).
+
+## Following the app's own schema
+
+An app that ships separate PostgreSQL and SQLite migrations does not translate
+one schema into the other: the SQLite one is written on its own terms, with
+column collations, `BOOLEAN` declarations, `STRICT`/`WITHOUT ROWID` tables, and
+timestamps kept as epoch integers. Deriving the tables from `pg_dump` then
+produces a database the app cannot read.
+
+`--schema` takes a database the app itself created, and uses its tables, column
+types, indexes, triggers and views as the shape to pour the rows into:
+
+```bash
+# Let the app create its schema on an empty data directory, stop it, then:
+go run . --in mydb.sql --out mydb.db --overwrite --schema scratch-data/app.db
+```
+
+Rows are converted per the target column type rather than the source one: a
+`DATETIME` column gets the driver's own layout, an `integer` column gets unix
+milliseconds, an interval becomes milliseconds, and a boolean becomes `0`/`1`.
+Columns the reference does not have are dropped with a warning, and tables it
+does not have keep no rows.
 
 ## Exit codes
 
