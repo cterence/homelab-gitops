@@ -1,0 +1,54 @@
+{{- $databases := dig "databases" (list) (index .Values "dump" | default dict) }}
+{{- if $databases }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqlite-dump-script
+data:
+  dump.sh: |
+    #!/bin/sh
+    set -eu
+
+    out=/dumps
+    mkdir -p "$out"
+
+    dump() {
+      src=$1
+      if [ ! -f "$src" ]; then
+        echo "missing, skipped: $src"
+        return 0
+      fi
+      name=$(basename "$src")
+      name=${name%.sqlite}
+      name=${name%.db}
+      tmp="$out/$name.part"
+      rm -f "$tmp"
+      if ! source_pages=$(sqlite3 -readonly "$src" 'PRAGMA page_count;' 2>/dev/null); then
+        echo "cannot read $src, refusing to dump it" >&2
+        exit 1
+      fi
+      sqlite3 -readonly -cmd '.timeout 30000' "$src" ".backup '$tmp'" || true
+      if [ ! -s "$tmp" ]; then
+        echo "dump of $src is empty" >&2
+        rm -f "$tmp"
+        exit 1
+      fi
+      if [ "$(sqlite3 "$tmp" 'PRAGMA integrity_check;' 2>/dev/null || echo failed)" != "ok" ]; then
+        echo "dump of $src failed its integrity check" >&2
+        rm -f "$tmp"
+        exit 1
+      fi
+      if [ "$source_pages" -gt 1 ] && [ "$(sqlite3 "$tmp" 'PRAGMA page_count;')" -le 1 ]; then
+        echo "dump of $src is empty but its source is not" >&2
+        rm -f "$tmp"
+        exit 1
+      fi
+      mv "$tmp" "$out/$name-$(date +%Y%m%dT%H%M%S).db"
+      echo "dumped: $src"
+    }
+    {{- range $databases }}
+    dump {{ . | quote }}
+    {{- end }}
+
+    find "$out" -type f -name '*.db' -mtime +3 -delete
+{{- end }}

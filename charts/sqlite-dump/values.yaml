@@ -1,0 +1,54 @@
+dump:
+  enabled: false
+  global:
+    createDefaultServiceAccount: false
+  defaultPodOptions:
+    automountServiceAccountToken: false
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+  controllers:
+    sqlite-dump:
+      forceRename: sqlite-dump
+      type: cronjob
+      cronjob:
+        schedule: "0 1 * * *"
+        concurrencyPolicy: Forbid
+        backoffLimit: 1
+        successfulJobsHistory: 1
+        failedJobsHistory: 3
+      containers:
+        dump:
+          image:
+            repository: keinos/sqlite3
+            tag: 3.54.1@sha256:b577e65892c6468d94b390097eda4488e05253470c161bdea68a05abb961fa17
+          command:
+            - /bin/sh
+            - /scripts/dump.sh
+  persistence:
+    script:
+      type: configMap
+      name: sqlite-dump-script
+      advancedMounts:
+        sqlite-dump:
+          dump:
+            - path: /scripts
+              readOnly: true
+    dumps:
+      type: persistentVolumeClaim
+      forceRename: sqlite-dump-dumps
+      accessMode: ReadWriteOnce
+      size: 20Mi
+      annotations:
+        helm.sh/resource-policy: keep
+        argocd.argoproj.io/sync-options: Delete=false
+      advancedMounts:
+        sqlite-dump:
+          dump:
+            - path: /dumps
+    config:
+      type: persistentVolumeClaim
+      advancedMounts:
+        sqlite-dump:
+          dump:
+            - path: /src

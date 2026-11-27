@@ -334,3 +334,11 @@ app-template:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: short-password
+
+dump:
+  enabled: true
+  databases:
+    - /src/absdatabase.sqlite
+  persistence:
+    config:
+      existingClaim: audiobookshelf-config-abs

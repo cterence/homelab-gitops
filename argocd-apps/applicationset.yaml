@@ -18,7 +18,7 @@ spec:
     metadata:
       name: "{{ .path.basename }}"
       annotations:
-        argocd.argoproj.io/manifest-generate-paths: "/{{ .path.path }};/charts/image-wait"
+        argocd.argoproj.io/manifest-generate-paths: "/{{ .path.path }};/charts/image-wait;/charts/sqlite-dump"
         notifications.argoproj.io/subscribe.on-sync-succeeded.telegram: "-1001726711150"
     spec:
       project: default
@@ -29,6 +29,12 @@ spec:
         - repoURL: git@github.com:cterence/homelab-gitops.git
           targetRevision: HEAD
           path: charts/image-wait
+          helm:
+            valueFiles:
+              - "/{{ .path.path }}/values.yaml"
+        - repoURL: git@github.com:cterence/homelab-gitops.git
+          targetRevision: HEAD
+          path: charts/sqlite-dump
           helm:
             valueFiles:
               - "/{{ .path.path }}/values.yaml"
