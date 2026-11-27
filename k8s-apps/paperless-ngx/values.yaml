@@ -6,7 +6,7 @@ app-template:
         PAPERLESS_TIME_ZONE: Europe/Paris
         PAPERLESS_PORT: "{{ .Values.service.main.ports.http.port }}"
         PAPERLESS_URL: "https://{{ (first .Values.ingress.main.hosts).host }}"
-        PAPERLESS_DBENGINE: postgresql
+        PAPERLESS_DBENGINE: sqlite
         PAPERLESS_ENABLE_HTTP_REMOTE_USER: "true"
         PAPERLESS_OCR_LANGUAGE: fra+eng
         PAPERLESS_TASK_WORKERS: "2"
@@ -38,26 +38,6 @@ app-template:
                 secretKeyRef:
                   name: "{{ .Release.Name }}-socialaccount-providers"
                   key: socialaccount-providers
-            PAPERLESS_DBHOST:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
-                  key: host
-            PAPERLESS_DBNAME:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
-                  key: dbname
-            PAPERLESS_DBUSER:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
-                  key: user
-            PAPERLESS_DBPASS:
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Release.Name }}-cnpg-cluster-app"
-                  key: password
             PAPERLESS_SECRET_KEY:
               valueFrom:
                 secretKeyRef:
@@ -268,3 +248,11 @@ cnpg-cluster:
         sslRootCertSecret:
           name: paperless-ngx-cnpg-cluster-pg17-ca
           key: ca.crt
+
+dump:
+  enabled: true
+  databases:
+    - /src/db.sqlite3
+  persistence:
+    config:
+      existingClaim: paperless-ngx-data
