@@ -364,3 +364,11 @@ app-template:
               storage: 100Mi
           storageClassName: shared-local
           volumeName: fbq-db
+
+dump:
+  enabled: true
+  databases:
+    - /src/filebrowser.sqlite
+  persistence:
+    config:
+      existingClaim: fbq-db

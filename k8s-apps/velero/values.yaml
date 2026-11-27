@@ -267,13 +267,13 @@ velero:
           - holyarrs
           - home-assistant
           - immich
+          - koito
           - mosquitto
           - music
           - opencloud
           - paperless-ngx
           - pocket-id
           - qbittorrent
-          - seerr
           - vaultwarden
           - zigbee2mqtt
         includedResources:
@@ -306,13 +306,13 @@ velero:
           - home-assistant
           - holyarrs
           - immich
+          - koito
           - mosquitto
           - music
           - opencloud
           - paperless-ngx
           - pocket-id
           - qbittorrent
-          - seerr
           - vaultwarden
           - zigbee2mqtt
         includedResources:

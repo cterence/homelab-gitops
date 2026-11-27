@@ -99,3 +99,11 @@ app-template:
                   apiVersion: generators.external-secrets.io/v1alpha1
                   kind: ClusterGenerator
                   name: password
+
+dump:
+  enabled: true
+  databases:
+    - /src/koito.db
+  persistence:
+    config:
+      existingClaim: koito

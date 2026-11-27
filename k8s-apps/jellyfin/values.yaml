@@ -320,3 +320,11 @@ app-template:
               storage: 8Ti
           storageClassName: nfs
           volumeName: jellyfin-storage-pool
+
+dump:
+  enabled: true
+  databases:
+    - /src/data/data/jellyfin.db
+  persistence:
+    config:
+      existingClaim: jellyfin

@@ -380,3 +380,14 @@ app-template:
           web:
               host: 0.0.0.0
               port: 8337
+
+dump:
+  enabled: true
+  databases:
+    - /src/data/events.db
+    - /src/data/messaging.db
+    - /src/data/search.db
+    - /src/data/transfers.db
+  persistence:
+    config:
+      existingClaim: slskd-data
