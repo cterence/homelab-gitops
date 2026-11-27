@@ -22,6 +22,7 @@ Flags:
 | `--in`        | yes      | `pg_dump` file, or `-` to read stdin                             |
 | `--out`       | yes      | path of the SQLite database to create                            |
 | `--schema`    | no       | SQLite database the app created, whose schema the output follows |
+| `--keep`      | no       | table whose rows stay as the reference database has them, repeatable |
 | `--overwrite` | no       | replace an existing output file (and its `-wal`/`-shm` sidecars) |
 | `--strict`    | no       | fail instead of warning when part of the schema cannot be kept    |
 | `--json`      | no       | log structured JSON instead of readable text                     |
@@ -87,6 +88,16 @@ keep no rows.
 
 The output is left out of write-ahead mode, so the finished database is a single
 file.
+
+Some apps keep a migration history per backend rather than one shared history,
+so the rows in Postgres describe migrations SQLite has never seen. `--keep` names
+such tables: the reference database's rows stay, and the dump contributes
+nothing to them.
+
+```bash
+go run . --in mydb.sql --out mydb.db --schema scratch-data/app.db \
+  --keep __diesel_schema_migrations
+```
 
 ## Exit codes
 

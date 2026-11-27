@@ -172,9 +172,14 @@ func refColumnTypes(db *sql.DB, name string) (map[string]string, map[string]bool
 }
 
 // clearTables empties the reference database so the dump supplies every row.
-// Its rows record the app's own migrations, which the dump also carries.
-func clearTables(ctx context.Context, tx *sql.Tx, ref *refSchema) error {
+// Its rows record the app's own migrations, which the dump also carries — except
+// where the bookkeeping is per backend, and those tables are kept as they are.
+func clearTables(ctx context.Context, tx *sql.Tx, ref *refSchema, keep map[string]bool) error {
 	for name := range ref.tables {
+		if keep[name] {
+			continue
+		}
+
 		if _, err := tx.ExecContext(ctx, "DELETE FROM "+quoteIdent(name)); err != nil {
 			return fmt.Errorf("emptying table %s: %w", name, err)
 		}
@@ -194,17 +199,29 @@ func clearTables(ctx context.Context, tx *sql.Tx, ref *refSchema) error {
 type refResolver struct {
 	ref    *refSchema
 	rep    *reporter
+	keep   map[string]bool
 	seen   map[*table]bool
 	warned map[string]bool
 }
 
-func newRefResolver(ref *refSchema, rep *reporter) *refResolver {
+func newRefResolver(ref *refSchema, rep *reporter, keep []string) *refResolver {
+	kept := make(map[string]bool, len(keep))
+	for _, name := range keep {
+		kept[name] = true
+	}
+
 	return &refResolver{
 		ref:    ref,
 		rep:    rep,
+		keep:   kept,
 		seen:   map[*table]bool{},
 		warned: map[string]bool{},
 	}
+}
+
+// keepRows reports the tables whose contents belong to the reference database.
+func (r *refResolver) keepRows() map[string]bool {
+	return r.keep
 }
 
 // apply points t at its reference definition. Columns the reference does not
@@ -216,6 +233,12 @@ func (r *refResolver) apply(t *table) {
 	}
 
 	r.seen[t] = true
+
+	if r.keep[t.name] {
+		t.absent = true
+
+		return
+	}
 
 	rt, ok := r.ref.tables[t.name]
 	if !ok {

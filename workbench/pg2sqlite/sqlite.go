@@ -501,12 +501,12 @@ const progressEvery = 4096
 //
 // progress, when set, is called every progressEvery rows.
 func convert(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool, progress func(rows int)) (*convertResult, error) {
-	return convertTo(ctx, source, db, strict, progress, nil)
+	return convertTo(ctx, source, db, strict, progress, nil, nil)
 }
 
 // convertTo is convert with an optional reference schema, whose tables replace
-// the ones the dump describes.
-func convertTo(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool, progress func(rows int), ref *refSchema) (*convertResult, error) {
+// the ones the dump describes, and the tables whose rows it keeps.
+func convertTo(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict bool, progress func(rows int), ref *refSchema, keep []string) (*convertResult, error) {
 	if _, err := source.Seek(0, io.SeekStart); err != nil {
 		return nil, fmt.Errorf("rewinding dump: %w", err)
 	}
@@ -528,9 +528,9 @@ func convertTo(ctx context.Context, source io.ReadSeeker, db *sql.DB, strict boo
 
 	var resolver *refResolver
 	if ref != nil {
-		resolver = newRefResolver(ref, rep)
+		resolver = newRefResolver(ref, rep, keep)
 
-		if err := clearTables(ctx, tx, ref); err != nil {
+		if err := clearTables(ctx, tx, ref, resolver.keepRows()); err != nil {
 			return nil, err
 		}
 	}
