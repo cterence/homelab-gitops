@@ -69,8 +69,7 @@ home-assistant:
       data:
         init.sh: |-
           #!/bin/sh
-          db_uri=$(printf "%s?client_encoding=utf8" "$(cat /config/database-secret/uri)")
-          db_uri=$(echo "$db_uri" | sed 's/\.{{ $.Release.Namespace }}//')
+          db_uri="sqlite:////config/home-assistant_v2.db"
           config="/config/configuration.yaml"
           default="/config/init"
           if [ ! -f "$config" ]; then
@@ -292,3 +291,11 @@ cnpg-cluster:
         sslRootCertSecret:
           name: home-assistant-cnpg-cluster-pg17-ca
           key: ca.crt
+
+dump:
+  enabled: true
+  databases:
+    - /src/home-assistant_v2.db
+  persistence:
+    config:
+      existingClaim: home-assistant-config
