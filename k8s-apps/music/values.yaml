@@ -44,7 +44,7 @@ app-template:
             - name: http
               containerPort: 5030
             - name: slskd
-              containerPort: 51413
+              containerPort: 39332
           probes:
             liveness:
               enabled: true
@@ -134,6 +134,15 @@ app-template:
       ports:
         http:
           port: 5030
+    slskd-ingress:
+      forceRename: slskd-ingress
+      annotations:
+        metallb.io/loadBalancerIPs: 192.168.1.243
+      controller: slskd
+      type: LoadBalancer
+      ports:
+        http:
+          port: 39332
     picard:
       forceRename: picard
       controller: picard
