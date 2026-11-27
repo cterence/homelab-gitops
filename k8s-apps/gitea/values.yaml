@@ -379,10 +379,8 @@ gitea:
         SSH_PORT: 22 # rootful image
         SSH_LISTEN_PORT: 2222 # rootless image
       database:
-        DB_TYPE: postgres
-        HOST: gitea-cnpg-cluster-rw
-        NAME: gitea
-        USER: gitea
+        DB_TYPE: sqlite3
+        PATH: /data/gitea/gitea.db
       cache:
         ADAPTER: redis
         HOST: redis://gitea-valkey:6379/0?pool_size=100&idle_timeout=180s
@@ -402,12 +400,7 @@ gitea:
     #       name: gitea-app-ini-plaintext
 
     ## @param gitea.additionalConfigFromEnvs Additional configuration sources from environment variables
-    additionalConfigFromEnvs:
-      - name: GITEA__database__PASSWD
-        valueFrom:
-          secretKeyRef:
-            name: gitea-cnpg-cluster-app
-            key: password
+    additionalConfigFromEnvs: []
 
     ## @param gitea.admin.username Username for the Gitea admin user
     ## @param gitea.admin.existingSecret Use an existing secret to store admin user credentials
