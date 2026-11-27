@@ -115,6 +115,9 @@ session timezone.
 - **A truncated dump is rejected.** If a `COPY` block or a statement ends
   early — a dropped `kubectl exec` stream, a killed `pg_dump` — the run fails
   and nothing is committed, rather than leaving a partially loaded database.
+- **A row with the wrong number of values is rejected.** A `COPY` or `VALUES`
+  row whose field count disagrees with its column list means the dump is
+  damaged; inserting it misaligned would silently shift every column.
 - **The source is read twice**, so it must be seekable. stdin and `pg_restore`
   output are copied to a temporary file on disk first (never into memory) and
   removed afterwards.
@@ -135,7 +138,16 @@ converting several dumps concurrently means running several processes.
 go test ./...                              # unit tests, no external services
 golangci-lint run --fix ./...
 staticcheck ./...
+
+# fuzzing: the parser, then the whole pipeline
+go test -run '^$' -fuzz '^FuzzParseDump$' -fuzztime 60s
+go test -run '^$' -fuzz '^FuzzConvert$' -fuzztime 60s
 ```
+
+`FuzzParseDump` checks that parsing is deterministic and self-consistent;
+`FuzzConvert` checks that no parsed row is lost, miscounted or misplaced on its
+way into SQLite. Inputs that once failed live in `testdata/fuzz/` and replay on
+every `go test`.
 
 Behaviour is checked against real dumps by comparing per-table row counts,
 per-column text lengths and per-column BLOB byte totals with the source

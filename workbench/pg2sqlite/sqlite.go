@@ -188,8 +188,6 @@ func cutDepthZero(s, sep string) (head, tail string, ok bool) {
 }
 
 func depthZeroIndex(s, sub string) int {
-	lower, needle := strings.ToLower(s), strings.ToLower(sub)
-
 	depth := 0
 
 	inQ := false
@@ -208,7 +206,7 @@ func depthZeroIndex(s, sub string) int {
 			}
 		}
 
-		if depth == 0 && !inQ && strings.HasPrefix(lower[i:], needle) {
+		if depth == 0 && !inQ && i+len(sub) <= len(s) && strings.EqualFold(s[i:i+len(sub)], sub) {
 			return i
 		}
 	}

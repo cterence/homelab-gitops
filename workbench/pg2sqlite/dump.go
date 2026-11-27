@@ -82,11 +82,22 @@ func parseDump(r io.Reader, rows rowHandler) (*dump, error) {
 
 		line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
 
+		// EOF with nothing left over is the end of the file, not an empty line:
+		// feeding it to the COPY handler would invent a row.
+		if line == "" && errors.Is(readErr, io.EOF) {
+			break
+		}
+
 		if copyState {
 			if line == `\.` {
 				copyState, cur, curCols = false, nil, nil
 			} else if rows != nil {
-				if err := rows(cur, curCols, strings.Split(line, "\t")); err != nil {
+				values := strings.Split(line, "\t")
+				if len(values) != len(curCols) {
+					return nil, fmt.Errorf("COPY %s: row has %d values for %d columns", cur.name, len(values), len(curCols))
+				}
+
+				if err := rows(cur, curCols, values); err != nil {
 					return nil, err
 				}
 			}
@@ -211,6 +222,10 @@ func (d *dump) createTable(text string) error {
 	}
 
 	schema, name := splitTableRef(rest[:open])
+	if name == "" {
+		return fmt.Errorf("no table name in %q", firstLine(text))
+	}
+
 	t := &table{name: sqliteTableName(schema, name), schema: schema, pgName: name}
 
 	for _, item := range splitTopLevel(rest[open+1:closeIdx], ',') {
@@ -390,6 +405,11 @@ func (d *dump) copyStart(text string) (startsCopy bool, t *table, cols []string,
 		return false, nil, nil, fmt.Errorf("COPY into unknown table %q", ref)
 	}
 
+	// COPY without a column list means every non-generated column, in order.
+	if len(cols) == 0 {
+		cols = defaultColumns(t)
+	}
+
 	for _, col := range cols {
 		if t.column(col) == nil {
 			return false, nil, nil, fmt.Errorf("COPY %s references unknown column %q", ref, col)
@@ -410,6 +430,10 @@ func (d *dump) insert(text string, rows rowHandler) error {
 		return fmt.Errorf("INSERT into unknown table %q", ref)
 	}
 
+	if len(cols) == 0 {
+		cols = defaultColumns(t)
+	}
+
 	for _, col := range cols {
 		if t.column(col) == nil {
 			return fmt.Errorf("INSERT into %s references unknown column %q", ref, col)
@@ -421,6 +445,10 @@ func (d *dump) insert(text string, rows rowHandler) error {
 	}
 
 	for _, tuple := range tuples {
+		if len(tuple) != len(cols) {
+			return fmt.Errorf("INSERT into %s: row has %d values for %d columns", ref, len(tuple), len(cols))
+		}
+
 		if err := rows(t, cols, tuple); err != nil {
 			return err
 		}
@@ -484,6 +512,19 @@ func (t *table) column(name string) *column {
 	}
 
 	return nil
+}
+
+// defaultColumns is the column list a COPY or INSERT without one covers: every
+// non-generated column, in table order.
+func defaultColumns(t *table) []string {
+	names := make([]string, 0, len(t.cols))
+	for _, col := range t.cols {
+		if !col.generated {
+			names = append(names, col.name)
+		}
+	}
+
+	return names
 }
 
 // insertColumns is the column order one block of rows is stored in. An empty
@@ -1347,8 +1388,17 @@ func hasAnyPrefix(s string, prefixes ...string) bool {
 }
 
 // indexWordFold finds the first occurrence of needle in s, ignoring case.
+// indexWordFold is a case-insensitive strings.Index. Folding a whole string can
+// change a rune's byte width (invalid UTF-8, dotted capitals), which would shift
+// every index after it, so the fold happens one candidate slice at a time.
 func indexWordFold(s, needle string) int {
-	return strings.Index(strings.ToUpper(s), strings.ToUpper(needle))
+	for i := 0; i+len(needle) <= len(s); i++ {
+		if strings.EqualFold(s[i:i+len(needle)], needle) {
+			return i
+		}
+	}
+
+	return -1
 }
 
 func firstLine(s string) string {

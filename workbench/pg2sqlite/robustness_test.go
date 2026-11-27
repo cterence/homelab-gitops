@@ -541,3 +541,88 @@ func TestParseRejectsTruncatedDump(t *testing.T) {
 		})
 	}
 }
+
+// EOF straight after a COPY header is the end of the file, not one empty row.
+func TestParseDoesNotInventRowAtEOF(t *testing.T) {
+	const dump = "CREATE TABLE public.t (id integer NOT NULL);\nCOPY public.t (id) FROM stdin;\n"
+
+	var rows int
+
+	_, err := parseDump(strings.NewReader(dump), func(*table, []string, []string) error {
+		rows++
+
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected a truncated COPY block to be rejected")
+	}
+
+	if rows != 0 {
+		t.Fatalf("emitted %d rows for an empty COPY block", rows)
+	}
+}
+
+// A COPY without a column list covers every non-generated column, in order.
+func TestParseCopyWithoutColumnList(t *testing.T) {
+	const dump = `CREATE TABLE public.t (
+    id integer NOT NULL,
+    name text,
+    doubled integer GENERATED ALWAYS AS (id * 2) STORED
+);
+
+COPY public.t FROM stdin;
+1	alpha
+\.
+`
+
+	_, rows := parseCollecting(t, dump)
+
+	if len(rows) != 1 {
+		t.Fatalf("got %d rows, want 1", len(rows))
+	}
+
+	if got := rows[0].cols; len(got) != 2 || got[0] != "id" || got[1] != "name" {
+		t.Fatalf("columns = %v, want [id name]", got)
+	}
+
+	if got := rows[0].row; len(got) != 2 || got[0] != "1" || got[1] != "alpha" {
+		t.Fatalf("row = %v", got)
+	}
+}
+
+// A row whose field count disagrees with its column list is corruption, not a
+// row to insert misaligned.
+func TestParseRejectsRowWithWrongFieldCount(t *testing.T) {
+	tests := []struct {
+		name string
+		dump string
+	}{
+		{
+			name: "copy row",
+			dump: "CREATE TABLE public.t (id integer NOT NULL, name text);\nCOPY public.t (id, name) FROM stdin;\n1\n\\.\n",
+		},
+		{
+			name: "copy row without a column list",
+			dump: "CREATE TABLE public.t (id integer NOT NULL, name text);\nCOPY public.t FROM stdin;\n1\tx\ty\n\\.\n",
+		},
+		{
+			name: "insert row",
+			dump: "CREATE TABLE public.t (id integer NOT NULL, name text);\nINSERT INTO public.t (id, name) VALUES (1);\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := parseDump(strings.NewReader(tt.dump), func(*table, []string, []string) error { return nil })
+			if err == nil {
+				t.Fatal("expected a row with the wrong number of values to be rejected")
+			}
+		})
+	}
+}
+
+func TestParseRejectsTableWithoutName(t *testing.T) {
+	if _, err := parseDump(strings.NewReader("CREATE TABLE (0 0);\n"), nil); err == nil {
+		t.Fatal("expected a CREATE TABLE without a name to be rejected")
+	}
+}
