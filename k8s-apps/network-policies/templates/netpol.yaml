@@ -33,6 +33,21 @@ spec:
             except:
               - {{ $.Values.podCIDR }}
 {{- end }}
+{{- if $ns.allowWorldIngressPorts }}
+    # world ingress, port-scoped
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - {{ $.Values.podCIDR }}
+      ports:
+{{- range $p := $ns.allowWorldIngressPorts }}
+        - port: {{ $p.port }}
+{{- if $p.protocol }}
+          protocol: {{ $p.protocol }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- if $ns.allowClusterIngressPorts }}
     # pods cluster-wide, port-scoped
     - from:
