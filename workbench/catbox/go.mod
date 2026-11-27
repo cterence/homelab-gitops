@@ -6,7 +6,7 @@ require (
 	github.com/tailscale/tailcat v0.8.0
 	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/crypto v0.59.0
-	tailscale.com v1.106.0
+	tailscale.com v1.106.1
 )
 
 require (
