@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -15,7 +17,24 @@ import (
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-const rescanInterval = 15 * time.Second
+const (
+	rescanInterval = 15 * time.Second
+	probeTimeout   = 2 * time.Second
+)
+
+// socketWatchInterval is how often a registered plugin checks that kubelet has
+// not removed its socket. Variable so tests can shorten it.
+var socketWatchInterval = 2 * time.Second
+
+// Overridable in tests, which cannot write to /var/lib/kubelet.
+var (
+	devicePluginDir = v1beta1.DevicePluginPath
+	kubeletSocket   = v1beta1.KubeletSocket
+)
+
+func socketPath(resource string) string {
+	return filepath.Join(devicePluginDir, socketName(resource))
+}
 
 func advertisedDevices(count int, health string) []*v1beta1.Device {
 	devices := make([]*v1beta1.Device, count)
@@ -88,26 +107,44 @@ func (p *rawPlugin) PreStartContainer(context.Context, *v1beta1.PreStartContaine
 	return &v1beta1.PreStartContainerResponse{}, nil
 }
 
-// serveDevice runs the plugin for one device until ctx is cancelled.
+// serveDevice keeps one device registered until ctx is cancelled.
 func serveDevice(ctx context.Context, device Device) error {
-	sockPath := v1beta1.DevicePluginPath + socketName(device.Resource)
+	for {
+		removed, err := serveOnce(ctx, device)
+		if err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+
+			return err
+		}
+
+		if !removed {
+			return nil
+		}
+
+		slog.Warn("device plugin socket removed by kubelet, re-registering", "resource", device.Resource)
+	}
+}
+
+// serveOnce registers and serves the plugin. It reports removed=true when
+// kubelet deleted the socket, which needs a fresh registration.
+func serveOnce(ctx context.Context, device Device) (bool, error) {
+	sockPath := socketPath(device.Resource)
 	if err := os.Remove(sockPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("removing stale socket %s: %w", sockPath, err)
+		return false, fmt.Errorf("removing stale socket %s: %w", sockPath, err)
 	}
 
 	listener, err := net.Listen("unix", sockPath)
 	if err != nil {
-		return fmt.Errorf("listening on %s: %w", sockPath, err)
+		return false, fmt.Errorf("listening on %s: %w", sockPath, err)
 	}
 	defer func() { _ = os.Remove(sockPath) }()
 
 	server := grpc.NewServer()
-	v1beta1.RegisterDevicePluginServer(server, &rawPlugin{device: device})
 
-	go func() {
-		<-ctx.Done()
-		server.Stop()
-	}()
+	v1beta1.RegisterDevicePluginServer(server, &rawPlugin{device: device})
+	defer server.Stop()
 
 	// Serve first: kubelet dials the plugin socket as part of handling the
 	// Register RPC, so the gRPC server must accept before registration.
@@ -120,19 +157,78 @@ func serveDevice(ctx context.Context, device Device) error {
 	}()
 
 	if err := registerWithKubelet(ctx, device); err != nil {
-		server.Stop()
-		return err
+		return false, err
 	}
 
 	slog.Info("device plugin registered", "resource", device.Resource, "path", device.Path)
 
+	watchCtx, stopWatch := context.WithCancel(ctx)
+	defer stopWatch()
+
+	removed := make(chan struct{})
+
+	go func() {
+		ticker := time.NewTicker(socketWatchInterval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-watchCtx.Done():
+				return
+			case <-ticker.C:
+				if _, err := os.Stat(sockPath); err != nil {
+					close(removed)
+
+					return
+				}
+			}
+		}
+	}()
+
 	select {
 	case <-ctx.Done():
-		server.Stop()
-		return nil
+		return false, nil
 	case err := <-serveErr:
-		return fmt.Errorf("serving %s: %w", device.Resource, err)
+		return false, fmt.Errorf("serving %s: %w", device.Resource, err)
+	case <-removed:
+		return true, nil
 	}
+}
+
+// probeDevices fails unless every configured plugin answers on its socket.
+func probeDevices(ctx context.Context, configPath string) error {
+	devices, err := loadConfig(configPath)
+	if err != nil {
+		return err
+	}
+
+	var errs []error
+
+	for _, device := range devices {
+		if err := probeDevice(ctx, device); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func probeDevice(ctx context.Context, device Device) error {
+	conn, err := grpc.NewClient("unix://"+socketPath(device.Resource),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("probing %s: %w", device.Resource, err)
+	}
+	defer func() { _ = conn.Close() }()
+
+	ctx, cancel := context.WithTimeout(ctx, probeTimeout)
+	defer cancel()
+
+	if _, err := v1beta1.NewDevicePluginClient(conn).GetDevicePluginOptions(ctx, &v1beta1.Empty{}); err != nil {
+		return fmt.Errorf("probing %s: %w", device.Resource, err)
+	}
+
+	return nil
 }
 
 func registerWithKubelet(ctx context.Context, device Device) error {
@@ -145,7 +241,7 @@ func registerWithKubelet(ctx context.Context, device Device) error {
 			}
 		}
 
-		conn, err := grpc.NewClient("unix://"+v1beta1.KubeletSocket,
+		conn, err := grpc.NewClient("unix://"+kubeletSocket,
 			grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return fmt.Errorf("dialing kubelet: %w", err)

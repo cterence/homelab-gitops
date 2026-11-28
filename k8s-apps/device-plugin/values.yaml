@@ -27,6 +27,16 @@ app-template:
               memory: 32Mi
             limits:
               memory: 64Mi
+          # Kubelet drops the plugin sockets on restart; the binary
+          # re-registers, and this probe restarts it if it stays unregistered.
+          livenessProbe: &livenessProbe
+            exec:
+              command:
+                - /usr/local/bin/device-plugin
+                - probe
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
 
     # /dev/net/tun exists on every node; consumed by the arr-stack gluetun
     # sidecar.
@@ -39,6 +49,7 @@ app-template:
         main:
           image: *image
           resources: *resources
+          livenessProbe: *livenessProbe
 
     # The ConBee stick is USB: a CharDevice mount only exists on homelab2,
     # so this DaemonSet is pinned there.
@@ -54,6 +65,7 @@ app-template:
         main:
           image: *image
           resources: *resources
+          livenessProbe: *livenessProbe
 
   configMaps:
     config-render:
