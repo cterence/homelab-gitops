@@ -67,6 +67,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON |
 | [hubble-exporter](./scripts/../k8s-apps/hubble-exporter) | Exports novel flow pairs from the hubble relay for egress netpol authoring |
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution |
+| [jellydash](./scripts/../k8s-apps/jellydash) | Jellyfin monitoring dashboard |
 | [jellyfin](./scripts/../k8s-apps/jellyfin) | Media server |
 | [jellystat](./scripts/../k8s-apps/jellystat) | Jellyfin stats |
 | [koito](./scripts/../k8s-apps/koito) | Self-hosted ListenBrainz-compatible music scrobbler |
