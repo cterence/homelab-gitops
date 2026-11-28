@@ -50,7 +50,6 @@ app-template:
             TZ: Europe/Paris
             FLASK_PORT: 8084
             FLASK_DEBUG: false
-            CLOUDFLARE_PROXY_URL: http://localhost:8000
             INGEST_DIR: /ebooks
             UID: "0"
             GID: "0"
@@ -78,29 +77,6 @@ app-template:
                 httpGet:
                   port: http
                   path: /api/status
-        cloudflare-bypass:
-          image:
-            repository: ghcr.io/sarperavci/cloudflarebypassforscraping
-            tag: latest@sha256:e48f7c080088131808369ecd3ecfdea7cce73c77c2e4de2b06dad4c5767ea685
-          env:
-            TZ: Europe/Paris
-          ports:
-            - name: http
-              containerPort: 8000
-          probes:
-            liveness:
-              enabled: true
-              custom: true
-              spec:
-                tcpSocket:
-                  port: http
-            readiness:
-              enabled: true
-              custom: true
-              spec:
-                tcpSocket:
-                  port: http
-
     webdav:
       type: deployment
       strategy: Recreate

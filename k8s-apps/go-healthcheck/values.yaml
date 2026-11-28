@@ -21,22 +21,12 @@ urls:
   - https://slskd.terence.cloud/health
 
 cnpgClusters:
-  - name: gitea-cnpg-cluster
-    namespace: gitea
-  - name: home-assistant-cnpg-cluster
-    namespace: home-assistant
   - name: immich-cnpg-cluster-blue
     namespace: immich
   - name: jellystat-cnpg-cluster
     namespace: jellystat
   - name: niks3-cnpg-cluster
     namespace: niks3
-  - name: paperless-ngx-cnpg-cluster
-    namespace: paperless-ngx
-  - name: pocket-id-cnpg-cluster
-    namespace: pocket-id
-  - name: vaultwarden-cnpg-cluster
-    namespace: vaultwarden
 
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 app-template:
