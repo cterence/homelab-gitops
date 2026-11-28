@@ -11,7 +11,6 @@ urls:
   - https://holyarrs.snow-delta.ts.net/ping
   - https://immich.terence.cloud/api/server/ping
   - https://jf.terence.cloud/health
-  - https://jstat.terence.cloud/auth/isconfigured
   - https://niks3.terence.cloud/health
   - https://oc.terence.cloud/status
   - https://paperless.terence.cloud/accounts/login/?next=/

@@ -62,7 +62,6 @@ namespaces:
         gitea,
         home-assistant,
         immich,
-        jellystat,
         monitoring,
         niks3,
         opencloud,
@@ -109,11 +108,7 @@ namespaces:
   - name: jellyfin
     defaultDeny: true
     allow:
-      [traefik, go-healthcheck, monitoring, jellystat, jellydash, seerr, koito, holyarrs]
-  - name: jellystat
-    defaultDeny: true
-    allow: [traefik, go-healthcheck, cnpg-system, monitoring, jellyfin]
-    allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
+      [traefik, go-healthcheck, monitoring, jellydash, seerr, koito, holyarrs]
   - name: koito
     defaultDeny: true
     allow: [traefik, monitoring, jellyfin]
