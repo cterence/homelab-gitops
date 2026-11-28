@@ -103,10 +103,13 @@ namespaces:
     allow:
       [traefik, go-healthcheck, tailscale-operator, cnpg-system, monitoring]
     allowFromPorts: [{ from: kube-system, port: 8000, protocol: TCP }]
+  - name: jellydash
+    defaultDeny: true
+    allow: [tailscale-operator]
   - name: jellyfin
     defaultDeny: true
     allow:
-      [traefik, go-healthcheck, monitoring, jellystat, seerr, koito, holyarrs]
+      [traefik, go-healthcheck, monitoring, jellystat, jellydash, seerr, koito, holyarrs]
   - name: jellystat
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring, jellyfin]

@@ -6,6 +6,31 @@ Add a subdir here with a `Dockerfile`, your source, and a `build.yaml`. On
 commit, ArgoCD renders a Kaniko Job that builds it and pushes to the in-cluster
 registry at `registry.registry:5000`.
 
+## Apps
+
+The AI column is the share of the app's code that was AI-generated, as reported
+by the maintainer. It is not measured from the repository.
+
+| App | What it does | AI |
+| --- | --- | --- |
+| [`agent-relay`](agent-relay/) | Generic webhook to Mistral-agent relay: each route renders a prompt template and starts a conversation. | 100% |
+| [`apachewebdav`](apachewebdav/) | Apache httpd image with WebDAV enabled, configured entirely through environment variables. | 0% |
+| [`catbox`](catbox/) | Async file transfer between your machines over tailcat, with one always-on stash in the cluster. | 100% |
+| [`cnpg-restore-test`](cnpg-restore-test/) | Daily restore verification of every CNPG cluster from its barman-cloud backups, with integrity checks. | 100% |
+| [`device-plugin`](device-plugin/) | Exposes host character devices (GPU render nodes, USB serial) as extended resources, no `privileged`. | 100% |
+| [`docs`](docs/) | Static documentation site at docs.terence.cloud, served from a Garage bucket. | 25% |
+| [`gitea-mirror-sync`](gitea-mirror-sync/) | Reconciles a declarative list of git mirrors against Gitea: creates the missing ones, updates settings, prunes the rest. | 100% |
+| [`go-healthcheck`](go-healthcheck/) | Aggregates HTTP and PostgreSQL health checks into a single JSON status endpoint. | 0% |
+| [`grafana-dashboards`](grafana-dashboards/) | Builds Grafana dashboards with the Foundation SDK and writes them into the kube-prometheus-stack app. | 100% |
+| [`hubble-exporter`](hubble-exporter/) | Logs only novel network flow tuples from the hubble relay, the source dataset for egress netpols. | 100% |
+| [`jellystat2jellydash`](jellystat2jellydash/) | Converts a Jellystat backup into the History CSV that Jellydash imports. | 100% |
+| [`lastfm-scrobble-deduplicator`](lastfm-scrobble-deduplicator/) | Detects and deletes duplicate Last.fm scrobbles by walking the profile with chromedp. | 10% |
+| [`pg2sqlite`](pg2sqlite/) | Converts a plain-format `pg_dump` artifact into a SQLite database, streaming the rows. | 100% |
+| [`pv-migrate`](pv-migrate/) | Moves data from a Released PersistentVolume to a destination PVC by wrapping upstream pv-migrate. | 100% |
+| [`rangemusique`](rangemusique/) | Arranges music files into `artist/album (year)/artist - album - NN track.ext` from their tags. | 25% |
+| [`slackmoji`](slackmoji/) | Turns a GIF, PNG, JPEG or WebP into a Slack emoji under 128 KB and 128x128 px. | 100% |
+| [`telegram-hub`](telegram-hub/) | The homelab's single Telegram app: an MCP server plus text to speech in one Go binary. | 100% |
+
 ## build.yaml
 
 ```yaml

@@ -57,6 +57,7 @@
         "catbox"
         "go-healthcheck"
         "grafana-dashboards"
+        "jellystat2jellydash"
         "lastfm-scrobble-deduplicator"
         "rangemusique"
       ];
