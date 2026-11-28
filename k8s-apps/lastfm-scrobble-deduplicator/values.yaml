@@ -31,7 +31,7 @@ app-template:
         app:
           image:
             repository: registry.snow-delta.ts.net/lastfm-scrobble-deduplicator
-            tag: "29"
+            tag: "30"
             pullPolicy: IfNotPresent
           args:
             - --from
