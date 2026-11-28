@@ -263,6 +263,7 @@ velero:
           - garage
           - garage-ssd
           - gitea
+          - jellydash
           - jellyfin
           - holyarrs
           - home-assistant
@@ -302,6 +303,7 @@ velero:
           - garage
           - garage-ssd
           - gitea
+          - jellydash
           - jellyfin
           - home-assistant
           - holyarrs

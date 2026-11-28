@@ -11,7 +11,6 @@ app-template:
   controllers:
     main:
       type: deployment
-      # One writer: the background poller and the web server share the SQLite file.
       strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -113,3 +112,11 @@ app-template:
         main:
           main:
             - path: /var/www/html/cache
+
+dump:
+  enabled: true
+  databases:
+    - /src/data/jellydash.sqlite
+  persistence:
+    config:
+      existingClaim: jellydash-var
