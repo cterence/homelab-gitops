@@ -69,7 +69,6 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [immich](./scripts/../k8s-apps/immich) | High performance self-hosted photo and video management solution |
 | [jellydash](./scripts/../k8s-apps/jellydash) | Jellyfin monitoring dashboard |
 | [jellyfin](./scripts/../k8s-apps/jellyfin) | Media server |
-| [jellystat](./scripts/../k8s-apps/jellystat) | Jellyfin stats |
 | [koito](./scripts/../k8s-apps/koito) | Self-hosted ListenBrainz-compatible music scrobbler |
 | [kube-prometheus-stack](./scripts/../k8s-apps/kube-prometheus-stack) | kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator |
 | [kubernetes-mcp](./scripts/../k8s-apps/kubernetes-mcp) | Kubernetes MCP server (read-only cluster visibility, no secrets) |
