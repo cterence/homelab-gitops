@@ -60,15 +60,9 @@ app-template:
 
   ingress:
     filebrowser-quantum:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        external-dns.kubernetes.io/target: home.terence.cloud
-        external-dns.kubernetes.io/cloudflare-proxied: "false"
-        traefik.ingress.kubernetes.io/router.tls.options: cert-manager-client-auth@kubernetescrd
-        traefik.ingress.kubernetes.io/router.middlewares: traefik-ip-allowlist@kubernetescrd
-      className: "traefik"
+      className: tailscale
       hosts:
-        - host: &host fbq.terence.cloud
+        - host: &host fbq.snow-delta.ts.net
           paths:
             - path: /
               pathType: Prefix
