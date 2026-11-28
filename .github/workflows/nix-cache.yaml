@@ -65,6 +65,16 @@ jobs:
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
+      - name: Chain niks3 and hestia post-build hooks
+        run: |
+          d="$RUNNER_TEMP/cache-hook-chain"
+          mkdir -p "$d"
+          hooks=$(grep -hs '^post-build-hook = ' ${NIX_USER_CONF_FILES//:/ } | sed 's/^post-build-hook = //' | awk '!seen[$0]++' || true)
+          [ -n "$hooks" ] || { echo "no post-build hooks to chain"; exit 0; }
+          { echo '#!/bin/sh'; printf '"%s" || exit $?\n' $hooks; } > "$d/hook"
+          chmod +x "$d/hook"
+          printf 'post-build-hook = %s\n' "$d/hook" > "$d/nix.conf"
+          echo "NIX_USER_CONF_FILES=$d/nix.conf:$NIX_USER_CONF_FILES" >> "$GITHUB_ENV"
       - name: Build
         run: |
           set -euo pipefail
@@ -122,6 +132,17 @@ jobs:
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
+      - name: Chain niks3 and hestia post-build hooks
+        if: steps.catbox.outputs.changed == 'true'
+        run: |
+          d="$RUNNER_TEMP/cache-hook-chain"
+          mkdir -p "$d"
+          hooks=$(grep -hs '^post-build-hook = ' ${NIX_USER_CONF_FILES//:/ } | sed 's/^post-build-hook = //' | awk '!seen[$0]++' || true)
+          [ -n "$hooks" ] || { echo "no post-build hooks to chain"; exit 0; }
+          { echo '#!/bin/sh'; printf '"%s" || exit $?\n' $hooks; } > "$d/hook"
+          chmod +x "$d/hook"
+          printf 'post-build-hook = %s\n' "$d/hook" > "$d/nix.conf"
+          echo "NIX_USER_CONF_FILES=$d/nix.conf:$NIX_USER_CONF_FILES" >> "$GITHUB_ENV"
       - name: Build catbox nix packages
         if: steps.catbox.outputs.changed == 'true'
         run: |
