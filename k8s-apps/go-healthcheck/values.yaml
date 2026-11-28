@@ -22,8 +22,6 @@ urls:
 cnpgClusters:
   - name: immich-cnpg-cluster-blue
     namespace: immich
-  - name: jellystat-cnpg-cluster
-    namespace: jellystat
   - name: niks3-cnpg-cluster
     namespace: niks3
 
