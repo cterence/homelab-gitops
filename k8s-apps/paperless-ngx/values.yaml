@@ -194,6 +194,7 @@ cnpg-cluster:
           - CNPGClusterLogicalReplicationStopped
           - CNPGClusterHACritical
           - CNPGClusterHAWarning
+          - CNPGClusterOffline
     postgresql: {}
     initdb:
       database: paperless-ngx

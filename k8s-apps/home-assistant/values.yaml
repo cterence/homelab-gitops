@@ -237,6 +237,7 @@ cnpg-cluster:
           - CNPGClusterLogicalReplicationStopped
           - CNPGClusterHACritical
           - CNPGClusterHAWarning
+          - CNPGClusterOffline
     postgresql: {}
     initdb:
       database: home-assistant
