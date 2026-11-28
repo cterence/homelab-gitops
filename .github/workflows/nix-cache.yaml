@@ -37,7 +37,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1
-      - uses: Mic92/hestia@dfed9ced335d28978ba74e513939a10db1f71025 # v3
       - name: Tailscale
         uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4
         with:
@@ -65,16 +64,6 @@ jobs:
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
-      - name: Chain niks3 and hestia post-build hooks
-        run: |
-          d="$RUNNER_TEMP/cache-hook-chain"
-          mkdir -p "$d"
-          hooks=$(grep -hs '^post-build-hook = ' ${NIX_USER_CONF_FILES//:/ } | sed 's/^post-build-hook = //' | awk '!seen[$0]++' || true)
-          [ -n "$hooks" ] || { echo "no post-build hooks to chain"; exit 0; }
-          { echo '#!/bin/sh'; printf '"%s" || exit $?\n' $hooks; } > "$d/hook"
-          chmod +x "$d/hook"
-          printf 'post-build-hook = %s\n' "$d/hook" > "$d/nix.conf"
-          echo "NIX_USER_CONF_FILES=$d/nix.conf:$NIX_USER_CONF_FILES" >> "$GITHUB_ENV"
       - name: Build
         run: |
           set -euo pipefail
@@ -118,7 +107,6 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
       - uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1
-      - uses: Mic92/hestia@dfed9ced335d28978ba74e513939a10db1f71025 # v3
       - name: Tailscale
         uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4
         if: steps.catbox.outputs.changed == 'true'
@@ -132,17 +120,6 @@ jobs:
         with:
           server-url: http://niks3.snow-delta.ts.net:5751
           substituter: http://niks3.snow-delta.ts.net:5751
-      - name: Chain niks3 and hestia post-build hooks
-        if: steps.catbox.outputs.changed == 'true'
-        run: |
-          d="$RUNNER_TEMP/cache-hook-chain"
-          mkdir -p "$d"
-          hooks=$(grep -hs '^post-build-hook = ' ${NIX_USER_CONF_FILES//:/ } | sed 's/^post-build-hook = //' | awk '!seen[$0]++' || true)
-          [ -n "$hooks" ] || { echo "no post-build hooks to chain"; exit 0; }
-          { echo '#!/bin/sh'; printf '"%s" || exit $?\n' $hooks; } > "$d/hook"
-          chmod +x "$d/hook"
-          printf 'post-build-hook = %s\n' "$d/hook" > "$d/nix.conf"
-          echo "NIX_USER_CONF_FILES=$d/nix.conf:$NIX_USER_CONF_FILES" >> "$GITHUB_ENV"
       - name: Build catbox nix packages
         if: steps.catbox.outputs.changed == 'true'
         run: |
