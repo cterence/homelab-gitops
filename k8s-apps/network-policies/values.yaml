@@ -85,6 +85,9 @@ namespaces:
   - name: go-healthcheck
     defaultDeny: true
     allow: [traefik]
+  - name: golink
+    defaultDeny: true
+    allow: [tailscale-operator]
   - name: home-assistant
     defaultDeny: true
     allow: [traefik, go-healthcheck, cnpg-system, monitoring]

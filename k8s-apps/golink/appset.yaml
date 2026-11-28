@@ -1,0 +1,2 @@
+# Exposed only through the tailscale-operator's layer 7 ingress (see the
+# Ingress in values.yaml), so no cert-manager or public DNS entry.

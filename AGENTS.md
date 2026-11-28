@@ -65,7 +65,42 @@ the `registry-pull-secret` ClusterExternalSecret's `spec.namespaces` in
 secret — and `imagePullSecrets: [{name: registry-pull-secret}]` under
 `app-template.defaultPodOptions` in the app's own values.yaml.
 
+A new app also needs a namespace entry in `k8s-apps/network-policies/values.yaml`.
+That chart renders policies only for the namespaces it lists, so an unlisted app
+gets no policy at all and accepts ingress from every pod in the cluster. Give it
+`defaultDeny: true` plus an `allow:` list of the callers that legitimately reach
+it: `traefik` for a `terence.cloud` ingress, `tailscale-operator` for a tailscale
+Ingress or an exposed Service, `monitoring` when Prometheus scrapes it,
+`go-healthcheck` when that app probes it. Kubelet probes need nothing — the chart
+always allows `nodeCIDR`.
+
 Tool/API documentation for workbench apps lives in each app's `README.md` — update it whenever an app's interface (tool arguments, endpoints, env vars) changes.
+
+### App data (SQLite and backups)
+
+An app that stores SQLite — one file or several — forces two separate decisions.
+Ask the user which way each goes; do not assume, and do not add backups by
+reflex. Durability is not the same as value: shortlinks, caches and rebuildable
+indexes do not need either mechanism.
+
+1. Dump it? Worth a dump when losing the file loses data that cannot be
+   recreated. If yes, set `dump.enabled: true` in the app's values.yaml (the
+   ApplicationSet already renders `charts/sqlite-dump` for every app, disabled
+   by default), list each database in `dump.databases` as a path *relative to
+   the PVC root* — the dump pod mounts that PVC at `/src`, so a db the app sees
+   at `/home/nonroot/golink.db` becomes `/src/golink.db` — and point
+   `dump.persistence.config.existingClaim` at the claim name. Dumps land in
+   `dumps/` on the same volume, pruned after 3 days: they survive a database
+   swap, not the loss of the PVC.
+2. Velero it? Worth it only for state that must outlive the volume, snapshotted
+   off-cluster. Add the namespace to *both* `includedNamespaces` lists under
+   `schedules` in `k8s-apps/velero/values.yaml` (`backblaze` daily,
+   `garage-backup` every 8h); PVCs are snapshotted unless `volume-policy` skips
+   them. The two lists are duplicated by hand and drift silently.
+
+Record the outcome in the app's `README.md` when the answer is "no" to both, so
+the next agent does not re-litigate it. Precedent: `golink` keeps only
+shortlinks and click counts, so it gets neither.
 
 ## Grafana dashboards
 
