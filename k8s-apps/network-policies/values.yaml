@@ -15,7 +15,7 @@ namespaces:
     allow: [traefik, go-healthcheck, monitoring, holyarrs]
   - name: filebrowser-quantum
     defaultDeny: true
-    allow: [traefik, go-healthcheck]
+    allow: [tailscale-operator, go-healthcheck]
   - name: audiobookshelf
     defaultDeny: true
     allow: [traefik, tailscale-operator]
