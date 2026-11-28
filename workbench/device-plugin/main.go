@@ -11,6 +11,8 @@ import (
 	cli "github.com/urfave/cli/v3"
 )
 
+const defaultConfigPath = "config.yaml"
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -19,8 +21,20 @@ func main() {
 		Name:  "device-plugin",
 		Usage: "expose host device nodes as extended resources",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "config", Value: "config.yaml", Usage: "path to the config file"},
+			&cli.StringFlag{Name: "config", Value: defaultConfigPath, Usage: "path to the config file"},
 			&cli.BoolFlag{Name: "debug", Value: false, Usage: "debug logging"},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  "probe",
+				Usage: "exit non-zero unless every configured plugin answers on its socket",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "config", Value: defaultConfigPath, Usage: "path to the config file"},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return probeDevices(ctx, c.String("config"))
+				},
+			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			return serve(ctx, c.String("config"), c.Bool("debug"))
