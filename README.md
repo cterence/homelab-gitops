@@ -62,6 +62,7 @@ This is an [automatically updated](.github/workflows/update-deployed-apps.yaml) 
 | [garage-ssd](./scripts/../k8s-apps/garage-ssd) | S3-compatible object store for small self-hosted geo-distributed deployments |
 | [gitea](./scripts/../k8s-apps/gitea) | Self-hosted Git service with a lightweight code hosting solution written in Go |
 | [go-healthcheck](./scripts/../k8s-apps/go-healthcheck) | Simple HTTP healthchecks |
+| [golink](./scripts/../k8s-apps/golink) | Private shortlink service for the tailnet, served at https://go.snow-delta.ts.net/ |
 | [holyarrs](./scripts/../k8s-apps/holyarrs) | HolyArrs |
 | [home-assistant](./scripts/../k8s-apps/home-assistant) | Open source home automation that puts local control and privacy first |
 | [httpbin](./scripts/../k8s-apps/httpbin) | Echoes request data as JSON |
