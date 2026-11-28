@@ -1,6 +1,6 @@
 apiVersion: v2
 name: golink
-description: Private shortlink service for the tailnet, served at https://go.snow-delta.ts.net/
+description: Private shortlink service for the tailnet, served at http://go/
 type: application
 version: 0.1.0
 dependencies:
