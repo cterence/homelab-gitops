@@ -12,7 +12,7 @@ namespaces:
     allow: [kube-system, monitoring]
   - name: qbittorrent
     defaultDeny: true
-    allow: [traefik, go-healthcheck, monitoring, holyarrs]
+    allow: [tailscale-operator, go-healthcheck, monitoring, holyarrs]
   - name: filebrowser-quantum
     defaultDeny: true
     allow: [tailscale-operator, go-healthcheck]
